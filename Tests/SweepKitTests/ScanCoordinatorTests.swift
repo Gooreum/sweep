@@ -137,4 +137,62 @@ struct ScanCoordinatorTests {
         let items = await coordinator.scan()
         #expect(Set(items.map(\.displayName)) == ["fast", "slow"])
     }
+
+    // MARK: - URL 중복 제거
+
+    // TC-8
+    @Test("같은 경로를 두 스캐너가 잡아도 결과에 한 번만 나온다")
+    func deduplicatesByURL() async {
+        let shared = allowed("shared.zip", size: 5_000, category: .largeFile)
+        let sameURLAsDuplicate = CleanupItem(
+            url: shared.url, size: 5_000, category: .duplicate, safety: .safe)
+
+        let coordinator = ScanCoordinator(scanners: [
+            FakeScanner(category: .largeFile, items: [shared]),
+            FakeScanner(category: .duplicate, items: [sameURLAsDuplicate]),
+        ])
+
+        let items = await coordinator.scan()
+
+        #expect(items.count == 1, "같은 경로가 두 번 잡혀 합계가 두 배가 된다")
+        #expect(items.totalSize == 5_000)
+    }
+
+    // TC-9
+    @Test("중복 제거 시 위에 오는 카테고리가 이긴다")
+    func dedupeKeepsHigherPriorityCategory() async {
+        let url = home.appending(path: "Library/Caches/contested.bin")
+        let asLarge = CleanupItem(url: url, size: 9_000, category: .largeFile, safety: .caution)
+        let asDuplicate = CleanupItem(url: url, size: 9_000, category: .duplicate, safety: .safe)
+
+        // 넣는 순서를 바꿔도 결과가 같아야 한다
+        for scanners in [[asDuplicate, asLarge], [asLarge, asDuplicate]] {
+            let items = await ScanCoordinator(scanners: [
+                FakeScanner(category: .largeFile, items: scanners),
+            ]).scan()
+
+            #expect(items.count == 1)
+            // largeFile(sortOrder 4) < duplicate(sortOrder 5) 이므로 largeFile이 남는다
+            #expect(items.first?.category == .largeFile)
+        }
+    }
+
+    // TC-10
+    @Test("중복이 없으면 기존 정렬이 그대로 유지된다")
+    func dedupeDoesNotDisturbOrdering() async {
+        let coordinator = ScanCoordinator(scanners: [
+            FakeScanner(category: .devCache, items: [
+                allowed("small", size: 100),
+                allowed("large", size: 9_000),
+            ]),
+            FakeScanner(category: .runawayTemp, items: [
+                allowed("temp", size: 50, category: .runawayTemp),
+            ]),
+        ])
+
+        let items = await coordinator.scan()
+
+        #expect(items.map(\.displayName) == ["temp", "large", "small"])
+        #expect(items.count == 3)
+    }
 }

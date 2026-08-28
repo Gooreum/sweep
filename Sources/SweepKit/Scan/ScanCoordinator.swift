@@ -13,6 +13,7 @@ public struct ScanCoordinator: Sendable {
             XcodeScanner(),
             DevCacheScanner(),
             StaleCacheScanner(),
+            LargeFileScanner(),
             DuplicateScanner(),
         ])
     }
@@ -30,6 +31,7 @@ public struct ScanCoordinator: Sendable {
             for await items in group { found += items }
         }
 
+        var seen: Set<URL> = []
         return found
             .filter { $0.size > 0 && ProtectedPaths.isRemovable($0.url) }
             .sorted { lhs, rhs in
@@ -38,5 +40,9 @@ public struct ScanCoordinator: Sendable {
                     ? lhs.size > rhs.size
                     : lhs.category.sortOrder < rhs.category.sortOrder
             }
+            // 같은 경로를 두 스캐너가 잡으면 합계가 두 배로 보인다.
+            // (~/Downloads는 DuplicateScanner와 LargeFileScanner가 함께 본다.)
+            // 정렬 뒤에 거르므로 더 위에 오는 카테고리가 이긴다.
+            .filter { seen.insert($0.url).inserted }
     }
 }
