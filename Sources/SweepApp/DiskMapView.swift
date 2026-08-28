@@ -44,7 +44,7 @@ struct DiskMapView: View {
 
             if let current = model.current {
                 Text(current.formattedSize)
-                    .monospacedDigit()
+                    .font(Theme.bodyText.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
             if model.canGoUp {
@@ -74,15 +74,12 @@ struct DiskMapView: View {
                     // 분모를 만드는 중이라 아직 퍼센트가 없다. 숫자를 지어내지 않는다.
                     ProgressView()
                     Text("\(scanned.formatted())개 세는 중…")
-                        .monospacedDigit()
+                        .font(Theme.bodyText.monospacedDigit())
                         .foregroundStyle(.secondary)
                 case .measuring(let percent):
-                    ProgressView(value: Double(percent), total: 100)
-                        .frame(width: 220)
-                    Text("\(percent)%")
-                        .font(.title3.monospacedDigit())
+                    RingGauge(percent: percent, caption: "재는 중")
                     Text("사용량을 재는 중…")
-                        .font(.caption)
+                        .font(Theme.caption)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -116,6 +113,7 @@ struct DiskMapView: View {
 
         return HStack(spacing: 12) {
             Text(node.name)
+                .font(Theme.bodyText)
                 .lineLimit(1)
                 .truncationMode(.middle)
                 .frame(width: 200, alignment: .leading)
@@ -124,7 +122,7 @@ struct DiskMapView: View {
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color.secondary.opacity(0.12))
                     Capsule()
-                        .fill(Color.accentColor.opacity(0.55))
+                        .fill(Theme.accent.opacity(0.55))
                         // 아주 작아도 흔적은 남긴다. 0폭이면 있는지조차 모른다.
                         .frame(width: max(geometry.size.width * ratio, 2))
                 }
@@ -132,7 +130,7 @@ struct DiskMapView: View {
             .frame(height: 10)
 
             Text(node.formattedSize)
-                .monospacedDigit()
+                .font(Theme.bodyText.monospacedDigit())
                 .foregroundStyle(.secondary)
                 .frame(width: 84, alignment: .trailing)
 
@@ -151,8 +149,8 @@ struct DiskMapView: View {
             Image(systemName: "square.grid.2x2")
                 .font(.system(size: 36))
                 .foregroundStyle(.secondary)
-            Text(title).font(.headline)
-            Text(detail).font(.callout).foregroundStyle(.secondary)
+            Text(title).font(Theme.title)
+            Text(detail).font(Theme.bodyText).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
