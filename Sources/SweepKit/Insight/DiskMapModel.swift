@@ -27,11 +27,14 @@ public final class ScanCounter: @unchecked Sendable {
         count = newValue
     }
 
-    /// 0~100. 분모 오차가 있어도 100을 넘지 않는다 —
-    /// 실측에서 세기와 집계가 0.32% 어긋났다(스캔 도중 사라지는 임시 파일).
+    /// 0~100.
+    ///
+    /// **절삭이 아니라 반올림한다.** 두 패스가 서로 다른 시점에 돌아 분모와 분자가
+    /// 완전히 같을 수 없다 — 실측에서 73,952 vs 73,947로 5개가 어긋났고,
+    /// 절삭하면 99.99%가 99%가 되어 "멈춘 것처럼" 보인다.
     public func percent(of total: Int) -> Int {
         guard total > 0 else { return 0 }
-        return min(100, max(0, value * 100 / total))
+        return min(100, max(0, (value * 200 + total) / (total * 2)))
     }
 }
 
@@ -104,7 +107,9 @@ public final class DiskMapModel {
             }
         }
 
-        let total = await counting.value
+        // countEntries는 루트 하위만 세고, build는 루트 자신도 방문한다.
+        // 분모에 1을 더해야 둘이 같은 것을 세게 된다.
+        let total = await counting.value + 1
         ticker.cancel()
         loadPhase = .measuring(percent: measured.percent(of: total))
 
@@ -118,6 +123,11 @@ public final class DiskMapModel {
         }
         let tree = await building.value
         percentTicker.cancel()
+
+        // 집계가 끝났으면 정의상 100%다. 분모 오차로 99%에서 끝나지 않도록 확정한다.
+        // 한 틱만 보여주고 넘어간다 — 사용자가 완료를 확인할 수 있어야 한다.
+        loadPhase = .measuring(percent: 100)
+        try? await Task.sleep(for: .milliseconds(120))
 
         path = [tree]
         loadPhase = nil

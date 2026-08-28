@@ -138,9 +138,32 @@ struct DiskMapModelTests {
         #expect(counter.percent(of: 0) == 0)
 
         for _ in 0..<150 { counter.increment() }
-        // 분모보다 많이 세도 100을 넘지 않는다 (실측 0.32% 오차가 있다)
+        // 분모보다 많이 세도 100을 넘지 않는다
         #expect(counter.percent(of: 100) == 100)
         #expect(counter.percent(of: 300) == 50)
+    }
+
+    // TC-5 · TC-6 (Phase 1)
+    @Test("근소한 분모 오차가 100%를 막지 않는다")
+    func nearCompleteRoundsToHundred() {
+        let counter = ScanCounter()
+        // 실측과 같은 상황: 73,947 / 73,953 = 99.99% — 절삭하면 99%가 된다
+        for _ in 0..<73_947 { counter.increment() }
+
+        #expect(counter.percent(of: 73_953) == 100, "반올림하지 않아 99%에서 멈춘다")
+
+        // 반올림이 과하지 않은지도 확인한다
+        let half = ScanCounter()
+        for _ in 0..<50 { half.increment() }
+        #expect(half.percent(of: 100) == 50)
+
+        let low = ScanCounter()
+        for _ in 0..<1 { low.increment() }
+        #expect(low.percent(of: 100) == 1)
+        // 99.4%는 아직 99% — 0.5% 미만은 올리지 않는다
+        let notYet = ScanCounter()
+        for _ in 0..<994 { notYet.increment() }
+        #expect(notYet.percent(of: 1_000) == 99)
     }
 
     // TC-5

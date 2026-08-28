@@ -116,6 +116,80 @@ struct CountEntriesTests {
         let stopped = DiskUsageTree.countEntries(at: root, isCancelled: { true })
         #expect(stopped < full)
     }
+
+    // TC-1 — 이 버그를 놓친 이유: 기존 TC-2에는 링크가 없었다
+    @Test("심볼릭 링크가 있어도 방문 수와 세기가 맞는다")
+    func matchesWithSymlinks() throws {
+        let root = try makeSandbox()
+        let outside = try makeSandbox()
+        defer {
+            try? fm.removeItem(at: root)
+            try? fm.removeItem(at: outside)
+        }
+        try write(1024, to: outside.appending(path: "target.bin"))
+        try write(1024, to: root.appending(path: "own.bin"))
+        // 파일 링크와 디렉토리 링크를 모두 둔다
+        try fm.createSymbolicLink(at: root.appending(path: "file-link"),
+                                  withDestinationURL: outside.appending(path: "target.bin"))
+        try fm.createSymbolicLink(at: root.appending(path: "dir-link"),
+                                  withDestinationURL: outside)
+
+        let counted = DiskUsageTree.countEntries(at: root)
+        let visits = Visits()
+        _ = DiskUsageTree.build(at: root, maxDepth: 4, minimumSize: 1) { visits.increment() }
+
+        #expect(counted == 3, "own.bin + 링크 2개")
+        #expect(visits.value == counted + 1,
+                "링크 때문에 분모가 어긋난다: 세기 \(counted) vs 방문 \(visits.value)")
+    }
+
+    // TC-2
+    @Test("읽을 수 없는 디렉토리가 섞여도 방문 수와 세기가 맞는다")
+    func matchesWithUnreadableEntries() throws {
+        let root = try makeSandbox()
+        defer {
+            // 권한을 되돌려야 지울 수 있다
+            try? fm.setAttributes([.posixPermissions: 0o755],
+                                  ofItemAtPath: root.appending(path: "locked").path)
+            try? fm.removeItem(at: root)
+        }
+        try write(1024, to: root.appending(path: "open.bin"))
+        let locked = root.appending(path: "locked")
+        try fm.createDirectory(at: locked, withIntermediateDirectories: true)
+        try write(1024, to: locked.appending(path: "inside.bin"))
+        // 읽을 수 없게 만든다
+        try fm.setAttributes([.posixPermissions: 0o000], ofItemAtPath: locked.path)
+
+        let counted = DiskUsageTree.countEntries(at: root)
+        let visits = Visits()
+        _ = DiskUsageTree.build(at: root, maxDepth: 4, minimumSize: 1) { visits.increment() }
+
+        #expect(visits.value == counted + 1,
+                "읽기 실패 항목에서 분모가 어긋난다: 세기 \(counted) vs 방문 \(visits.value)")
+    }
+
+    // TC-4
+    @Test("링크는 방문으로는 세되 크기에는 넣지 않는다")
+    func symlinksCountAsVisitsButNotSize() throws {
+        let root = try makeSandbox()
+        let outside = try makeSandbox()
+        defer {
+            try? fm.removeItem(at: root)
+            try? fm.removeItem(at: outside)
+        }
+        let fat = outside.appending(path: "fat.bin")
+        try write(4 * Self.oneMB, to: fat)
+        try fm.createSymbolicLink(at: root.appending(path: "link"), withDestinationURL: fat)
+
+        let visits = Visits()
+        let tree = DiskUsageTree.build(at: root, maxDepth: 4,
+                                       minimumSize: 1) { visits.increment() }
+
+        // 루트 + 링크 = 2회 방문
+        #expect(visits.value == 2)
+        // 링크 대상 4MB는 크기에 섞이지 않는다
+        #expect(tree.size == 0, "링크 대상 용량이 합계에 들어갔다: \(tree.size)")
+    }
 }
 
 /// 방문 횟수를 세는 잠금 카운터.

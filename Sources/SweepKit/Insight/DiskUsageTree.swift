@@ -52,13 +52,17 @@ public enum DiskUsageTree {
     /// 훑으므로 같은 파일을 깊이만큼 반복해서 셌다 — 실측 30.7초가 이것 때문이었다.
     private static func node(at url: URL, depth: Int, minimumSize: Int64,
                              onEntryScanned: (@Sendable () -> Void)?) -> DiskUsageNode {
+        // 무엇이든 들여다봤으면 보고한다. `countEntries`가 링크와 읽기 실패 항목까지
+        // 세므로 여기서 빼먹으면 분모가 커져 퍼센트가 100에 닿지 못한다 —
+        // 실측에서 링크 232개 때문에 99%에서 멈췄다.
+        onEntryScanned?()
+
         guard let values = try? url.resourceValues(forKeys: keys) else {
             return DiskUsageNode(url: url, size: 0)
         }
-        // 링크는 세지 않는다. 따라가면 대상 용량이 중복 집계된다.
+        // 링크는 크기에 넣지 않는다. 따라가면 대상 용량이 중복 집계된다.
+        // 다만 **방문은 했으므로** 위에서 이미 보고했다 — 두 성질은 별개다.
         if values.isSymbolicLink == true { return DiskUsageNode(url: url, size: 0) }
-
-        onEntryScanned?()
 
         guard values.isDirectory == true else {
             return DiskUsageNode(url: url, size: allocated(values))
