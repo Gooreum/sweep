@@ -27,38 +27,52 @@ extension SafetyLevel {
     }
 }
 
-/// 정리 후보 한 줄. 체크박스 · 이름 · 설명 · 안전도 · 크기.
+/// 정리 후보 한 줄. 경고 바 · 체크박스 · (이름 + 배지) · 설명 · 크기.
 struct ItemRow: View {
     let item: CleanupItem
     @Binding var isOn: Bool
 
     var body: some View {
-        Toggle(isOn: $isOn) {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 2) {
+        HStack(spacing: 10) {
+            // 되돌릴 수 없는 항목은 훑어보다가도 걸리도록 좌측에 색 바를 둔다
+            RoundedRectangle(cornerRadius: 1.5)
+                .fill(item.safety.needsWarningBar ? item.safety.tint : .clear)
+                .frame(width: 3)
+
+            Toggle("", isOn: $isOn)
+                .toggleStyle(.checkbox)
+                .labelsHidden()
+
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
                     Text(item.displayName)
                         .lineLimit(1)
                         .truncationMode(.middle)
-                    // 설명이 없는 항목까지 빈 줄을 만들면 목록 높이가 들쭉날쭉해진다
-                    if !item.detail.isEmpty {
-                        Text(item.detail)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
+                    // 배지는 이름 옆에 둔다. 크기 옆에 두면 숫자 열 정렬을 방해한다.
+                    SafetyBadge(level: item.safety)
                 }
-
-                Spacer(minLength: 8)
-
-                SafetyBadge(level: item.safety)
-
-                Text(item.formattedSize)
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-                    .frame(width: 88, alignment: .trailing)
+                // 설명이 없는 항목까지 빈 줄을 만들면 목록 높이가 들쭉날쭉해진다
+                if !item.detail.isEmpty {
+                    Text(item.detail)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
             }
+
+            Spacer(minLength: 8)
+
+            // 우측은 크기 열만 남겨 값끼리 비교할 수 있게 한다
+            Text(item.formattedSize)
+                .monospacedDigit()
+                .foregroundStyle(isOn ? .primary : .secondary)
+                .frame(width: 88, alignment: .trailing)
         }
-        .toggleStyle(.checkbox)
+        .padding(.vertical, 2)
+        // 선택이 능동적으로 보여야 한다. 미선택 행이 비활성처럼 읽히면 안 된다.
+        .listRowBackground(isOn ? Color.accentColor.opacity(0.10) : Color.clear)
+        .contentShape(Rectangle())
+        .onTapGesture { isOn.toggle() }
         .help(item.url.path)
     }
 }

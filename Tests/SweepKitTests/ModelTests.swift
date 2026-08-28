@@ -88,4 +88,40 @@ struct ModelTests {
         #expect(items.totalSize == 3_500)
         #expect(!items.formattedTotalSize.isEmpty)
     }
+
+    // MARK: - 행 표시 (Phase 3)
+
+    // TC-3
+    @Test("경고 바는 되돌릴 수 없는 항목에만 붙는다")
+    func warningBarOnlyForDanger() {
+        #expect(!SafetyLevel.safe.needsWarningBar)
+        #expect(!SafetyLevel.caution.needsWarningBar)
+        #expect(SafetyLevel.danger.needsWarningBar)
+
+        // 전부 표시하면 아무것도 눈에 띄지 않는다
+        let flagged = SafetyLevel.allCases.filter(\.needsWarningBar)
+        #expect(flagged == [.danger])
+    }
+
+    // TC-4
+    @Test("안전도 표시명이 유지된다")
+    func safetyDisplayNamesAreStable() {
+        #expect(SafetyLevel.safe.displayName == "안전")
+        #expect(SafetyLevel.caution.displayName == "주의")
+        #expect(SafetyLevel.danger.displayName == "위험")
+        #expect(Set(SafetyLevel.allCases.map(\.displayName)).count == 3)
+    }
+
+    // TC-5
+    @Test("detail 유무로 설명 줄을 그릴지 정할 수 있다")
+    func detailEmptinessDrivesLayout() {
+        let bare = CleanupItem(url: URL(filePath: "/private/tmp/bare"),
+                               size: 1, category: .devCache, safety: .safe)
+        let described = CleanupItem(url: URL(filePath: "/private/tmp/described"),
+                                    size: 1, category: .devCache, safety: .safe,
+                                    detail: "Homebrew 내려받기 캐시")
+
+        #expect(bare.detail.isEmpty)
+        #expect(!described.detail.isEmpty)
+    }
 }

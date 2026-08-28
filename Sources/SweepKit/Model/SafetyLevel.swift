@@ -23,6 +23,10 @@ public enum SafetyLevel: String, CaseIterable, Sendable, Hashable, Comparable {
         }
     }
 
+    /// 목록에서 좌측에 경고 바를 그릴지 여부.
+    /// 되돌릴 수 없는 것만 표시한다 — 전부 표시하면 아무것도 눈에 띄지 않는다.
+    public var needsWarningBar: Bool { self == .danger }
+
     /// 위험할수록 큰 값. 목록 정렬과 비교에 쓴다.
     private var rank: Int {
         switch self {
