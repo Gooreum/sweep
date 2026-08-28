@@ -188,4 +188,58 @@ struct FileFlagsTests {
         let flags = try #require(ProtectedPaths.fileFlags(of: file))
         #expect(flags & UInt32(UF_IMMUTABLE) != 0)
     }
+
+    // MARK: - lstat 통합 (소유권 + 플래그를 한 번에)
+
+    // TC-1
+    @Test("fileInfo가 uid와 flags를 함께 돌려준다")
+    func fileInfoReturnsBoth() throws {
+        let file = try makeFile()
+        defer { try? fm.removeItem(at: file.deletingLastPathComponent()) }
+
+        let info = try #require(ProtectedPaths.fileInfo(of: file))
+
+        #expect(info.uid == getuid())
+        #expect(info.flags == 0)
+    }
+
+    // TC-2
+    @Test("존재하지 않는 경로의 fileInfo는 nil이다")
+    func fileInfoOfMissingPathIsNil() {
+        let ghost = URL(filePath: "/private/tmp/sweep-info-ghost-\(UUID().uuidString)")
+        #expect(ProtectedPaths.fileInfo(of: ghost) == nil)
+    }
+
+    // TC-3
+    @Test("uchg를 걸면 fileInfo의 flags에 반영된다")
+    func fileInfoReflectsFlags() throws {
+        let file = try makeFile()
+        defer {
+            try? chflags("nouchg", file)
+            try? fm.removeItem(at: file.deletingLastPathComponent())
+        }
+        try chflags("uchg", file)
+
+        let info = try #require(ProtectedPaths.fileInfo(of: file))
+
+        #expect(info.flags & UInt32(UF_IMMUTABLE) != 0)
+        #expect(info.uid == getuid(), "플래그를 걸어도 소유자는 그대로다")
+    }
+
+    // TC-6
+    @Test("소유권이 플래그보다 먼저 판정된다")
+    func ownershipIsCheckedBeforeFlags() throws {
+        // /private/var/folders 하위 버킷은 root 소유이면서 플래그도 걸려 있다
+        ProtectedPaths.additionalRootsForTesting = [URL(filePath: "/private/var/folders")]
+        defer { ProtectedPaths.additionalRootsForTesting = [] }
+
+        let bucket = try #require(fm.contentsOfDirectory(
+            at: URL(filePath: "/private/var/folders"),
+            includingPropertiesForKeys: nil).first)
+
+        guard case .notOwnedByCurrentUser = veto(bucket) else {
+            Issue.record("소유권보다 플래그가 먼저 판정됐다: \(String(describing: veto(bucket)))")
+            return
+        }
+    }
 }

@@ -125,22 +125,35 @@ public enum ProtectedPaths {
             }
         }
 
-        // 6. 남의 소유는 거부한다. 지울 수 없을 뿐 아니라, 지워지면 다른 프로세스가 깨진다.
-        //    경로가 없으면 소유자를 읽을 수 없어 nil이 되고 검사를 건너뛴다 —
-        //    존재 여부는 관문의 관심사가 아니고, 실제 삭제 시 자연스럽게 실패한다.
-        if let owner = ownerID(of: resolved), owner != getuid() {
-            throw RemovalVeto.notOwnedByCurrentUser(resolved)
-        }
-
-        // 7. 커널이 삭제를 거부하는 플래그가 걸려 있으면 후보로 올리지 않는다.
-        //    소유자가 나이고 부모가 쓰기 가능해도 SF_NOUNLINK·SIP면 unlink가 실패한다.
+        // 6·7단계는 lstat 한 번으로 함께 처리한다. 예전엔 소유자를 읽으려고
+        // attributesOfItem으로 속성 딕셔너리를 통째로 만들었다 — uid 하나 때문에 0.285ms.
         //
-        //    부모 디렉토리의 플래그는 보지 않는다. 임시 컨테이너의 `T` 자신이
-        //    SF_NOUNLINK를 갖지만 그 안의 항목은 자유롭게 지워지므로,
-        //    부모까지 보면 지울 수 있는 항목 수천 개가 통째로 사라진다.
-        if let flags = fileFlags(of: resolved), flags & Self.undeletableFlags != 0 {
-            throw RemovalVeto.systemProtected(resolved)
+        // 경로가 없으면 nil이 되어 두 검사를 모두 건너뛴다 —
+        // 존재 여부는 관문의 관심사가 아니고, 실제 삭제 시 자연스럽게 실패한다.
+        if let info = fileInfo(of: resolved) {
+            // 6. 남의 소유는 거부한다. 지울 수 없을 뿐 아니라, 지워지면 다른 프로세스가 깨진다.
+            guard info.uid == getuid() else {
+                throw RemovalVeto.notOwnedByCurrentUser(resolved)
+            }
+
+            // 7. 커널이 삭제를 거부하는 플래그가 걸려 있으면 후보로 올리지 않는다.
+            //    소유자가 나이고 부모가 쓰기 가능해도 SF_NOUNLINK·SIP면 unlink가 실패한다.
+            //
+            //    부모 디렉토리의 플래그는 보지 않는다. 임시 컨테이너의 `T` 자신이
+            //    SF_NOUNLINK를 갖지만 그 안의 항목은 자유롭게 지워지므로,
+            //    부모까지 보면 지울 수 있는 항목 수천 개가 통째로 사라진다.
+            guard info.flags & Self.undeletableFlags == 0 else {
+                throw RemovalVeto.systemProtected(resolved)
+            }
         }
+    }
+
+    /// 심볼릭 링크를 따라가지 않고 소유자와 파일 플래그를 **한 번의 lstat으로** 읽는다.
+    /// 읽을 수 없으면(주로 경로가 없으면) nil.
+    static func fileInfo(of url: URL) -> (uid: uid_t, flags: UInt32)? {
+        var info = stat()
+        guard lstat(url.path, &info) == 0 else { return nil }
+        return (uid: info.st_uid, flags: info.st_flags)
     }
 
     /// 삭제를 막는 BSD 파일 플래그.
@@ -152,23 +165,11 @@ public enum ProtectedPaths {
         UInt32(UF_IMMUTABLE) | 0x0000_0010 /* UF_NOUNLINK */
         | UInt32(SF_IMMUTABLE) | UInt32(SF_NOUNLINK) | UInt32(SF_RESTRICTED)
 
-    /// 심볼릭 링크를 따라가지 않고 파일 플래그를 읽는다. 읽을 수 없으면 nil.
+    /// 파일 플래그만 필요할 때 쓰는 편의 입구.
     ///
     /// `URLResourceValues`의 `isUserImmutable`/`isSystemImmutable`로는 부족하다.
     /// 실제로 삭제를 막는 `SF_NOUNLINK`를 둘 다 보지 않아 false를 돌려준다.
-    static func fileFlags(of url: URL) -> UInt32? {
-        var info = stat()
-        guard lstat(url.path, &info) == 0 else { return nil }
-        return info.st_flags
-    }
-
-    /// 소유자 uid. 읽을 수 없으면(주로 경로가 없으면) nil.
-    private static func ownerID(of url: URL) -> uid_t? {
-        guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
-              let id = attributes[.ownerAccountID] as? NSNumber
-        else { return nil }
-        return uid_t(id.uint32Value)
-    }
+    static func fileFlags(of url: URL) -> UInt32? { fileInfo(of: url)?.flags }
 
     /// 존재하지 않는 경로에도 일관된 실경로를 준다.
     ///
