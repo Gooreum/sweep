@@ -5,6 +5,7 @@ import SweepKit
 struct DiskMapView: View {
     @State private var model = DiskMapModel()
     @State private var root: URL?
+    @State private var hovered: URL?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -12,6 +13,12 @@ struct DiskMapView: View {
             Divider()
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .task {
+            // 열자마자 뭔가 보여준다. 빈 화면에서 시작하면 뭘 해야 할지 모른다.
+            guard root == nil, let first = model.availableRoots.first else { return }
+            root = first
+            await model.load(first)
         }
     }
 
@@ -24,7 +31,7 @@ struct DiskMapView: View {
                 }
             }
             .labelsHidden()
-            .frame(maxWidth: 260)
+            .frame(maxWidth: 240)
             .onChange(of: root) { _, new in
                 guard let new else { return }
                 Task { await model.load(new) }
@@ -34,6 +41,11 @@ struct DiskMapView: View {
 
             Spacer()
 
+            if let current = model.current {
+                Text(current.formattedSize)
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+            }
             if model.canGoUp {
                 Button("위로") { model.goUp() }
             }
@@ -74,31 +86,42 @@ struct DiskMapView: View {
 
     private var map: some View {
         GeometryReader { geometry in
-            let tiles = Treemap.layout(
-                model.tiles,
-                in: CGRect(origin: .zero, size: geometry.size))
-
+            let tiles = Treemap.layout(model.tiles,
+                                       in: CGRect(origin: .zero, size: geometry.size))
             ZStack(alignment: .topLeading) {
-                ForEach(tiles, id: \.node.id) { tile in
-                    tileView(tile, rank: tiles.firstIndex(of: tile) ?? 0, total: tiles.count)
+                ForEach(Array(tiles.enumerated()), id: \.element.node.id) { index, tile in
+                    tileView(tile, hue: Treemap.hue(for: index))
                 }
             }
         }
         .padding(8)
     }
 
-    private func tileView(_ tile: TreemapTile, rank: Int, total: Int) -> some View {
-        // 큰 것일수록 진하게. 순위로 색조를 나눠 면적과 색이 같은 방향을 가리키게 한다.
-        let intensity = 1.0 - Double(rank) / Double(max(total, 1)) * 0.65
+    /// 타일 하나. 라벨 아래 남는 자리에 **자식을 한 겹 더** 깐다.
+    ///
+    /// 한 층만 그리면 5.76GB짜리 타일이 화면을 다 먹고 그 안이 비어 있어
+    /// "크다"는 사실 외에 아무 정보도 주지 못한다.
+    private func tileView(_ tile: TreemapTile, hue: Double) -> some View {
+        let showsLabel = tile.rect.width > 52 && tile.rect.height > 26
+        let labelHeight: CGFloat = showsLabel ? 32 : 0
+        let inner = CGRect(x: 6, y: labelHeight + 4,
+                           width: max(tile.rect.width - 12, 0),
+                           height: max(tile.rect.height - labelHeight - 10, 0))
+        let children = Treemap.fitsChildren(inner)
+            ? Treemap.layout(tile.node.children, in: inner)
+            : []
+        let isHovered = hovered == tile.node.id
 
         return ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 3)
-                .fill(Color.accentColor.opacity(0.25 * intensity + 0.12))
-                .overlay(RoundedRectangle(cornerRadius: 3)
-                    .strokeBorder(Color.primary.opacity(0.12)))
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color(hue: hue, saturation: 0.45, brightness: 0.55)
+                    .opacity(isHovered ? 0.5 : 0.35))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .strokeBorder(Color(hue: hue, saturation: 0.5, brightness: 0.8),
+                                      lineWidth: isHovered ? 2 : 1))
 
-            // 라벨이 타일보다 크면 글자만 삐져나와 지저분해진다
-            if tile.rect.width > 60, tile.rect.height > 30 {
+            if showsLabel {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(tile.node.name)
                         .font(.caption.weight(.medium))
@@ -107,12 +130,26 @@ struct DiskMapView: View {
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
-                .padding(5)
+                .padding(6)
+            }
+
+            // 자식 층. 클릭은 부모가 받아 드릴다운으로 이어진다.
+            ForEach(children, id: \.node.id) { child in
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Color(hue: hue, saturation: 0.6, brightness: 0.9).opacity(0.30))
+                    .overlay(RoundedRectangle(cornerRadius: 2)
+                        .strokeBorder(Color.white.opacity(0.12)))
+                    .frame(width: max(child.rect.width - 1, 1),
+                           height: max(child.rect.height - 1, 1))
+                    .offset(x: child.rect.minX, y: child.rect.minY)
+                    .allowsHitTesting(false)
+                    .help("\(child.node.name) · \(child.node.formattedSize)")
             }
         }
         .frame(width: max(tile.rect.width, 1), height: max(tile.rect.height, 1))
         .offset(x: tile.rect.minX, y: tile.rect.minY)
         .contentShape(Rectangle())
+        .onHover { hovered = $0 ? tile.node.id : nil }
         .onTapGesture { model.drillDown(into: tile.node) }
         .help("\(tile.node.url.path) · \(tile.node.formattedSize)")
     }

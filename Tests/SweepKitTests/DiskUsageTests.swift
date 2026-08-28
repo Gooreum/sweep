@@ -173,4 +173,58 @@ struct TreemapTests {
             #expect(ratio < 20, "\(tile.node.name) 종횡비 \(ratio)")
         }
     }
+
+    // MARK: - 중첩 렌더링 지원 (Phase 4)
+
+    // TC-1
+    @Test("인접 인덱스의 색상이 충분히 벌어진다")
+    func adjacentHuesAreDistinct() {
+        let hues = (0..<12).map(Treemap.hue(for:))
+
+        for i in 0..<(hues.count - 1) {
+            // 색상환은 순환하므로 양방향 거리 중 가까운 쪽을 본다
+            let raw = abs(hues[i] - hues[i + 1])
+            let distance = min(raw, 1 - raw)
+            #expect(distance > 0.2,
+                    "인덱스 \(i)와 \(i+1)의 색이 너무 가깝다: \(distance)")
+        }
+    }
+
+    // TC-2
+    @Test("색상 값이 0 이상 1 미만에 머문다")
+    func huesStayInRange() {
+        for index in 0..<200 {
+            let hue = Treemap.hue(for: index)
+            #expect(hue >= 0 && hue < 1, "인덱스 \(index)에서 범위 이탈: \(hue)")
+        }
+    }
+
+    // TC-3
+    @Test("자식 타일이 부모 사각형 안에 들어간다")
+    func childTilesStayInsideParent() {
+        let children = (0..<4).map {
+            DiskUsageNode(url: URL(filePath: "/private/tmp/c\($0)"),
+                          size: Int64(400 - $0 * 80))
+        }
+        let parent = DiskUsageNode(url: URL(filePath: "/private/tmp/p"),
+                                   size: 1_000, children: children)
+        let outer = CGRect(x: 0, y: 0, width: 300, height: 200)
+        let inner = CGRect(x: 6, y: 36, width: outer.width - 12, height: outer.height - 46)
+
+        #expect(Treemap.fitsChildren(inner))
+        for tile in Treemap.layout(parent.children, in: inner) {
+            #expect(inner.contains(tile.rect.origin), "자식이 부모 밖에서 시작한다")
+            #expect(tile.rect.maxX <= inner.maxX + 0.01)
+            #expect(tile.rect.maxY <= inner.maxY + 0.01)
+        }
+    }
+
+    // TC-4
+    @Test("작은 사각형에는 자식을 그리지 않는다")
+    func tinyRectsSkipChildren() {
+        #expect(!Treemap.fitsChildren(CGRect(x: 0, y: 0, width: 39, height: 100)))
+        #expect(!Treemap.fitsChildren(CGRect(x: 0, y: 0, width: 100, height: 23)))
+        #expect(!Treemap.fitsChildren(.zero))
+        #expect(Treemap.fitsChildren(CGRect(x: 0, y: 0, width: 41, height: 25)))
+    }
 }

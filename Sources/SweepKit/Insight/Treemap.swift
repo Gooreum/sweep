@@ -15,6 +15,21 @@ public struct TreemapTile: Sendable, Hashable {
 /// 사각형을 크기에 비례해 나눠 담는 squarified 트리맵.
 public enum Treemap {
 
+    /// 인접 타일이 구분되도록 색상환을 황금각으로 돈다.
+    ///
+    /// 순서대로 조금씩 돌리면 이웃한 타일이 비슷한 색이 되어 경계가 안 보인다.
+    /// 0.618…씩 건너뛰면 몇 개를 그리든 서로 충분히 멀어진다.
+    public static func hue(for index: Int) -> Double {
+        (Double(index) * 0.618_033_988_749_895).truncatingRemainder(dividingBy: 1)
+    }
+
+    /// 부모 타일 안에 자식을 그릴 만한 자리가 있는지.
+    /// 너무 작으면 그려봐야 보이지 않고 계산만 든다.
+    public static func fitsChildren(_ rect: CGRect) -> Bool {
+        rect.width > 40 && rect.height > 24
+    }
+
+
     /// 노드들을 `bounds` 안에 크기 비례로 배치한다.
     ///
     /// 단순 slice-and-dice(한 방향으로만 자르기)를 쓰지 않는 이유는
