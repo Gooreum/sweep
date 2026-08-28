@@ -87,7 +87,81 @@ struct DiskUsageTreeTests {
         #expect(node.formattedSize.contains("GB"))
         #expect(!node.formattedSize.contains("5000000000"))
     }
+
+    // MARK: - 단일 순회 재작성 (Phase 1)
+
+    // TC-4
+    @Test("깊이 제한을 넘는 파일도 부모 크기에 반영된다")
+    func deepFilesStillCountTowardParentSize() throws {
+        let root = try makeSandbox()
+        defer { try? fm.removeItem(at: root) }
+        try write(4, to: root.appending(path: "a/b/c/deep.bin"))
+
+        let tree = DiskUsageTree.build(at: root, maxDepth: 1,
+                                       minimumSize: Int64(Self.oneMB))
+
+        // children은 한 겹만 있지만 크기는 3단계 아래 파일까지 합산돼야 한다
+        #expect(tree.children.count == 1)
+        #expect(tree.children.first?.children.isEmpty == true)
+        #expect(tree.size >= Int64(4 * Self.oneMB))
+    }
+
+    // TC-5
+    @Test("항목을 정확히 한 번씩만 본다")
+    func everyEntryIsVisitedOnce() throws {
+        let root = try makeSandbox()
+        defer { try? fm.removeItem(at: root) }
+        // 디렉토리 3개 + 파일 3개 = 6개 (루트 자신 포함하면 7개)
+        try write(2, to: root.appending(path: "a/x.bin"))
+        try write(2, to: root.appending(path: "b/y.bin"))
+        try write(2, to: root.appending(path: "c/z.bin"))
+
+        let counter = VisitCounter()
+        _ = DiskUsageTree.build(at: root, maxDepth: 4,
+                                minimumSize: Int64(Self.oneMB)) { counter.increment() }
+
+        // 루트 1 + 디렉토리 3 + 파일 3
+        #expect(counter.value == 7, "방문 횟수가 항목 수와 다르다: \(counter.value)")
+    }
+
+    // TC-6
+    @Test("심볼릭 링크 대상 용량이 합계에 섞이지 않는다")
+    func symlinkTargetsAreNotCounted() throws {
+        let root = try makeSandbox()
+        let outside = try makeSandbox()
+        defer {
+            try? fm.removeItem(at: root)
+            try? fm.removeItem(at: outside)
+        }
+        try write(2, to: root.appending(path: "real.bin"))
+        let fat = outside.appending(path: "fat.bin")
+        try write(8, to: fat)
+        try fm.createSymbolicLink(at: root.appending(path: "link.bin"), withDestinationURL: fat)
+
+        let tree = DiskUsageTree.build(at: root, minimumSize: 1)
+
+        #expect(tree.size >= Int64(2 * Self.oneMB))
+        #expect(tree.size < Int64(3 * Self.oneMB), "링크를 따라가 8MB가 섞였다")
+    }
 }
+
+/// 방문 횟수를 세는 잠금 카운터. 재귀가 여러 스레드를 쓰지는 않지만
+/// 콜백이 `@Sendable`이라 참조 타입이 필요하다.
+private final class VisitCounter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+
+    func increment() {
+        lock.lock(); defer { lock.unlock() }
+        count += 1
+    }
+
+    var value: Int {
+        lock.lock(); defer { lock.unlock() }
+        return count
+    }
+}
+
 
 @Suite("Treemap")
 struct TreemapTests {
