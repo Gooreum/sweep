@@ -27,10 +27,14 @@ public enum DirectorySize {
         var total: Int64 = 0
         for case let child as URL in walker {
             guard let v = try? child.resourceValues(forKeys: keys) else { continue }
-            if v.isSymbolicLink == true {
-                walker.skipDescendants()
-                continue
-            }
+            // 링크는 세지 않고 넘어가기만 한다. 열거자는 심볼릭 링크를 따라 내려가지
+            // 않으므로 그것으로 충분하다.
+            //
+            // 여기서 skipDescendants()를 부르면 안 된다. 그 호출은 "가장 최근에 얻은
+            // 디렉토리"의 하위를 건너뛰는데, 링크는 디렉토리가 아니라서 대신 **부모의
+            // 나머지 하위가 통째로 잘려나간다.** 실측에서 261MB짜리 캐시가 3MB로
+            // 집계되는 원인이었다.
+            if v.isSymbolicLink == true { continue }
             if v.isDirectory != true { total += allocated(v) }
         }
         return total

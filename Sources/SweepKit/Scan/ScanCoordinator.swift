@@ -12,6 +12,7 @@ public struct ScanCoordinator: Sendable {
             RunawayTempScanner(),
             XcodeScanner(),
             DevCacheScanner(),
+            StaleCacheScanner(),
             DuplicateScanner(),
         ])
     }

@@ -106,7 +106,34 @@ struct DirectorySizeTests {
         #expect(total >= Int64(3 * Self.oneMB))
         #expect(total < Int64(4 * Self.oneMB))
     }
+
+    // 회귀 방지: 링크가 큰 파일보다 먼저 열거되면 그 뒤가 통째로 잘렸었다
+    @Test("심볼릭 링크가 먼저 나와도 뒤따르는 파일이 집계된다")
+    func symlinkDoesNotTruncateEnumeration() throws {
+        let fm = FileManager.default
+        let dir = try makeSandbox()
+        let outside = try makeSandbox()
+        defer {
+            try? fm.removeItem(at: dir)
+            try? fm.removeItem(at: outside)
+        }
+
+        // 이름순으로 링크가 먼저 열거되도록 a/b로 짓는다
+        try write(Self.oneMB, to: outside.appending(path: "target.bin"))
+        try fm.createSymbolicLink(at: dir.appending(path: "a-link"),
+                                  withDestinationURL: outside.appending(path: "target.bin"))
+
+        let deep = dir.appending(path: "b-tree/nested")
+        try fm.createDirectory(at: deep, withIntermediateDirectories: true)
+        try write(3 * Self.oneMB, to: deep.appending(path: "big.bin"))
+
+        // 링크 뒤의 3MB가 살아 있어야 한다
+        let total = DirectorySize.bytes(at: dir)
+        #expect(total >= Int64(3 * Self.oneMB), "링크 이후 항목이 잘렸다: \(total)바이트")
+        #expect(total < Int64(4 * Self.oneMB), "링크 대상까지 따라갔다")
+    }
 }
+
 
 /// `CleanupScanner` 프로토콜 자체의 계약을 확인하는 더미 구현.
 private struct StubScanner: CleanupScanner {
