@@ -189,6 +189,10 @@ struct ScanModelTests {
 
         #expect(model.items.map(\.displayName) == ["남길것"])
         #expect(model.report?.succeeded.count == 1)
+        // 정리 직후에는 완료 화면이다. 목록은 사용자가 닫은 뒤에 다시 보인다.
+        #expect(model.phase == .cleaned)
+
+        model.dismissReport()
         #expect(model.phase == .results)        // 다시 조작 가능한 상태로 복귀
     }
 
@@ -426,5 +430,70 @@ struct ScanModelTests {
         #expect(reasons.joined(separator: "\n").contains("\n"))
         // 실패분은 회수량에 섞이지 않는다
         #expect(mixed.reclaimedBytes == 1_000)
+    }
+
+    // MARK: - 정리 완료 단계 (Phase 1 / Step 1)
+
+    // TC-7
+    @Test("정리가 끝나면 완료 단계로 간다")
+    func removalEndsInCleanedPhase() async {
+        let model = ScanModel(scan: stream([[item("a"), item("b")]]),
+                              removeOne: alwaysSucceeds())
+        await model.scan()
+        #expect(model.phase == .results)
+
+        await model.removeSelected()
+
+        // 결과 목록으로 바로 돌아가면 "얼마를 비웠는지" 볼 틈이 없다
+        #expect(model.phase == .cleaned)
+        #expect(model.report != nil)
+        #expect(model.report?.succeeded.count == 2)
+    }
+
+    // TC-8
+    @Test("전부 지워 목록이 비면 완료 화면을 닫을 때 시작 화면으로 간다")
+    func dismissWithNothingLeftGoesIdle() async {
+        let model = ScanModel(scan: stream([[item("a")]]),
+                              removeOne: alwaysSucceeds())
+        await model.scan()
+        await model.removeSelected()
+        #expect(model.items.isEmpty)
+
+        model.dismissReport()
+
+        // 빈 목록을 띄우면 "정리할 것이 없다"만 보여주는 죽은 화면이 된다
+        #expect(model.phase == .idle)
+    }
+
+    // TC-9
+    @Test("항목이 남아 있으면 완료 화면을 닫을 때 결과 목록으로 간다")
+    func dismissWithRemainingGoesResults() async {
+        let model = ScanModel(scan: stream([[item("safe", safety: .safe),
+                                             item("danger", safety: .danger)]]),
+                              removeOne: alwaysSucceeds())
+        await model.scan()
+        // danger는 기본 선택에서 빠지므로 safe만 지워지고 하나가 남는다
+        await model.removeSelected()
+        #expect(model.items.map(\.displayName) == ["danger"])
+
+        model.dismissReport()
+
+        #expect(model.phase == .results)
+    }
+
+    // TC-10
+    @Test("선택이 없으면 정리를 눌러도 완료 단계로 가지 않는다")
+    func removalWithoutSelectionIsNoOp() async {
+        let model = ScanModel(scan: stream([[item("a", safety: .danger)]]),
+                              removeOne: alwaysSucceeds())
+        await model.scan()
+        // danger만 있으므로 기본 선택이 비어 있다
+        #expect(model.selection.isEmpty)
+
+        await model.removeSelected()
+
+        #expect(model.phase == .results)
+        #expect(model.report == nil)
+        #expect(model.items.count == 1)
     }
 }

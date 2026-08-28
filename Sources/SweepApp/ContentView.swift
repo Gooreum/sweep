@@ -67,7 +67,8 @@ struct ContentView: View {
                 Text("삭제 중 \(done)/\(total)").foregroundStyle(.secondary)
             }
 
-        case .results:
+        // Phase 2에서 FeatureScreen이 완료 화면을 맡는다. 그때까지는 결과 목록과 같게 둔다.
+        case .results, .cleaned:
             if model.items.isEmpty {
                 placeholder(
                     icon: "checkmark.circle",
@@ -198,7 +199,7 @@ struct ContentView: View {
     private var isBusy: Bool {
         switch model.phase {
         case .scanning, .removing: true
-        case .idle, .results: false
+        case .idle, .results, .cleaned: false
         }
     }
 

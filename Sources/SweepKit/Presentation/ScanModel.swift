@@ -25,6 +25,8 @@ public final class ScanModel {
         case scanning(percent: Int, remainingSeconds: Int?)
         case results
         case removing(done: Int, total: Int)
+        /// 정리가 끝난 직후. 목록이 아니라 "얼마를 비웠다"만 보여준다.
+        case cleaned
     }
 
     public private(set) var phase: Phase = .idle
@@ -46,6 +48,11 @@ public final class ScanModel {
     ) {
         self.scanStream = scan
         self.performRemove = removeOne
+    }
+
+    /// 기능 하나에 묶인 모델. 그 기능의 스캐너만 돌린다.
+    public convenience init(feature: Feature) {
+        self.init(scan: { feature.coordinator.stream() })
     }
 
     // MARK: - 파생 상태
@@ -165,6 +172,13 @@ public final class ScanModel {
         selection.subtract(removed)
 
         report = result
-        phase = .results
+        phase = .cleaned
+    }
+
+    /// 완료 화면을 닫는다.
+    ///
+    /// 남은 항목이 없으면 결과 목록을 띄울 이유가 없어 시작 화면으로 돌아간다.
+    public func dismissReport() {
+        phase = items.isEmpty ? .idle : .results
     }
 }
