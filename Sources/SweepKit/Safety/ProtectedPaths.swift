@@ -76,10 +76,6 @@ public enum ProtectedPaths {
         inHome("Library/Developer/Xcode/UserData/Capabilities"),
     ]
 
-    /// 테스트에서 임시 디렉토리를 허용 루트로 추가하기 위한 훅.
-    /// 프로덕션 코드에서는 건드리지 않는다.
-    nonisolated(unsafe) static var additionalRootsForTesting: [URL] = []
-
     /// 삭제해도 되는 경로인지 검사한다. 통과하지 못하면 던진다.
     public static func validate(_ url: URL) throws {
         let requested = url.standardizedFileURL
@@ -221,19 +217,9 @@ public enum ProtectedPaths {
     private static let cachedHome: URL = canonical(
         FileManager.default.homeDirectoryForCurrentUser)
 
-    private static func resolvedRoots() -> [URL] {
-        // 테스트 훅은 실행 중에 바뀌므로 캐시하지 않는다. 보통은 비어 있어 비용이 없다.
-        additionalRootsForTesting.isEmpty
-            ? cachedRoots
-            : cachedRoots + additionalRootsForTesting.map(canonical)
-    }
+    private static func resolvedRoots() -> [URL] { cachedRoots }
 
-    private static func rootComponents() -> [[String]] {
-        additionalRootsForTesting.isEmpty
-            ? cachedRootComponents
-            : cachedRootComponents
-                + additionalRootsForTesting.map { canonical($0).standardizedFileURL.pathComponents }
-    }
+    private static func rootComponents() -> [[String]] { cachedRootComponents }
 
     /// 경로 구성요소 단위 하위 판정. URL을 다시 정규화하지 않아 값싸다.
     private static func isDescendant(_ path: [String], of ancestor: [String]) -> Bool {

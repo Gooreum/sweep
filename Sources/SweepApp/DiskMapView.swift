@@ -15,9 +15,11 @@ struct DiskMapView: View {
         }
         .task {
             // 열자마자 뭔가 보여준다. 빈 화면에서 시작하면 뭘 해야 할지 모른다.
-            guard root == nil, let first = model.availableRoots.first else { return }
-            root = first
-            await model.load(first)
+            //
+            // 여기서는 대입만 한다. 실제 로드는 `.onChange`가 맡는다 —
+            // 두 곳에서 부르면 10초짜리 순회가 두 번 돈다.
+            guard root == nil else { return }
+            root = model.availableRoots.first
         }
     }
 

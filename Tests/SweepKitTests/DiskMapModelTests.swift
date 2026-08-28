@@ -192,6 +192,36 @@ struct DiskMapModelTests {
         #expect(model.loadPhase == nil)
         #expect(model.current?.name == "root")
     }
+
+    // TC-3
+    @Test("같은 루트로 두 번 로드해도 안전하다")
+    func repeatedLoadIsSafe() async {
+        let model = fakeModel()
+        let root = URL(filePath: "/private/tmp/root")
+
+        await model.load(root)
+        #expect(model.path.count == 1)
+
+        await model.load(root)
+
+        #expect(model.path.count == 1, "경로가 쌓였다")
+        #expect(model.loadPhase == nil)
+    }
+
+    // TC-4
+    @Test("다른 루트를 로드하면 경로가 통째로 갈아끼워진다")
+    func loadingAnotherRootReplacesPath() async {
+        let model = fakeModel()
+        await model.load(URL(filePath: "/private/tmp/root"))
+        model.drillDown(into: model.tiles.first { $0.name == "big" }!)
+        #expect(model.path.count == 2)
+
+        // 새 루트를 로드하면 드릴다운 경로가 남으면 안 된다
+        await model.load(URL(filePath: "/private/tmp/other"))
+
+        #expect(model.path.count == 1)
+        #expect(!model.canGoUp)
+    }
 }
 
 /// 가짜 세기 패스를 원하는 시점까지 붙잡아 두는 문.
