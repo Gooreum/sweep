@@ -8,7 +8,7 @@ struct SafetyBadge: View {
 
     var body: some View {
         Text(level.displayName)
-            .font(.caption2.weight(.semibold))
+            .font(.system(size: 10, weight: .semibold))
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(level.tint.opacity(0.18), in: Capsule())
@@ -46,6 +46,7 @@ struct ItemRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(item.displayName)
+                        .font(Theme.bodyText)
                         .lineLimit(1)
                         .truncationMode(.middle)
                     // 배지는 이름 옆에 둔다. 크기 옆에 두면 숫자 열 정렬을 방해한다.
@@ -54,7 +55,7 @@ struct ItemRow: View {
                 // 설명이 없는 항목까지 빈 줄을 만들면 목록 높이가 들쭉날쭉해진다
                 if !item.detail.isEmpty {
                     Text(item.detail)
-                        .font(.caption)
+                        .font(Theme.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -64,13 +65,14 @@ struct ItemRow: View {
 
             // 우측은 크기 열만 남겨 값끼리 비교할 수 있게 한다
             Text(item.formattedSize)
-                .monospacedDigit()
+                .font(Theme.bodyText.monospacedDigit())
                 .foregroundStyle(isOn ? .primary : .secondary)
                 .frame(width: 88, alignment: .trailing)
         }
         .padding(.vertical, 2)
-        // 선택이 능동적으로 보여야 한다. 미선택 행이 비활성처럼 읽히면 안 된다.
-        .listRowBackground(isOn ? Color.accentColor.opacity(0.10) : Color.clear)
+        // #D7E6F6. 선택이 능동적으로 보여야 한다 —
+        // 미선택 행이 비활성처럼 읽히면 뭘 지우는지 헷갈린다.
+        .listRowBackground(isOn ? Theme.selectionTint.opacity(0.55) : Color.clear)
         .contentShape(Rectangle())
         .onTapGesture { isOn.toggle() }
         .help(item.url.path)

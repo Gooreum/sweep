@@ -496,4 +496,18 @@ struct ScanModelTests {
         #expect(model.report == nil)
         #expect(model.items.count == 1)
     }
+
+    // TC-7 (Phase 3 / Step 2) — 하단 바의 "정리" 버튼 활성 조건
+    @Test("되돌릴 수 없는 항목만 있으면 정리 버튼이 잠긴다")
+    func dangerOnlyLeavesNothingSelected() async {
+        let model = ScanModel(scan: stream([[item("보관함", safety: .danger),
+                                             item("아카이브", safety: .danger)]]))
+        await model.scan()
+
+        // 기본 선택은 safe만 담는다. danger뿐이면 고를 것이 없다.
+        #expect(model.selection.isEmpty)
+        #expect(model.hasSelection == false)
+        // 하단 바는 "총계"를 보여주므로 찾은 양 자체는 0이 아니다
+        #expect(!model.items.isEmpty)
+    }
 }

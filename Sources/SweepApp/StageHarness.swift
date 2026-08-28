@@ -78,6 +78,16 @@ struct StageHarness: View {
             await created.scan()
             await created.removeSelected()
 
+        case "danger-only":
+            // 되돌릴 수 없는 항목만 있으면 기본 선택이 비어 정리 버튼이 잠긴다
+            let onlyDanger = [
+                CleanupItem(url: URL(filePath: "/private/tmp/보관함"), size: 234_881_024,
+                            category: .xcode, safety: .danger, detail: "다시 만들 수 없음"),
+            ]
+            let created = ScanModel(scan: { Self.finishing(onlyDanger) })
+            model = created
+            await created.scan()
+
         case "empty":
             let created = ScanModel(scan: { Self.finishing([]) })
             model = created
