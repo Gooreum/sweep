@@ -2,14 +2,37 @@ import SwiftUI
 import SweepKit
 
 struct ContentView: View {
+    /// 정리와 디스크 맵은 성격이 다르다. 맵은 읽기 전용이라 삭제 바를 숨긴다.
+    private enum Tab: String, CaseIterable, Identifiable {
+        case cleanup = "정리"
+        case diskMap = "디스크 맵"
+        var id: Self { self }
+    }
+
     @State private var model = ScanModel()
+    @State private var tab: Tab = .cleanup
 
     var body: some View {
         VStack(spacing: 0) {
-            content
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            Picker("", selection: $tab) {
+                ForEach(Tab.allCases) { Text($0.rawValue).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(maxWidth: 260)
+            .padding(.vertical, 8)
+
             Divider()
-            footer
+
+            switch tab {
+            case .cleanup:
+                content
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                Divider()
+                footer
+            case .diskMap:
+                DiskMapView()
+            }
         }
     }
 
