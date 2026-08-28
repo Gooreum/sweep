@@ -258,4 +258,123 @@ struct ScanModelTests {
         #expect(model.phase == .results)
         #expect(model.items.isEmpty)
     }
+
+    // MARK: - 총계 · 선택 프리셋 · 섹션 토글
+
+    /// safe 2 / caution 2 / danger 1이 두 카테고리에 나뉘어 담긴 모델.
+    private func mixedModel() async -> ScanModel {
+        let found = [
+            item("safe-a", size: 100, category: .devCache, safety: .safe),
+            item("safe-b", size: 200, category: .devCache, safety: .safe),
+            item("caution-a", size: 400, category: .xcode, safety: .caution),
+            item("caution-b", size: 800, category: .xcode, safety: .caution),
+            item("danger-a", size: 1_600, category: .xcode, safety: .danger),
+        ]
+        let model = ScanModel(scan: stream([found]), removeOne: alwaysSucceeds())
+        await model.scan()
+        return model
+    }
+
+    // TC-1
+    @Test("전체 회수 가능량이 선택과 무관하게 계산된다")
+    func totalSizeIsIndependentOfSelection() async {
+        let model = await mixedModel()
+
+        // 자동 선택은 safe 2개(300B)뿐이지만 총계는 3,100B다
+        #expect(model.selection.count == 2)
+        #expect(model.items.totalSize == 3_100)
+        #expect(!model.formattedTotalSize.isEmpty)
+        #expect(model.formattedTotalSize != model.formattedSelectedSize)
+    }
+
+    // TC-2
+    @Test("안전만 프리셋은 safe만 고른다")
+    func safeOnlyPreset() async {
+        let model = await mixedModel()
+        model.apply(.all)
+
+        model.apply(.safeOnly)
+
+        #expect(model.selectedItems.allSatisfy { $0.safety == .safe })
+        #expect(model.selectedItems.count == 2)
+    }
+
+    // TC-3
+    @Test("권장 프리셋은 danger만 뺀다")
+    func recommendedPresetExcludesDangerOnly() async {
+        let model = await mixedModel()
+
+        model.apply(.recommended)
+
+        #expect(model.selectedItems.count == 4)
+        #expect(!model.selectedItems.contains { $0.safety == .danger })
+        #expect(model.selectedItems.contains { $0.safety == .caution })
+        // 되돌릴 수 없는 것만 빠졌으므로 회수량이 크게 늘어야 한다
+        #expect(model.selectedItems.totalSize == 1_500)
+    }
+
+    // TC-4
+    @Test("전체·해제 프리셋이 양 극단을 만든다")
+    func allAndNonePresets() async {
+        let model = await mixedModel()
+
+        model.apply(.all)
+        #expect(model.selection.count == 5)
+        #expect(model.selectedItems.totalSize == 3_100)
+
+        model.apply(.none)
+        #expect(model.selection.isEmpty)
+        #expect(!model.hasSelection)
+    }
+
+    // TC-5 · TC-6 · TC-7
+    @Test("섹션 선택 상태가 세 가지로 판정된다")
+    func sectionSelectionStates() async {
+        let model = await mixedModel()
+        let xcode = model.groups.first { $0.category == .xcode }!
+
+        model.apply(.none)
+        #expect(model.selectionState(of: xcode) == .none)
+
+        model.setSelection(true, for: xcode.items[0])
+        #expect(model.selectionState(of: xcode) == .partial)
+
+        model.apply(.all)
+        #expect(model.selectionState(of: xcode) == .all)
+    }
+
+    // TC-8 · TC-9
+    @Test("섹션 토글이 부분 선택을 올리고 전체 선택을 내린다")
+    func toggleAllRoundTrips() async {
+        let model = await mixedModel()
+        let xcode = model.groups.first { $0.category == .xcode }!
+
+        model.apply(.none)
+        model.setSelection(true, for: xcode.items[0])
+        #expect(model.selectionState(of: xcode) == .partial)
+
+        model.toggleAll(in: xcode)              // 부분 → 전체
+        #expect(model.selectionState(of: xcode) == .all)
+
+        model.toggleAll(in: xcode)              // 전체 → 해제
+        #expect(model.selectionState(of: xcode) == .none)
+    }
+
+    // TC-10
+    @Test("섹션 토글이 다른 카테고리 선택을 건드리지 않는다")
+    func toggleAllLeavesOtherSectionsAlone() async {
+        let model = await mixedModel()
+        let devCache = model.groups.first { $0.category == .devCache }!
+        let xcode = model.groups.first { $0.category == .xcode }!
+
+        model.apply(.none)
+        model.toggleAll(in: devCache)
+        #expect(model.selectionState(of: devCache) == .all)
+
+        model.toggleAll(in: xcode)
+        #expect(model.selectionState(of: devCache) == .all, "다른 섹션이 함께 바뀌었다")
+
+        model.toggleAll(in: xcode)
+        #expect(model.selectionState(of: devCache) == .all)
+    }
 }

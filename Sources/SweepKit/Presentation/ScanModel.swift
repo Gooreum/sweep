@@ -54,6 +54,49 @@ public final class ScanModel {
     public var formattedSelectedSize: String { selectedItems.formattedTotalSize }
     public var hasSelection: Bool { !selection.isEmpty }
 
+    /// 찾아낸 전체 용량. 이게 안 보이면 사용자는 자기가 뭘 얻을 수 있는지 모른 채
+    /// 선택량만 보게 된다 — 6.9GB를 찾아놓고 111KB만 보이는 일이 생긴다.
+    public var formattedTotalSize: String { items.formattedTotalSize }
+
+    /// 한 번에 고르는 방법. 안전도 기준이라 결과를 예측할 수 있다.
+    public enum SelectionPreset: String, CaseIterable, Sendable {
+        case safeOnly = "안전만"
+        /// 되돌릴 수 없는 것(danger)만 뺀다. 실질적인 기본 추천.
+        case recommended = "권장"
+        case all = "전체"
+        case none = "해제"
+    }
+
+    public func apply(_ preset: SelectionPreset) {
+        let chosen: [CleanupItem]
+        switch preset {
+        case .safeOnly: chosen = items.filter { $0.safety == .safe }
+        case .recommended: chosen = items.filter { $0.safety != .danger }
+        case .all: chosen = items
+        case .none: chosen = []
+        }
+        selection = Set(chosen.map(\.url))
+    }
+
+    /// 섹션 헤더 체크박스가 그릴 세 가지 상태.
+    public enum SectionSelection: Sendable { case none, partial, all }
+
+    public func selectionState(of group: ScanGroup) -> SectionSelection {
+        let picked = group.items.filter { selection.contains($0.url) }.count
+        if picked == 0 { return .none }
+        return picked == group.items.count ? .all : .partial
+    }
+
+    /// 부분 선택이면 전체 선택으로 올린다. 이미 전체면 해제한다.
+    public func toggleAll(in group: ScanGroup) {
+        let urls = group.items.map(\.url)
+        if selectionState(of: group) == .all {
+            selection.subtract(urls)
+        } else {
+            selection.formUnion(urls)
+        }
+    }
+
     /// 카테고리별 섹션. 위험한 카테고리가 위로 온다.
     public var groups: [ScanGroup] {
         Dictionary(grouping: items, by: \.category)
