@@ -85,28 +85,32 @@ public enum ProtectedPaths {
         let requested = url.standardizedFileURL
         let resolved = canonical(requested)
 
-        let home = canonical(FileManager.default.homeDirectoryForCurrentUser)
+        let home = cachedHome
 
         // 1. 루트·홈 자체는 무조건 거부
         guard resolved.path != "/", resolved != home else {
             throw RemovalVeto.rootOrHome(resolved)
         }
 
-        let roots = resolvedRoots()
+        // 구성요소는 한 번만 쪼갠다. 아래에서 12번 넘게 비교하기 때문이다.
+        let resolvedComponents = resolved.standardizedFileURL.pathComponents
+        let roots = rootComponents()
 
         // 2. 허용 루트 자체를 통째로 지우는 것도 거부 (하위만 허용)
-        if roots.contains(resolved) {
+        if roots.contains(resolvedComponents) {
             throw RemovalVeto.allowedRootItself(resolved)
         }
 
         // 3. deny-list 우선 — 허용 루트 안이어도 막는다
-        if resolvedDenyList().contains(where: { resolved.isSameOrDescendant(of: $0) }) {
+        if cachedDenyComponents.contains(where: {
+            resolvedComponents == $0 || Self.isDescendant(resolvedComponents, of: $0)
+        }) {
             throw RemovalVeto.protectedPath(resolved)
         }
 
         // 4. 실경로가 허용 루트 하위여야 한다.
         //    허용 루트 안의 심볼릭 링크가 바깥을 가리키면 여기서 걸린다.
-        guard roots.contains(where: { resolved.isDescendant(of: $0) }) else {
+        guard roots.contains(where: { Self.isDescendant(resolvedComponents, of: $0) }) else {
             throw RemovalVeto.outsideAllowedRoots(resolved)
         }
 
@@ -114,9 +118,11 @@ public enum ProtectedPaths {
         //    마지막 구성요소는 그것 자체가 링크일 수 있으므로 풀지 않고, 그 위치만 따진다.
         let requestedLocation = canonical(requested.deletingLastPathComponent())
             .appending(path: requested.lastPathComponent)
-        if resolved != requestedLocation,
-           !roots.contains(where: { requestedLocation.isDescendant(of: $0) }) {
-            throw RemovalVeto.symlinkEscape(requested)
+        if resolved != requestedLocation {
+            let locationComponents = requestedLocation.standardizedFileURL.pathComponents
+            guard roots.contains(where: { Self.isDescendant(locationComponents, of: $0) }) else {
+                throw RemovalVeto.symlinkEscape(requested)
+            }
         }
 
         // 6. 남의 소유는 거부한다. 지울 수 없을 뿐 아니라, 지워지면 다른 프로세스가 깨진다.
@@ -196,12 +202,41 @@ public enum ProtectedPaths {
     }
 
     // 심볼릭 링크가 섞인 실제 경로(예: /tmp → /private/tmp)로 정규화해 둔다.
+    //
+    // 한 번만 계산해 캐시한다. `allowedRoots`·`denyList`는 `let` 상수인데도
+    // 예전엔 `validate()` 호출마다 다시 정규화했다 — 실측 0.657ms + 0.47ms이고
+    // 후보 5389개를 거르면 그것만으로 6초가 넘었다.
+    private static let cachedRoots: [URL] = allowedRoots.map(canonical)
+    private static let cachedDenyList: [URL] = denyList.map(canonical)
+
+    // 경로 구성요소까지 미리 쪼개 둔다.
+    // `isDescendant`는 호출마다 `standardizedFileURL.pathComponents`를 다시 만드는데,
+    // 루트 7개 + denyList 5개를 훑느라 validate 한 번에 12번 반복됐다 — 실측 2.9ms.
+    private static let cachedRootComponents: [[String]] =
+        cachedRoots.map { $0.standardizedFileURL.pathComponents }
+    private static let cachedDenyComponents: [[String]] =
+        cachedDenyList.map { $0.standardizedFileURL.pathComponents }
+    /// 홈은 프로세스 수명 동안 바뀌지 않는다.
+    private static let cachedHome: URL = canonical(
+        FileManager.default.homeDirectoryForCurrentUser)
+
     private static func resolvedRoots() -> [URL] {
-        (allowedRoots + additionalRootsForTesting).map(canonical)
+        // 테스트 훅은 실행 중에 바뀌므로 캐시하지 않는다. 보통은 비어 있어 비용이 없다.
+        additionalRootsForTesting.isEmpty
+            ? cachedRoots
+            : cachedRoots + additionalRootsForTesting.map(canonical)
     }
 
-    private static func resolvedDenyList() -> [URL] {
-        denyList.map(canonical)
+    private static func rootComponents() -> [[String]] {
+        additionalRootsForTesting.isEmpty
+            ? cachedRootComponents
+            : cachedRootComponents
+                + additionalRootsForTesting.map { canonical($0).standardizedFileURL.pathComponents }
+    }
+
+    /// 경로 구성요소 단위 하위 판정. URL을 다시 정규화하지 않아 값싸다.
+    private static func isDescendant(_ path: [String], of ancestor: [String]) -> Bool {
+        path.count > ancestor.count && Array(path.prefix(ancestor.count)) == ancestor
     }
 }
 
