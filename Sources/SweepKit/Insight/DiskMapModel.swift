@@ -15,8 +15,14 @@ public final class DiskMapModel {
     private let buildTree: @Sendable (URL) -> DiskUsageNode
 
     /// 트리 생성을 주입할 수 있게 열어 둔다 — 실제 스캔은 느려서 테스트에 쓸 수 없다.
+    /// 기본값이 `DiskUsageTree`보다 잘게 나눈다(깊이 4 / 하한 1MB).
+    ///
+    /// 10MB 하한에서는 `Developer > Xcode`에 타일이 2개까지 줄었다.
+    /// 중첩 렌더링이 층을 흡수하므로 더 잘게 나눠도 화면이 감당하고,
+    /// 깊이를 4로 올려야 자식 타일이 그릴 손자 층이 실제로 존재한다.
     public init(buildTree: @escaping @Sendable (URL) -> DiskUsageNode
-                    = { DiskUsageTree.build(at: $0) }) {
+                    = { DiskUsageTree.build(at: $0, maxDepth: 4,
+                                            minimumSize: 1024 * 1024) }) {
         self.buildTree = buildTree
     }
 
