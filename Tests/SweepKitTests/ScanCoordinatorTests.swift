@@ -195,4 +195,122 @@ struct ScanCoordinatorTests {
         #expect(items.map(\.displayName) == ["temp", "large", "small"])
         #expect(items.count == 3)
     }
+
+    // MARK: - 증분 스트림
+
+    private func collect(_ coordinator: ScanCoordinator) async -> [ScanCoordinator.Progress] {
+        var got: [ScanCoordinator.Progress] = []
+        for await progress in coordinator.stream() { got.append(progress) }
+        return got
+    }
+
+    // TC-1 · TC-7
+    @Test("스캐너 수만큼 중간 결과가 흘러나온다")
+    func streamYieldsOncePerScanner() async {
+        let coordinator = ScanCoordinator(scanners: [
+            FakeScanner(category: .devCache, items: [allowed("a")]),
+            FakeScanner(category: .devCache, items: [allowed("b")]),
+            FakeScanner(category: .devCache, items: [allowed("c")]),
+        ])
+
+        let progresses = await collect(coordinator)
+
+        #expect(progresses.count == 3)
+        #expect(progresses.map(\.finishedScanners) == [1, 2, 3])
+        #expect(progresses.allSatisfy { $0.totalScanners == 3 })
+        // 결과는 단조 증가한다
+        #expect(progresses.map(\.items.count) == [1, 2, 3])
+    }
+
+    // TC-2
+    @Test("마지막 중간 결과가 scan() 결과와 같다")
+    func finalProgressMatchesScan() async {
+        let coordinator = ScanCoordinator(scanners: [
+            FakeScanner(category: .runawayTemp, items: [allowed("t", size: 50, category: .runawayTemp)]),
+            FakeScanner(category: .devCache, items: [allowed("big", size: 9_000), allowed("small", size: 10)]),
+        ])
+
+        let progresses = await collect(coordinator)
+        let scanned = await coordinator.scan()
+
+        #expect(progresses.last?.items == scanned)
+    }
+
+    // TC-3
+    @Test("중간 결과에도 허용 루트 필터가 걸린다")
+    func intermediateResultsAreFiltered() async {
+        let leaked = CleanupItem(url: home.appending(path: "Documents/비밀.txt"),
+                                 size: 5_000, category: .devCache, safety: .safe)
+        let coordinator = ScanCoordinator(scanners: [
+            FakeScanner(category: .devCache, items: [leaked, allowed("ok")]),
+            FakeScanner(category: .devCache, items: [allowed("ok2")], delay: .milliseconds(100)),
+        ])
+
+        let progresses = await collect(coordinator)
+
+        for progress in progresses {
+            #expect(!progress.items.contains { $0.url.path.contains("Documents") },
+                    "중간 결과에 허용 밖 경로가 샜다")
+        }
+    }
+
+    // TC-4
+    @Test("중간 결과도 카테고리·크기 순으로 정렬돼 있다")
+    func intermediateResultsAreSorted() async {
+        let coordinator = ScanCoordinator(scanners: [
+            FakeScanner(category: .devCache, items: [
+                allowed("small", size: 10), allowed("large", size: 9_000),
+            ]),
+            FakeScanner(category: .runawayTemp, items: [
+                allowed("temp", size: 5, category: .runawayTemp),
+            ], delay: .milliseconds(80)),
+        ])
+
+        for progress in await collect(coordinator) {
+            let orders = progress.items.map(\.category.sortOrder)
+            #expect(orders == orders.sorted(), "카테고리 정렬이 깨졌다")
+        }
+    }
+
+    // TC-5
+    @Test("중간 결과에도 경로 중복 제거가 적용된다")
+    func intermediateResultsAreDeduplicated() async {
+        let shared = allowed("shared", size: 5_000, category: .largeFile)
+        let twin = CleanupItem(url: shared.url, size: 5_000,
+                               category: .duplicate, safety: .safe)
+        let coordinator = ScanCoordinator(scanners: [
+            FakeScanner(category: .largeFile, items: [shared]),
+            FakeScanner(category: .duplicate, items: [twin], delay: .milliseconds(60)),
+        ])
+
+        let progresses = await collect(coordinator)
+
+        for progress in progresses {
+            #expect(Set(progress.items.map(\.url)).count == progress.items.count)
+        }
+        #expect(progresses.last?.items.count == 1)
+    }
+
+    // TC-6
+    @Test("스캐너가 없으면 중간 결과 없이 끝난다")
+    func emptyCoordinatorFinishesImmediately() async {
+        let progresses = await collect(ScanCoordinator(scanners: []))
+        #expect(progresses.isEmpty)
+    }
+
+    // TC-8
+    @Test("빠른 스캐너 결과가 느린 것을 기다리지 않고 먼저 나온다")
+    func fastScannerYieldsFirst() async {
+        let coordinator = ScanCoordinator(scanners: [
+            FakeScanner(category: .devCache, items: [allowed("fast")]),
+            FakeScanner(category: .devCache, items: [allowed("slow")],
+                        delay: .milliseconds(250)),
+        ])
+
+        let progresses = await collect(coordinator)
+
+        #expect(progresses.count == 2)
+        #expect(progresses.first?.items.map(\.displayName) == ["fast"])
+        #expect(Set(progresses.last?.items.map(\.displayName) ?? []) == ["fast", "slow"])
+    }
 }
