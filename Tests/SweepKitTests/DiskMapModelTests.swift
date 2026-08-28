@@ -23,6 +23,17 @@ struct DiskMapModelTests {
         return model
     }
 
+    /// 세기·집계를 즉시 끝내는 가짜 모델.
+    private func fakeModel(entries: Int = 3) -> DiskMapModel {
+        let tree = sampleTree()
+        return DiskMapModel(
+            countEntries: { _, onCounted in onCounted(entries); return entries },
+            buildTree: { _, onScanned in
+                for _ in 0..<entries { onScanned() }
+                return tree
+            })
+    }
+
     // TC-2
     @Test("초기 상태는 비어 있다")
     func initialStateIsEmpty() {
@@ -104,15 +115,88 @@ struct DiskMapModelTests {
         #expect(!model.availableRoots.isEmpty)
     }
 
-    @Test("load가 주입된 트리로 경로를 초기화한다")
+    // TC-1 · TC-2
+    @Test("load가 주입된 트리로 경로를 초기화하고 단계가 전이된다")
     func loadSeedsPathFromInjectedTree() async {
-        let tree = sampleTree()
-        let model = DiskMapModel(buildTree: { _ in tree })
+        let model = fakeModel()
 
+        #expect(model.loadPhase == nil)
         await model.load(URL(filePath: "/private/tmp/root"))
 
         #expect(model.path.count == 1)
         #expect(model.current?.name == "root")
+        #expect(model.loadPhase == nil, "완료 후에도 로딩 상태가 남아 있다")
         #expect(!model.isScanning)
     }
+
+    // TC-3 · TC-4
+    @Test("퍼센트가 0~100을 벗어나지 않는다")
+    func percentIsClamped() {
+        let counter = ScanCounter()
+
+        // 분모 0 — 0으로 나누지 않는다
+        #expect(counter.percent(of: 0) == 0)
+
+        for _ in 0..<150 { counter.increment() }
+        // 분모보다 많이 세도 100을 넘지 않는다 (실측 0.32% 오차가 있다)
+        #expect(counter.percent(of: 100) == 100)
+        #expect(counter.percent(of: 300) == 50)
+    }
+
+    // TC-5
+    @Test("진행 카운터가 동시 증가에서도 정확하다")
+    func counterIsThreadSafe() async {
+        let counter = ScanCounter()
+
+        await withTaskGroup(of: Void.self) { group in
+            for _ in 0..<8 {
+                group.addTask { for _ in 0..<1_000 { counter.increment() } }
+            }
+        }
+
+        #expect(counter.value == 8_000)
+    }
+
+    // TC-2
+    @Test("분모가 오기 전에는 세는 중 단계를 보여준다")
+    func countingPhaseComesFirst() async {
+        let tree = sampleTree()
+        // 세기를 붙잡아 둔다. 시간에 기대면 부하에 따라 결과가 흔들린다.
+        let gate = Gate()
+        let model = DiskMapModel(
+            countEntries: { _, onCounted in
+                onCounted(5)
+                gate.wait()
+                return 10
+            },
+            buildTree: { _, onScanned in
+                for _ in 0..<10 { onScanned() }
+                return tree
+            })
+
+        async let load: Void = model.load(URL(filePath: "/private/tmp/root"))
+
+        // load가 시작될 때까지 양보한다
+        while model.loadPhase == nil { await Task.yield() }
+
+        // 아직 분모가 없으므로 퍼센트를 지어내지 않는다
+        guard case .counting = model.loadPhase else {
+            Issue.record("세는 중이 아니다: \(String(describing: model.loadPhase))")
+            gate.signal()
+            await load
+            return
+        }
+
+        gate.signal()
+        await load
+        #expect(model.loadPhase == nil)
+        #expect(model.current?.name == "root")
+    }
+}
+
+/// 가짜 세기 패스를 원하는 시점까지 붙잡아 두는 문.
+private final class Gate: @unchecked Sendable {
+    private let semaphore = DispatchSemaphore(value: 0)
+    func wait() { semaphore.wait() }
+    func signal() { semaphore.signal() }
 }

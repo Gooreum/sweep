@@ -84,12 +84,16 @@ public enum DiskUsageTree {
     ///
     /// 숨김 파일을 포함하는 이유는 `build`도 포함하기 때문이다. 한쪽만 빼면 분모가 어긋난다.
     public static func countEntries(at url: URL,
-                                    isCancelled: @Sendable () -> Bool = { false }) -> Int {
+                                    isCancelled: @Sendable () -> Bool = { false },
+                                    onCounted: (@Sendable (Int) -> Void)? = nil) -> Int {
         var total = 0
         var stack = [url.path]
 
         while let path = stack.popLast() {
             if isCancelled() { return total }
+            // 디렉토리 단위로 보고한다. 분모가 생기기 전에도 숫자가 움직여야
+            // 멈춘 것처럼 보이지 않는다.
+            onCounted?(total)
             guard let handle = opendir(path) else { continue }
             defer { closedir(handle) }
 

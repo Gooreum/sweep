@@ -66,11 +66,26 @@ struct DiskMapView: View {
 
     @ViewBuilder
     private var content: some View {
-        if model.isScanning {
-            VStack(spacing: 8) {
-                ProgressView()
-                Text("사용량을 재는 중…").foregroundStyle(.secondary)
+        if let phase = model.loadPhase {
+            VStack(spacing: 12) {
+                switch phase {
+                case .counting(let scanned):
+                    // 분모를 만드는 중이라 아직 퍼센트가 없다. 숫자를 지어내지 않는다.
+                    ProgressView()
+                    Text("\(scanned.formatted())개 세는 중…")
+                        .monospacedDigit()
+                        .foregroundStyle(.secondary)
+                case .measuring(let percent):
+                    ProgressView(value: Double(percent), total: 100)
+                        .frame(width: 220)
+                    Text("\(percent)%")
+                        .font(.title3.monospacedDigit())
+                    Text("사용량을 재는 중…")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let current = model.current {
             if model.tiles.isEmpty {
                 placeholder("\(current.name)에는 더 나눌 항목이 없습니다",
