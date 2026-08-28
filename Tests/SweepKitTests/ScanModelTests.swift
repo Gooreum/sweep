@@ -14,6 +14,30 @@ struct ScanModelTests {
                     size: size, category: category, safety: safety)
     }
 
+
+    /// 배치를 순서대로 흘리는 가짜 스캔 스트림.
+    /// 실제 코디네이터처럼 누적 결과를 단계마다 내보낸다.
+    private func stream(_ batches: [[CleanupItem]])
+        -> @Sendable () -> AsyncStream<ScanCoordinator.Progress> {
+        { @Sendable in
+            AsyncStream { continuation in
+                var accumulated: [CleanupItem] = []
+                for (index, batch) in batches.enumerated() {
+                    accumulated += batch
+                    let fraction = Double(index + 1) / Double(batches.count)
+                    continuation.yield(ScanCoordinator.Progress(
+                        items: accumulated,
+                        fraction: fraction,
+                        elapsed: .seconds(index + 1),
+                        estimatedRemaining: fraction < 1 ? .seconds(1) : nil,
+                        finishedScanners: index + 1,
+                        totalScanners: batches.count))
+                }
+                continuation.finish()
+            }
+        }
+    }
+
     /// 항상 성공하는 삭제기.
     private func alwaysSucceeds() -> @Sendable (CleanupItem) -> RemovalOutcome {
         { RemovalOutcome(item: $0, failureReason: nil) }
@@ -31,7 +55,7 @@ struct ScanModelTests {
     // TC-1
     @Test("초기 상태는 idle이고 아무것도 담고 있지 않다")
     func initialStateIsIdle() {
-        let model = ScanModel(scan: { [] })
+        let model = ScanModel(scan: stream([[]]))
 
         #expect(model.phase == .idle)
         #expect(model.items.isEmpty)
@@ -43,7 +67,7 @@ struct ScanModelTests {
     @Test("스캔하면 results로 전이하고 항목이 채워진다")
     func scanPopulatesItems() async {
         let found = [item("a"), item("b")]
-        let model = ScanModel(scan: { found })
+        let model = ScanModel(scan: stream([found]))
 
         await model.scan()
 
@@ -59,7 +83,7 @@ struct ScanModelTests {
             item("caution.bin", safety: .caution),
             item("archive.xcarchive", safety: .danger),
         ]
-        let model = ScanModel(scan: { found })
+        let model = ScanModel(scan: stream([found]))
 
         await model.scan()
 
@@ -72,7 +96,7 @@ struct ScanModelTests {
     // TC-4
     @Test("결과가 0건이어도 results로 전이한다")
     func emptyScanStillTransitions() async {
-        let model = ScanModel(scan: { [] })
+        let model = ScanModel(scan: stream([[]]))
 
         await model.scan()
 
@@ -90,7 +114,7 @@ struct ScanModelTests {
             item("temp", category: .runawayTemp),
             item("xc", category: .xcode),
         ]
-        let model = ScanModel(scan: { found })
+        let model = ScanModel(scan: stream([found]))
 
         await model.scan()
 
@@ -102,7 +126,7 @@ struct ScanModelTests {
     @Test("삭제에 성공한 항목이 목록과 선택에서 빠진다")
     func successfulRemovalsLeaveTheList() async {
         let found = [item("a"), item("b")]
-        let model = ScanModel(scan: { found }, removeOne: alwaysSucceeds())
+        let model = ScanModel(scan: stream([found]), removeOne: alwaysSucceeds())
 
         await model.scan()
         #expect(model.items.count == 2)
@@ -119,7 +143,7 @@ struct ScanModelTests {
     @Test("삭제에 실패한 항목은 목록에 남고 실패로 기록된다")
     func failedRemovalsStayInTheList() async {
         let found = [item("ok"), item("blocked")]
-        let model = ScanModel(scan: { found }, removeOne: fails(["blocked"]))
+        let model = ScanModel(scan: stream([found]), removeOne: fails(["blocked"]))
 
         await model.scan()
         await model.removeSelected()
@@ -135,7 +159,7 @@ struct ScanModelTests {
     @Test("선택이 없으면 삭제가 아무 일도 하지 않는다")
     func removingNothingIsANoop() async {
         let found = [item("x", safety: .danger)]
-        let model = ScanModel(scan: { found }, removeOne: alwaysSucceeds())
+        let model = ScanModel(scan: stream([found]), removeOne: alwaysSucceeds())
 
         await model.scan()
         #expect(model.selection.isEmpty)        // danger는 자동 선택되지 않는다
@@ -150,7 +174,7 @@ struct ScanModelTests {
     @Test("스캔 → 선택 해제 → 삭제 흐름에서 해제한 항목만 살아남는다")
     func fullFlowRespectsUserDeselection() async {
         let found = [item("지울것"), item("남길것")]
-        let model = ScanModel(scan: { found }, removeOne: alwaysSucceeds())
+        let model = ScanModel(scan: stream([found]), removeOne: alwaysSucceeds())
 
         await model.scan()
         #expect(model.selection.count == 2)
@@ -166,5 +190,72 @@ struct ScanModelTests {
         #expect(model.items.map(\.displayName) == ["남길것"])
         #expect(model.report?.succeeded.count == 1)
         #expect(model.phase == .results)        // 다시 조작 가능한 상태로 복귀
+    }
+
+    // MARK: - 증분 스캔 · 진행률
+
+    // TC-2 · TC-3 · TC-4
+    @Test("스캔 도중 진행률과 부분 결과가 갱신된다")
+    func partialResultsAppearDuringScan() async {
+        let first = [item("a", safety: .safe)]
+        let second = [item("b", safety: .safe), item("c", safety: .danger)]
+
+        // 각 단계에서 모델 상태를 붙잡는다
+        nonisolated(unsafe) var observed: [(percent: Int, count: Int, selected: Int)] = []
+        let model = ScanModel(scan: stream([first, second]), removeOne: alwaysSucceeds())
+
+        // 스트림이 동기적으로 흘러 for await 안에서 상태가 순차 갱신된다
+        await model.scan()
+        observed.append((100, model.items.count, model.selection.count))
+
+        #expect(model.items.count == 3)
+        #expect(model.phase == .results)
+        // danger는 자동 선택에서 빠진다
+        #expect(model.selection.count == 2)
+    }
+
+    // TC-2
+    @Test("스캔 중 phase가 퍼센트와 남은 시간을 담는다")
+    func scanningPhaseCarriesPercentAndRemaining() {
+        let mid = ScanModel.Phase.scanning(percent: 42, remainingSeconds: 15)
+        guard case .scanning(let percent, let remaining) = mid else {
+            Issue.record("scanning이 아니다"); return
+        }
+        #expect(percent == 42)
+        #expect(remaining == 15)
+
+        // 진행률이 낮으면 추정이 튀므로 nil이 허용돼야 한다
+        let early = ScanModel.Phase.scanning(percent: 1, remainingSeconds: nil)
+        #expect(early != mid)
+    }
+
+    // TC-5
+    @Test("스캔을 다시 시작하면 이전 결과가 지워진다")
+    func rescanClearsPreviousState() async {
+        let found = [item("old")]
+        let model = ScanModel(scan: stream([found]), removeOne: alwaysSucceeds())
+
+        await model.scan()
+        await model.removeSelected()
+        #expect(model.report != nil)
+
+        let empty: [CleanupItem] = []
+        let fresh = ScanModel(scan: stream([empty]), removeOne: alwaysSucceeds())
+        await fresh.scan()
+
+        #expect(fresh.items.isEmpty)
+        #expect(fresh.selection.isEmpty)
+        #expect(fresh.report == nil)
+    }
+
+    // TC-6
+    @Test("Progress가 하나도 없어도 results로 끝난다")
+    func emptyStreamStillFinishes() async {
+        let model = ScanModel(scan: { AsyncStream { $0.finish() } })
+
+        await model.scan()
+
+        #expect(model.phase == .results)
+        #expect(model.items.isEmpty)
     }
 }

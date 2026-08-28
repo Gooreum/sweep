@@ -20,7 +20,9 @@ public final class ScanModel {
 
     public enum Phase: Equatable, Sendable {
         case idle
-        case scanning
+        /// 스캔 중. 개수가 아니라 **실측 시간 가중 진행률**을 담는다.
+        /// 스캐너 6개 중 5개가 끝나도 작업은 6%만 끝난 경우가 있다.
+        case scanning(percent: Int, remainingSeconds: Int?)
         case results
         case removing(done: Int, total: Int)
     }
@@ -31,18 +33,18 @@ public final class ScanModel {
     public private(set) var report: RemovalReport?
     public var selection: Set<URL> = []
 
-    private let performScan: @Sendable () async -> [CleanupItem]
+    private let scanStream: @Sendable () -> AsyncStream<ScanCoordinator.Progress>
     private let performRemove: @Sendable (CleanupItem) -> RemovalOutcome
 
     /// 스캔·삭제 동작을 주입할 수 있게 열어 둔다.
     /// 실제 스캔은 17초 이상 걸리고 실제 삭제는 되돌릴 수 없어 테스트에 쓸 수 없다.
     public init(
-        scan: @escaping @Sendable () async -> [CleanupItem]
-            = { await ScanCoordinator.standard().scan() },
+        scan: @escaping @Sendable () -> AsyncStream<ScanCoordinator.Progress>
+            = { ScanCoordinator.standard().stream() },
         removeOne: @escaping @Sendable (CleanupItem) -> RemovalOutcome
             = { Remover().removeOne($0) }
     ) {
-        self.performScan = scan
+        self.scanStream = scan
         self.performRemove = removeOne
     }
 
@@ -68,12 +70,22 @@ public final class ScanModel {
     // MARK: - 동작
 
     public func scan() async {
-        phase = .scanning
+        phase = .scanning(percent: 0, remainingSeconds: nil)
         report = nil
-        items = await performScan()
-        // safe만 미리 체크한다. 사용자가 "전체 선택 → 삭제"를 눌러도
-        // 되돌릴 수 없는 것(Archives 등)은 빠져 있어야 한다.
-        selection = Set(items.filter(\.isSelectedByDefault).map(\.url))
+        items = []
+        selection = []
+
+        for await progress in scanStream() {
+            items = progress.items
+            // safe만 미리 체크한다. 사용자가 "전체 선택 → 삭제"를 눌러도
+            // 되돌릴 수 없는 것(Archives 등)은 빠져 있어야 한다.
+            //
+            // 중간 결과마다 갱신하는 이유: 끝나고 한꺼번에 체크되면 화면이 튄다.
+            selection = Set(items.filter(\.isSelectedByDefault).map(\.url))
+            phase = .scanning(percent: progress.percent,
+                              remainingSeconds: progress.estimatedRemaining
+                                  .map { Int($0.components.seconds) })
+        }
         phase = .results
     }
 

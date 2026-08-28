@@ -19,6 +19,9 @@ public struct LargeFileScanner: CleanupScanner {
         self.home = home
     }
 
+    /// 실측 0.29초. 1초 안에 끝나므로 중간 보고 없이 완료 시점만 알린다.
+    public var progressWeight: Double { 0.3 }
+
     public func scan() async -> [CleanupItem] {
         let root = home.appending(path: "Downloads")
         return Self.largeFiles(under: root, minimumSize: minimumSize).map { found in

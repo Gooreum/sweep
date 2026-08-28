@@ -40,6 +40,9 @@ public struct DevCacheScanner: CleanupScanner {
     /// `StaleCacheScanner`가 같은 항목을 두 번 보고하지 않도록 참조한다.
     static var knownCacheNames: Set<String> { Set(knownCaches.map(\.name)) }
 
+    /// 실측 0.01초. 1초 안에 끝나므로 중간 보고 없이 완료 시점만 알린다.
+    public var progressWeight: Double { 0.05 }
+
     public func scan() async -> [CleanupItem] {
         cacheItems() + logItems()
     }

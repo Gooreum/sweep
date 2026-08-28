@@ -47,14 +47,17 @@ struct ContentView: View {
                 title: "정리할 것을 찾아봅니다",
                 message: "Xcode 산출물, 개발 캐시, 폭주 중인 임시 파일, 중복 내려받기를 훑습니다.")
 
-        case .scanning:
-            VStack(spacing: 12) {
-                ProgressView()
-                Text("스캔 중…").foregroundStyle(.secondary)
-                // 실측 17초 이상 걸린다. 왜 오래 걸리는지 알려줘야 사용자가 기다린다.
-                Text("임시 파일이 커지고 있는지 보려고 두 번 측정합니다.")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+        case .scanning(let percent, let remaining):
+            VStack(spacing: 0) {
+                scanBanner(percent: percent, remainingSeconds: remaining)
+                Divider()
+                // 이미 찾은 것이 있으면 기다리는 동안 보여준다
+                if model.items.isEmpty {
+                    placeholder(icon: "magnifyingglass", title: "훑는 중입니다",
+                                message: "찾는 대로 여기에 쌓입니다.")
+                } else {
+                    resultList
+                }
             }
 
         case .removing(let done, let total):
@@ -95,6 +98,30 @@ struct ContentView: View {
                 }
             }
         }
+    }
+
+    private func scanBanner(percent: Int, remainingSeconds: Int?) -> some View {
+        HStack(spacing: 10) {
+            ProgressView(value: Double(percent), total: 100)
+                .frame(width: 160)
+            Text("\(percent)%")
+                .monospacedDigit()
+                .frame(width: 44, alignment: .leading)
+            if let remainingSeconds {
+                Text("약 \(Self.readable(seconds: remainingSeconds)) 남음")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+    }
+
+    /// "45초" / "1분 20초". 분 단위가 넘어가면 초만 보여주는 건 읽기 나쁘다.
+    static func readable(seconds: Int) -> String {
+        seconds < 60 ? "\(seconds)초" : "\(seconds / 60)분 \(seconds % 60)초"
     }
 
     private func placeholder(icon: String, title: String, message: String) -> some View {

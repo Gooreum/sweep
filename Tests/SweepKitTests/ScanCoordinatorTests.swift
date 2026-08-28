@@ -205,8 +205,8 @@ struct ScanCoordinatorTests {
     }
 
     // TC-1 · TC-7
-    @Test("스캐너 수만큼 중간 결과가 흘러나온다")
-    func streamYieldsOncePerScanner() async {
+    @Test("완료 이벤트가 스캐너 수만큼 나오고 마지막이 100%다")
+    func streamReportsEveryScannerCompletion() async {
         let coordinator = ScanCoordinator(scanners: [
             FakeScanner(category: .devCache, items: [allowed("a")]),
             FakeScanner(category: .devCache, items: [allowed("b")]),
@@ -215,11 +215,27 @@ struct ScanCoordinatorTests {
 
         let progresses = await collect(coordinator)
 
-        #expect(progresses.count == 3)
-        #expect(progresses.map(\.finishedScanners) == [1, 2, 3])
+        // 진행 보고마다 yield하므로 개수는 스캐너 수보다 많다.
+        // 계약은 "완료 수가 1..3을 모두 거치고 마지막이 100%"다.
+        #expect(Set(progresses.map(\.finishedScanners)).isSuperset(of: [1, 2, 3]))
+        #expect(progresses.map(\.finishedScanners) == progresses.map(\.finishedScanners).sorted())
         #expect(progresses.allSatisfy { $0.totalScanners == 3 })
-        // 결과는 단조 증가한다
-        #expect(progresses.map(\.items.count) == [1, 2, 3])
+        #expect(progresses.last?.fraction == 1.0)
+        #expect(progresses.last?.items.count == 3)
+        #expect(progresses.last?.estimatedRemaining == nil, "완료 시점에 남은 시간이 남아 있다")
+    }
+
+    @Test("진행률이 단조 증가한다")
+    func fractionNeverGoesBackwards() async {
+        let coordinator = ScanCoordinator(scanners: [
+            FakeScanner(category: .devCache, items: [allowed("a")]),
+            FakeScanner(category: .devCache, items: [allowed("b")], delay: .milliseconds(80)),
+        ])
+
+        let fractions = await collect(coordinator).map(\.fraction)
+
+        #expect(fractions == fractions.sorted(), "진행률이 뒤로 갔다: \(fractions)")
+        #expect(fractions.allSatisfy { $0 >= 0 && $0 <= 1 })
     }
 
     // TC-2
@@ -292,10 +308,14 @@ struct ScanCoordinatorTests {
     }
 
     // TC-6
-    @Test("스캐너가 없으면 중간 결과 없이 끝난다")
-    func emptyCoordinatorFinishesImmediately() async {
+    @Test("스캐너가 없어도 100%로 끝맺는다")
+    func emptyCoordinatorFinishesAtFullProgress() async {
         let progresses = await collect(ScanCoordinator(scanners: []))
-        #expect(progresses.isEmpty)
+
+        // 진행 막대가 0%에 멈춘 채로 끝나면 안 된다
+        #expect(progresses.count == 1)
+        #expect(progresses.first?.fraction == 1.0)
+        #expect(progresses.first?.items.isEmpty == true)
     }
 
     // TC-8
@@ -308,9 +328,10 @@ struct ScanCoordinatorTests {
         ])
 
         let progresses = await collect(coordinator)
+        let completions = progresses.filter { $0.finishedScanners > 0 }
 
-        #expect(progresses.count == 2)
-        #expect(progresses.first?.items.map(\.displayName) == ["fast"])
+        // 느린 스캐너를 기다리지 않고 빠른 쪽 결과가 먼저 완료로 보고된다
+        #expect(completions.first?.items.map(\.displayName) == ["fast"])
         #expect(Set(progresses.last?.items.map(\.displayName) ?? []) == ["fast", "slow"])
     }
 }

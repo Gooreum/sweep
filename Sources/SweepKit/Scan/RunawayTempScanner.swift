@@ -32,32 +32,62 @@ public struct RunawayTempScanner: CleanupScanner {
         self.roots = roots
     }
 
+    /// 실측 41초로 전체 스캔 시간의 94%를 차지한다. 다른 스캐너는 1초 안팎이다.
+    public var progressWeight: Double { 40 }
+
     public func scan() async -> [CleanupItem] {
+        await scan(onProgress: { _ in })
+    }
+
+    /// 두 번의 전체 순회가 시간을 다 쓰므로, 후보 하나를 잴 때마다 진행을 알린다.
+    /// 그러지 않으면 40초 동안 진행률이 한 자리에 멈춰 있다.
+    public func scan(onProgress: @escaping @Sendable (Double) -> Void) async -> [CleanupItem] {
         let candidates = roots.flatMap { children(of: $0) }
             .filter { ProtectedPaths.isRemovable($0) }
+        onProgress(Self.listingShare)
+        guard !candidates.isEmpty else { onProgress(1); return [] }
 
         // 1차 샘플 — 큰 것만 남긴다. 작은 것까지 두 번 세면 스캔이 느려진다.
-        let first = candidates
-            .map { (url: $0, size: DirectorySize.bytes(at: $0)) }
-            .filter { $0.size >= minimumSize }
-        guard !first.isEmpty else { return [] }
+        var measured: [(url: URL, size: Int64)] = []
+        for (index, url) in candidates.enumerated() {
+            measured.append((url: url, size: DirectorySize.bytes(at: url)))
+            onProgress(Self.listingShare
+                       + Self.passShare * Double(index + 1) / Double(candidates.count))
+        }
+        let first = measured.filter { $0.size >= minimumSize }
+        guard !first.isEmpty else { onProgress(1); return [] }
 
         try? await Task.sleep(for: samplingInterval)
+        let afterSleep = Self.listingShare + Self.passShare + Self.sleepShare
+        onProgress(afterSleep)
 
         // 2차 샘플 — 증가분이 폭주 여부를 가른다.
-        return first.compactMap { sample in
+        var found: [CleanupItem] = []
+        for (index, sample) in first.enumerated() {
+            defer {
+                onProgress(afterSleep
+                           + Self.passShare * Double(index + 1) / Double(first.count))
+            }
             let now = DirectorySize.bytes(at: sample.url)
-            guard now > 0 else { return nil }       // 그새 사라졌다
+            guard now > 0 else { continue }         // 그새 사라졌다
             let growth = now - sample.size
-            return CleanupItem(
+            found.append(CleanupItem(
                 url: sample.url,
                 size: now,
                 category: .runawayTemp,
                 // 증가 중이라면 무언가 쓰고 있다는 뜻이다. 함부로 지우게 두지 않는다.
                 safety: growth > 0 ? .caution : .safe,
-                detail: Self.detail(growth: growth, over: samplingInterval))
+                detail: Self.detail(growth: growth, over: samplingInterval)))
         }
+        onProgress(1)
+        return found
     }
+
+    // 진행률을 시간 비중대로 쪼갠다. 두 번의 순회가 대부분을 차지하고
+    // 대기는 samplingInterval(기본 3초)로 고정이다.
+    private static let listingShare = 0.02
+    private static let passShare = 0.44
+    private static let sleepShare = 0.10
 
     /// "33.0 MB/분 증가 중"처럼 사람이 판단할 수 있는 속도로 환산한다.
     static func detail(growth: Int64, over interval: Duration) -> String {

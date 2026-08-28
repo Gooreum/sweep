@@ -39,6 +39,9 @@ public struct XcodeScanner: CleanupScanner {
               safety: .danger, detail: "앱 심사 제출본 — 지우면 복구할 수 없습니다", expandsChildren: true),
     ]
 
+    /// 실측 1.0초. 1초 안에 끝나므로 중간 보고 없이 완료 시점만 알린다.
+    public var progressWeight: Double { 1.0 }
+
     public func scan() async -> [CleanupItem] {
         Self.targets.flatMap { target -> [CleanupItem] in
             let root = home.appending(path: target.path)
