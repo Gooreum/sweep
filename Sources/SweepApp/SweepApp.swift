@@ -19,8 +19,10 @@ struct SweepApp: App {
     var body: some Scene {
         WindowGroup("Sweep") {
             ContentView()
-                .frame(minWidth: 760, minHeight: 520)
+                // 사이드바 220 + 결과 목록이 접히지 않을 최소 폭
+                .frame(minWidth: 940, minHeight: 600)
         }
+        .defaultSize(width: Theme.windowWidth, height: Theme.windowHeight)
     }
 
     /// 스캔 결과를 탭 구분 텍스트로 찍고 종료한다.

@@ -1,228 +1,34 @@
 import SwiftUI
 import SweepKit
 
+/// 창 전체. 왼쪽 사이드바가 기능을 고르고 오른쪽이 그 기능의 화면이다.
 struct ContentView: View {
-    /// 정리와 디스크 맵은 성격이 다르다. 맵은 읽기 전용이라 삭제 바를 숨긴다.
-    private enum Tab: String, CaseIterable, Identifiable {
-        case cleanup = "정리"
-        case diskMap = "디스크 맵"
-        var id: Self { self }
-    }
-
-    @State private var model = ScanModel()
-    @State private var tab: Tab = .cleanup
+    @State private var app = AppModel()
 
     var body: some View {
-        VStack(spacing: 0) {
-            Picker("", selection: $tab) {
-                ForEach(Tab.allCases) { Text($0.rawValue).tag($0) }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(maxWidth: 260)
-            .padding(.vertical, 8)
+        HStack(spacing: 0) {
+            Sidebar(app: app)
 
-            Divider()
-
-            switch tab {
-            case .cleanup:
-                content
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                Divider()
-                footer
-            case .diskMap:
-                DiskMapView()
-            }
+            detail
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Theme.contentBackground)
         }
     }
-
-    // MARK: - 상태별 본문
 
     @ViewBuilder
-    private var content: some View {
-        switch model.phase {
-        case .idle:
-            placeholder(
-                icon: "sparkles",
-                title: "정리할 것을 찾아봅니다",
-                message: "Xcode 산출물, 개발 캐시, 폭주 중인 임시 파일, 중복 내려받기를 훑습니다.")
+    private var detail: some View {
+        switch app.selected {
+        case .diskMap:
+            // 읽기 전용이라 스캔 모델이 없다. 자기 상태를 직접 들고 있는다.
+            DiskMapView()
 
-        case .scanning(let percent, let remaining):
-            VStack(spacing: 0) {
-                scanBanner(percent: percent, remainingSeconds: remaining)
-                Divider()
-                // 이미 찾은 것이 있으면 기다리는 동안 보여준다
-                if model.items.isEmpty {
-                    placeholder(icon: "magnifyingglass", title: "훑는 중입니다",
-                                message: "찾는 대로 여기에 쌓입니다.")
-                } else {
-                    resultList
-                }
-            }
-
-        case .removing(let done, let total):
-            VStack(spacing: 12) {
-                ProgressView(value: Double(done), total: Double(total))
-                    .frame(maxWidth: 320)
-                Text("삭제 중 \(done)/\(total)").foregroundStyle(.secondary)
-            }
-
-        // Phase 2에서 FeatureScreen이 완료 화면을 맡는다. 그때까지는 결과 목록과 같게 둔다.
-        case .results, .cleaned:
-            if model.items.isEmpty {
-                placeholder(
-                    icon: "checkmark.circle",
-                    title: "정리할 것이 없습니다",
-                    message: "회수할 만한 크기의 항목을 찾지 못했습니다.")
-            } else {
-                resultList
-            }
+        // 스마트 스캔은 Phase 4에서 전용 요약 화면을 받는다.
+        // 그전까지는 6개 스캐너를 도는 평범한 기능으로 취급해도 동작한다.
+        case let feature:
+            FeatureScreen(feature: feature, model: app.model(for: feature))
+                // 기능을 바꾸면 뷰를 새로 만든다. 안 그러면 이전 기능의
+                // 스크롤 위치와 애니메이션 상태가 그대로 따라온다.
+                .id(feature)
         }
-    }
-
-    private var resultList: some View {
-        List {
-            ForEach(model.groups) { group in
-                Section {
-                    ForEach(group.items) { item in
-                        ItemRow(item: item, isOn: binding(for: item))
-                    }
-                } header: {
-                    HStack(spacing: 8) {
-                        // SwiftUI Toggle은 부분 선택을 표현하지 못해 버튼으로 그린다
-                        Button { model.toggleAll(in: group) } label: {
-                            let state = model.selectionState(of: group)
-                            Image(systemName: state.symbolName)
-                                .foregroundStyle(state.isEmphasized
-                                                 ? Color.accentColor : Color.secondary)
-                        }
-                        .buttonStyle(.plain)
-                        .help("이 묶음 전체 선택 / 해제")
-
-                        Label(group.category.displayName,
-                              systemImage: group.category.systemImageName)
-                        Text("\(group.items.count)")
-                            .foregroundStyle(.tertiary)
-                            .monospacedDigit()
-                        Spacer()
-                        Text(group.formattedTotalSize)
-                            .monospacedDigit()
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-        }
-        // 아래에 묵은 캐시·대용량 파일 섹션이 더 있다는 유일한 단서
-        .scrollIndicators(.visible)
-    }
-
-    private func scanBanner(percent: Int, remainingSeconds: Int?) -> some View {
-        HStack(spacing: 10) {
-            ProgressView(value: Double(percent), total: 100)
-                .frame(width: 160)
-            Text("\(percent)%")
-                .monospacedDigit()
-                .frame(width: 44, alignment: .leading)
-            if let remainingSeconds {
-                Text("약 \(Self.readable(seconds: remainingSeconds)) 남음")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-            }
-            Spacer()
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-    }
-
-    /// "45초" / "1분 20초". 분 단위가 넘어가면 초만 보여주는 건 읽기 나쁘다.
-    static func readable(seconds: Int) -> String {
-        seconds < 60 ? "\(seconds)초" : "\(seconds / 60)분 \(seconds % 60)초"
-    }
-
-    private func placeholder(icon: String, title: String, message: String) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 40))
-                .foregroundStyle(.secondary)
-            Text(title).font(.headline)
-            Text(message)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding(40)
-    }
-
-    // MARK: - 하단 바
-
-    private var footer: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                // 사용자가 얻을 수 있는 양이 먼저다. 선택량만 보이면
-                // 6.9GB를 찾아놓고 111KB만 보이는 상태가 된다.
-                Text("회수 가능 \(model.formattedTotalSize)")
-                    .font(.headline)
-                    .monospacedDigit()
-                Text("\(model.items.count)개 중 \(model.selectedItems.count)개 선택 · "
-                     + model.formattedSelectedSize)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-                if let report = model.report { removalSummary(report) }
-            }
-
-            Spacer()
-
-            Menu("선택") {
-                ForEach(ScanModel.SelectionPreset.allCases, id: \.self) { preset in
-                    Button(preset.rawValue) { model.apply(preset) }
-                }
-            }
-            .frame(width: 88)
-            .disabled(isBusy || model.items.isEmpty)
-
-            Button("다시 스캔") {
-                Task { await model.scan() }
-            }
-            .disabled(isBusy)
-
-            Button("휴지통으로 이동") {
-                Task { await model.removeSelected() }
-            }
-            .keyboardShortcut(.defaultAction)
-            .disabled(isBusy || !model.hasSelection)
-        }
-        .padding(12)
-    }
-
-    private var isBusy: Bool {
-        switch model.phase {
-        case .scanning, .removing: true
-        case .idle, .results, .cleaned: false
-        }
-    }
-
-    /// 실패 사유는 길어서 한 줄에 넣으면 잘린다. 개수만 보여주고 전체는 툴팁에 담는다.
-    @ViewBuilder
-    private func removalSummary(_ report: RemovalReport) -> some View {
-        if report.failed.isEmpty {
-            Text("\(report.succeeded.count)개 이동 · \(report.formattedReclaimed) 확보")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        } else {
-            Text("\(report.succeeded.count)개 이동 · \(report.failed.count)개 실패")
-                .font(.caption)
-                .foregroundStyle(Color.red)
-                .help(report.failed.compactMap(\.failureReason).joined(separator: "\n"))
-        }
-    }
-
-
-    /// `selection`(Set<URL>)을 체크박스가 쓰는 Bool 바인딩으로 잇는다.
-    private func binding(for item: CleanupItem) -> Binding<Bool> {
-        Binding(
-            get: { model.isSelected(item) },
-            set: { model.setSelection($0, for: item) })
     }
 }
