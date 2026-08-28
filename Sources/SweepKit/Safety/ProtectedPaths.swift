@@ -12,6 +12,8 @@ public enum RemovalVeto: Error, Equatable, Sendable {
     case rootOrHome(URL)
     /// 허용 루트 그 자체를 통째로 지우려 한다.
     case allowedRootItself(URL)
+    /// 현재 사용자의 소유가 아니다.
+    case notOwnedByCurrentUser(URL)
 
     public var message: String {
         switch self {
@@ -20,6 +22,7 @@ public enum RemovalVeto: Error, Equatable, Sendable {
         case .symlinkEscape(let u): "심볼릭 링크가 허용 범위 밖을 가리킵니다: \(u.path)"
         case .rootOrHome(let u): "루트 또는 홈 디렉토리는 삭제할 수 없습니다: \(u.path)"
         case .allowedRootItself(let u): "정리 루트 자체는 삭제할 수 없습니다: \(u.path)"
+        case .notOwnedByCurrentUser(let u): "다른 사용자·시스템 소유라 정리할 수 없습니다: \(u.path)"
         }
     }
 }
@@ -111,6 +114,21 @@ public enum ProtectedPaths {
            !roots.contains(where: { requestedLocation.isDescendant(of: $0) }) {
             throw RemovalVeto.symlinkEscape(requested)
         }
+
+        // 6. 남의 소유는 거부한다. 지울 수 없을 뿐 아니라, 지워지면 다른 프로세스가 깨진다.
+        //    경로가 없으면 소유자를 읽을 수 없어 nil이 되고 검사를 건너뛴다 —
+        //    존재 여부는 관문의 관심사가 아니고, 실제 삭제 시 자연스럽게 실패한다.
+        if let owner = ownerID(of: resolved), owner != getuid() {
+            throw RemovalVeto.notOwnedByCurrentUser(resolved)
+        }
+    }
+
+    /// 소유자 uid. 읽을 수 없으면(주로 경로가 없으면) nil.
+    private static func ownerID(of url: URL) -> uid_t? {
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+              let id = attributes[.ownerAccountID] as? NSNumber
+        else { return nil }
+        return uid_t(id.uint32Value)
     }
 
     /// 존재하지 않는 경로에도 일관된 실경로를 준다.
