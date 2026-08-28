@@ -13,10 +13,14 @@ public struct RunawayTempScanner: CleanupScanner {
 
     private let roots: [URL]
 
-    public static let defaultRoots: [URL] = [
-        URL(filePath: "/private/var/folders"),
-        URL(filePath: "/private/tmp"),
-    ]
+    /// 사용자 임시 컨테이너의 `C`·`T`와 `/private/tmp`.
+    ///
+    /// `/private/var/folders`를 직접 훑으면 한 단계 아래가 root 소유 버킷(`mg`)이라
+    /// 후보가 "모든 앱의 임시 데이터가 합쳐진 덩어리" 하나로 뭉개진다.
+    /// 폭주하는 것은 개별 파일이므로 개별 파일이 보이는 깊이에서 훑어야 한다.
+    public static var defaultRoots: [URL] {
+        ProtectedPaths.userTemporaryRoots + [URL(filePath: "/private/tmp")]
+    }
 
     /// `roots`는 테스트에서 샌드박스를 넣기 위해 열어 둔다 —
     /// 실제 /private/tmp에 100MB짜리 픽스처를 만들 수는 없다.

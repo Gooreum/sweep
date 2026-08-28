@@ -148,12 +148,62 @@ struct RunawayTempScannerTests {
     // TC-9 · TC-10
     @Test("기본 루트 스캔 결과가 관문을 통과하고 카테고리가 일관된다")
     func realRootsPassGateAndCategory() async {
-        // 실제 /private/tmp·var/folders를 훑되 간격을 짧게 둬 테스트가 오래 걸리지 않게 한다
+        // 실제 루트를 훑되 간격을 짧게 둬 테스트가 오래 걸리지 않게 한다
         let items = await RunawayTempScanner(samplingInterval: .milliseconds(200)).scan()
 
         #expect(items.allSatisfy { $0.category == .runawayTemp })
         for item in items {
             #expect(ProtectedPaths.isRemovable(item.url), "관문 미통과: \(item.url.path)")
+        }
+    }
+
+    // MARK: - 스캔 범위 (root 소유 버킷이 후보로 새던 버그의 회귀 방지)
+
+    /// `<컨테이너>` — `C`/`T`의 부모.
+    private var container: URL {
+        URL(filePath: NSTemporaryDirectory(), directoryHint: .isDirectory)
+            .resolvingSymlinksInPath().standardizedFileURL.deletingLastPathComponent()
+    }
+
+    // TC-1 · TC-2
+    @Test("defaultRoots가 컨테이너의 C·T와 /private/tmp로 구성된다")
+    func defaultRootsTargetUserContainer() {
+        let roots = RunawayTempScanner.defaultRoots
+        let paths = roots.map { ProtectedPaths.canonical($0).path }
+
+        #expect(roots.count == 3)
+        #expect(!paths.contains(ProtectedPaths.canonical(URL(filePath: "/private/var/folders")).path))
+        #expect(paths.contains(ProtectedPaths.canonical(container.appending(path: "C")).path))
+        #expect(paths.contains(ProtectedPaths.canonical(container.appending(path: "T")).path))
+        #expect(paths.contains(ProtectedPaths.canonical(URL(filePath: "/private/tmp")).path))
+    }
+
+    // TC-3 · TC-4 · TC-5
+    @Test("기본 루트 스캔 결과가 전부 내 소유이고 실제로 지울 수 있다")
+    func realScanYieldsOnlyDeletableItemsIOwn() async throws {
+        let fm = FileManager.default
+        let items = await RunawayTempScanner(samplingInterval: .milliseconds(200)).scan()
+
+        for item in items {
+            let path = item.url.path
+
+            // 버킷(`/private/var/folders/<한 단계>`)이 후보가 되면 안 된다 — 이번 버그
+            let components = ProtectedPaths.canonical(item.url).pathComponents
+            let bucketDepth = ProtectedPaths.canonical(URL(filePath: "/private/var/folders"))
+                .pathComponents.count + 1
+            let inVarFolders = components.starts(with:
+                ProtectedPaths.canonical(URL(filePath: "/private/var/folders")).pathComponents)
+            #expect(!(inVarFolders && components.count == bucketDepth),
+                    "버킷이 후보로 올라왔다: \(path)")
+
+            // 내 소유여야 한다
+            let owner = (try fm.attributesOfItem(atPath: path)[.ownerAccountID] as? NSNumber)?
+                .uint32Value
+            #expect(owner == getuid(), "남의 소유가 후보로 올라왔다: \(path)")
+
+            // 삭제는 부모 디렉토리 쓰기 권한이 필요하다
+            #expect(fm.isWritableFile(atPath: item.url.deletingLastPathComponent().path),
+                    "지울 수 없는 후보다: \(path)")
         }
     }
 }
