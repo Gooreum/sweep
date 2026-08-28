@@ -19,6 +19,17 @@ public struct DiskUsageNode: Identifiable, Sendable, Hashable {
     }
 }
 
+extension DiskUsageNode {
+    /// 목록 막대의 길이 비율. **가장 큰 항목** 기준이다.
+    ///
+    /// 전체 합 기준이면 하나가 압도할 때 나머지가 전부 보이지 않는 선이 된다 —
+    /// 트리맵이 이 데이터에서 실패한 이유가 그것이었다.
+    public func barRatio(largest: Int64) -> Double {
+        guard largest > 0 else { return 0 }
+        return min(1, max(0, Double(size) / Double(largest)))
+    }
+}
+
 public enum DiskUsageTree {
 
     /// 사용량 트리를 만든다.

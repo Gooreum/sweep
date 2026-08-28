@@ -225,21 +225,4 @@ struct FileFlagsTests {
         #expect(info.flags & UInt32(UF_IMMUTABLE) != 0)
         #expect(info.uid == getuid(), "플래그를 걸어도 소유자는 그대로다")
     }
-
-    // TC-6
-    @Test("소유권이 플래그보다 먼저 판정된다")
-    func ownershipIsCheckedBeforeFlags() throws {
-        // /private/var/folders 하위 버킷은 root 소유이면서 플래그도 걸려 있다
-        ProtectedPaths.additionalRootsForTesting = [URL(filePath: "/private/var/folders")]
-        defer { ProtectedPaths.additionalRootsForTesting = [] }
-
-        let bucket = try #require(fm.contentsOfDirectory(
-            at: URL(filePath: "/private/var/folders"),
-            includingPropertiesForKeys: nil).first)
-
-        guard case .notOwnedByCurrentUser = veto(bucket) else {
-            Issue.record("소유권보다 플래그가 먼저 판정됐다: \(String(describing: veto(bucket)))")
-            return
-        }
-    }
 }

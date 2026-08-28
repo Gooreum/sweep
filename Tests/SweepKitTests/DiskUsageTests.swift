@@ -162,143 +162,54 @@ private final class VisitCounter: @unchecked Sendable {
     }
 }
 
-
-@Suite("Treemap")
-struct TreemapTests {
+@Suite("막대 목록")
+struct BarListTests {
 
     private func node(_ name: String, _ size: Int64) -> DiskUsageNode {
         DiskUsageNode(url: URL(filePath: "/private/tmp/\(name)"), size: size)
     }
 
-    private let bounds = CGRect(x: 0, y: 0, width: 100, height: 100)
-
-    // TC-6
-    @Test("타일 면적 합이 전체 사각형 면적과 일치한다")
-    func tileAreasFillBounds() {
-        let tiles = Treemap.layout([node("a", 500), node("b", 300), node("c", 200)],
-                                   in: bounds)
-        let covered = tiles.reduce(0.0) { $0 + Double($1.rect.width * $1.rect.height) }
-        let expected = Double(bounds.width * bounds.height)
-
-        #expect(tiles.count == 3)
-        #expect(abs(covered - expected) / expected < 0.01, "면적 오차 \(covered) vs \(expected)")
-    }
-
-    // TC-7
-    @Test("타일끼리 겹치지 않는다")
-    func tilesDoNotOverlap() {
-        let tiles = Treemap.layout(
-            [node("a", 600), node("b", 250), node("c", 100), node("d", 50)], in: bounds)
-
-        for i in tiles.indices {
-            for j in tiles.indices where j > i {
-                let overlap = tiles[i].rect.intersection(tiles[j].rect)
-                let area = overlap.isNull ? 0 : Double(overlap.width * overlap.height)
-                #expect(area < 0.01,
-                        "\(tiles[i].node.name)와 \(tiles[j].node.name)가 겹친다: \(area)")
-            }
-        }
-    }
-
-    // TC-8
-    @Test("빈 입력은 빈 결과를 준다")
-    func emptyInputYieldsNoTiles() {
-        #expect(Treemap.layout([], in: bounds).isEmpty)
-        #expect(Treemap.layout([node("a", 100)], in: .zero).isEmpty)
-        #expect(Treemap.layout([node("zero", 0)], in: bounds).isEmpty)
-    }
-
-    // TC-9
-    @Test("노드가 하나면 전체를 차지한다")
-    func singleNodeFillsBounds() {
-        let tiles = Treemap.layout([node("only", 100)], in: bounds)
-
-        #expect(tiles.count == 1)
-        let rect = tiles[0].rect
-        #expect(abs(rect.width - bounds.width) < 0.01)
-        #expect(abs(rect.height - bounds.height) < 0.01)
-    }
-
-    // TC-10
-    @Test("크기가 큰 노드가 더 넓은 면적을 받는다")
-    func areaIsProportionalToSize() {
-        let tiles = Treemap.layout([node("big", 800), node("small", 200)], in: bounds)
-        let byName = Dictionary(uniqueKeysWithValues:
-            tiles.map { ($0.node.name, Double($0.rect.width * $0.rect.height)) })
-
-        let big = try! #require(byName["big"])
-        let small = try! #require(byName["small"])
-        #expect(big > small)
-        // 4:1 비율이 대략 유지되어야 한다
-        #expect(abs(big / small - 4.0) < 0.2)
-    }
-
-    // TC-11
-    @Test("극단적으로 가늘고 긴 타일이 생기지 않는다")
-    func aspectRatiosStayReasonable() {
-        let sizes: [Int64] = [600, 300, 250, 200, 150, 120, 100, 80, 60, 40]
-        let tiles = Treemap.layout(
-            sizes.enumerated().map { node("n\($0.offset)", $0.element) }, in: bounds)
-
-        for tile in tiles {
-            let w = Double(tile.rect.width), h = Double(tile.rect.height)
-            guard w > 0, h > 0 else { Issue.record("면적 0 타일: \(tile.node.name)"); continue }
-            let ratio = max(w / h, h / w)
-            #expect(ratio < 20, "\(tile.node.name) 종횡비 \(ratio)")
-        }
-    }
-
-    // MARK: - 중첩 렌더링 지원 (Phase 4)
-
-    // TC-1
-    @Test("인접 인덱스의 색상이 충분히 벌어진다")
-    func adjacentHuesAreDistinct() {
-        let hues = (0..<12).map(Treemap.hue(for:))
-
-        for i in 0..<(hues.count - 1) {
-            // 색상환은 순환하므로 양방향 거리 중 가까운 쪽을 본다
-            let raw = abs(hues[i] - hues[i + 1])
-            let distance = min(raw, 1 - raw)
-            #expect(distance > 0.2,
-                    "인덱스 \(i)와 \(i+1)의 색이 너무 가깝다: \(distance)")
-        }
-    }
-
-    // TC-2
-    @Test("색상 값이 0 이상 1 미만에 머문다")
-    func huesStayInRange() {
-        for index in 0..<200 {
-            let hue = Treemap.hue(for: index)
-            #expect(hue >= 0 && hue < 1, "인덱스 \(index)에서 범위 이탈: \(hue)")
-        }
-    }
-
     // TC-3
-    @Test("자식 타일이 부모 사각형 안에 들어간다")
-    func childTilesStayInsideParent() {
-        let children = (0..<4).map {
-            DiskUsageNode(url: URL(filePath: "/private/tmp/c\($0)"),
-                          size: Int64(400 - $0 * 80))
-        }
-        let parent = DiskUsageNode(url: URL(filePath: "/private/tmp/p"),
-                                   size: 1_000, children: children)
-        let outer = CGRect(x: 0, y: 0, width: 300, height: 200)
-        let inner = CGRect(x: 6, y: 36, width: outer.width - 12, height: outer.height - 46)
+    @Test("막대 비율이 가장 큰 항목 기준으로 계산된다")
+    func ratioIsRelativeToLargest() {
+        let largest: Int64 = 1_000
 
-        #expect(Treemap.fitsChildren(inner))
-        for tile in Treemap.layout(parent.children, in: inner) {
-            #expect(inner.contains(tile.rect.origin), "자식이 부모 밖에서 시작한다")
-            #expect(tile.rect.maxX <= inner.maxX + 0.01)
-            #expect(tile.rect.maxY <= inner.maxY + 0.01)
-        }
+        #expect(node("a", 1_000).barRatio(largest: largest) == 1.0)
+        #expect(node("b", 500).barRatio(largest: largest) == 0.5)
+        #expect(node("c", 1).barRatio(largest: largest) == 0.001)
     }
 
     // TC-4
-    @Test("작은 사각형에는 자식을 그리지 않는다")
-    func tinyRectsSkipChildren() {
-        #expect(!Treemap.fitsChildren(CGRect(x: 0, y: 0, width: 39, height: 100)))
-        #expect(!Treemap.fitsChildren(CGRect(x: 0, y: 0, width: 100, height: 23)))
-        #expect(!Treemap.fitsChildren(.zero))
-        #expect(Treemap.fitsChildren(CGRect(x: 0, y: 0, width: 41, height: 25)))
+    @Test("최대값이 0이면 0으로 나누지 않는다")
+    func zeroLargestYieldsZero() {
+        #expect(node("a", 0).barRatio(largest: 0) == 0)
+        #expect(node("b", 100).barRatio(largest: 0) == 0)
+    }
+
+    @Test("비율이 0~1을 벗어나지 않는다")
+    func ratioIsClamped() {
+        // 최대값보다 큰 값이 들어와도(정렬이 어긋나도) 1을 넘지 않는다
+        #expect(node("over", 5_000).barRatio(largest: 1_000) == 1.0)
+    }
+
+    // TC-5
+    @Test("children이 크기 내림차순이라 첫 원소를 막대 기준으로 쓸 수 있다")
+    func childrenAreSortedDescending() throws {
+        let fm = FileManager.default
+        let root = URL(filePath: NSTemporaryDirectory())
+            .appending(path: "sweep-bar-\(UUID().uuidString)")
+        defer { try? fm.removeItem(at: root) }
+
+        for (name, mb) in [("small", 2), ("big", 6), ("mid", 4)] {
+            let url = root.appending(path: "\(name)/f.bin")
+            try fm.createDirectory(at: url.deletingLastPathComponent(),
+                                   withIntermediateDirectories: true)
+            try Data(repeating: 0x41, count: mb * 1024 * 1024).write(to: url)
+        }
+
+        let tree = DiskUsageTree.build(at: root, maxDepth: 2, minimumSize: 1024 * 1024)
+
+        #expect(tree.children.map(\.name) == ["big", "mid", "small"])
+        #expect(tree.children.first?.size == tree.children.map(\.size).max())
     }
 }

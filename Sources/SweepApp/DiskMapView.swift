@@ -5,7 +5,6 @@ import SweepKit
 struct DiskMapView: View {
     @State private var model = DiskMapModel()
     @State private var root: URL?
-    @State private var hovered: URL?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -91,7 +90,7 @@ struct DiskMapView: View {
                 placeholder("\(current.name)에는 더 나눌 항목이 없습니다",
                             detail: current.formattedSize)
             } else {
-                map
+                usageList
             }
         } else {
             placeholder("시작 지점을 고르세요",
@@ -99,74 +98,50 @@ struct DiskMapView: View {
         }
     }
 
-    private var map: some View {
-        GeometryReader { geometry in
-            let tiles = Treemap.layout(model.tiles,
-                                       in: CGRect(origin: .zero, size: geometry.size))
-            ZStack(alignment: .topLeading) {
-                ForEach(Array(tiles.enumerated()), id: \.element.node.id) { index, tile in
-                    tileView(tile, hue: Treemap.hue(for: index))
-                }
-            }
+    /// 크기순 막대 목록. 트리맵은 이 데이터에 맞지 않았다 —
+    /// 5.76GB짜리 하나가 나머지를 눌러 면적 비교가 성립하지 않는다.
+    private var usageList: some View {
+        List(model.tiles) { node in
+            row(node, largest: model.tiles.first?.size ?? 0)
         }
-        .padding(8)
+        .listStyle(.inset)
+        .scrollIndicators(.visible)
     }
 
-    /// 타일 하나. 라벨 아래 남는 자리에 **자식을 한 겹 더** 깐다.
-    ///
-    /// 한 층만 그리면 5.76GB짜리 타일이 화면을 다 먹고 그 안이 비어 있어
-    /// "크다"는 사실 외에 아무 정보도 주지 못한다.
-    private func tileView(_ tile: TreemapTile, hue: Double) -> some View {
-        let showsLabel = tile.rect.width > 52 && tile.rect.height > 26
-        let labelHeight: CGFloat = showsLabel ? 32 : 0
-        let inner = CGRect(x: 6, y: labelHeight + 4,
-                           width: max(tile.rect.width - 12, 0),
-                           height: max(tile.rect.height - labelHeight - 10, 0))
-        let children = Treemap.fitsChildren(inner)
-            ? Treemap.layout(tile.node.children, in: inner)
-            : []
-        let isHovered = hovered == tile.node.id
+    private func row(_ node: DiskUsageNode, largest: Int64) -> some View {
+        let ratio = node.barRatio(largest: largest)
+        let isDrillable = !node.children.isEmpty
 
-        return ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color(hue: hue, saturation: 0.45, brightness: 0.55)
-                    .opacity(isHovered ? 0.5 : 0.35))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 4)
-                        .strokeBorder(Color(hue: hue, saturation: 0.5, brightness: 0.8),
-                                      lineWidth: isHovered ? 2 : 1))
+        return HStack(spacing: 12) {
+            Text(node.name)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .frame(width: 200, alignment: .leading)
 
-            if showsLabel {
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(tile.node.name)
-                        .font(.caption.weight(.medium))
-                        .lineLimit(1)
-                    Text(tile.node.formattedSize)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.secondary.opacity(0.12))
+                    Capsule()
+                        .fill(Color.accentColor.opacity(0.55))
+                        // 아주 작아도 흔적은 남긴다. 0폭이면 있는지조차 모른다.
+                        .frame(width: max(geometry.size.width * ratio, 2))
                 }
-                .padding(6)
             }
+            .frame(height: 10)
 
-            // 자식 층. 클릭은 부모가 받아 드릴다운으로 이어진다.
-            ForEach(children, id: \.node.id) { child in
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(Color(hue: hue, saturation: 0.6, brightness: 0.9).opacity(0.30))
-                    .overlay(RoundedRectangle(cornerRadius: 2)
-                        .strokeBorder(Color.white.opacity(0.12)))
-                    .frame(width: max(child.rect.width - 1, 1),
-                           height: max(child.rect.height - 1, 1))
-                    .offset(x: child.rect.minX, y: child.rect.minY)
-                    .allowsHitTesting(false)
-                    .help("\(child.node.name) · \(child.node.formattedSize)")
-            }
+            Text(node.formattedSize)
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+                .frame(width: 84, alignment: .trailing)
+
+            // 더 들어갈 수 있는 항목만 화살표를 준다
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundStyle(isDrillable ? Color.secondary : Color.clear)
         }
-        .frame(width: max(tile.rect.width, 1), height: max(tile.rect.height, 1))
-        .offset(x: tile.rect.minX, y: tile.rect.minY)
         .contentShape(Rectangle())
-        .onHover { hovered = $0 ? tile.node.id : nil }
-        .onTapGesture { model.drillDown(into: tile.node) }
-        .help("\(tile.node.url.path) · \(tile.node.formattedSize)")
+        .onTapGesture { model.drillDown(into: node) }
+        .help(node.url.path)
     }
 
     private func placeholder(_ title: String, detail: String) -> some View {

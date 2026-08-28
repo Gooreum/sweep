@@ -127,4 +127,23 @@ struct OwnershipTests {
             #expect(!ProtectedPaths.isRemovable(bucket), "버킷이 통과했다: \(bucket.path)")
         }
     }
+
+    // 판정 순서 — FileFlagsTests에 있던 것을 여기로 옮겼다.
+    // `additionalRootsForTesting`이 전역 가변 상태라 두 스위트가 병렬로 건드리면
+    // 서로의 설정을 지운다. 훅을 쓰는 테스트는 이 직렬화된 스위트에 모은다.
+    @Test("소유권이 플래그보다 먼저 판정된다")
+    func ownershipIsCheckedBeforeFlags() throws {
+        ProtectedPaths.additionalRootsForTesting = [systemOwned]
+        defer { ProtectedPaths.additionalRootsForTesting = [] }
+
+        // 버킷은 root 소유이면서 SF_NOUNLINK 플래그도 걸려 있다.
+        // 둘 다 해당할 때 어느 쪽 메시지가 나가는지가 여기서 고정된다.
+        let bucket = try #require(
+            fm.contentsOfDirectory(at: systemOwned, includingPropertiesForKeys: nil).first)
+
+        guard case .notOwnedByCurrentUser = veto(bucket) else {
+            Issue.record("소유권보다 플래그가 먼저 판정됐다: \(String(describing: veto(bucket)))")
+            return
+        }
+    }
 }
