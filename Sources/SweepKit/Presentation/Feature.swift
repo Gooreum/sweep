@@ -75,5 +75,21 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
 
     public var isScannable: Bool { !scanners.isEmpty }
 
+    /// 스마트 스캔 요약에 카드로 뜨는 기능들.
+    ///
+    /// 자기 자신과 읽기 전용(디스크 맵)은 뺀다. 손으로 나열하지 않아
+    /// 기능을 추가하면 요약에도 자동으로 따라 붙는다.
+    public static var summaryCards: [Feature] {
+        allCases.filter { $0 != .smartScan && $0.isScannable }
+    }
+
+    /// 스캔 결과 중 이 기능이 담당하는 것만.
+    ///
+    /// 뷰에서 카테고리를 손으로 걸러 내면 스캐너가 바뀔 때 조용히 어긋난다.
+    public func items(from items: [CleanupItem]) -> [CleanupItem] {
+        let mine = Set(categories)
+        return items.filter { mine.contains($0.category) }
+    }
+
     public var coordinator: ScanCoordinator { ScanCoordinator(scanners: scanners) }
 }

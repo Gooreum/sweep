@@ -80,4 +80,66 @@ struct FeatureTests {
         let items = await Feature.diskMap.coordinator.scan()
         #expect(items.isEmpty)
     }
+
+    // MARK: - 스마트 스캔 요약 (Phase 4 / Step 1)
+
+    private func item(_ name: String, _ category: ScanCategory, _ size: Int64) -> CleanupItem {
+        CleanupItem(url: URL(filePath: "/private/tmp/\(name)"),
+                    size: size, category: category, safety: .safe)
+    }
+
+    // TC-2 (Step 1)
+    @Test("요약 카드는 자기 자신과 읽기 전용을 뺀 기능들이다")
+    func summaryCardsExcludeSelfAndReadOnly() {
+        let cards = Feature.summaryCards
+
+        #expect(!cards.contains(.smartScan))   // 자기를 가리키는 카드는 뜻이 없다
+        #expect(!cards.contains(.diskMap))     // 스캔하지 않으니 발견량도 없다
+        #expect(cards == [.junk, .largeFile, .duplicate])
+        // 손으로 나열하지 않았으므로 스캔 가능한 기능 수와 맞아야 한다
+        #expect(cards.count == Feature.allCases.filter(\.isScannable).count - 1)
+    }
+
+    // TC-4
+    @Test("스캔 결과가 기능별로 빠짐없이, 겹침 없이 갈린다")
+    func itemsPartitionAcrossFeatures() {
+        let all = [
+            item("임시", .runawayTemp, 100),
+            item("빌드", .xcode, 200),
+            item("캐시", .devCache, 300),
+            item("묵은", .staleCache, 400),
+            item("큰것", .largeFile, 500),
+            item("사본", .duplicate, 600),
+        ]
+
+        let split = Feature.summaryCards.map { $0.items(from: all) }
+
+        // 합이 전체와 같아야 한다 — 어느 항목도 어느 카드에도 안 잡히면 안 된다
+        #expect(split.flatMap { $0 }.count == all.count)
+        #expect(split.reduce(0) { $0 + $1.totalSize } == all.totalSize)
+
+        // 같은 항목이 두 카드에 걸치면 총합이 부풀려진다
+        let urls = split.flatMap { $0 }.map(\.url)
+        #expect(urls.count == Set(urls).count)
+
+        #expect(Feature.junk.items(from: all).count == 4)
+        #expect(Feature.largeFile.items(from: all).map(\.displayName) == ["큰것"])
+        #expect(Feature.duplicate.items(from: all).map(\.displayName) == ["사본"])
+    }
+
+    // TC-5
+    @Test("담당 항목이 없는 기능은 빈 배열을 준다")
+    func featureWithNoMatchesIsEmpty() {
+        let onlyJunk = [item("캐시", .devCache, 300)]
+
+        // 카드를 비활성으로 만드는 근거. 누르면 빈 결과 화면으로 떨어진다.
+        #expect(Feature.largeFile.items(from: onlyJunk).isEmpty)
+        #expect(Feature.duplicate.items(from: onlyJunk).isEmpty)
+        #expect(!Feature.junk.items(from: onlyJunk).isEmpty)
+
+        // 아무것도 못 찾은 경우
+        for feature in Feature.summaryCards {
+            #expect(feature.items(from: []).isEmpty)
+        }
+    }
 }

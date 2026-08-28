@@ -18,11 +18,16 @@ struct StageHarness: View {
     }
 
     @State private var model: ScanModel?
+    @State private var app = AppModel()
 
     var body: some View {
         Group {
             if let model {
-                FeatureScreen(feature: .junk, model: model)
+                if stage.hasPrefix("smart-") {
+                    SmartScanView(app: app, model: model)
+                } else {
+                    FeatureScreen(feature: .junk, model: model)
+                }
             } else {
                 Text("준비 중").font(Theme.bodyText)
             }
@@ -87,6 +92,36 @@ struct StageHarness: View {
             let created = ScanModel(scan: { Self.finishing(onlyDanger) })
             model = created
             await created.scan()
+
+        case "smart-summary":
+            // 기능마다 다른 카테고리를 심어 카드가 제각기 채워지는지 본다
+            let spread = items + [
+                CleanupItem(url: URL(filePath: "/private/tmp/큰영상.mov"), size: 1_073_741_824,
+                            category: .largeFile, safety: .caution),
+                CleanupItem(url: URL(filePath: "/private/tmp/사본.zip"), size: 104_857_600,
+                            category: .duplicate, safety: .safe),
+            ]
+            let created = ScanModel(scan: { Self.finishing(spread) })
+            model = created
+            await created.scan()
+
+        case "smart-summary-partial":
+            // 중복이 하나도 없는 경우 — 그 카드는 비활성이어야 한다
+            let created = ScanModel(scan: { Self.finishing(items) })
+            model = created
+            await created.scan()
+
+        case "smart-scanning":
+            let created = ScanModel(scan: {
+                AsyncStream { continuation in
+                    continuation.yield(ScanCoordinator.Progress(
+                        items: items, fraction: 0.67, elapsed: .seconds(20),
+                        estimatedRemaining: .seconds(95),
+                        finishedScanners: 4, totalScanners: 6))
+                }
+            })
+            model = created
+            Task { await created.scan() }
 
         case "empty":
             let created = ScanModel(scan: { Self.finishing([]) })
