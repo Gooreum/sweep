@@ -76,6 +76,49 @@ public enum DiskUsageTree {
         Int64(v.totalFileAllocatedSize ?? v.fileAllocatedSize ?? 0)
     }
 
+    /// 크기를 재기 전에 항목 수만 센다. 이 값이 진행률의 분모가 된다.
+    ///
+    /// `stat`을 부르지 않고 `readdir`의 `d_type`만으로 디렉토리를 판별한다.
+    /// `FileManager.enumerator`로 세면 6.2초인데 이 방식은 3.6초다 —
+    /// 퍼센트 하나 때문에 대기 시간을 두 배로 만들 수는 없다.
+    ///
+    /// 숨김 파일을 포함하는 이유는 `build`도 포함하기 때문이다. 한쪽만 빼면 분모가 어긋난다.
+    public static func countEntries(at url: URL,
+                                    isCancelled: @Sendable () -> Bool = { false }) -> Int {
+        var total = 0
+        var stack = [url.path]
+
+        while let path = stack.popLast() {
+            if isCancelled() { return total }
+            guard let handle = opendir(path) else { continue }
+            defer { closedir(handle) }
+
+            while let entry = readdir(handle) {
+                // `.`/`..`는 바이트로 거른다. 여기서 String을 만들면
+                // 항목 7만 개에 대해 문자열 생성 비용이 그대로 붙는다(실측 5.9 → 3.4초 차이).
+                let isDotEntry = withUnsafePointer(to: entry.pointee.d_name) {
+                    $0.withMemoryRebound(to: CChar.self, capacity: 3) { name in
+                        name[0] == 46 && (name[1] == 0 || (name[1] == 46 && name[2] == 0))
+                    }
+                }
+                if isDotEntry { continue }
+                total += 1
+
+                // 이름이 필요한 건 더 내려갈 디렉토리뿐이다. 파일은 세기만 하면 된다.
+                // 링크는 세되 따라 내려가지 않는다 — build도 링크 하위를 보지 않는다.
+                guard entry.pointee.d_type == DT_DIR else { continue }
+                let name = withUnsafePointer(to: entry.pointee.d_name) {
+                    $0.withMemoryRebound(to: CChar.self,
+                                         capacity: Int(entry.pointee.d_namlen) + 1) {
+                        String(cString: $0)
+                    }
+                }
+                stack.append(path + "/" + name)
+            }
+        }
+        return total
+    }
+
     /// 하위 항목을 가져오면서 **필요한 속성을 함께 프리페치**한다.
     /// `includingPropertiesForKeys: nil`로 가져오면 뒤이은 `resourceValues`가
     /// 항목마다 별도 syscall이 되어 순회가 두 배 가까이 느려진다.
