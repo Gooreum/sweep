@@ -61,6 +61,7 @@ public enum ProtectedPaths {
     public static let allowedRoots: [URL] = [
         inHome("Library/Developer"),
         inHome("Library/Caches"),
+        inHome("Library/Logs"),
         inHome("Downloads"),
         URL(filePath: "/private/tmp"),
     ] + userTemporaryRoots
