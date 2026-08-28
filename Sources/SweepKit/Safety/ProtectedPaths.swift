@@ -14,6 +14,8 @@ public enum RemovalVeto: Error, Equatable, Sendable {
     case allowedRootItself(URL)
     /// 현재 사용자의 소유가 아니다.
     case notOwnedByCurrentUser(URL)
+    /// 파일 플래그(불변·삭제금지·SIP)가 걸려 있어 커널이 삭제를 거부한다.
+    case systemProtected(URL)
 
     public var message: String {
         switch self {
@@ -23,6 +25,7 @@ public enum RemovalVeto: Error, Equatable, Sendable {
         case .rootOrHome(let u): "루트 또는 홈 디렉토리는 삭제할 수 없습니다: \(u.path)"
         case .allowedRootItself(let u): "정리 루트 자체는 삭제할 수 없습니다: \(u.path)"
         case .notOwnedByCurrentUser(let u): "다른 사용자·시스템 소유라 정리할 수 없습니다: \(u.path)"
+        case .systemProtected(let u): "시스템이 보호 중이라 삭제할 수 없습니다: \(u.path)"
         }
     }
 }
@@ -121,6 +124,35 @@ public enum ProtectedPaths {
         if let owner = ownerID(of: resolved), owner != getuid() {
             throw RemovalVeto.notOwnedByCurrentUser(resolved)
         }
+
+        // 7. 커널이 삭제를 거부하는 플래그가 걸려 있으면 후보로 올리지 않는다.
+        //    소유자가 나이고 부모가 쓰기 가능해도 SF_NOUNLINK·SIP면 unlink가 실패한다.
+        //
+        //    부모 디렉토리의 플래그는 보지 않는다. 임시 컨테이너의 `T` 자신이
+        //    SF_NOUNLINK를 갖지만 그 안의 항목은 자유롭게 지워지므로,
+        //    부모까지 보면 지울 수 있는 항목 수천 개가 통째로 사라진다.
+        if let flags = fileFlags(of: resolved), flags & Self.undeletableFlags != 0 {
+            throw RemovalVeto.systemProtected(resolved)
+        }
+    }
+
+    /// 삭제를 막는 BSD 파일 플래그.
+    ///
+    /// `UF_NOUNLINK`은 Darwin 모듈이 노출하지 않아 값을 직접 쓴다.
+    /// SIP(`com.apple.rootless`) 항목은 전수 조사 결과 전부 이 플래그들을 함께 갖고 있어
+    /// 확장 속성을 따로 읽을 필요가 없다.
+    static let undeletableFlags: UInt32 =
+        UInt32(UF_IMMUTABLE) | 0x0000_0010 /* UF_NOUNLINK */
+        | UInt32(SF_IMMUTABLE) | UInt32(SF_NOUNLINK) | UInt32(SF_RESTRICTED)
+
+    /// 심볼릭 링크를 따라가지 않고 파일 플래그를 읽는다. 읽을 수 없으면 nil.
+    ///
+    /// `URLResourceValues`의 `isUserImmutable`/`isSystemImmutable`로는 부족하다.
+    /// 실제로 삭제를 막는 `SF_NOUNLINK`를 둘 다 보지 않아 false를 돌려준다.
+    static func fileFlags(of url: URL) -> UInt32? {
+        var info = stat()
+        guard lstat(url.path, &info) == 0 else { return nil }
+        return info.st_flags
     }
 
     /// 소유자 uid. 읽을 수 없으면(주로 경로가 없으면) nil.
