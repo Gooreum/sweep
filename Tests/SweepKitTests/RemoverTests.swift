@@ -1,0 +1,139 @@
+import Testing
+import Foundation
+@testable import SweepKit
+
+@Suite("Remover")
+struct RemoverTests {
+
+    private var home: URL { FileManager.default.homeDirectoryForCurrentUser }
+    private var fm: FileManager { .default }
+
+    /// `/private/tmp` 아래 — 허용 루트 하위이므로 관문을 통과한다.
+    private func makeAllowedFile() throws -> URL {
+        let dir = URL(filePath: "/private/tmp")
+            .appending(path: "sweep-remove-\(UUID().uuidString)")
+        try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        let file = dir.appending(path: "target.bin")
+        try Data(repeating: 0x41, count: 4096).write(to: file)
+        return file
+    }
+
+    /// `~/Documents` 아래 — 어느 허용 루트에도 속하지 않는다.
+    private func makeForbiddenFile() throws -> URL {
+        let dir = home.appending(path: "Documents")
+            .appending(path: "sweep-forbidden-\(UUID().uuidString)")
+        try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        let file = dir.appending(path: "소중한파일.txt")
+        try "지워지면 안 된다".write(to: file, atomically: true, encoding: .utf8)
+        return file
+    }
+
+    private func item(_ url: URL, size: Int64 = 4096) -> CleanupItem {
+        CleanupItem(url: url, size: size, category: .devCache, safety: .safe)
+    }
+
+    // TC-1
+    @Test("허용 루트 안의 파일은 실제로 삭제된다")
+    func removesAllowedFile() throws {
+        let file = try makeAllowedFile()
+        defer { try? fm.removeItem(at: file.deletingLastPathComponent()) }
+
+        let outcome = Remover(movesToTrash: false).removeOne(item(file))
+
+        #expect(outcome.succeeded)
+        #expect(outcome.failureReason == nil)
+        #expect(!fm.fileExists(atPath: file.path))
+    }
+
+    // TC-2 · TC-3
+    @Test("허용 루트 밖 파일은 실패로 기록되고 디스크에 그대로 남는다")
+    func blocksForbiddenFileAndLeavesItIntact() throws {
+        let file = try makeForbiddenFile()
+        defer { try? fm.removeItem(at: file.deletingLastPathComponent()) }
+
+        let outcome = Remover(movesToTrash: false).removeOne(item(file))
+
+        #expect(!outcome.succeeded)
+        #expect(outcome.failureReason?.contains("정리 대상 범위 밖입니다") == true)
+        // 이 앱의 핵심 불변식 — 관문이 막았으면 파일은 살아 있어야 한다
+        #expect(fm.fileExists(atPath: file.path), "관문이 막았는데 파일이 사라졌다")
+    }
+
+    // TC-4
+    @Test("홈 디렉토리 자체는 삭제되지 않는다")
+    func refusesToRemoveHome() {
+        let outcome = Remover(movesToTrash: false).removeOne(item(home, size: 1))
+
+        #expect(!outcome.succeeded)
+        #expect(outcome.failureReason?.contains("루트 또는 홈 디렉토리") == true)
+        #expect(fm.fileExists(atPath: home.path))
+    }
+
+    // TC-5
+    @Test("존재하지 않는 파일은 크래시 없이 실패로 기록된다")
+    func missingFileIsRecordedAsFailure() {
+        let ghost = URL(filePath: "/private/tmp/sweep-ghost-\(UUID().uuidString)/none.bin")
+        let outcome = Remover(movesToTrash: false).removeOne(item(ghost))
+
+        #expect(!outcome.succeeded)
+        #expect(outcome.failureReason?.isEmpty == false)
+    }
+
+    // TC-6 · TC-10
+    @Test("배치 삭제에서 성공과 차단이 함께 기록되고 회수량은 성공분만 센다")
+    func batchSeparatesSuccessesAndBlocks() throws {
+        let ok1 = try makeAllowedFile()
+        let ok2 = try makeAllowedFile()
+        let blocked = try makeForbiddenFile()
+        defer {
+            try? fm.removeItem(at: ok1.deletingLastPathComponent())
+            try? fm.removeItem(at: ok2.deletingLastPathComponent())
+            try? fm.removeItem(at: blocked.deletingLastPathComponent())
+        }
+
+        let report = Remover(movesToTrash: false).remove([
+            item(ok1, size: 1_000),
+            item(ok2, size: 2_000),
+            item(blocked, size: 9_000_000),
+        ])
+
+        #expect(report.outcomes.count == 3)
+        #expect(report.succeeded.count == 2)
+        #expect(report.failed.count == 1)
+        #expect(report.reclaimedBytes == 3_000)     // 차단된 9,000,000은 제외
+        #expect(!report.succeeded.contains { $0.item.url == blocked })
+        #expect(fm.fileExists(atPath: blocked.path))
+    }
+
+    // TC-7
+    @Test("빈 배열을 넘기면 빈 report를 돌려준다")
+    func emptyBatchYieldsEmptyReport() {
+        let report = Remover().remove([])
+
+        #expect(report.outcomes.isEmpty)
+        #expect(report.reclaimedBytes == 0)
+    }
+
+    // TC-8
+    @Test("휴지통 이동 모드에서 원래 경로에서 사라진다")
+    func trashModeRemovesFromOriginalPath() throws {
+        let file = try makeAllowedFile()
+        defer { try? fm.removeItem(at: file.deletingLastPathComponent()) }
+
+        let outcome = Remover(movesToTrash: true).removeOne(item(file))
+
+        #expect(outcome.succeeded, "휴지통 이동 실패: \(outcome.failureReason ?? "")")
+        #expect(!fm.fileExists(atPath: file.path))
+    }
+
+    // TC-9
+    @Test("denyList 경로는 허용 루트 안이어도 차단된다")
+    func denyListedPathIsBlocked() {
+        let profiles = home.appending(
+            path: "Library/Developer/Xcode/UserData/Provisioning Profiles")
+        let outcome = Remover(movesToTrash: false).removeOne(item(profiles))
+
+        #expect(!outcome.succeeded)
+        #expect(outcome.failureReason?.contains("보호된 경로입니다") == true)
+    }
+}
