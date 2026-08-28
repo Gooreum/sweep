@@ -87,9 +87,22 @@ struct ContentView: View {
                         ItemRow(item: item, isOn: binding(for: item))
                     }
                 } header: {
-                    HStack {
+                    HStack(spacing: 8) {
+                        // SwiftUI Toggle은 부분 선택을 표현하지 못해 버튼으로 그린다
+                        Button { model.toggleAll(in: group) } label: {
+                            let state = model.selectionState(of: group)
+                            Image(systemName: state.symbolName)
+                                .foregroundStyle(state.isEmphasized
+                                                 ? Color.accentColor : Color.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help("이 묶음 전체 선택 / 해제")
+
                         Label(group.category.displayName,
                               systemImage: group.category.systemImageName)
+                        Text("\(group.items.count)")
+                            .foregroundStyle(.tertiary)
+                            .monospacedDigit()
                         Spacer()
                         Text(group.formattedTotalSize)
                             .monospacedDigit()
@@ -98,6 +111,8 @@ struct ContentView: View {
                 }
             }
         }
+        // 아래에 묵은 캐시·대용량 파일 섹션이 더 있다는 유일한 단서
+        .scrollIndicators(.visible)
     }
 
     private func scanBanner(percent: Int, remainingSeconds: Int?) -> some View {
@@ -143,16 +158,28 @@ struct ContentView: View {
     private var footer: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("선택 \(model.selectedItems.count)개 · \(model.formattedSelectedSize)")
+                // 사용자가 얻을 수 있는 양이 먼저다. 선택량만 보이면
+                // 6.9GB를 찾아놓고 111KB만 보이는 상태가 된다.
+                Text("회수 가능 \(model.formattedTotalSize)")
+                    .font(.headline)
                     .monospacedDigit()
-                if let report = model.report {
-                    Text(summary(of: report))
-                        .font(.caption)
-                        .foregroundStyle(report.failed.isEmpty ? Color.secondary : Color.red)
-                }
+                Text("\(model.items.count)개 중 \(model.selectedItems.count)개 선택 · "
+                     + model.formattedSelectedSize)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+                if let report = model.report { removalSummary(report) }
             }
 
             Spacer()
+
+            Menu("선택") {
+                ForEach(ScanModel.SelectionPreset.allCases, id: \.self) { preset in
+                    Button(preset.rawValue) { model.apply(preset) }
+                }
+            }
+            .frame(width: 88)
+            .disabled(isBusy || model.items.isEmpty)
 
             Button("다시 스캔") {
                 Task { await model.scan() }
@@ -175,12 +202,21 @@ struct ContentView: View {
         }
     }
 
-    private func summary(of report: RemovalReport) -> String {
-        report.failed.isEmpty
-            ? "\(report.succeeded.count)개 이동 · \(report.formattedReclaimed) 확보"
-            : "\(report.succeeded.count)개 이동 · \(report.failed.count)개 실패 — "
-                + (report.failed.first?.failureReason ?? "")
+    /// 실패 사유는 길어서 한 줄에 넣으면 잘린다. 개수만 보여주고 전체는 툴팁에 담는다.
+    @ViewBuilder
+    private func removalSummary(_ report: RemovalReport) -> some View {
+        if report.failed.isEmpty {
+            Text("\(report.succeeded.count)개 이동 · \(report.formattedReclaimed) 확보")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        } else {
+            Text("\(report.succeeded.count)개 이동 · \(report.failed.count)개 실패")
+                .font(.caption)
+                .foregroundStyle(Color.red)
+                .help(report.failed.compactMap(\.failureReason).joined(separator: "\n"))
+        }
     }
+
 
     /// `selection`(Set<URL>)을 체크박스가 쓰는 Bool 바인딩으로 잇는다.
     private func binding(for item: CleanupItem) -> Binding<Bool> {

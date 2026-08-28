@@ -79,7 +79,21 @@ public final class ScanModel {
     }
 
     /// 섹션 헤더 체크박스가 그릴 세 가지 상태.
-    public enum SectionSelection: Sendable { case none, partial, all }
+    public enum SectionSelection: String, CaseIterable, Sendable {
+        case none, partial, all
+
+        /// 부분 선택은 빼기 기호로 그린다. 체크와 빈 칸만으로는 구분되지 않는다.
+        public var symbolName: String {
+            switch self {
+            case .none: "square"
+            case .partial: "minus.square.fill"
+            case .all: "checkmark.square.fill"
+            }
+        }
+
+        /// 하나라도 선택돼 있으면 강조색을 쓴다.
+        public var isEmphasized: Bool { self != .none }
+    }
 
     public func selectionState(of group: ScanGroup) -> SectionSelection {
         let picked = group.items.filter { selection.contains($0.url) }.count

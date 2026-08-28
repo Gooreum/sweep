@@ -377,4 +377,54 @@ struct ScanModelTests {
         model.toggleAll(in: xcode)
         #expect(model.selectionState(of: devCache) == .all)
     }
+
+    // TC-2 (Phase 2 Step 2)
+    @Test("섹션 선택 상태마다 다른 심볼과 강조가 붙는다")
+    func sectionSymbolsAreDistinct() {
+        let symbols = ScanModel.SectionSelection.allCases.map(\.symbolName)
+
+        #expect(Set(symbols).count == 3, "상태별 심볼이 겹친다: \(symbols)")
+        #expect(ScanModel.SectionSelection.none.symbolName == "square")
+        #expect(ScanModel.SectionSelection.partial.symbolName == "minus.square.fill")
+        #expect(ScanModel.SectionSelection.all.symbolName == "checkmark.square.fill")
+
+        // 하나라도 골랐으면 강조된다
+        #expect(!ScanModel.SectionSelection.none.isEmphasized)
+        #expect(ScanModel.SectionSelection.partial.isEmphasized)
+        #expect(ScanModel.SectionSelection.all.isEmphasized)
+    }
+
+    // TC-3 (Phase 2 Step 2)
+    @Test("프리셋 4종이 메뉴에 나열할 수 있는 형태다")
+    func presetsAreEnumerableWithLabels() {
+        let presets = ScanModel.SelectionPreset.allCases
+
+        #expect(presets.count == 4)
+        #expect(presets.map(\.rawValue) == ["안전만", "권장", "전체", "해제"])
+        #expect(presets.allSatisfy { !$0.rawValue.isEmpty })
+    }
+
+    // TC-4 · TC-5 (Phase 2 Step 2)
+    @Test("삭제 요약이 성공만일 때와 실패가 섞일 때 다르게 구성된다")
+    func removalSummaryDistinguishesFailures() {
+        let ok = RemovalReport(outcomes: [
+            RemovalOutcome(item: item("a", size: 1_000), failureReason: nil),
+        ])
+        #expect(ok.failed.isEmpty)
+        #expect(ok.succeeded.count == 1)
+        #expect(!ok.formattedReclaimed.isEmpty)
+
+        let mixed = RemovalReport(outcomes: [
+            RemovalOutcome(item: item("a", size: 1_000), failureReason: nil),
+            RemovalOutcome(item: item("b", size: 2_000), failureReason: "시스템이 보호 중입니다"),
+            RemovalOutcome(item: item("c", size: 3_000), failureReason: "다른 사용자 소유입니다"),
+        ])
+        #expect(mixed.failed.count == 2)
+        // 툴팁에 넣을 전체 사유가 모두 남아 있어야 한다
+        let reasons = mixed.failed.compactMap(\.failureReason)
+        #expect(reasons.count == 2)
+        #expect(reasons.joined(separator: "\n").contains("\n"))
+        // 실패분은 회수량에 섞이지 않는다
+        #expect(mixed.reclaimedBytes == 1_000)
+    }
 }
