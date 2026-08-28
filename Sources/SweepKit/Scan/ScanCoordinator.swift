@@ -31,6 +31,18 @@ public struct ScanCoordinator: Sendable {
         public let totalScanners: Int
 
         public var percent: Int { Int((fraction * 100).rounded()) }
+
+        /// 프로퍼티가 전부 public인데 이니셜라이저만 internal이면
+        /// 모듈 밖에서는 값을 읽을 수만 있고 만들 수는 없다.
+        public init(items: [CleanupItem], fraction: Double, elapsed: Duration,
+                    estimatedRemaining: Duration?, finishedScanners: Int, totalScanners: Int) {
+            self.items = items
+            self.fraction = fraction
+            self.elapsed = elapsed
+            self.estimatedRemaining = estimatedRemaining
+            self.finishedScanners = finishedScanners
+            self.totalScanners = totalScanners
+        }
     }
 
     /// 여러 스캐너가 동시에 보고하는 진행률을 한 값으로 모은다.

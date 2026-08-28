@@ -66,7 +66,7 @@ struct FeatureScreen: View {
             RingGauge(percent: percent, caption: "훑는 중")
 
             if let remaining {
-                Text("약 \(Self.readable(seconds: remaining)) 남음")
+                Text("약 \(ProgressDisplay.readable(seconds: remaining)) 남음")
                     .font(Theme.caption)
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
@@ -204,11 +204,6 @@ struct FeatureScreen: View {
     }
 
     // MARK: - 거들기
-
-    /// "45초" / "1분 20초". 분을 넘겨도 초만 보여주면 읽기 나쁘다.
-    static func readable(seconds: Int) -> String {
-        seconds < 60 ? "\(seconds)초" : "\(seconds / 60)분 \(seconds % 60)초"
-    }
 
     /// `selection`(Set<URL>)을 체크박스가 쓰는 Bool 바인딩으로 잇는다.
     private func binding(for item: CleanupItem) -> Binding<Bool> {

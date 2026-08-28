@@ -1,4 +1,5 @@
 import SwiftUI
+import SweepKit
 
 /// 가운데에 퍼센트를 담는 원형 진행 표시.
 ///
@@ -15,7 +16,7 @@ struct RingGauge: View {
                 .stroke(Theme.separator, lineWidth: 10)
 
             Circle()
-                .trim(from: 0, to: Double(percent) / 100)
+                .trim(from: 0, to: ProgressDisplay.ringFraction(percent: percent))
                 .stroke(Theme.accent, style: StrokeStyle(lineWidth: 10, lineCap: .round))
                 // 기본은 3시에서 시작한다. 12시에서 시작해야 진행으로 읽힌다.
                 .rotationEffect(.degrees(-90))

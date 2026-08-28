@@ -18,9 +18,17 @@ struct SweepApp: App {
 
     var body: some Scene {
         WindowGroup("Sweep") {
-            ContentView()
-                // 사이드바 220 + 결과 목록이 접히지 않을 최소 폭
-                .frame(minWidth: 940, minHeight: 600)
+            // 화면 단계는 실제 스캔 없이는 재현하기 어렵다. 43초를 기다리거나
+            // 실제 파일을 지워야 완료 화면을 볼 수 있으면 검증할 수 없다.
+            // `--scan-only`와 같은 취지의 확인용 입구다.
+            if let stage = StageHarness.requested {
+                StageHarness(stage: stage)
+                    .frame(minWidth: 940, minHeight: 600)
+            } else {
+                ContentView()
+                    // 사이드바 220 + 결과 목록이 접히지 않을 최소 폭
+                    .frame(minWidth: 940, minHeight: 600)
+            }
         }
         .defaultSize(width: Theme.windowWidth, height: Theme.windowHeight)
     }
