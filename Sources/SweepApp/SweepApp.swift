@@ -16,8 +16,14 @@ struct SweepApp: App {
         NSApplication.shared.setActivationPolicy(.regular)
     }
 
+    /// 메뉴 명령이 모델을 건드려야 해서 창이 아니라 앱이 들고 있는다.
+    @State private var app = AppModel()
+
     var body: some Scene {
-        WindowGroup("Sweep") {
+        // `WindowGroup`이 아니라 `Window`다. 창마다 `AppModel`이 따로 생기면
+        // 같은 43초 스캔이 두 번 돈다. 창을 여러 개 열 이유가 없는데
+        // "New Window"와 탭 항목만 메뉴에 남는다.
+        Window("Sweep", id: "main") {
             // 화면 단계는 실제 스캔 없이는 재현하기 어렵다. 43초를 기다리거나
             // 실제 파일을 지워야 완료 화면을 볼 수 있으면 검증할 수 없다.
             // `--scan-only`와 같은 취지의 확인용 입구다.
@@ -25,7 +31,7 @@ struct SweepApp: App {
                 StageHarness(stage: stage)
                     .frame(minWidth: 940, minHeight: 600)
             } else {
-                ContentView()
+                ContentView(app: app)
                     // 사이드바 220 + 결과 목록이 접히지 않을 최소 폭
                     .frame(minWidth: 940, minHeight: 600)
             }

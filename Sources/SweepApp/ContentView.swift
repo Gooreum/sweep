@@ -3,7 +3,8 @@ import SweepKit
 
 /// 창 전체. 왼쪽 사이드바가 기능을 고르고 오른쪽이 그 기능의 화면이다.
 struct ContentView: View {
-    @State private var app = AppModel()
+    /// 앱이 소유한다 — 메뉴 명령도 같은 모델을 건드려야 한다.
+    @Bindable var app: AppModel
 
     var body: some View {
         HStack(spacing: 0) {
