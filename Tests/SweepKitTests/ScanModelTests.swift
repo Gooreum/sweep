@@ -510,4 +510,48 @@ struct ScanModelTests {
         // 하단 바는 "총계"를 보여주므로 찾은 양 자체는 0이 아니다
         #expect(!model.items.isEmpty)
     }
+
+    // MARK: - 바쁨 상태 (메뉴 잠금의 근거)
+
+    // TC-1
+    @Test("스캔·삭제 중에만 바쁘다고 답한다")
+    func isBusyOnlyDuringWork() async {
+        let model = ScanModel(scan: stream([[item("a")]]),
+                              removeOne: alwaysSucceeds())
+
+        #expect(model.phase == .idle)
+        #expect(model.isBusy == false)          // 시작 화면 — 검색을 받아야 한다
+
+        await model.scan()
+        #expect(model.phase == .results)
+        #expect(model.isBusy == false)          // TC-2: 결과에서도 다시 검색 가능
+
+        await model.removeSelected()
+        #expect(model.phase == .cleaned)
+        #expect(model.isBusy == false)          // 완료 화면에서도 잠기면 안 된다
+    }
+
+    @Test("진행 중 단계는 바쁨으로 판정된다")
+    func inProgressPhasesAreBusy() async {
+        // 끝나지 않는 스트림으로 scanning에 머물게 한다
+        let model = ScanModel(scan: {
+            AsyncStream { continuation in
+                continuation.yield(ScanCoordinator.Progress(
+                    items: [], fraction: 0.4, elapsed: .seconds(3),
+                    estimatedRemaining: .seconds(5),
+                    finishedScanners: 1, totalScanners: 3))
+                // finish하지 않는다
+            }
+        })
+        let running = Task { await model.scan() }
+        // 첫 Progress가 반영될 때까지 양보한다
+        for _ in 0..<50 where model.isBusy == false {
+            await Task.yield()
+        }
+
+        #expect(model.isBusy == true)
+        if case .scanning = model.phase {} else { Issue.record("scanning이 아니라 \(model.phase)") }
+
+        running.cancel()
+    }
 }

@@ -61,6 +61,17 @@ public final class ScanModel {
     public var formattedSelectedSize: String { selectedItems.formattedTotalSize }
     public var hasSelection: Bool { !selection.isEmpty }
 
+    /// 스캔이나 삭제가 도는 중.
+    ///
+    /// 이때는 새 명령을 받으면 안 된다. 메뉴와 하단 바가 **같은 값**을 보고
+    /// 잠겨야 한다 — 각자 판단하면 한쪽만 눌리는 상태가 생긴다.
+    public var isBusy: Bool {
+        switch phase {
+        case .scanning, .removing: true
+        case .idle, .results, .cleaned: false
+        }
+    }
+
     /// 찾아낸 전체 용량. 이게 안 보이면 사용자는 자기가 뭘 얻을 수 있는지 모른 채
     /// 선택량만 보게 된다 — 6.9GB를 찾아놓고 111KB만 보이는 일이 생긴다.
     public var formattedTotalSize: String { items.formattedTotalSize }

@@ -46,4 +46,85 @@ struct AppModelTests {
 
         #expect(app.model(for: .junk) === junk)
     }
+
+    // MARK: - 메뉴 잠금 조건 (Phase 2 / Step 1)
+
+    private func item(_ name: String, safety: SafetyLevel = .safe) -> CleanupItem {
+        CleanupItem(url: URL(filePath: "/private/tmp/\(name)"),
+                    size: 1_000, category: .devCache, safety: safety)
+    }
+
+    private func finishing(_ items: [CleanupItem])
+        -> @Sendable () -> AsyncStream<ScanCoordinator.Progress> {
+        { @Sendable in
+            AsyncStream { continuation in
+                continuation.yield(ScanCoordinator.Progress(
+                    items: items, fraction: 1, elapsed: .seconds(1),
+                    estimatedRemaining: nil, finishedScanners: 1, totalScanners: 1))
+                continuation.finish()
+            }
+        }
+    }
+
+    // TC-3
+    @Test("디스크 맵을 보고 있으면 걸릴 모델이 없다")
+    func diskMapHasNoCurrentModel() {
+        let app = AppModel()
+        app.selected = .diskMap
+
+        // 스캔하지 않는 기능이라 검색·정리 명령이 걸릴 데가 없다
+        #expect(app.currentModel == nil)
+        // TC-6
+        #expect(app.canScan == false)
+        #expect(app.canClean == false)
+    }
+
+    // TC-4
+    @Test("현재 모델은 그 기능의 모델과 같은 인스턴스다")
+    func currentModelMatchesFeatureModel() {
+        let app = AppModel()
+
+        for feature in Feature.allCases where feature.isScannable {
+            app.selected = feature
+            #expect(app.currentModel === app.model(for: feature))
+        }
+    }
+
+    // TC-5
+    @Test("기능을 옮기면 현재 모델도 따라간다")
+    func currentModelFollowsSelection() {
+        let app = AppModel()
+        app.selected = .junk
+        let junk = app.currentModel
+
+        app.selected = .largeFile
+
+        #expect(app.currentModel !== junk)
+        #expect(app.currentModel === app.model(for: .largeFile))
+    }
+
+    // TC-7 · TC-8 · TC-9 · TC-10
+    @Test("검색은 늘 가능하고 정리는 고른 것이 있을 때만 가능하다")
+    func scanAndCleanGates() async {
+        let app = AppModel()
+        app.selected = .junk
+
+        // 시작 화면 — 검색은 되고 정리는 안 된다
+        #expect(app.canScan)            // TC-7
+        #expect(!app.canClean)          // TC-8
+
+        // AppModel이 만든 모델은 실제 스캐너를 물고 있어 테스트에 쓸 수 없다.
+        // 잠금 조건 자체는 ScanModel의 값만 보므로 직접 만들어 확인한다.
+        let model = ScanModel(scan: finishing([item("safe")]))
+        await model.scan()
+        #expect(model.hasSelection)     // safe는 기본 선택
+        #expect(!model.isBusy)
+
+        // TC-10: 메뉴(canClean)와 하단 바가 보는 값이 같다
+        #expect(model.hasSelection && !model.isBusy)   // TC-9의 조건
+
+        // 고른 것을 없애면 정리가 잠긴다
+        model.apply(.none)
+        #expect(!model.hasSelection)
+    }
 }

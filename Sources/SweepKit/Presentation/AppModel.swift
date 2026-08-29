@@ -25,4 +25,23 @@ public final class AppModel {
         models[feature] = created
         return created
     }
+
+    // MARK: - 메뉴가 물어보는 것
+
+    /// 지금 보고 있는 기능의 모델. 디스크 맵은 스캔하지 않으므로 nil이다.
+    public var currentModel: ScanModel? {
+        selected.isScannable ? model(for: selected) : nil
+    }
+
+    /// 검색을 시작할 수 있는가. 이미 도는 중이면 안 된다.
+    public var canScan: Bool {
+        guard let model = currentModel else { return false }
+        return !model.isBusy
+    }
+
+    /// 정리할 수 있는가. 고른 것이 있어야 한다.
+    public var canClean: Bool {
+        guard let model = currentModel else { return false }
+        return !model.isBusy && model.hasSelection
+    }
 }
