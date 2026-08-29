@@ -27,6 +27,42 @@ struct SweepCommands: Commands {
         // 아무것도 없는 메뉴가 더 나쁘다. 메뉴 자체는 AppKit이 만들므로
         // `MenuTrimmer`가 기동 후에 떼어낸다.
         CommandGroup(replacing: .help) {}
+
+        // 사이드바를 마우스로만 옮길 수 있으면 키보드 사용자는 갇힌다.
+        // 항목을 손으로 나열하지 않는다 — 기능이 늘면 메뉴도 따라온다.
+        CommandMenu("기능") {
+            ForEach(Array(Feature.allCases.enumerated()), id: \.element) { index, feature in
+                Button(feature.displayName) { app.selected = feature }
+                    .keyboardShortcut(
+                        KeyEquivalent(Character("\(index + 1)")), modifiers: .command)
+            }
+        }
+
+        CommandMenu("검색") {
+            // 43초짜리 스캔을 돌리는 앱인데 ⌘R이 없었다
+            Button("검색") {
+                guard let model = app.currentModel else { return }
+                Task { await model.scan() }
+            }
+            .keyboardShortcut("r", modifiers: .command)
+            .disabled(!app.canScan)
+
+            // 되돌릴 수 없는 동작이라 ⌘⌫ — 하단 바 버튼과 같은 무게로 둔다
+            Button("정리") {
+                guard let model = app.currentModel else { return }
+                Task { await model.removeSelected() }
+            }
+            .keyboardShortcut(.delete, modifiers: .command)
+            .disabled(!app.canClean)
+
+            Divider()
+
+            // 고를 것이 없으면 프리셋도 뜻이 없다
+            ForEach(ScanModel.SelectionPreset.allCases, id: \.self) { preset in
+                Button(preset.rawValue) { app.currentModel?.apply(preset) }
+                    .disabled(app.currentModel?.items.isEmpty ?? true)
+            }
+        }
     }
 }
 
