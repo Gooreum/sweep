@@ -22,6 +22,9 @@ struct SweepApp: App {
     /// AppKit이 붙이는 빈 Help 메뉴를 기동 후에 떼어낸다.
     @NSApplicationDelegateAdaptor(MenuTrimmer.self) private var menuTrimmer
 
+    /// 상태 아이콘에서 본 창을 앞으로 부를 때 쓴다.
+    @Environment(\.openWindow) private var openWindow
+
     var body: some Scene {
         // `WindowGroup`이 아니라 `Window`다. 창마다 `AppModel`이 따로 생기면
         // 같은 43초 스캔이 두 번 돈다. 창을 여러 개 열 이유가 없는데
@@ -41,6 +44,17 @@ struct SweepApp: App {
         }
         .defaultSize(width: Theme.windowWidth, height: Theme.windowHeight)
         .commands { SweepCommands(app: app) }
+
+        // 배터리·와이파이가 있는 상태 영역. 창을 닫아도 여기는 남는다.
+        MenuBarExtra("Sweep", systemImage: "sparkles") {
+            MenuBarPanel(app: app) {
+                openWindow(id: "main")
+                // 다른 앱이 앞에 있으면 창만 만들어지고 뒤에 숨는다
+                NSApp.activate(ignoringOtherApps: true)
+            }
+        }
+        // 기본 `.menu`는 임의 뷰를 그리지 못한다 — 텍스트 항목만 나온다
+        .menuBarExtraStyle(.window)
     }
 
     /// 스캔 결과를 탭 구분 텍스트로 찍고 종료한다.

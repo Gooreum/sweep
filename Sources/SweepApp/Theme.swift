@@ -45,6 +45,13 @@ enum Theme {
 
     static let rowCornerRadius: CGFloat = 6
 
+    /// 메뉴 막대 패널 폭. 퀵 윈도우 콘텐츠 `{400, 602}`의 폭만 따른다 —
+    /// 높이는 담을 내용이 달라 고정하지 않는다.
+    static let panelWidth: CGFloat = 400
+    /// 퀵 윈도우 큰 버튼 `{{10, 45}, {380, 31}}` — 400에서 380을 빼면 좌우 10pt.
+    /// 글자 줄에는 조금 넉넉하게 준다.
+    static let panelPadding: CGFloat = 14
+
     // MARK: - 서체 (.AppleSystemUIFont 22 / 13 / 11)
 
     static let title = Font.system(size: 22)
