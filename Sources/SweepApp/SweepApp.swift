@@ -19,6 +19,9 @@ struct SweepApp: App {
     /// 메뉴 명령이 모델을 건드려야 해서 창이 아니라 앱이 들고 있는다.
     @State private var app = AppModel()
 
+    /// AppKit이 붙이는 빈 Help 메뉴를 기동 후에 떼어낸다.
+    @NSApplicationDelegateAdaptor(MenuTrimmer.self) private var menuTrimmer
+
     var body: some Scene {
         // `WindowGroup`이 아니라 `Window`다. 창마다 `AppModel`이 따로 생기면
         // 같은 43초 스캔이 두 번 돈다. 창을 여러 개 열 이유가 없는데
@@ -37,6 +40,7 @@ struct SweepApp: App {
             }
         }
         .defaultSize(width: Theme.windowWidth, height: Theme.windowHeight)
+        .commands { SweepCommands(app: app) }
     }
 
     /// 스캔 결과를 탭 구분 텍스트로 찍고 종료한다.
