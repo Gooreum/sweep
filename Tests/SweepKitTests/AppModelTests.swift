@@ -127,4 +127,23 @@ struct AppModelTests {
         model.apply(.none)
         #expect(!model.hasSelection)
     }
+
+    // TC-9
+    @Test("메뉴 막대 요약은 스마트 스캔 모델을 본다")
+    func menuBarSummaryReadsSmartScan() {
+        let app = AppModel()
+
+        // 사이드바를 다른 기능에 두어도 패널은 전체 스캔 결과를 보여줘야 한다 —
+        // 기능별 모델을 합치면 같은 파일이 여러 번 세어진다.
+        app.selected = .largeFile
+        let summary = app.menuBarSummary
+
+        let smart = app.model(for: .smartScan)
+        #expect(summary.reclaimableBytes == smart.items.totalSize)
+        #expect(summary.isScanning == smart.isBusy)
+
+        // 아직 아무것도 안 돌렸으니 비어 있다
+        #expect(summary.reclaimable == nil)
+        #expect(summary.breakdown.isEmpty)
+    }
 }

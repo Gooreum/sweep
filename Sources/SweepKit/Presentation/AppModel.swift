@@ -44,4 +44,67 @@ public final class AppModel {
         guard let model = currentModel else { return false }
         return !model.isBusy && model.hasSelection
     }
+
+    // MARK: - 상태 아이콘이 물어보는 것
+
+    /// 메뉴 막대 패널이 보여줄 요약.
+    ///
+    /// **스마트 스캔 모델 하나만 본다.** 기능별 모델을 합치면 같은 파일이
+    /// 여러 번 세어져 총량이 부풀려진다 — 지금 구성에서는 겹치지 않지만
+    /// 합산은 그 전제에 기대는 계산이라 스캐너가 바뀌면 조용히 틀린다.
+    public var menuBarSummary: MenuBarSummary {
+        MenuBarSummary(model: model(for: .smartScan))
+    }
+}
+
+/// 메뉴 막대 패널 한 장에 들어갈 값들.
+///
+/// 뷰가 아니라 여기서 만든다 — 숫자가 맞는지 뷰 없이 확인할 수 있어야 한다.
+@MainActor
+public struct MenuBarSummary: Sendable {
+
+    /// 기능 하나의 발견량.
+    public struct Row: Identifiable, Sendable {
+        public let feature: Feature
+        public let bytes: Int64
+        public let count: Int
+
+        public var id: Feature { feature }
+        public var formattedSize: String {
+            ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
+        }
+    }
+
+    /// 회수 가능 총량. 아직 아무것도 못 찾았으면 nil이다.
+    ///
+    /// **"0바이트"가 아니다.** 스캔한 적이 없는 것과 스캔했는데 0인 것을
+    /// 화면에서 구분해야 한다 — `VolumeUsage.current()`에서 한 판단과 같다.
+    public let reclaimable: String?
+    public let reclaimableBytes: Int64
+
+    /// 기능별 발견량. 0인 기능은 빠진다 — "중복 0개"는 알려줄 것이 아니다.
+    public let breakdown: [Row]
+
+    public let isScanning: Bool
+    /// 스캔 중일 때만 값이 있다.
+    public let scanPercent: Int?
+
+    init(model: ScanModel) {
+        isScanning = model.isBusy
+        if case let .scanning(percent, _) = model.phase {
+            scanPercent = percent
+        } else {
+            scanPercent = nil
+        }
+
+        let items = model.items
+        reclaimableBytes = items.totalSize
+        reclaimable = items.isEmpty ? nil : items.formattedTotalSize
+
+        breakdown = Feature.summaryCards.compactMap { feature in
+            let matched = feature.items(from: items)
+            guard !matched.isEmpty else { return nil }
+            return Row(feature: feature, bytes: matched.totalSize, count: matched.count)
+        }
+    }
 }
