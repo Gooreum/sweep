@@ -1,73 +1,154 @@
 import SwiftUI
+import AppKit
 
 /// 화면 전체가 공유하는 색·치수·서체.
 ///
-/// 값은 Cleaner One 6.5.3의 nib에서 뽑았다. 눈대중이 아니라 아카이브의
-/// `NSRGB`와 frame 문자열이다. 치수와 강조색은 `ATMainWindowController.nib`,
-/// 선택 틴트는 `MQWProMainWindowController.nib`에서 나왔다.
+/// 표면 색은 **다크·라이트 두 값을 모두** 들고 있다. 반투명 색을 배경 위에
+/// 합성하면 모드에 따라 전혀 다른 색이 나온다 — 실측에서 밝은 파랑
+/// `#D7E6F6`을 55%로 깔았더니 다크에서 `#878E97` 탁한 회색이 됐고,
+/// 그 위 글자가 1.54~2.85:1로 WCAG AA에 한참 못 미쳤다.
 enum Theme {
 
-    // MARK: - 색
+    /// 모드에 따라 값이 바뀌는 색. 합성이 아니라 **불투명 값**을 각각 고른다.
+    private static func adaptive(dark: UInt32, light: UInt32) -> Color {
+        Color(nsColor: NSColor(name: nil) { appearance in
+            let hex = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua ? dark : light
+            return NSColor(srgbRed: Double((hex >> 16) & 0xFF) / 255,
+                           green: Double((hex >> 8) & 0xFF) / 255,
+                           blue: Double(hex & 0xFF) / 255,
+                           alpha: 1)
+        })
+    }
 
-    /// #0A5FFF. nib의 `0.04081478715 0.3748140335 0.998367548`.
-    /// 브랜드 색이라 라이트·다크에서 같게 쓴다.
+    // MARK: - 표면
+
+    /// 본문 배경.
+    static let surface = adaptive(dark: 0x222424, light: 0xFFFFFF)
+    /// 사이드바·패널처럼 한 단 들어간 면.
+    static let surfaceSunken = adaptive(dark: 0x1A1A1A, light: 0xF7F7F8)
+    /// 선택된 행·카드처럼 한 단 올라온 면.
+    ///
+    /// 예전 `selectionTint`(반투명 하늘색)를 대체한다. 불투명이라 배경과
+    /// 합성되지 않는다 — 다크 `#2E3033` 위에서 본문 글씨가 11.9:1이다.
+    static let surfaceRaised = adaptive(dark: 0x2E3033, light: 0xF0F0F2)
+    static let border = adaptive(dark: 0x3A3C3F, light: 0xDCDCE0)
+
+    // MARK: - 텍스트
+
+    static let textPrimary = adaptive(dark: 0xEDEEEF, light: 0x1D1D1F)
+
+    /// 보조 텍스트는 **시스템 값을 그대로 쓴다.**
+    /// 실측에서 다크 배경 위 5.67:1로 AA를 통과했다 — 통과하는 것을 건드리지 않는다.
+    static let textSecondary = Color.secondary
+
+    /// 시스템 `.tertiary`는 다크에서 2.25:1로 미달이었다. 자체 값으로 올린다.
+    static let textTertiary = adaptive(dark: 0x8A8C8E, light: 0x6E6E73)
+
+    // MARK: - 강조
+
+    /// #0A5FFF. 흰 글씨와 5.23:1 (실측). 값은 두되 **쓰는 면적을 줄인다** —
+    /// 버튼·진행 표시·선택 인디케이터에만.
     static let accent = Color(red: 0.0408, green: 0.3748, blue: 0.9984)
-
-    /// #0956F2. 눌린 상태. nib의 `0.03549256176 0.3348736167 0.9491817951`.
     static let accentPressed = Color(red: 0.0355, green: 0.3349, blue: 0.9492)
 
-    /// #D7E6F6. 선택된 행의 옅은 배경.
-    /// 메인 윈도우 nib에는 없고 `MQWProMainWindowController.nib`에 있다.
-    static let selectionTint = Color(red: 0.8431, green: 0.9020, blue: 0.9647)
-
-    /// 구분선과 배경은 실측값(#DFDFDF, 흰색)을 그대로 쓰지 않고 시맨틱 색을 쓴다.
-    /// Cleaner One은 라이트 전용이지만 Sweep은 다크에서도 읽혀야 한다 —
-    /// 고정 회색을 박으면 다크 모드에서 선이 보이지 않거나 배경이 흰 판으로 튄다.
+    /// 창 테두리와 톤이 맞아야 해서 시맨틱을 쓴다.
     static let separator = Color(nsColor: .separatorColor)
-    static let sidebarBackground = Color(nsColor: .controlBackgroundColor)
-    static let contentBackground = Color(nsColor: .textBackgroundColor)
 
-    // MARK: - 치수 (nib frame 실측)
+    // MARK: - 치수 (8px 그리드: 4/8/12/16/24/32)
 
-    /// 콘텐츠 `{1160, 680}`.
     static let windowWidth: CGFloat = 1160
     static let windowHeight: CGFloat = 680
-
-    /// 사이드바 `{220, 680}`, 오른쪽 끝 구분선 `{{219, 0}, {1, 680}}`.
     static let sidebarWidth: CGFloat = 220
-    /// 선택 배경 `{{1, 1}, {217, 45}}`.
-    static let sidebarRowHeight: CGFloat = 45
-    /// 내부 콘텐츠 `{{4, 2}, {215, 40}}` — 좌우 4pt 들여쓰기.
+
+    /// macOS 사이드바는 포인터 조작이라 iOS의 44pt 터치타겟 규칙이 없다.
+    /// Finder·Xcode·Raycast가 모두 28~32 구간이다.
+    static let sidebarRowHeight: CGFloat = 32
     static let sidebarRowInset: CGFloat = 4
-    /// 아이콘 `{{20, 9}, {28, 28}}`.
-    static let sidebarIconSize: CGFloat = 28
-    static let sidebarIconLeading: CGFloat = 20
+    static let sidebarIconSize: CGFloat = 16
+    static let sidebarIconLeading: CGFloat = 12
 
+    /// 버튼·행. 카드·패널은 `cardRadius`.
     static let rowCornerRadius: CGFloat = 6
+    static let cardRadius: CGFloat = 10
 
-    /// 메뉴 막대 패널 폭. 퀵 윈도우 콘텐츠 `{400, 602}`의 폭만 따른다 —
-    /// 높이는 담을 내용이 달라 고정하지 않는다.
     static let panelWidth: CGFloat = 400
-    /// 퀵 윈도우 큰 버튼 `{{10, 45}, {380, 31}}` — 400에서 380을 빼면 좌우 10pt.
-    /// 글자 줄에는 조금 넉넉하게 준다.
-    static let panelPadding: CGFloat = 14
+    static let panelPadding: CGFloat = 16
 
-    // MARK: - 서체 (.AppleSystemUIFont 22 / 13 / 11)
+    /// 아이콘 크기는 폰트 스케일과 분리한다.
+    enum Icon {
+        static let small: CGFloat = 16
+        static let medium: CGFloat = 24
+        static let large: CGFloat = 48
+    }
 
-    static let title = Font.system(size: 22)
+    // MARK: - 서체 (6단계, weight 2종)
+
+    static let display = Font.system(size: 32, weight: .medium)
+    static let title = Font.system(size: 20)
+    static let headline = Font.system(size: 16, weight: .medium)
     static let bodyText = Font.system(size: 13)
     static let caption = Font.system(size: 11)
+
+    /// 숫자는 자릿수가 흔들리면 안 된다.
+    static let displayMono = display.monospacedDigit()
+    static let headlineMono = headline.monospacedDigit()
+    static let bodyMono = bodyText.monospacedDigit()
+    static let captionMono = caption.monospacedDigit()
+
+    /// 표준 150~300ms.
+    static let transition = Animation.easeInOut(duration: 0.15)
 }
 
-/// 강조색 알약 버튼. 화면마다 주 동작이 하나씩 있고 그것만 이 모양을 쓴다.
+/// 화면의 주 동작 하나에만 쓴다.
+///
+/// 5개 상태를 모두 그린다. `.disabled()`는 `\.isEnabled` 환경값만 바꾸므로
+/// 커스텀 스타일이 읽지 않으면 **누를 수 없는 버튼이 누를 수 있어 보인다.**
 struct PrimaryButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+    @State private var isHovering = false
+
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(Theme.bodyText.weight(.medium))
-            .foregroundStyle(.white)
-            .padding(.horizontal, 28)
-            .frame(height: 32)
-            .background(configuration.isPressed ? Theme.accentPressed : Theme.accent,
-                        in: Capsule())
+            .foregroundStyle(isEnabled ? Color.white : Theme.textTertiary)
+            .padding(.horizontal, 16)
+            .frame(height: 28)
+            .background(fill(configuration),
+                        in: RoundedRectangle(cornerRadius: Theme.rowCornerRadius))
+            .scaleEffect(configuration.isPressed && isEnabled ? 0.98 : 1)
+            .animation(Theme.transition, value: configuration.isPressed)
+            .animation(Theme.transition, value: isHovering)
+            .onHover { isHovering = $0 }
+    }
+
+    private func fill(_ configuration: Configuration) -> Color {
+        guard isEnabled else { return Theme.surfaceRaised }
+        return configuration.isPressed || isHovering ? Theme.accentPressed : Theme.accent
+    }
+}
+
+/// 보조 동작. 주 동작과 같은 치수를 쓰되 면을 채우지 않는다.
+struct SecondaryButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+    @State private var isHovering = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(Theme.bodyText)
+            .foregroundStyle(isEnabled ? Theme.textPrimary : Theme.textTertiary)
+            .padding(.horizontal, 16)
+            .frame(height: 28)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.rowCornerRadius)
+                    .fill(configuration.isPressed || isHovering
+                          ? Theme.surfaceRaised : Color.clear)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.rowCornerRadius)
+                    .strokeBorder(Theme.border, lineWidth: 1)
+            )
+            .animation(Theme.transition, value: configuration.isPressed)
+            .animation(Theme.transition, value: isHovering)
+            .onHover { isHovering = $0 }
     }
 }

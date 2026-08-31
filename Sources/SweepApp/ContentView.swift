@@ -12,7 +12,7 @@ struct ContentView: View {
 
             detail
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Theme.contentBackground)
+                .background(Theme.surface)
         }
     }
 

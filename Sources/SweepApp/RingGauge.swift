@@ -13,7 +13,7 @@ struct RingGauge: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(Theme.separator, lineWidth: 10)
+                .stroke(Theme.border, lineWidth: 10)
 
             Circle()
                 .trim(from: 0, to: ProgressDisplay.ringFraction(percent: percent))
@@ -24,7 +24,7 @@ struct RingGauge: View {
 
             VStack(spacing: 4) {
                 Text("\(percent)%")
-                    .font(.system(size: 34, weight: .medium).monospacedDigit())
+                    .font(Theme.displayMono)
                 Text(caption)
                     .font(Theme.caption)
                     .foregroundStyle(.secondary)

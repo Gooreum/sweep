@@ -43,7 +43,7 @@ struct FeatureScreen: View {
     private var welcome: some View {
         VStack(spacing: 16) {
             Image(systemName: feature.systemImageName)
-                .font(.system(size: 56))
+                .font(.system(size: Theme.Icon.large))
                 .foregroundStyle(Theme.accent)
 
             Text(feature.displayName)
@@ -85,7 +85,7 @@ struct FeatureScreen: View {
     private var emptyResult: some View {
         VStack(spacing: 10) {
             Image(systemName: "checkmark.circle")
-                .font(.system(size: 48))
+                .font(.system(size: Theme.Icon.large))
                 .foregroundStyle(.secondary)
             Text("정리할 항목이 없음").font(Theme.title)
             Text("회수할 만한 크기의 항목을 찾지 못했습니다.")
@@ -103,7 +103,7 @@ struct FeatureScreen: View {
         if let report = model.report {
             VStack(spacing: 14) {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 56))
+                    .font(.system(size: Theme.Icon.large))
                     .foregroundStyle(Theme.accent)
 
                 Text("\(report.formattedReclaimed)의 파일이 삭제됨")
@@ -156,7 +156,7 @@ struct FeatureScreen: View {
 
             Label(group.category.displayName, systemImage: group.category.systemImageName)
             Text("\(group.items.count)")
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(Theme.textTertiary)
                 .monospacedDigit()
 
             Spacer()
@@ -194,6 +194,7 @@ struct FeatureScreen: View {
             .frame(width: 88)
 
             Button("다시 검색") { Task { await model.scan() } }
+                .buttonStyle(SecondaryButtonStyle())
 
             Button("정리") { Task { await model.removeSelected() } }
                 .buttonStyle(PrimaryButtonStyle())

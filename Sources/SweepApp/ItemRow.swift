@@ -8,7 +8,7 @@ struct SafetyBadge: View {
 
     var body: some View {
         Text(level.displayName)
-            .font(.system(size: 10, weight: .semibold))
+            .font(Theme.caption.weight(.semibold))
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(level.tint.opacity(0.18), in: Capsule())
@@ -70,9 +70,9 @@ struct ItemRow: View {
                 .frame(width: 88, alignment: .trailing)
         }
         .padding(.vertical, 2)
-        // #D7E6F6. 선택이 능동적으로 보여야 한다 —
-        // 미선택 행이 비활성처럼 읽히면 뭘 지우는지 헷갈린다.
-        .listRowBackground(isOn ? Theme.selectionTint.opacity(0.55) : Color.clear)
+        // 불투명 표면을 쓴다. 반투명 하늘색을 다크 배경에 깔면 탁한 회색이 되어
+        // 이 행 위의 모든 글자가 1.54~2.85:1로 무너졌다 (실측).
+        .listRowBackground(isOn ? Theme.surfaceRaised : Color.clear)
         .contentShape(Rectangle())
         .onTapGesture { isOn.toggle() }
         .help(item.url.path)

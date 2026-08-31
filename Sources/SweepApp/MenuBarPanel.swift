@@ -44,7 +44,7 @@ struct MenuBarPanel: View {
 
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Theme.separator)
+                        Capsule().fill(Theme.border)
                         Capsule()
                             .fill(Theme.accent)
                             .frame(width: geometry.size.width * usage.usedFraction)
@@ -78,7 +78,7 @@ struct MenuBarPanel: View {
                     Text("회수 가능").font(Theme.bodyText.weight(.medium))
                     Spacer()
                     Text(reclaimable)
-                        .font(.system(size: 17, weight: .medium).monospacedDigit())
+                        .font(Theme.headlineMono)
                         .foregroundStyle(Theme.accent)
                 }
 
@@ -117,6 +117,7 @@ struct MenuBarPanel: View {
             Spacer()
 
             Button("Sweep 열기", action: openMain)
+                .buttonStyle(SecondaryButtonStyle())
         }
         .padding(Theme.panelPadding)
     }

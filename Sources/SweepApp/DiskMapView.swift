@@ -120,7 +120,7 @@ struct DiskMapView: View {
 
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Color.secondary.opacity(0.12))
+                    Capsule().fill(Theme.border)
                     Capsule()
                         .fill(Theme.accent.opacity(0.55))
                         // 아주 작아도 흔적은 남긴다. 0폭이면 있는지조차 모른다.
@@ -147,7 +147,7 @@ struct DiskMapView: View {
     private func placeholder(_ title: String, detail: String) -> some View {
         VStack(spacing: 8) {
             Image(systemName: "square.grid.2x2")
-                .font(.system(size: 36))
+                .font(.system(size: Theme.Icon.large))
                 .foregroundStyle(.secondary)
             Text(title).font(Theme.title)
             Text(detail).font(Theme.bodyText).foregroundStyle(.secondary)

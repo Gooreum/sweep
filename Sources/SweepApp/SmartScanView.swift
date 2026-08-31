@@ -24,7 +24,7 @@ struct SmartScanView: View {
     private var welcome: some View {
         VStack(spacing: 16) {
             Image(systemName: Feature.smartScan.systemImageName)
-                .font(.system(size: 64))
+                .font(.system(size: Theme.Icon.large))
                 .foregroundStyle(Theme.accent)
 
             Text(Feature.smartScan.displayName)
@@ -62,7 +62,7 @@ struct SmartScanView: View {
         VStack(spacing: 24) {
             VStack(spacing: 4) {
                 Text("회수 가능 \(model.formattedTotalSize)")
-                    .font(.system(size: 28, weight: .medium).monospacedDigit())
+                    .font(Theme.displayMono)
                 Text("\(model.items.count)개 항목")
                     .font(Theme.caption)
                     .foregroundStyle(.secondary)
@@ -90,7 +90,7 @@ struct SmartScanView: View {
         } label: {
             VStack(spacing: 10) {
                 Image(systemName: feature.systemImageName)
-                    .font(.system(size: 28))
+                    .font(.system(size: Theme.Icon.medium))
                     .foregroundStyle(isEmpty ? Color.secondary : Theme.accent)
 
                 Text(feature.displayName)
@@ -98,7 +98,7 @@ struct SmartScanView: View {
                     .foregroundStyle(.primary)
 
                 Text(matched.formattedTotalSize)
-                    .font(.system(size: 17, weight: .medium).monospacedDigit())
+                    .font(Theme.headlineMono)
                     .foregroundStyle(isEmpty ? Color.secondary : Theme.accent)
 
                 Text("\(matched.count)개")
@@ -107,8 +107,8 @@ struct SmartScanView: View {
                     .monospacedDigit()
             }
             .frame(width: 160, height: 150)
-            .background(Theme.selectionTint.opacity(isEmpty ? 0.18 : 0.45),
-                        in: RoundedRectangle(cornerRadius: 10))
+            .background(Theme.surfaceRaised.opacity(isEmpty ? 0.5 : 1),
+                        in: RoundedRectangle(cornerRadius: Theme.cardRadius))
         }
         .buttonStyle(.plain)
         // 찾은 것이 없는 카드를 누르면 빈 결과 화면으로 떨어진다

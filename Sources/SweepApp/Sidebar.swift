@@ -19,11 +19,11 @@ struct Sidebar: View {
         }
         .padding(.top, 8)
         .frame(width: Theme.sidebarWidth)
-        .background(Theme.sidebarBackground)
+        .background(Theme.surfaceSunken)
         // nib의 {{219, 0}, {1, 680}} — 사이드바 오른쪽 끝에 붙은 1pt 선
         .overlay(alignment: .trailing) {
             Rectangle()
-                .fill(Theme.separator)
+                .fill(Theme.border)
                 .frame(width: 1)
         }
     }
@@ -34,7 +34,7 @@ struct Sidebar: View {
 
         return HStack(spacing: 0) {
             Image(systemName: feature.systemImageName)
-                .font(.system(size: 15))
+                .font(.system(size: Theme.Icon.small))
                 .frame(width: Theme.sidebarIconSize, height: Theme.sidebarIconSize)
                 .padding(.leading, Theme.sidebarIconLeading)
 
@@ -66,7 +66,7 @@ struct Sidebar: View {
             VStack(alignment: .leading, spacing: 6) {
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Theme.separator)
+                        Capsule().fill(Theme.border)
                         Capsule()
                             .fill(Theme.accent)
                             .frame(width: geometry.size.width * usage.usedFraction)
