@@ -62,10 +62,20 @@ enum Theme {
     /// 같은 강조색이라도 배경으로 쓸 때와 전경으로 쓸 때 필요한 명도가 반대다.
     static let accentText = adaptive(dark: 0x6AA9FF, light: 0x0B52D9)
 
-    /// 기능 고유 색. 값과 대비 검증은 `Feature.tintHex`(SweepKit)에 있다.
-    /// 스마트 스캔처럼 고유색이 없는 기능은 강조 글씨색으로 떨어진다.
+    /// 기능 색 — **글씨·아이콘용**. 값과 대비 검증은 `Feature.tintHex`(SweepKit)에 있다.
+    /// 고유색이 없는 기능(스마트 스캔)은 글씨용 강조색으로 떨어진다.
     static func tint(_ feature: Feature) -> Color {
         guard let hex = feature.tintHex else { return accentText }
+        return adaptive(dark: hex.dark, light: hex.light)
+    }
+
+    /// 기능 색 — **면을 채울 때**. 고유색이 없으면 채움용 강조색으로 떨어진다.
+    ///
+    /// `accent`와 `accentText`를 나눈 것과 같은 이유다. 같은 색이라도 배경으로
+    /// 쓸 때와 전경으로 쓸 때 필요한 명도가 반대다. 대체값이 갈리는 것은
+    /// 고유색이 없는 기능뿐이고, 있는 기능은 두 함수가 같은 값을 준다.
+    static func tintFill(_ feature: Feature) -> Color {
+        guard let hex = feature.tintHex else { return accent }
         return adaptive(dark: hex.dark, light: hex.light)
     }
 

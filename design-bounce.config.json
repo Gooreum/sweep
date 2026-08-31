@@ -5,12 +5,65 @@
   "tokens": "Sources/SweepApp/Theme.swift",
   "captureDir": ".design-bounce/shots",
   "screens": {
-    "idle":        { "deeplink": "--stage idle",        "route": "Sources/SweepApp/FeatureScreen.swift", "settleMs": 1500 },
-    "scanning":    { "deeplink": "--stage scanning",    "route": "Sources/SweepApp/FeatureScreen.swift", "settleMs": 1500 },
-    "results":     { "deeplink": "--stage results",     "route": "Sources/SweepApp/FeatureScreen.swift", "settleMs": 1500 },
-    "cleaned":     { "deeplink": "--stage cleaned",     "route": "Sources/SweepApp/FeatureScreen.swift", "settleMs": 1500 },
-    "danger-only": { "deeplink": "--stage danger-only", "route": "Sources/SweepApp/FeatureScreen.swift", "settleMs": 1500 },
-    "smart-summary": { "deeplink": "--stage smart-summary", "route": "Sources/SweepApp/SmartScanView.swift", "settleMs": 1500 },
-    "main":        { "deeplink": "",                    "route": "Sources/SweepApp/ContentView.swift",   "settleMs": 2000 }
+    "cleaned": {
+      "deeplink": "--stage cleaned",
+      "route": "Sources/SweepApp/FeatureScreen.swift",
+      "settleMs": 1500
+    },
+    "cleaned-failed": {
+      "deeplink": "--stage cleaned-failed",
+      "route": "Sources/SweepApp/FeatureScreen.swift",
+      "settleMs": 1500
+    },
+    "danger-only": {
+      "deeplink": "--stage danger-only",
+      "route": "Sources/SweepApp/FeatureScreen.swift",
+      "settleMs": 1500
+    },
+    "empty": {
+      "deeplink": "--stage empty",
+      "route": "Sources/SweepApp/FeatureScreen.swift",
+      "settleMs": 1500
+    },
+    "idle": {
+      "deeplink": "--stage idle",
+      "route": "Sources/SweepApp/FeatureScreen.swift",
+      "settleMs": 1500
+    },
+    "results": {
+      "deeplink": "--stage results",
+      "route": "Sources/SweepApp/FeatureScreen.swift",
+      "settleMs": 1500
+    },
+    "scanning": {
+      "deeplink": "--stage scanning",
+      "route": "Sources/SweepApp/FeatureScreen.swift",
+      "settleMs": 1500
+    },
+    "smart-idle": {
+      "deeplink": "--stage smart-idle",
+      "route": "Sources/SweepApp/SmartScanView.swift",
+      "settleMs": 2000
+    },
+    "smart-scanning": {
+      "deeplink": "--stage smart-scanning",
+      "route": "Sources/SweepApp/SmartScanView.swift",
+      "settleMs": 1500
+    },
+    "smart-summary": {
+      "deeplink": "--stage smart-summary",
+      "route": "Sources/SweepApp/SmartScanView.swift",
+      "settleMs": 1500
+    },
+    "smart-summary-partial": {
+      "deeplink": "--stage smart-summary-partial",
+      "route": "Sources/SweepApp/SmartScanView.swift",
+      "settleMs": 1500
+    },
+    "main": {
+      "deeplink": "",
+      "route": "Sources/SweepApp/ContentView.swift",
+      "settleMs": 2000
+    }
   }
 }

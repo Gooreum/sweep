@@ -99,7 +99,7 @@ struct SmartScanView: View {
     private func reclaimSlices(_ breakdown: [MenuBarSummary.Row]) -> [DiskDonut.Slice] {
         breakdown.map { row in
             .init(id: row.feature.rawValue, label: row.feature.displayName,
-                  bytes: row.bytes, color: Theme.tint(row.feature))
+                  bytes: row.bytes, color: Theme.tintFill(row.feature))
         }
     }
 
@@ -219,7 +219,7 @@ struct SmartScanView: View {
                         ZStack(alignment: .leading) {
                             Capsule().fill(Theme.border)
                             Capsule()
-                                .fill(Theme.tint(row.feature))
+                                .fill(Theme.tintFill(row.feature))
                                 .frame(width: max(geometry.size.width * ratio(row, largest), 2))
                         }
                     }

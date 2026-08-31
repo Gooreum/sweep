@@ -47,7 +47,7 @@ struct Sidebar: View {
             // 다크에서 파란 슬래브는 화면에서 가장 밝은 덩어리가 되어
             // 정작 봐야 할 결과 목록보다 눈에 먼저 들어온다.
             RoundedRectangle(cornerRadius: 2)
-                .fill(isSelected ? Theme.tint(feature) : .clear)
+                .fill(isSelected ? Theme.tintFill(feature) : .clear)
                 .frame(width: 4, height: 16)
                 .padding(.leading, 4)
 
