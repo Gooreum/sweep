@@ -124,54 +124,70 @@ enum Theme {
 
 /// 화면의 주 동작 하나에만 쓴다.
 ///
-/// 5개 상태를 모두 그린다. `.disabled()`는 `\.isEnabled` 환경값만 바꾸므로
-/// 커스텀 스타일이 읽지 않으면 **누를 수 없는 버튼이 누를 수 있어 보인다.**
+/// 상태를 **중첩 `View`** 안에 둔다. `ButtonStyle`은 `View`가 아니라서
+/// `@State` 저장소가 뷰 그래프에 설치되지 않는다 — 쓰기가 유실돼 hover가
+/// 영영 `false`로 남는다. (`@Environment`는 `ButtonStyle`에서 유효하다.)
 struct PrimaryButtonStyle: ButtonStyle {
-    @Environment(\.isEnabled) private var isEnabled
-    @State private var isHovering = false
-
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(Theme.bodyText.weight(.medium))
-            .foregroundStyle(isEnabled ? Color.white : Theme.textTertiary)
-            .padding(.horizontal, 16)
-            .frame(height: 28)
-            .background(fill(configuration),
-                        in: RoundedRectangle(cornerRadius: Theme.rowCornerRadius))
-            .scaleEffect(configuration.isPressed && isEnabled ? 0.98 : 1)
-            .animation(Theme.transition, value: configuration.isPressed)
-            .animation(Theme.transition, value: isHovering)
-            .onHover { isHovering = $0 }
+        StyledLabel(configuration: configuration)
     }
 
-    private func fill(_ configuration: Configuration) -> Color {
-        guard isEnabled else { return Theme.surfaceRaised }
-        return configuration.isPressed || isHovering ? Theme.accentPressed : Theme.accent
+    private struct StyledLabel: View {
+        let configuration: Configuration
+        @Environment(\.isEnabled) private var isEnabled
+        @State private var isHovering = false
+
+        var body: some View {
+            configuration.label
+                .font(Theme.bodyText.weight(.medium))
+                .foregroundStyle(isEnabled ? Color.white : Theme.textTertiary)
+                .padding(.horizontal, 16)
+                .frame(height: 28)
+                .background(fill, in: RoundedRectangle(cornerRadius: Theme.rowCornerRadius))
+                .scaleEffect(configuration.isPressed && isEnabled ? 0.98 : 1)
+                .animation(Theme.transition, value: configuration.isPressed)
+                .animation(Theme.transition, value: isHovering)
+                .onHover { isHovering = $0 }
+        }
+
+        /// `.disabled()`는 `\.isEnabled` 환경값만 바꾼다 — 스타일이 읽지 않으면
+        /// **누를 수 없는 버튼이 누를 수 있어 보인다.**
+        private var fill: Color {
+            guard isEnabled else { return Theme.surfaceRaised }
+            return configuration.isPressed || isHovering ? Theme.accentPressed : Theme.accent
+        }
     }
 }
 
 /// 보조 동작. 주 동작과 같은 치수를 쓰되 면을 채우지 않는다.
 struct SecondaryButtonStyle: ButtonStyle {
-    @Environment(\.isEnabled) private var isEnabled
-    @State private var isHovering = false
-
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(Theme.bodyText)
-            .foregroundStyle(isEnabled ? Theme.textPrimary : Theme.textTertiary)
-            .padding(.horizontal, 16)
-            .frame(height: 28)
-            .background(
-                RoundedRectangle(cornerRadius: Theme.rowCornerRadius)
-                    .fill(configuration.isPressed || isHovering
-                          ? Theme.surfaceRaised : Color.clear)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.rowCornerRadius)
-                    .strokeBorder(Theme.border, lineWidth: 1)
-            )
-            .animation(Theme.transition, value: configuration.isPressed)
-            .animation(Theme.transition, value: isHovering)
-            .onHover { isHovering = $0 }
+        StyledLabel(configuration: configuration)
+    }
+
+    private struct StyledLabel: View {
+        let configuration: Configuration
+        @Environment(\.isEnabled) private var isEnabled
+        @State private var isHovering = false
+
+        var body: some View {
+            configuration.label
+                .font(Theme.bodyText)
+                .foregroundStyle(isEnabled ? Theme.textPrimary : Theme.textTertiary)
+                .padding(.horizontal, 16)
+                .frame(height: 28)
+                .background(
+                    RoundedRectangle(cornerRadius: Theme.rowCornerRadius)
+                        .fill(configuration.isPressed || isHovering
+                              ? Theme.surfaceRaised : Color.clear)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.rowCornerRadius)
+                        .strokeBorder(Theme.border, lineWidth: 1)
+                )
+                .animation(Theme.transition, value: configuration.isPressed)
+                .animation(Theme.transition, value: isHovering)
+                .onHover { isHovering = $0 }
+        }
     }
 }
