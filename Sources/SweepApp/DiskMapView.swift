@@ -90,6 +90,16 @@ struct DiskMapView: View {
             if model.canGoUp {
                 Button("위로") { model.goUp() }
             }
+
+            // 앱 밖에서 지우거나 내려받아도 이 화면은 모른다. 다시 읽는 입구가 필요하다.
+            // 아직 아무것도 안 읽었거나 읽는 중이면 누를 것이 없다.
+            Button {
+                Task { await model.reload() }
+            } label: {
+                Image(systemName: "arrow.clockwise")
+            }
+            .help("다시 읽기")
+            .disabled(model.current == nil || model.isScanning)
         }
         .padding(12)
     }

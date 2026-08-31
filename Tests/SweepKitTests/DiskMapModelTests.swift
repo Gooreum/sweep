@@ -414,6 +414,155 @@ struct DiskMapModelTests {
         #expect(model.current?.size == 0)   // mid: 100 - 900
         #expect(model.path[0].size == 0)    // root: 50 - 900
     }
+
+    // MARK: - 다시 읽기 (Phase 2)
+
+    /// 3단 트리: root → big → a → a1
+    private func deepTree(missingA: Bool = false, emptyA: Bool = false) -> DiskUsageNode {
+        let dir = URL(filePath: "/private/tmp/root")
+        let a1 = DiskUsageNode(url: dir.appending(path: "big/a/a1"), size: 200)
+        let a = DiskUsageNode(url: dir.appending(path: "big/a"), size: 300,
+                              children: emptyA ? [] : [a1])
+        let b = DiskUsageNode(url: dir.appending(path: "big/b"), size: 200)
+        let big = DiskUsageNode(url: dir.appending(path: "big"), size: 500,
+                                children: missingA ? [b] : [a, b])
+        let small = DiskUsageNode(url: dir.appending(path: "small"), size: 100)
+        return DiskUsageNode(url: dir, size: 600, children: [big, small])
+    }
+
+    private func sourcedModel(_ source: TreeSource) -> DiskMapModel {
+        DiskMapModel(
+            countEntries: { _, onCounted in onCounted(1); return 1 },
+            buildTree: { _, onScanned in onScanned(); return source.next() })
+    }
+
+    /// root → big → a 까지 내려간 모델을 만든다.
+    private func drilledThreeDeep(_ model: DiskMapModel) async {
+        await model.load(URL(filePath: "/private/tmp/root"))
+        model.drillDown(into: model.tiles.first { $0.name == "big" }!)
+        model.drillDown(into: model.tiles.first { $0.name == "a" }!)
+    }
+
+    // TC-2
+    @Test("다시 읽어도 파고든 자리를 잃지 않는다")
+    func reloadRestoresDrillPath() async {
+        let source = TreeSource([deepTree(), deepTree()])
+        let model = sourcedModel(source)
+        await drilledThreeDeep(model)
+        #expect(model.path.map(\.name) == ["root", "big", "a"])
+
+        await model.reload()
+
+        // 세 단계 파고든 뒤 맨 위로 튕기면 세 번 다시 눌러야 한다
+        #expect(model.path.map(\.url) == [
+            URL(filePath: "/private/tmp/root"),
+            URL(filePath: "/private/tmp/root/big"),
+            URL(filePath: "/private/tmp/root/big/a"),
+        ])
+        #expect(model.tiles.map(\.name) == ["a1"])
+    }
+
+    // TC-3
+    @Test("다시 읽었더니 중간이 사라졌으면 거기서 멈춘다")
+    func reloadStopsWhereTheTrailBreaks() async {
+        // 두 번째로 읽을 때 big 아래 a가 없어졌다 (앱 밖에서 지워진 상황)
+        let source = TreeSource([deepTree(), deepTree(missingA: true)])
+        let model = sourcedModel(source)
+        await drilledThreeDeep(model)
+
+        await model.reload()
+
+        // 없는 자리를 지어내지 않는다. 있는 데까지만 복원한다.
+        #expect(model.path.map(\.name) == ["root", "big"])
+        #expect(model.tiles.map(\.name) == ["b"])
+    }
+
+    // TC-3
+    @Test("다시 읽었더니 그 폴더가 비었으면 들어가지 않는다")
+    func reloadStopsBeforeEmptiedFolder() async {
+        // 폴더는 남아 있는데 안이 통째로 비워진 상황
+        let source = TreeSource([deepTree(), deepTree(emptyA: true)])
+        let model = sourcedModel(source)
+        await drilledThreeDeep(model)
+
+        await model.reload()
+
+        // `drillDown`이 빈 노드 진입을 막는 것과 같은 이유다 —
+        // 빈 화면으로 들어가면 사용자가 길을 잃는다.
+        #expect(model.path.map(\.name) == ["root", "big"])
+    }
+
+    // TC-4
+    @Test("아직 아무것도 안 읽었으면 다시 읽기는 아무 일도 하지 않는다")
+    func reloadDoesNothingWithoutTree() async {
+        let source = TreeSource([deepTree()])
+        let model = sourcedModel(source)
+
+        await model.reload()
+
+        #expect(model.path.isEmpty)
+        // 무엇을 다시 읽을지 모르는데 순회부터 시작하면 안 된다
+        #expect(source.callCount == 0)
+    }
+
+    // TC-5
+    @Test("루트만 보고 있을 때 다시 읽으면 루트가 새 트리로 바뀐다")
+    func reloadAtRootReplacesTree() async {
+        let smaller = DiskUsageNode(url: URL(filePath: "/private/tmp/root"), size: 100,
+                                    children: [DiskUsageNode(
+                                        url: URL(filePath: "/private/tmp/root/small"), size: 100)])
+        let source = TreeSource([deepTree(), smaller])
+        let model = sourcedModel(source)
+        await model.load(URL(filePath: "/private/tmp/root"))
+
+        await model.reload()
+
+        #expect(model.path.count == 1)
+        #expect(model.current?.size == 100)
+        #expect(model.tiles.map(\.name) == ["small"])
+    }
+
+    // TC-6
+    @Test("다시 읽기는 순회를 정확히 한 번만 돈다")
+    func reloadScansExactlyOnce() async {
+        let source = TreeSource([deepTree(), deepTree()])
+        let model = sourcedModel(source)
+        await drilledThreeDeep(model)
+        let afterLoad = source.callCount
+
+        await model.reload()
+
+        // 10초짜리 순회가 두 번 돌면 20초가 된다
+        #expect(source.callCount - afterLoad == 1)
+    }
+
+}
+
+/// 호출할 때마다 다른 트리를 내주고 몇 번 불렸는지 센다.
+///
+/// `buildTree`는 `Task.detached`에서 불리므로 잠금이 필요하다.
+private final class TreeSource: @unchecked Sendable {
+    private let lock = NSLock()
+    private var queue: [DiskUsageNode]
+    private let last: DiskUsageNode
+    private var calls = 0
+
+    init(_ trees: [DiskUsageNode]) {
+        queue = trees
+        last = trees[trees.count - 1]
+    }
+
+    /// 준비한 트리를 순서대로, 다 쓰면 마지막 것을 계속 내준다.
+    func next() -> DiskUsageNode {
+        lock.lock(); defer { lock.unlock() }
+        calls += 1
+        return queue.isEmpty ? last : queue.removeFirst()
+    }
+
+    var callCount: Int {
+        lock.lock(); defer { lock.unlock() }
+        return calls
+    }
 }
 
 /// 가짜 세기 패스를 원하는 시점까지 붙잡아 두는 문.

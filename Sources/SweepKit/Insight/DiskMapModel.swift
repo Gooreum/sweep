@@ -159,6 +159,27 @@ public final class DiskMapModel {
         path = Array(path.prefix(index + 1))
     }
 
+    /// 지금 보고 있는 트리를 디스크에서 다시 읽는다.
+    ///
+    /// 삭제는 메모리 트리에서 바로 빼지만, 앱 밖에서 생긴 변화는 다시 읽어야 보인다.
+    ///
+    /// 다시 읽으면 `path`가 루트 하나로 초기화된다. **같은 경로를 URL로 다시 찾아
+    /// 내려간다** — 세 단계 파고든 뒤 새로고침했다고 맨 위로 튕기면 세 번 다시 눌러야 한다.
+    /// 중간이 사라졌으면 거기서 멈춘다. 없는 자리를 지어내지 않는다.
+    public func reload() async {
+        guard let root = path.first?.url else { return }
+        let trail = path.dropFirst().map(\.url)
+
+        await load(root)
+
+        for url in trail {
+            guard let next = current?.children.first(where: { $0.url == url }),
+                  !next.children.isEmpty
+            else { break }
+            path.append(next)
+        }
+    }
+
     // MARK: - 삭제
 
     /// 직전 삭제가 실패한 사유. 성공했으면 nil.
