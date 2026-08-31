@@ -38,8 +38,54 @@ public final class AppModel {
     public func model(for feature: Feature) -> ScanModel {
         if let existing = models[feature] { return existing }
         let created = makeModel(feature)
+        wire(created, as: feature)
         models[feature] = created
         return created
+    }
+
+    // MARK: - 화면끼리 결과 나누기
+
+    /// 모델 하나를 나머지 모델과 이어 준다.
+    ///
+    /// 화면마다 모델이 따로인 것은 기능별로 따로 훑기 위해서지, 서로 모르는
+    /// 척하기 위해서가 아니다. 같은 파일을 두 화면이 들고 있으면 한쪽에서
+    /// 일어난 일이 다른 쪽에도 보여야 한다.
+    private func wire(_ model: ScanModel, as feature: Feature) {
+        model.onScanFinished = { [weak self] items in
+            self?.share(items, from: feature)
+        }
+        model.onRemoved = { [weak self] urls in
+            self?.forget(urls, except: feature)
+        }
+    }
+
+    /// 스마트 스캔 결과를 기능 탭에 나눠 준다.
+    ///
+    /// `badges`는 이미 이 결과로 그린다 — 사이드바에 "정크 파일 6.9 GB"라고
+    /// 써 놓고 그 탭에 들어가면 빈 시작 화면이 뜨는 것이 고치기 전 상태였다.
+    /// 데이터를 손에 쥐고 있으면서 없는 척한 셈이다.
+    ///
+    /// **스마트 스캔만 나눠 준다.** 기능 탭은 자기 몫만 훑으므로, 그 결과를
+    /// 전체로 퍼뜨리면 다른 탭이 "훑어봤는데 없다"는 거짓말을 하게 된다.
+    private func share(_ items: [CleanupItem], from feature: Feature) {
+        guard feature == .smartScan else { return }
+
+        for target in Feature.summaryCards {
+            let model = self.model(for: target)
+            // 그 탭이 자기 스캔을 도는 중이면 덮지 않는다
+            guard !model.isBusy else { continue }
+            model.adopt(target.items(from: items))
+        }
+    }
+
+    /// 한 화면에서 지운 파일을 나머지 화면의 목록에서도 뺀다.
+    ///
+    /// 나눠 준 뒤에는 같은 파일을 여러 화면이 들고 있다. 한쪽에서 지웠는데
+    /// 다른 쪽에 남아 있으면 목록도 사이드바 배지도 거짓말이 된다.
+    private func forget(_ urls: [URL], except owner: Feature) {
+        for (feature, model) in models where feature != owner {
+            model.forget(urls)
+        }
     }
 
     /// 디스크 맵 모델. `model(for:)`과 **같은 이유로** 여기서 소유한다.

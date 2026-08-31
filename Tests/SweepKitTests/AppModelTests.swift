@@ -279,4 +279,158 @@ struct AppModelTests {
             }
         }
     }
+
+    // MARK: - 스마트 스캔 결과 나눠 주기
+
+    private func categorized(_ name: String, _ category: ScanCategory,
+                             safety: SafetyLevel = .safe) -> CleanupItem {
+        CleanupItem(url: URL(filePath: "/private/tmp/\(name)"),
+                    size: 1_000, category: category, safety: safety)
+    }
+
+    /// 기능 세 개가 각자 몫을 갖도록 카테고리를 섞은 전체 결과.
+    private var mixed: [CleanupItem] {
+        [categorized("정크.bin", .devCache),
+         categorized("임시", .runawayTemp),
+         categorized("큰영상.mov", .largeFile),
+         categorized("사본.zip", .duplicate)]
+    }
+
+    /// 지정한 기능만 결과를 내고 나머지는 빈 스캔인 앱.
+    private func app(scanning feature: Feature, finds found: [CleanupItem]) -> AppModel {
+        AppModel(makeModel: { f in
+            ScanModel(scan: f == feature ? self.finishing(found) : self.finishing([]),
+                      removeOne: { RemovalOutcome(item: $0, failureReason: nil) })
+        })
+    }
+
+    /// 끝나지 않는 스캔 — 그 탭을 `.scanning`에 붙잡아 둔다.
+    private func neverFinishing() -> @Sendable () -> AsyncStream<ScanCoordinator.Progress> {
+        { @Sendable in
+            AsyncStream { continuation in
+                continuation.yield(ScanCoordinator.Progress(
+                    items: [], fraction: 0.5, elapsed: .seconds(1),
+                    estimatedRemaining: .seconds(1),
+                    finishedScanners: 1, totalScanners: 2))
+            }
+        }
+    }
+
+    // TC-2
+    @Test("스마트 스캔이 끝나면 기능 탭이 각자 몫으로 채워진다")
+    func smartScanSharesResults() async {
+        let app = app(scanning: .smartScan, finds: mixed)
+
+        await app.model(for: .smartScan).scan()
+
+        for feature in Feature.summaryCards {
+            let mine = feature.items(from: mixed)
+            // 몫이 비어 있으면 이 TC는 아무것도 검증하지 못한다
+            #expect(!mine.isEmpty, "\(feature) 몫이 비어 TC가 공허하다")
+            #expect(app.model(for: feature).items.map(\.url) == mine.map(\.url),
+                    "\(feature)에 자기 몫이 안 들어왔다")
+        }
+    }
+
+    // TC-3
+    @Test("배분된 기능 탭은 바로 결과 목록 상태다")
+    func sharedTabsLandInResults() async {
+        let app = app(scanning: .smartScan, finds: mixed)
+
+        await app.model(for: .smartScan).scan()
+
+        for feature in Feature.summaryCards {
+            // `.idle`이면 탭에 들어갔을 때 "검색" 버튼만 뜬다 — 고치기 전 상태다
+            #expect(app.model(for: feature).phase == .results, "\(feature)가 결과 상태가 아니다")
+        }
+    }
+
+    // TC-4
+    @Test("기능 탭 스캔 결과는 다른 탭으로 퍼지지 않는다")
+    func featureScanDoesNotSpread() async {
+        let app = app(scanning: .junk, finds: mixed)
+
+        await app.model(for: .junk).scan()
+
+        // 정크 탭은 자기 몫만 훑는다. 그 결과를 퍼뜨리면 큰 파일 탭이
+        // "훑어봤는데 없다"는 거짓말을 하게 된다.
+        #expect(app.model(for: .largeFile).items.isEmpty)
+        #expect(app.model(for: .duplicate).items.isEmpty)
+        #expect(app.model(for: .smartScan).items.isEmpty)
+    }
+
+    // TC-5
+    @Test("스캔 중인 탭은 배분이 덮지 않는다")
+    func sharingSkipsBusyTab() async {
+        let app = AppModel(makeModel: { f in
+            switch f {
+            case .smartScan: ScanModel(scan: self.finishing(self.mixed))
+            case .largeFile: ScanModel(scan: self.neverFinishing())
+            default: ScanModel(scan: self.finishing([]))
+            }
+        })
+        let big = app.model(for: .largeFile)
+        let running = Task { await big.scan() }
+        for _ in 0..<50 where !big.isBusy { await Task.yield() }
+        #expect(big.isBusy, "큰 파일 탭이 스캔 중이 아니어서 TC가 공허하다")
+
+        await app.model(for: .smartScan).scan()
+
+        // 돌고 있는 스캔을 결과로 덮으면 진행률이 사라지고 화면이 튄다
+        #expect(big.isBusy, "스캔 중인 탭이 덮였다")
+        #expect(big.items.isEmpty)
+        // 나머지 탭은 정상 배분
+        #expect(!app.model(for: .junk).items.isEmpty)
+
+        running.cancel()
+    }
+
+    // TC-6
+    @Test("기능 탭에서 지우면 스마트 스캔 목록에서도 빠진다")
+    func removalInFeatureTabPropagatesToSmartScan() async throws {
+        let app = app(scanning: .smartScan, finds: mixed)
+        await app.model(for: .smartScan).scan()
+
+        let junk = app.model(for: .junk)
+        // `items[0]`으로 찌르면 배분이 끊겼을 때 **스위트 전체가 크래시**한다 —
+        // 그러면 다른 실패까지 전부 묻힌다. 여기서 깔끔하게 멈춘다.
+        let target = try #require(junk.items.first, "정크 탭이 비어 배분이 끊겼다")
+        junk.selection = [target.url]
+        await junk.removeSelected()
+
+        // 지운 파일이 다른 화면에 남아 있으면 목록도 배지도 거짓말이 된다
+        #expect(!app.model(for: .smartScan).items.contains { $0.url == target.url })
+    }
+
+    // TC-7
+    @Test("스마트 스캔에서 지우면 기능 탭 목록에서도 빠진다")
+    func removalInSmartScanPropagatesToFeatureTabs() async throws {
+        let app = app(scanning: .smartScan, finds: mixed)
+        let smart = app.model(for: .smartScan)
+        await smart.scan()
+
+        let junk = app.model(for: .junk)
+        let target = try #require(junk.items.first, "정크 탭이 비어 배분이 끊겼다")
+        smart.selection = [target.url]
+        await smart.removeSelected()
+
+        #expect(!junk.items.contains { $0.url == target.url })
+    }
+
+    // TC-8
+    @Test("배분해도 배지는 기능별 합 그대로다")
+    func sharingDoesNotDoubleCountBadges() async {
+        let app = app(scanning: .smartScan, finds: mixed)
+
+        await app.model(for: .smartScan).scan()
+        let badges = app.badges
+
+        // 배지는 스마트 스캔 모델만 본다. 배분한 모델까지 합치면 같은 파일을
+        // 두 번 세어 총량이 부풀려진다.
+        for feature in Feature.summaryCards {
+            #expect(badges[feature] == feature.items(from: mixed).formattedTotalSize,
+                    "\(feature) 배지가 어긋났다")
+        }
+        #expect(badges[.smartScan] == mixed.formattedTotalSize)
+    }
 }
