@@ -439,6 +439,58 @@ struct DiskMapModelTests {
         #expect(model.path[0].size == 0)    // root: 50 - 900
     }
 
+    // MARK: - 지울 수 있는지 (범위 확대)
+
+    /// 정리 루트 안(지울 수 있음)과 밖(못 지움)을 한 지점에 섞어 둔 트리.
+    private func mixedRemovabilityTree() -> DiskUsageNode {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let ok = DiskUsageNode(url: home.appending(path: "Library/Caches/지울수있음"),
+                               size: 300)
+        let blocked = DiskUsageNode(url: home.appending(path: "Documents/못지움"),
+                                    size: 200,
+                                    children: [DiskUsageNode(
+                                        url: home.appending(path: "Documents/못지움/안"),
+                                        size: 200)])
+        return DiskUsageNode(url: home, size: 500, children: [ok, blocked])
+    }
+
+    // TC-6
+    @Test("트리를 넣으면 지금 자식들의 삭제 가능 여부가 채워진다")
+    func vetoesFillOnSeed() {
+        let model = DiskMapModel()
+        model.seed(mixedRemovabilityTree())
+
+        let ok = model.tiles.first { $0.name == "지울수있음" }!
+        let blocked = model.tiles.first { $0.name == "못지움" }!
+
+        #expect(model.veto(for: ok) == nil, "정리 루트 안인데 막혔다")
+        #expect(model.veto(for: blocked) != nil, "허용 루트 밖인데 통과했다")
+    }
+
+    // TC-7
+    @Test("드릴다운하면 새 지점의 자식들로 갈아 끼워진다")
+    func vetoesFollowDrillDown() {
+        let model = DiskMapModel()
+        model.seed(mixedRemovabilityTree())
+        let blocked = model.tiles.first { $0.name == "못지움" }!
+
+        model.drillDown(into: blocked)
+
+        // 이전 지점의 키가 남아 있으면 화면과 어긋난다
+        #expect(model.tileVetoes.count == 1)
+        #expect(model.tileVetoes.keys.first?.lastPathComponent == "안")
+    }
+
+    // TC-8
+    @Test("목록에 없는 노드를 물으면 nil을 돌려주고 크래시하지 않는다")
+    func vetoForUnknownNodeIsNil() {
+        let model = DiskMapModel()
+        model.seed(mixedRemovabilityTree())
+
+        let stranger = DiskUsageNode(url: URL(filePath: "/private/tmp/남의것"), size: 1)
+        #expect(model.veto(for: stranger) == nil)
+    }
+
     // MARK: - 다시 읽기 (Phase 2)
 
     /// 3단 트리: root → big → a → a1

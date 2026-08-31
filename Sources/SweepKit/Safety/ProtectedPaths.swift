@@ -77,7 +77,11 @@ public enum ProtectedPaths {
     ]
 
     /// 삭제해도 되는 경로인지 검사한다. 통과하지 못하면 던진다.
-    public static func validate(_ url: URL) throws {
+    /// `RemovalVeto`만 던진다 — 타입으로 고정한다.
+    ///
+    /// 예전엔 `throws`라 부르는 쪽마다 "그 밖의 오류"를 상상해 분기를 뒀는데,
+    /// 그 분기는 도달할 수 없어 테스트로 고정할 수도 없었다.
+    public static func validate(_ url: URL) throws(RemovalVeto) {
         let requested = url.standardizedFileURL
         let resolved = canonical(requested)
 
@@ -193,10 +197,23 @@ public enum ProtectedPaths {
         return result.standardizedFileURL
     }
 
-    /// 던지지 않는 판정 버전. UI에서 목록을 거를 때 쓴다.
-    public static func isRemovable(_ url: URL) -> Bool {
-        do { try validate(url); return true } catch { return false }
+    /// 던지지 않는 판정 버전. 통과면 nil, 막히면 **사유**를 돌려준다.
+    ///
+    /// 화면이 "왜 못 지우는지"를 말할 수 있어야 한다 — 눌러 보고 실패해야
+    /// 아는 것은 알려준 것이 아니다.
+    public static func veto(for url: URL) -> RemovalVeto? {
+        do {
+            try validate(url)
+            return nil
+        } catch {
+            // 타입이 `RemovalVeto`로 고정돼 있어 다른 오류가 올 수 없다.
+            return error
+        }
     }
+
+    /// 목록을 거를 때 쓴다. **판정 로직을 두 벌로 두지 않는다** —
+    /// 화면이 보여주는 것과 실제 삭제 판정이 갈라지면 안 된다.
+    public static func isRemovable(_ url: URL) -> Bool { veto(for: url) == nil }
 
     // 심볼릭 링크가 섞인 실제 경로(예: /tmp → /private/tmp)로 정규화해 둔다.
     //

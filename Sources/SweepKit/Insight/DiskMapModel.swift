@@ -55,7 +55,15 @@ public final class DiskMapModel {
     }
 
     /// 지금 보고 있는 지점까지의 경로. 첫 원소가 루트다.
-    public private(set) var path: [DiskUsageNode] = []
+    public private(set) var path: [DiskUsageNode] = [] {
+        didSet { refreshVetoes() }
+    }
+
+    /// 지금 보이는 자식들의 삭제 가능 여부.
+    ///
+    /// `ProtectedPaths.validate`는 경로를 정규화하고 캐시를 훑는다. 매 렌더마다
+    /// 행 수만큼 부르면 스크롤이 버벅인다 — `path`가 바뀔 때만 계산한다.
+    public private(set) var tileVetoes: [URL: RemovalVeto?] = [:]
     public private(set) var loadPhase: LoadPhase?
 
     /// Picker가 고른 시작 지점.
@@ -142,6 +150,22 @@ public final class DiskMapModel {
 
         path = [tree]
         loadPhase = nil
+    }
+
+    /// 이 항목을 지울 수 없는 사유. 지울 수 있으면 nil.
+    ///
+    /// 지금 보고 있는 지점의 자식이 아니면 nil이다 — 목록에 없는 것을
+    /// "지울 수 있다"고 말하는 셈이지만, 화면이 그리지 않으므로 쓰이지 않는다.
+    public func veto(for node: DiskUsageNode) -> RemovalVeto? {
+        tileVetoes[node.url] ?? nil
+    }
+
+    private func refreshVetoes() {
+        var map: [URL: RemovalVeto?] = [:]
+        for child in path.last?.children ?? [] {
+            map[child.url] = ProtectedPaths.veto(for: child.url)
+        }
+        tileVetoes = map
     }
 
     /// 타일을 눌러 한 단계 내려간다. 자식이 없으면 아무 일도 하지 않는다 —

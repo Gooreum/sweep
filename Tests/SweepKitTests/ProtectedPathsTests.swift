@@ -167,4 +167,53 @@ struct ProtectedPathsTests {
         let sibling = home.appending(path: "Downloads-backup/파일.zip")
         #expect(!ProtectedPaths.isRemovable(sibling))
     }
+
+    // MARK: - 사유가 붙은 판정 (디스크 맵이 행마다 물어본다)
+
+    // TC-2
+    @Test("홈 디렉토리는 rootOrHome 사유로 막힌다")
+    func vetoNamesHomeReason() {
+        guard case .rootOrHome = ProtectedPaths.veto(for: home) else {
+            Issue.record("홈: rootOrHome이 아니라 \(String(describing: ProtectedPaths.veto(for: home)))")
+            return
+        }
+    }
+
+    // TC-3
+    @Test("허용 루트 밖은 outsideAllowedRoots 사유로 막힌다")
+    func vetoNamesOutsideReason() {
+        let outside = home.appending(path: "Documents/중요파일.txt")
+        guard case .outsideAllowedRoots = ProtectedPaths.veto(for: outside) else {
+            Issue.record("Documents: outsideAllowedRoots가 아니다")
+            return
+        }
+    }
+
+    // TC-4
+    @Test("허용 루트 안의 파일은 사유가 없다")
+    func vetoIsNilInsideAllowedRoot() {
+        let inside = home.appending(path: "Library/Caches/sweep-veto-\(UUID().uuidString)")
+        #expect(ProtectedPaths.veto(for: inside) == nil)
+    }
+
+    // TC-5
+    @Test("isRemovable과 veto 판정이 모든 경우에 일치한다")
+    func twoEntriesNeverDisagree() {
+        // 화면이 "정리 가능"이라 써 놓고 눌렀더니 막히면 최악이다.
+        // 판정 로직이 두 벌이면 언젠가 갈라진다.
+        var probes: [URL] = [
+            URL(filePath: "/"),
+            home,
+            home.appending(path: "Documents/중요파일.txt"),
+            home.appending(path: "Library/Developer/Xcode/UserData/Provisioning Profiles"),
+            URL(filePath: "/private/tmp/sweep-\(UUID().uuidString).bin"),
+        ]
+        probes += ProtectedPaths.allowedRoots
+        probes += ProtectedPaths.allowedRoots.map { $0.appending(path: "child.bin") }
+
+        for url in probes {
+            #expect(ProtectedPaths.isRemovable(url) == (ProtectedPaths.veto(for: url) == nil),
+                    "판정이 갈라졌다: \(url.path)")
+        }
+    }
 }
