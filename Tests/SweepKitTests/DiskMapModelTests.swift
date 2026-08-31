@@ -27,8 +27,8 @@ struct DiskMapModelTests {
     private func fakeModel(entries: Int = 3) -> DiskMapModel {
         let tree = sampleTree()
         return DiskMapModel(
-            countEntries: { _, onCounted in onCounted(entries); return entries },
-            buildTree: { _, onScanned in
+            countEntries: { _, _, onCounted in onCounted(entries); return entries },
+            buildTree: { _, _, onScanned in
                 for _ in 0..<entries { onScanned() }
                 return tree
             })
@@ -195,12 +195,12 @@ struct DiskMapModelTests {
         // 세기를 붙잡아 둔다. 시간에 기대면 부하에 따라 결과가 흔들린다.
         let gate = Gate()
         let model = DiskMapModel(
-            countEntries: { _, onCounted in
+            countEntries: { _, _, onCounted in
                 onCounted(5)
                 gate.wait()
                 return 10
             },
-            buildTree: { _, onScanned in
+            buildTree: { _, _, onScanned in
                 for _ in 0..<10 { onScanned() }
                 return tree
             })
@@ -491,6 +491,91 @@ struct DiskMapModelTests {
         #expect(model.veto(for: stranger) == nil)
     }
 
+    // MARK: - 중단 (긴 순회)
+
+    // TC-2
+    @Test("CancelFlag는 cancel 전후로 값이 바뀐다")
+    func cancelFlagFlips() {
+        let flag = CancelFlag()
+        #expect(flag.isCancelled == false)
+        flag.cancel()
+        #expect(flag.isCancelled == true)
+    }
+
+    // TC-3
+    @Test("중단 신호가 서 있으면 순회가 자식으로 내려가지 않는다")
+    func buildStopsWhenCancelled() throws {
+        let fm = FileManager.default
+        let root = URL(filePath: NSTemporaryDirectory())
+            .appending(path: "sweep-cancel-\(UUID().uuidString)")
+        try fm.createDirectory(at: root.appending(path: "안쪽"),
+                               withIntermediateDirectories: true)
+        try Data(count: 2048).write(to: root.appending(path: "안쪽/파일.bin"))
+        defer { try? fm.removeItem(at: root) }
+
+        let tree = DiskUsageTree.build(at: root, minimumSize: 1,
+                                       isCancelled: { true })
+
+        // 첫 자식으로 내려가기 전에 끊긴다
+        #expect(tree.children.isEmpty)
+        #expect(tree.size == 0)
+    }
+
+    // TC-4 · TC-6
+    @Test("중단하면 보던 트리가 그대로 남고 반쪽 결과로 덮이지 않는다")
+    func cancelKeepsExistingTree() async {
+        let replacement = DiskUsageNode(url: URL(filePath: "/private/tmp/other"), size: 1)
+        let gate = Gate()
+        let model = DiskMapModel(
+            countEntries: { _, _, onCounted in onCounted(1); return 1 },
+            buildTree: { _, _, onScanned in
+                onScanned()
+                gate.wait()          // 중단을 누를 때까지 붙잡아 둔다
+                return replacement
+            })
+        model.seed(sampleTree())
+        let before = model.path
+
+        let running = Task { await model.load(URL(filePath: "/private/tmp/root")) }
+        for _ in 0..<200 where !model.isScanning { await Task.yield() }
+        #expect(model.isScanning, "로드가 시작되지 않아 TC가 공허하다")
+
+        model.cancelLoad()
+        gate.signal()
+        await running.value
+
+        // 멈췄다고 보던 것까지 사라지면 처음부터 다시 해야 한다
+        #expect(model.path == before, "중단했는데 트리가 바뀌었다")
+        #expect(model.loadPhase == nil)
+    }
+
+    @Test("중단해서 트리가 없어도 고른 시작점으로 다시 훑는다")
+    func reloadRecoversAfterCancel() async {
+        let tree = deepTree()
+        let source = TreeSource([tree])
+        let model = sourcedModel(source)
+        model.selectedRoot = URL(filePath: "/private/tmp/root")
+        #expect(model.path.isEmpty, "트리가 있으면 이 TC는 다른 것을 잰다")
+
+        await model.reload()
+
+        // path만 보고 판단하면 중단한 순간 되돌아갈 길이 막힌다
+        #expect(model.path.map(\.name) == ["root"])
+        #expect(source.callCount == 1)
+    }
+
+    // TC-5
+    @Test("로드 중이 아닐 때 중단해도 아무 일도 없다")
+    func cancelWhenIdleIsHarmless() {
+        let model = loadedModel()
+        let before = model.path
+
+        model.cancelLoad()
+
+        #expect(model.path == before)
+        #expect(model.loadPhase == nil)
+    }
+
     // MARK: - 다시 읽기 (Phase 2)
 
     /// 3단 트리: root → big → a → a1
@@ -508,8 +593,8 @@ struct DiskMapModelTests {
 
     private func sourcedModel(_ source: TreeSource) -> DiskMapModel {
         DiskMapModel(
-            countEntries: { _, onCounted in onCounted(1); return 1 },
-            buildTree: { _, onScanned in onScanned(); return source.next() })
+            countEntries: { _, _, onCounted in onCounted(1); return 1 },
+            buildTree: { _, _, onScanned in onScanned(); return source.next() })
     }
 
     /// root → big → a 까지 내려간 모델을 만든다.

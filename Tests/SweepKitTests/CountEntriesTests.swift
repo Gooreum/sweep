@@ -45,7 +45,8 @@ struct CountEntriesTests {
 
         let counted = DiskUsageTree.countEntries(at: root)
         let visits = Visits()
-        _ = DiskUsageTree.build(at: root, maxDepth: 4, minimumSize: 1) { visits.increment() }
+        _ = DiskUsageTree.build(at: root, maxDepth: 4, minimumSize: 1,
+                                onEntryScanned: { visits.increment() })
 
         // build는 루트 자신도 방문하므로 정확히 1 크다
         #expect(visits.value == counted + 1,
@@ -136,7 +137,8 @@ struct CountEntriesTests {
 
         let counted = DiskUsageTree.countEntries(at: root)
         let visits = Visits()
-        _ = DiskUsageTree.build(at: root, maxDepth: 4, minimumSize: 1) { visits.increment() }
+        _ = DiskUsageTree.build(at: root, maxDepth: 4, minimumSize: 1,
+                                onEntryScanned: { visits.increment() })
 
         #expect(counted == 3, "own.bin + 링크 2개")
         #expect(visits.value == counted + 1,
@@ -162,7 +164,8 @@ struct CountEntriesTests {
 
         let counted = DiskUsageTree.countEntries(at: root)
         let visits = Visits()
-        _ = DiskUsageTree.build(at: root, maxDepth: 4, minimumSize: 1) { visits.increment() }
+        _ = DiskUsageTree.build(at: root, maxDepth: 4, minimumSize: 1,
+                                onEntryScanned: { visits.increment() })
 
         #expect(visits.value == counted + 1,
                 "읽기 실패 항목에서 분모가 어긋난다: 세기 \(counted) vs 방문 \(visits.value)")
@@ -182,8 +185,8 @@ struct CountEntriesTests {
         try fm.createSymbolicLink(at: root.appending(path: "link"), withDestinationURL: fat)
 
         let visits = Visits()
-        let tree = DiskUsageTree.build(at: root, maxDepth: 4,
-                                       minimumSize: 1) { visits.increment() }
+        let tree = DiskUsageTree.build(at: root, maxDepth: 4, minimumSize: 1,
+                                       onEntryScanned: { visits.increment() })
 
         // 루트 + 링크 = 2회 방문
         #expect(visits.value == 2)

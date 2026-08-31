@@ -110,7 +110,7 @@ struct DiskMapView: View {
                 Image(systemName: "arrow.clockwise")
             }
             .help("다시 읽기")
-            .disabled(model.current == nil || model.isScanning)
+            .disabled(model.selectedRoot == nil || model.isScanning)
         }
         .padding(12)
     }
@@ -143,6 +143,11 @@ struct DiskMapView: View {
                         .font(Theme.caption)
                         .foregroundStyle(.secondary)
                 }
+
+                // 볼륨 전체는 몇 분이 걸린다. 못 멈추면 못 쓴다.
+                Button("중단") { model.cancelLoad() }
+                    .buttonStyle(SecondaryButtonStyle())
+                    .padding(.top, 4)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let current = model.current {
@@ -152,9 +157,24 @@ struct DiskMapView: View {
             } else {
                 usageList
             }
+        } else if model.selectedRoot != nil {
+            // 중단했거나 아직 못 읽은 상태. 고른 곳은 있으니 다시 훑을 길을 준다.
+            VStack(spacing: 10) {
+                Image(systemName: "square.grid.2x2")
+                    .font(.system(size: Theme.Icon.large))
+                    .foregroundStyle(.secondary)
+                Text("훑기를 멈췄습니다").font(Theme.title)
+                Text("다시 훑으면 이어서가 아니라 처음부터 셉니다.")
+                    .font(Theme.bodyText)
+                    .foregroundStyle(.secondary)
+                Button("다시 훑기") { Task { await model.reload() } }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .padding(.top, 6)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             placeholder("시작 지점을 고르세요",
-                        detail: "정리 대상과 같은 범위만 살펴봅니다.")
+                        detail: "홈·볼륨 전체·응용 프로그램까지 살펴봅니다.")
         }
     }
 

@@ -118,7 +118,8 @@ struct DiskUsageTreeTests {
 
         let counter = VisitCounter()
         _ = DiskUsageTree.build(at: root, maxDepth: 4,
-                                minimumSize: Int64(Self.oneMB)) { counter.increment() }
+                                minimumSize: Int64(Self.oneMB),
+                                onEntryScanned: { counter.increment() })
 
         // 루트 1 + 디렉토리 3 + 파일 3
         #expect(counter.value == 7, "방문 횟수가 항목 수와 다르다: \(counter.value)")

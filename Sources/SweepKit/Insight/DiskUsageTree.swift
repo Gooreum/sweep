@@ -39,6 +39,27 @@ extension DiskUsageNode {
     }
 }
 
+/// 여러 스레드가 함께 보는 중단 신호.
+///
+/// 순회는 `Task.detached`에서 도는데 그 안에서는 바깥 `Task`의 취소가 보이지
+/// 않는다. 볼륨 전체를 훑으면 몇 분이 걸리므로 멈출 방법이 있어야 한다.
+public final class CancelFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var flag = false
+
+    public init() {}
+
+    public func cancel() {
+        lock.lock(); defer { lock.unlock() }
+        flag = true
+    }
+
+    public var isCancelled: Bool {
+        lock.lock(); defer { lock.unlock() }
+        return flag
+    }
+}
+
 public enum DiskUsageTree {
 
     /// 사용량 트리를 만든다.
@@ -50,9 +71,10 @@ public enum DiskUsageTree {
     public static func build(at url: URL,
                              maxDepth: Int = 4,
                              minimumSize: Int64 = 1024 * 1024,
+                             isCancelled: @escaping @Sendable () -> Bool = { false },
                              onEntryScanned: (@Sendable () -> Void)? = nil) -> DiskUsageNode {
         node(at: url, depth: maxDepth, minimumSize: minimumSize,
-             onEntryScanned: onEntryScanned)
+             isCancelled: isCancelled, onEntryScanned: onEntryScanned)
     }
 
     /// 항목 하나를 정확히 한 번만 본다. 크기는 자식에서 올려받는다.
@@ -60,6 +82,7 @@ public enum DiskUsageTree {
     /// 예전에는 노드마다 `DirectorySize.bytes(at:)`를 불렀는데, 그 함수가 하위 전체를
     /// 훑으므로 같은 파일을 깊이만큼 반복해서 셌다 — 실측 30.7초가 이것 때문이었다.
     private static func node(at url: URL, depth: Int, minimumSize: Int64,
+                             isCancelled: @escaping @Sendable () -> Bool,
                              onEntryScanned: (@Sendable () -> Void)?) -> DiskUsageNode {
         // 무엇이든 들여다봤으면 보고한다. `countEntries`가 링크와 읽기 실패 항목까지
         // 세므로 여기서 빼먹으면 분모가 커져 퍼센트가 100에 닿지 못한다 —
@@ -86,8 +109,11 @@ public enum DiskUsageTree {
         var total: Int64 = 0
         var children: [DiskUsageNode] = []
         for child in entries {
+            // 몇 분짜리 순회를 끊을 수 있어야 한다. 자식 단위면 충분히 촘촘하다.
+            if isCancelled() { break }
+
             let node = node(at: child, depth: depth - 1, minimumSize: minimumSize,
-                            onEntryScanned: onEntryScanned)
+                            isCancelled: isCancelled, onEntryScanned: onEntryScanned)
             total += node.size
             // 깊이를 넘어서도 **순회는 계속한다** — 크기를 정확히 합치려면 끝까지 세야 한다.
             // 달라지는 것은 children에 넣느냐뿐이다.

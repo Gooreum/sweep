@@ -74,15 +74,30 @@ public final class DiskMapModel {
 
     public var isScanning: Bool { loadPhase != nil }
 
-    private let countEntries: @Sendable (URL, @escaping @Sendable (Int) -> Void) -> Int
-    private let buildTree: @Sendable (URL, @escaping @Sendable () -> Void) -> DiskUsageNode
+    private let countEntries:
+        @Sendable (URL, CancelFlag, @escaping @Sendable (Int) -> Void) -> Int
+    private let buildTree:
+        @Sendable (URL, CancelFlag, @escaping @Sendable () -> Void) -> DiskUsageNode
+
+    /// 지금 도는 순회의 중단 신호.
+    private var cancelFlag: CancelFlag?
 
     /// 세기·집계를 주입할 수 있게 열어 둔다 — 실제 스캔은 10초가 넘어 테스트에 쓸 수 없다.
     public init(
-        countEntries: @escaping @Sendable (URL, @escaping @Sendable (Int) -> Void) -> Int
-            = { DiskUsageTree.countEntries(at: $0, onCounted: $1) },
-        buildTree: @escaping @Sendable (URL, @escaping @Sendable () -> Void) -> DiskUsageNode
-            = { DiskUsageTree.build(at: $0, onEntryScanned: $1) }
+        countEntries: @escaping @Sendable
+            (URL, CancelFlag, @escaping @Sendable (Int) -> Void) -> Int
+            = { url, flag, onCounted in
+                DiskUsageTree.countEntries(at: url,
+                                           isCancelled: { flag.isCancelled },
+                                           onCounted: onCounted)
+            },
+        buildTree: @escaping @Sendable
+            (URL, CancelFlag, @escaping @Sendable () -> Void) -> DiskUsageNode
+            = { url, flag, onScanned in
+                DiskUsageTree.build(at: url,
+                                    isCancelled: { flag.isCancelled },
+                                    onEntryScanned: onScanned)
+            }
     ) {
         self.countEntries = countEntries
         self.buildTree = buildTree
@@ -108,20 +123,26 @@ public final class DiskMapModel {
         selectedRoot = root
         loadPhase = .counting(scanned: 0)
 
+        // 볼륨 전체는 몇 분이 걸린다. 시작한 순회를 멈출 수 있어야 한다.
+        let flag = CancelFlag()
+        cancelFlag = flag
+
         let measured = ScanCounter()
         let counted = ScanCounter()
         let counting = Task.detached { [countEntries] in
-            countEntries(root) { counted.set($0) }
+            countEntries(root, flag) { counted.set($0) }
         }
         let building = Task.detached { [buildTree] in
-            buildTree(root) { measured.increment() }
+            buildTree(root, flag) { measured.increment() }
         }
 
         // 분모가 오기 전에는 센 개수를, 온 뒤에는 퍼센트를 보여준다.
         let ticker = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(80))
-                guard let self, case .counting = self.loadPhase else { return }
+                // 중단했는데 티커가 진행률을 되살리면 "중단" 버튼이 안 먹은 것처럼 보인다
+                guard let self, !flag.isCancelled,
+                      case .counting = self.loadPhase else { return }
                 self.loadPhase = .counting(scanned: counted.value)
             }
         }
@@ -136,12 +157,19 @@ public final class DiskMapModel {
         let percentTicker = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(80))
-                guard let self else { return }
+                guard let self, !flag.isCancelled else { return }
                 self.loadPhase = .measuring(percent: measured.percent(of: total))
             }
         }
         let tree = await building.value
         percentTicker.cancel()
+
+        // 중단됐으면 반쪽 트리로 화면을 덮지 않는다.
+        // 보던 것은 그대로 둔다 — 멈췄다고 화면까지 비면 처음부터 다시 해야 한다.
+        guard !flag.isCancelled else {
+            loadPhase = nil
+            return
+        }
 
         // 집계가 끝났으면 정의상 100%다. 분모 오차로 99%에서 끝나지 않도록 확정한다.
         // 한 틱만 보여주고 넘어간다 — 사용자가 완료를 확인할 수 있어야 한다.
@@ -166,6 +194,16 @@ public final class DiskMapModel {
             map[child.url] = ProtectedPaths.veto(for: child.url)
         }
         tileVetoes = map
+    }
+
+    /// 도는 순회를 멈춘다.
+    ///
+    /// **이미 그리고 있던 트리는 건드리지 않는다.** 멈췄다고 보던 것까지
+    /// 사라지면 사용자가 처음부터 다시 해야 한다.
+    public func cancelLoad() {
+        cancelFlag?.cancel()
+        cancelFlag = nil
+        loadPhase = nil
     }
 
     /// 타일을 눌러 한 단계 내려간다. 자식이 없으면 아무 일도 하지 않는다 —
@@ -194,7 +232,9 @@ public final class DiskMapModel {
     /// 내려간다** — 세 단계 파고든 뒤 새로고침했다고 맨 위로 튕기면 세 번 다시 눌러야 한다.
     /// 중간이 사라졌으면 거기서 멈춘다. 없는 자리를 지어내지 않는다.
     public func reload() async {
-        guard let root = path.first?.url else { return }
+        // 중단하면 트리가 없다. 그래도 고른 시작점이 있으면 다시 훑을 수 있어야 한다 —
+        // 없으면 중단한 순간 되돌아갈 길이 막힌다.
+        guard let root = path.first?.url ?? selectedRoot else { return }
         let trail = path.dropFirst().map(\.url)
 
         await load(root)

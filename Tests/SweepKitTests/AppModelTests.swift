@@ -75,8 +75,8 @@ struct AppModelTests {
     @Test("주입한 디스크 맵 모델을 그대로 돌려준다")
     func diskMapModelIsInjectable() {
         // 기본 구성은 실제 순회를 물고 있어 테스트에서 10초를 기다리게 된다.
-        let injected = DiskMapModel(countEntries: { _, _ in 0 },
-                                    buildTree: { url, _ in
+        let injected = DiskMapModel(countEntries: { _, _, _ in 0 },
+                                    buildTree: { url, _, _ in
                                         DiskUsageNode(url: url, size: 0)
                                     })
         let app = AppModel(makeDiskMap: { injected })
