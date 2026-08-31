@@ -53,24 +53,33 @@ struct DiskDonut: View {
         .animation(Theme.transition, value: total)
     }
 
+    /// 색칩 · 이름 · 용량 세 열.
+    ///
+    /// `Spacer`로 밀지 않는다. 남는 폭을 전부 먹어 **레이블이 짧을수록 간격이
+    /// 벌어졌다** — 고정 폭 260pt 안에서 "사용됨"과 값 사이가 150pt였다.
+    ///
+    /// `Grid`는 열을 맞추면서 **콘텐츠 크기로** 잡히므로 간격이
+    /// `horizontalSpacing` 그대로다. 값은 열 안에서 오른쪽 정렬해 자릿수를
+    /// 맞춘다 — 원래 `Spacer`를 쓴 이유가 그것이었고, 그 목적은 유지한다.
     private var legend: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 10) {
             ForEach(slices) { slice in
-                HStack(spacing: 10) {
+                GridRow {
                     RoundedRectangle(cornerRadius: 2)
                         .fill(slice.color)
                         .frame(width: 10, height: 10)
+
                     Text(slice.label)
                         .font(Theme.bodyText)
                         .foregroundStyle(Theme.textPrimary)
-                    Spacer(minLength: 24)
+
                     Text(ByteCountFormatter.string(fromByteCount: slice.bytes, countStyle: .file))
                         .font(Theme.bodyMono)
                         .foregroundStyle(Theme.textSecondary)
+                        .gridColumnAlignment(.trailing)
                 }
             }
         }
-        .frame(maxWidth: 260)
     }
 
     /// 조각의 시작·끝 지점(0~1). 총합이 0이면 아무것도 그리지 않는다.
