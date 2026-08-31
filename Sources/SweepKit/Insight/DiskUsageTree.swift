@@ -6,10 +6,19 @@ public struct DiskUsageNode: Identifiable, Sendable, Hashable {
     public let size: Int64
     public let children: [DiskUsageNode]
 
-    public init(url: URL, size: Int64, children: [DiskUsageNode] = []) {
+    /// 안을 들여다볼 수 있었는가.
+    ///
+    /// 못 읽은 디렉토리를 0바이트로 그리면 **거짓말이 된다.** 허용 루트 안만
+    /// 볼 때는 거의 없던 일이지만 `/`나 `~/Library/Containers`에서는 흔하다.
+    /// 빈 디렉토리도 0바이트라 크기만으로는 둘을 구분할 수 없다.
+    public let isReadable: Bool
+
+    public init(url: URL, size: Int64, children: [DiskUsageNode] = [],
+                isReadable: Bool = true) {
         self.url = url
         self.size = size
         self.children = children
+        self.isReadable = isReadable
     }
 
     public var id: URL { url }
@@ -68,15 +77,27 @@ public enum DiskUsageTree {
             return DiskUsageNode(url: url, size: allocated(values))
         }
 
+        // 못 읽었으면 0바이트가 아니라 "모른다"다. `?? []`로 삼키면
+        // 권한 없는 폴더가 "0 KB"로 보인다.
+        guard let entries = contents(of: url) else {
+            return DiskUsageNode(url: url, size: 0, isReadable: false)
+        }
+
         var total: Int64 = 0
         var children: [DiskUsageNode] = []
-        for child in contents(of: url) {
+        for child in entries {
             let node = node(at: child, depth: depth - 1, minimumSize: minimumSize,
                             onEntryScanned: onEntryScanned)
             total += node.size
             // 깊이를 넘어서도 **순회는 계속한다** — 크기를 정확히 합치려면 끝까지 세야 한다.
             // 달라지는 것은 children에 넣느냐뿐이다.
-            if depth > 0, node.size >= minimumSize { children.append(node) }
+            //
+            // 못 읽은 노드는 크기와 무관하게 남긴다. 크기가 0이라 최소 크기에
+            // 걸려 잘려 나가면, 안에 뭐가 얼마나 있는지 모르는 폴더가 목록에서
+            // 통째로 사라진다 — 0으로 보이는 것보다 나쁘다.
+            if depth > 0, node.size >= minimumSize || !node.isReadable {
+                children.append(node)
+            }
         }
         return DiskUsageNode(url: url, size: total,
                              children: children.sorted { $0.size > $1.size })
@@ -144,8 +165,10 @@ public enum DiskUsageTree {
     ///
     /// 숨김 파일도 포함한다. 용량을 보는 화면에서 `.git` 같은 것을 빼면
     /// 합계가 실제와 어긋난다(실측 37MB 차이).
-    private static func contents(of url: URL) -> [URL] {
-        (try? FileManager.default.contentsOfDirectory(
-            at: url, includingPropertiesForKeys: Array(keys), options: [])) ?? []
+    /// 읽지 못하면 nil. **빈 디렉토리(`[]`)와 구분해야 한다** —
+    /// 둘 다 0바이트지만 하나는 사실이고 하나는 모르는 것이다.
+    private static func contents(of url: URL) -> [URL]? {
+        try? FileManager.default.contentsOfDirectory(
+            at: url, includingPropertiesForKeys: Array(keys), options: [])
     }
 }

@@ -143,6 +143,80 @@ struct DiskUsageTreeTests {
         #expect(tree.size >= Int64(2 * Self.oneMB))
         #expect(tree.size < Int64(3 * Self.oneMB), "링크를 따라가 8MB가 섞였다")
     }
+
+    // MARK: - 읽을 수 있었는가 (범위 확대)
+
+    /// 권한을 되돌려 놓지 않으면 임시 디렉토리가 지워지지 않는다.
+    private func unlock(_ url: URL) {
+        try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
+    }
+
+    // TC-2
+    @Test("못 읽는 디렉토리는 0바이트가 아니라 읽을 수 없음으로 표시된다")
+    func unreadableDirectoryIsMarked() throws {
+        let root = try makeSandbox()
+        let locked = root.appending(path: "잠긴폴더")
+        defer { unlock(locked); try? fm.removeItem(at: root) }
+
+        try write(2, to: locked.appending(path: "안보임.bin"))
+        try fm.setAttributes([.posixPermissions: 0o000], ofItemAtPath: locked.path)
+
+        let tree = DiskUsageTree.build(at: root, minimumSize: 1)
+        let node = try #require(tree.children.first { $0.name == "잠긴폴더" },
+                                "잠긴 폴더가 트리에 없다")
+
+        // 0 KB라고 말하면 거짓말이다 — 안에 2MB가 있다
+        #expect(node.isReadable == false)
+        #expect(node.size == 0)
+    }
+
+    // TC-3
+    @Test("빈 디렉토리는 읽을 수 있는 0바이트다")
+    func emptyDirectoryStaysReadable() throws {
+        let root = try makeSandbox()
+        defer { try? fm.removeItem(at: root) }
+        let empty = root.appending(path: "빈폴더")
+        try fm.createDirectory(at: empty, withIntermediateDirectories: true)
+
+        let tree = DiskUsageTree.build(at: empty, minimumSize: 1)
+
+        // 빈 것과 못 읽는 것은 둘 다 0바이트다. 크기만으로는 구분되지 않는다.
+        #expect(tree.isReadable == true)
+        #expect(tree.size == 0)
+    }
+
+    // TC-4
+    @Test("읽을 수 있는 디렉토리는 크기가 그대로 잡힌다")
+    func readableDirectoryKeepsSize() throws {
+        let root = try makeSandbox()
+        defer { try? fm.removeItem(at: root) }
+        try write(2, to: root.appending(path: "a.bin"))
+
+        let tree = DiskUsageTree.build(at: root, minimumSize: 1)
+
+        #expect(tree.isReadable == true)
+        #expect(tree.size >= Int64(2 * Self.oneMB))
+    }
+
+    // TC-5
+    @Test("못 읽는 자식이 있어도 부모는 읽을 수 있다")
+    func parentStaysReadableWithLockedChild() throws {
+        let root = try makeSandbox()
+        let locked = root.appending(path: "잠긴폴더")
+        defer { unlock(locked); try? fm.removeItem(at: root) }
+
+        try write(2, to: root.appending(path: "보이는.bin"))
+        try write(2, to: locked.appending(path: "안보임.bin"))
+        try fm.setAttributes([.posixPermissions: 0o000], ofItemAtPath: locked.path)
+
+        let tree = DiskUsageTree.build(at: root, minimumSize: 1)
+
+        // 못 읽는 것은 그 폴더 하나지 부모 전체가 아니다
+        #expect(tree.isReadable == true)
+        #expect(tree.size >= Int64(2 * Self.oneMB))
+        #expect(tree.children.first { $0.name == "잠긴폴더" }?.isReadable == false)
+        #expect(tree.children.first { $0.name == "보이는.bin" }?.isReadable == true)
+    }
 }
 
 /// 방문 횟수를 세는 잠금 카운터. 재귀가 여러 스레드를 쓰지는 않지만

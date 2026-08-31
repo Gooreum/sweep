@@ -404,6 +404,22 @@ struct DiskMapModelTests {
         #expect(model.tiles.isEmpty)
     }
 
+    // TC-6
+    @Test("drop이 조상의 '읽을 수 없음'을 지우지 않는다")
+    func dropPreservesReadability() {
+        // 조상을 다시 만들 때 isReadable을 안 넘기면 기본값 true로 되살아나
+        // "읽을 수 없음" 표시가 조용히 사라진다.
+        let dir = URL(filePath: "/private/tmp/root")
+        let child = DiskUsageNode(url: dir.appending(path: "지울것"), size: 100)
+        let model = DiskMapModel()
+        model.seed(DiskUsageNode(url: dir, size: 100, children: [child],
+                                 isReadable: false))
+
+        model.drop(child)
+
+        #expect(model.current?.isReadable == false)
+    }
+
     // TC-10
     @Test("조상 크기도 음수로 가지 않는다")
     func dropClampsAncestorSizeAtZero() {

@@ -218,7 +218,9 @@ public final class DiskMapModel {
         rebuilt[leaf] = DiskUsageNode(
             url: rebuilt[leaf].url,
             size: max(0, rebuilt[leaf].size - node.size),
-            children: rebuilt[leaf].children.filter { $0.id != node.id })
+            children: rebuilt[leaf].children.filter { $0.id != node.id },
+            // 안 넘기면 기본값 true로 되살아나 "읽을 수 없음"이 사라진다
+            isReadable: rebuilt[leaf].isReadable)
 
         // 조상으로 올라가며 크기를 줄이고, 바뀐 자식으로 교체한다.
         // 교체하지 않으면 breadcrumb으로 위에 올라갔을 때 지운 노드가 되살아난다.
@@ -231,7 +233,8 @@ public final class DiskMapModel {
                 size: max(0, rebuilt[parent].size - node.size),
                 children: rebuilt[parent].children.map {
                     $0.id == updated.id ? updated : $0
-                })
+                },
+                isReadable: rebuilt[parent].isReadable)
             index = parent
         }
         path = rebuilt
