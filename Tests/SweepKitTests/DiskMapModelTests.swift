@@ -246,6 +246,27 @@ struct DiskMapModelTests {
         #expect(!model.canGoUp)
     }
 
+    // MARK: - 시작 지점 (탭 왕복에도 머리말이 남아야 한다)
+
+    // TC-5
+    @Test("새 모델은 아직 아무 시작 지점도 고르지 않았다")
+    func selectedRootStartsNil() {
+        #expect(DiskMapModel().selectedRoot == nil)
+    }
+
+    // TC-4
+    @Test("load가 시작 지점을 모델에 남긴다")
+    func loadRecordsSelectedRoot() async {
+        let model = fakeModel()
+        let root = URL(filePath: "/private/tmp/root")
+
+        await model.load(root)
+
+        // 뷰가 들고 있으면 탭을 옮겼다 오는 순간 nil로 돌아가,
+        // 트리는 그대로인데 머리말만 "선택하세요"가 된다.
+        #expect(model.selectedRoot == root)
+    }
+
     // MARK: - 삭제 (Step 2)
     //
     // **안전 규칙**: 실패 경로 TC의 대상은 관문이 깨져도 지울 것이 없어야 한다.

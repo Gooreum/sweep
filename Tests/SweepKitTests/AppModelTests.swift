@@ -47,6 +47,43 @@ struct AppModelTests {
         #expect(app.model(for: .junk) === junk)
     }
 
+    // MARK: - 디스크 맵 모델 소유권
+
+    // TC-2
+    @Test("디스크 맵 모델도 다시 물으면 같은 인스턴스다")
+    func diskMapModelIsReused() {
+        let app = AppModel()
+
+        // 스캔 모델이 아니라고 규칙이 달라지지 않는다. 매번 새로 만들면
+        // 사이드바를 옮겼다 돌아올 때 트리가 사라져 10초를 다시 기다린다.
+        #expect(app.diskMap() === app.diskMap())
+    }
+
+    // TC-3
+    @Test("탭을 옮겼다 디스크 맵으로 돌아와도 같은 모델이다")
+    func switchingFeatureKeepsDiskMapModel() {
+        let app = AppModel()
+        let first = app.diskMap()
+
+        app.selected = .junk
+        app.selected = .diskMap
+
+        #expect(app.diskMap() === first)
+    }
+
+    // TC-6
+    @Test("주입한 디스크 맵 모델을 그대로 돌려준다")
+    func diskMapModelIsInjectable() {
+        // 기본 구성은 실제 순회를 물고 있어 테스트에서 10초를 기다리게 된다.
+        let injected = DiskMapModel(countEntries: { _, _ in 0 },
+                                    buildTree: { url, _ in
+                                        DiskUsageNode(url: url, size: 0)
+                                    })
+        let app = AppModel(makeDiskMap: { injected })
+
+        #expect(app.diskMap() === injected)
+    }
+
     // MARK: - 메뉴 잠금 조건 (Phase 2 / Step 1)
 
     private func item(_ name: String, safety: SafetyLevel = .safe) -> CleanupItem {

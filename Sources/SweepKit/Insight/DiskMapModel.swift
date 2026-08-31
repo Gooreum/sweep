@@ -58,6 +58,12 @@ public final class DiskMapModel {
     public private(set) var path: [DiskUsageNode] = []
     public private(set) var loadPhase: LoadPhase?
 
+    /// Picker가 고른 시작 지점.
+    ///
+    /// 뷰가 들고 있으면 탭을 옮겼다 오는 순간 nil로 돌아가, 트리는 그대로인데
+    /// 머리말만 "선택하세요"가 된다.
+    public var selectedRoot: URL?
+
     public var isScanning: Bool { loadPhase != nil }
 
     private let countEntries: @Sendable (URL, @escaping @Sendable (Int) -> Void) -> Int
@@ -87,6 +93,8 @@ public final class DiskMapModel {
     /// 집계 패스 수준으로 줄어든다. 분모가 도착하기 전까지는 퍼센트 대신
     /// "세는 중"을 보여주는 것이 정직하다.
     public func load(_ root: URL) async {
+        // 화면이 무엇을 보고 있는지도 모델이 안다. 뷰와 두 곳에 두면 어긋난다.
+        selectedRoot = root
         loadPhase = .counting(scanned: 0)
 
         let measured = ScanCounter()

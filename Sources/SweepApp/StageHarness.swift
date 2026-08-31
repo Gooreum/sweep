@@ -18,12 +18,18 @@ struct StageHarness: View {
     }
 
     @State private var model: ScanModel?
+    /// `body`에서 만들면 렌더마다 새 모델이 되어 트리가 매번 초기화된다.
+    @State private var diskMap: DiskMapModel?
     @State private var app = AppModel()
 
     var body: some View {
         Group {
             if stage == "diskmap" {
-                DiskMapView(model: Self.seededDiskMap())
+                if let diskMap {
+                    DiskMapView(model: diskMap)
+                } else {
+                    Text("준비 중").font(Theme.bodyText)
+                }
             } else if let model {
                 if stage.hasPrefix("smart-") {
                     SmartScanView(app: app, model: model)
@@ -134,7 +140,7 @@ struct StageHarness: View {
             // `body`가 `DiskMapView`를 직접 그린다 — 여기서 `ScanModel`은 쓰이지 않는다.
             // `default`로 흘려보내면 쓰지도 않을 모델을 만들고, 하니스 단계 목록에서도
             // 빠져 config와 어긋난다.
-            break
+            diskMap = Self.seededDiskMap()
 
         default:
             model = ScanModel(scan: { AsyncStream { $0.finish() } })

@@ -20,8 +20,9 @@ struct ContentView: View {
     private var detail: some View {
         switch app.selected {
         case .diskMap:
-            // 읽기 전용이라 스캔 모델이 없다. 자기 상태를 직접 들고 있는다.
-            DiskMapView()
+            // 스캔 모델은 아니지만 **소유는 다른 기능과 똑같이** AppModel이 한다.
+            // 뷰가 들고 있으면 탭을 옮기는 순간 트리가 사라져 10초를 다시 기다린다.
+            DiskMapView(model: app.diskMap())
 
         case .smartScan:
             // 첫 화면. 전체를 훑고 기능별로 얼마가 나왔는지 카드로 보여준다.

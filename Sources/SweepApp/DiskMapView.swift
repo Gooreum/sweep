@@ -7,17 +7,13 @@ import SweepKit
 /// 크기만 보여주고 아무것도 못 하면 "용량이 어디 있는지"만 알려주고 끝난다.
 /// Finder로 가기 · 경로 복사 · 휴지통 세 가지를 행에 붙인다.
 struct DiskMapView: View {
-    @State private var model: DiskMapModel
-    @State private var root: URL?
+    /// **소유하지 않는다.** `AppModel`이 들고 있는 것을 받아 쓴다 —
+    /// `@State`로 들면 탭을 옮기는 순간 트리가 사라지고, 돌아올 때
+    /// 10초짜리 순회를 다시 돈다.
+    @Bindable var model: DiskMapModel
 
     /// 삭제 확인을 기다리는 항목. nil이면 대화가 닫혀 있다.
     @State private var pendingDelete: DiskUsageNode?
-
-    /// 하니스가 스캔 없이 트리를 넣어 화면을 띄울 수 있게 열어 둔다.
-    /// 실제 로드는 10초가 넘어 이 화면을 눈으로 확인할 방법이 달리 없다.
-    init(model: DiskMapModel = DiskMapModel()) {
-        _model = State(initialValue: model)
-    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,12 +25,14 @@ struct DiskMapView: View {
         .task {
             // 열자마자 뭔가 보여준다. 빈 화면에서 시작하면 뭘 해야 할지 모른다.
             //
+            // **이미 본 것이 있으면 그대로 둔다.** 탭을 옮겼다 돌아올 때마다
+            // 10초짜리 순회를 다시 도는 것이 이 화면의 가장 큰 불만이었다.
+            //
             // 여기서는 대입만 한다. 실제 로드는 `.onChange`가 맡는다 —
-            // 두 곳에서 부르면 10초짜리 순회가 두 번 돈다.
-            // 이미 트리가 들어와 있으면(하니스) 건드리지 않는다 —
-            // 대입하는 순간 `.onChange`가 10초짜리 순회를 시작한다.
-            guard root == nil, model.current == nil else { return }
-            root = model.availableRoots.first
+            // 두 곳에서 부르면 순회가 두 번 돈다.
+            guard model.selectedRoot == nil, model.current == nil, !model.isScanning
+            else { return }
+            model.selectedRoot = model.availableRoots.first
         }
         // 정리 화면과 달리 여기엔 안전도 배지도 기본 선택도 없다.
         // 무엇을 지우는지 경로와 크기로 다시 보여주고 확인을 받는다.
@@ -67,7 +65,7 @@ struct DiskMapView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            Picker("시작 지점", selection: $root) {
+            Picker("시작 지점", selection: $model.selectedRoot) {
                 Text("선택하세요").tag(URL?.none)
                 ForEach(model.availableRoots, id: \.self) { url in
                     Text(shortName(url)).tag(URL?.some(url))
@@ -75,7 +73,7 @@ struct DiskMapView: View {
             }
             .labelsHidden()
             .frame(maxWidth: 240)
-            .onChange(of: root) { _, new in
+            .onChange(of: model.selectedRoot) { _, new in
                 guard let new else { return }
                 Task { await model.load(new) }
             }

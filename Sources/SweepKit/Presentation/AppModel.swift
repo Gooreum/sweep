@@ -14,6 +14,9 @@ public final class AppModel {
     private var models: [Feature: ScanModel] = [:]
     private let makeModel: @MainActor (Feature) -> ScanModel
 
+    private var diskMapModel: DiskMapModel?
+    private let makeDiskMap: @MainActor () -> DiskMapModel
+
     /// 기능 모델을 만드는 방법을 주입할 수 있게 열어 둔다.
     ///
     /// `ScanModel(scan:removeOne:)`과 같은 이유다 — 기본 구성은 실제 스캐너를
@@ -21,8 +24,11 @@ public final class AppModel {
     /// 두지 않는다**: 이 프로젝트에서 그런 훅(`additionalRootsForTesting`)이
     /// 병렬 스위트끼리 서로를 덮어써 한 번 제거된 적이 있다.
     public init(makeModel: @escaping @MainActor (Feature) -> ScanModel
-                    = { ScanModel(feature: $0) }) {
+                    = { ScanModel(feature: $0) },
+                makeDiskMap: @escaping @MainActor () -> DiskMapModel
+                    = { DiskMapModel() }) {
         self.makeModel = makeModel
+        self.makeDiskMap = makeDiskMap
     }
 
     /// 기능마다 모델을 하나씩만 만들어 재사용한다.
@@ -33,6 +39,17 @@ public final class AppModel {
         if let existing = models[feature] { return existing }
         let created = makeModel(feature)
         models[feature] = created
+        return created
+    }
+
+    /// 디스크 맵 모델. `model(for:)`과 **같은 이유로** 여기서 소유한다.
+    ///
+    /// 뷰가 `@State`로 들고 있으면 사이드바를 옮기는 순간 죽고, 돌아올 때
+    /// 10초짜리 순회를 다시 돈다. 스캔 모델이 아니라고 규칙이 달라지지 않는다.
+    public func diskMap() -> DiskMapModel {
+        if let existing = diskMapModel { return existing }
+        let created = makeDiskMap()
+        diskMapModel = created
         return created
     }
 
