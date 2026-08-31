@@ -12,8 +12,18 @@ public final class AppModel {
     public var selected: Feature = .smartScan
 
     private var models: [Feature: ScanModel] = [:]
+    private let makeModel: @MainActor (Feature) -> ScanModel
 
-    public init() {}
+    /// 기능 모델을 만드는 방법을 주입할 수 있게 열어 둔다.
+    ///
+    /// `ScanModel(scan:removeOne:)`과 같은 이유다 — 기본 구성은 실제 스캐너를
+    /// 물고 있어 테스트에서 43초를 기다리게 된다. **테스트 전용 전역 상태를
+    /// 두지 않는다**: 이 프로젝트에서 그런 훅(`additionalRootsForTesting`)이
+    /// 병렬 스위트끼리 서로를 덮어써 한 번 제거된 적이 있다.
+    public init(makeModel: @escaping @MainActor (Feature) -> ScanModel
+                    = { ScanModel(feature: $0) }) {
+        self.makeModel = makeModel
+    }
 
     /// 기능마다 모델을 하나씩만 만들어 재사용한다.
     ///
@@ -21,7 +31,7 @@ public final class AppModel {
     /// 43초를 다시 기다리게 하는 셈이다.
     public func model(for feature: Feature) -> ScanModel {
         if let existing = models[feature] { return existing }
-        let created = ScanModel(feature: feature)
+        let created = makeModel(feature)
         models[feature] = created
         return created
     }
@@ -45,13 +55,31 @@ public final class AppModel {
         return !model.isBusy && model.hasSelection
     }
 
-    /// 사이드바에 붙일 발견량. 아직 훑지 않았거나 0이면 nil이다 —
+    /// 사이드바 배지 전체. 아직 훑지 않았거나 0이면 그 기능은 빠진다 —
     /// "0바이트" 배지는 알려줄 것이 아니라 자리만 차지한다.
-    public func badge(for feature: Feature) -> String? {
-        guard feature.isScannable else { return nil }
+    ///
+    /// 행마다 따로 물으면 같은 항목 목록을 기능 수만큼 훑는다.
+    /// 카테고리 → 기능 대응표를 먼저 만들고 항목을 **한 번만** 지나간다.
+    public var badges: [Feature: String] {
         let items = model(for: .smartScan).items
-        let matched = feature == .smartScan ? items : feature.items(from: items)
-        return matched.isEmpty ? nil : matched.formattedTotalSize
+        guard !items.isEmpty else { return [:] }
+
+        var owner: [ScanCategory: Feature] = [:]
+        for feature in Feature.summaryCards {
+            for category in feature.categories { owner[category] = feature }
+        }
+
+        var bytes: [Feature: Int64] = [:]
+        for item in items {
+            if let feature = owner[item.category] { bytes[feature, default: 0] += item.size }
+            // 스마트 스캔은 전체를 대표한다. 담당 기능이 없는 카테고리가 생겨도
+            // 전체 합에서는 빠지지 않는다.
+            bytes[.smartScan, default: 0] += item.size
+        }
+
+        return bytes.mapValues {
+            ByteCountFormatter.string(fromByteCount: $0, countStyle: .file)
+        }
     }
 
     // MARK: - 상태 아이콘이 물어보는 것

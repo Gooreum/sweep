@@ -147,15 +147,99 @@ struct AppModelTests {
         #expect(summary.breakdown.isEmpty)
     }
 
-    @Test("사이드바 배지는 찾은 것이 있을 때만 붙는다")
-    func badgeOnlyWhenFound() {
-        let app = AppModel()
+    // MARK: - 사이드바 배지
 
-        // 아직 훑지 않았다 — "0바이트" 배지는 자리만 차지한다
-        for feature in Feature.allCases {
-            #expect(app.badge(for: feature) == nil, "\(feature)에 배지가 붙었다")
+    private func sized(_ name: String, _ category: ScanCategory, _ size: Int64) -> CleanupItem {
+        CleanupItem(url: URL(filePath: "/private/tmp/\(name)"),
+                    size: size, category: category, safety: .safe)
+    }
+
+    private func stream(_ items: [CleanupItem])
+        -> @Sendable () -> AsyncStream<ScanCoordinator.Progress> {
+        { @Sendable in
+            AsyncStream { continuation in
+                continuation.yield(ScanCoordinator.Progress(
+                    items: items, fraction: 1, elapsed: .seconds(1),
+                    estimatedRemaining: nil, finishedScanners: 6, totalScanners: 6))
+                continuation.finish()
+            }
         }
-        // 스캔하지 않는 기능은 언제나 nil
-        #expect(app.badge(for: .diskMap) == nil)
+    }
+
+    /// 기본 구성은 실제 스캐너를 물고 있어 43초가 걸린다. 모델 생성을 주입한다.
+    private func app(with items: [CleanupItem]) async -> AppModel {
+        let make = stream(items)
+        let app = AppModel(makeModel: { _ in ScanModel(scan: make) })
+        await app.model(for: .smartScan).scan()
+        return app
+    }
+
+    // TC-1
+    @Test("아직 훑지 않았으면 배지가 하나도 없다")
+    func noBadgesBeforeScan() {
+        // "0바이트" 배지는 알려줄 것이 아니라 자리만 차지한다
+        #expect(AppModel().badges.isEmpty)
+    }
+
+    // TC-2
+    @Test("기능마다 담당 항목이 배지로 잡힌다")
+    func badgesPerFeature() async {
+        let app = await app(with: [
+            sized("임시", .runawayTemp, 100), sized("빌드", .xcode, 200),
+            sized("큰것", .largeFile, 500), sized("사본", .duplicate, 50),
+        ])
+        let badges = app.badges
+
+        #expect(badges[.junk] != nil)
+        #expect(badges[.largeFile] != nil)
+        #expect(badges[.duplicate] != nil)
+        #expect(badges[.smartScan] != nil)
+        // 스캔하지 않는 기능은 배지가 없다
+        #expect(badges[.diskMap] == nil)
+    }
+
+    // TC-3 · TC-4
+    @Test("기능별 합이 전체와 같고 스마트 스캔이 전체 합이다")
+    func badgeSumsMatchTotal() async {
+        let items = [
+            sized("a", .runawayTemp, 1_000), sized("b", .xcode, 2_000),
+            sized("c", .devCache, 3_000), sized("d", .staleCache, 4_000),
+            sized("e", .largeFile, 5_000), sized("f", .duplicate, 6_000),
+        ]
+        let app = await app(with: items)
+        let model = app.model(for: .smartScan)
+
+        // 문자열이 아니라 원본에서 다시 계산해 대조한다
+        let junk = Feature.junk.items(from: model.items).totalSize
+        let large = Feature.largeFile.items(from: model.items).totalSize
+        let dup = Feature.duplicate.items(from: model.items).totalSize
+
+        // 한 번 훑기로 바꾸며 카테고리를 빠뜨리면 합이 어긋난다
+        #expect(junk + large + dup == items.totalSize)
+
+        let badges = app.badges
+        #expect(badges[.smartScan] == items.formattedTotalSize)
+        #expect(badges[.junk] == Feature.junk.items(from: model.items).formattedTotalSize)
+        #expect(badges[.largeFile] == Feature.largeFile.items(from: model.items).formattedTotalSize)
+        #expect(badges[.duplicate] == Feature.duplicate.items(from: model.items).formattedTotalSize)
+    }
+
+    // TC-6
+    @Test("배지 문자열이 기능별 개별 계산과 일치한다")
+    func badgesMatchPerFeatureCalculation() async {
+        let app = await app(with: [
+            sized("캐시", .devCache, 7_777), sized("사본", .duplicate, 333),
+        ])
+        let model = app.model(for: .smartScan)
+        let badges = app.badges
+
+        for feature in Feature.summaryCards {
+            let matched = feature.items(from: model.items)
+            if matched.isEmpty {
+                #expect(badges[feature] == nil, "\(feature)에 빈 배지가 붙었다")
+            } else {
+                #expect(badges[feature] == matched.formattedTotalSize)
+            }
+        }
     }
 }
