@@ -25,7 +25,7 @@ struct SmartScanView: View {
         VStack(spacing: 16) {
             Image(systemName: Feature.smartScan.systemImageName)
                 .font(.system(size: Theme.Icon.large))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentText)
 
             Text(Feature.smartScan.displayName)
                 .font(Theme.title)
@@ -59,59 +59,95 @@ struct SmartScanView: View {
     }
 
     private var summary: some View {
-        VStack(spacing: 24) {
-            VStack(spacing: 4) {
-                Text("회수 가능 \(model.formattedTotalSize)")
+        // 받은 모델에서 뽑는다. app을 거치면 하니스에서 다른 모델을 보게 된다.
+        let summary = model.summary
+        let largest = summary.breakdown.first?.bytes ?? 0
+
+        return VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("회수 가능")
+                    .font(Theme.bodyText)
+                    .foregroundStyle(Theme.textSecondary)
+                Text(model.formattedTotalSize)
                     .font(Theme.displayMono)
+                    .foregroundStyle(Theme.textPrimary)
                 Text("\(model.items.count)개 항목")
-                    .font(Theme.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+                    .font(Theme.captionMono)
+                    .foregroundStyle(Theme.textSecondary)
             }
 
-            HStack(spacing: 16) {
-                // 카드를 손으로 나열하지 않는다. 기능이 늘면 여기도 따라온다.
-                ForEach(Feature.summaryCards) { card($0) }
+            // 같은 크기 카드 3장을 한 줄에 놓으면 5.6GB와 104MB가 같은 무게로
+            // 읽힌다. 크기순 목록 + 비율 막대로 어디에 묶여 있는지를 먼저 보인다.
+            VStack(spacing: 0) {
+                ForEach(Array(summary.breakdown.enumerated()), id: \.element.id) { index, row in
+                    breakdownRow(row, largest: largest, isTop: index == 0)
+                    if index < summary.breakdown.count - 1 {
+                        Divider().overlay(Theme.border)
+                    }
+                }
             }
+            .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: Theme.cardRadius))
 
             Button("다시 검색") { Task { await model.scan() } }
-                .buttonStyle(PrimaryButtonStyle())
+                .buttonStyle(SecondaryButtonStyle())
         }
+        .frame(maxWidth: 520, alignment: .leading)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func card(_ feature: Feature) -> some View {
-        // 카테고리를 손으로 거르지 않는다 — 스캐너가 바뀌면 조용히 어긋난다
-        let matched = feature.items(from: model.items)
-        let isEmpty = matched.isEmpty
-
-        return Button {
-            app.selected = feature
+    /// 기능 한 줄. 1위만 강조색 숫자를 받는다 — 나머지까지 강조하면 위계가 없다.
+    private func breakdownRow(_ row: MenuBarSummary.Row,
+                              largest: Int64, isTop: Bool) -> some View {
+        Button {
+            app.selected = row.feature
         } label: {
-            VStack(spacing: 10) {
-                Image(systemName: feature.systemImageName)
-                    .font(.system(size: Theme.Icon.medium))
-                    .foregroundStyle(isEmpty ? Color.secondary : Theme.accent)
+            HStack(spacing: 12) {
+                Image(systemName: row.feature.systemImageName)
+                    .font(.system(size: Theme.Icon.small))
+                    .foregroundStyle(isTop ? Theme.accentText : Theme.textSecondary)
+                    .frame(width: Theme.Icon.medium)
 
-                Text(feature.displayName)
-                    .font(Theme.bodyText)
-                    .foregroundStyle(.primary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(row.feature.displayName)
+                        .font(isTop ? Theme.bodyText.weight(.medium) : Theme.bodyText)
+                        .foregroundStyle(Theme.textPrimary)
 
-                Text(matched.formattedTotalSize)
-                    .font(Theme.headlineMono)
-                    .foregroundStyle(isEmpty ? Color.secondary : Theme.accent)
+                    // 비율 막대. 숫자만으로는 53배 차이가 눈에 안 들어온다.
+                    GeometryReader { geometry in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Theme.border)
+                            Capsule()
+                                .fill(isTop ? Theme.accent : Theme.textTertiary)
+                                .frame(width: max(geometry.size.width * ratio(row, largest), 2))
+                        }
+                    }
+                    .frame(height: 4)
+                }
 
-                Text("\(matched.count)개")
+                Text(row.formattedSize)
+                    .font(isTop ? Theme.headlineMono : Theme.bodyMono)
+                    .foregroundStyle(isTop ? Theme.accentText : Theme.textPrimary)
+                    .frame(width: 88, alignment: .trailing)
+
+                Text("\(row.count)개")
+                    .font(Theme.captionMono)
+                    .foregroundStyle(Theme.textSecondary)
+                    .frame(width: 44, alignment: .trailing)
+
+                Image(systemName: "chevron.right")
                     .font(Theme.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+                    .foregroundStyle(Theme.textTertiary)
             }
-            .frame(width: 160, height: 150)
-            .background(Theme.surfaceRaised.opacity(isEmpty ? 0.5 : 1),
-                        in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        // 찾은 것이 없는 카드를 누르면 빈 결과 화면으로 떨어진다
-        .disabled(isEmpty)
     }
+
+    /// 0으로 나누지 않는다. 1위가 0이면 아무것도 못 찾은 것이라 막대도 없다.
+    private func ratio(_ row: MenuBarSummary.Row, _ largest: Int64) -> Double {
+        largest > 0 ? Double(row.bytes) / Double(largest) : 0
+    }
+
 }

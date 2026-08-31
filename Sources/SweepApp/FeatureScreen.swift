@@ -44,7 +44,7 @@ struct FeatureScreen: View {
         VStack(spacing: 16) {
             Image(systemName: feature.systemImageName)
                 .font(.system(size: Theme.Icon.large))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentText)
 
             Text(feature.displayName)
                 .font(Theme.title)
@@ -104,7 +104,7 @@ struct FeatureScreen: View {
             VStack(spacing: 14) {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: Theme.Icon.large))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentText)
 
                 Text("\(report.formattedReclaimed)의 파일이 삭제됨")
                     .font(Theme.title)
@@ -149,7 +149,7 @@ struct FeatureScreen: View {
             Button { model.toggleAll(in: group) } label: {
                 let state = model.selectionState(of: group)
                 Image(systemName: state.symbolName)
-                    .foregroundStyle(state.isEmphasized ? Theme.accent : Color.secondary)
+                    .foregroundStyle(state.isEmphasized ? Theme.accentText : Theme.textSecondary)
             }
             .buttonStyle(.plain)
             .help("이 묶음 전체 선택 / 해제")

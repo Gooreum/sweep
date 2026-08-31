@@ -51,6 +51,13 @@ enum Theme {
     static let accent = Color(red: 0.0408, green: 0.3748, blue: 0.9984)
     static let accentPressed = Color(red: 0.0355, green: 0.3349, blue: 0.9492)
 
+    /// **글씨·아이콘용 강조색.** 채움용(`accent`)과 다른 값이다.
+    ///
+    /// `#0A5FFF`는 흰 글씨를 얹을 때는 5.23:1로 통과하지만, 그 색으로
+    /// **글씨를 쓰면** 어두운 표면 위에서 2.60:1로 무너진다 (실측).
+    /// 같은 강조색이라도 배경으로 쓸 때와 전경으로 쓸 때 필요한 명도가 반대다.
+    static let accentText = adaptive(dark: 0x6AA9FF, light: 0x0B52D9)
+
     /// 창 테두리와 톤이 맞아야 해서 시맨틱을 쓴다.
     static let separator = Color(nsColor: .separatorColor)
 

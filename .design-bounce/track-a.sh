@@ -51,7 +51,9 @@ chk("카드 radius 8~12", 8 <= nums.get("cardRadius", 0) <= 12, f"{nums.get('car
 
 # 뷰의 radius 종류 (위험 바 1.5는 예외)
 radii = sorted({float(v) for v in re.findall(r'cornerRadius: ([\d.]+)', "\n".join(views.values()))})
-chk("뷰 radius 종류", set(radii) <= {1.0, 1.5}, f"{radii} (나머지는 Theme 참조)")
+# 1.5(위험 바) / 2.0(선택 인디케이터)는 폭 3~4pt짜리 막대라 컨테이너 radius가 아니다.
+INDICATOR = {1.0, 1.5, 2.0}
+chk("뷰 radius 종류", set(radii) <= INDICATOR, f"{radii} (인디케이터 예외 외 전부 Theme 참조)")
 
 # 버튼 5상태
 btn = theme[theme.index("struct PrimaryButtonStyle"):]

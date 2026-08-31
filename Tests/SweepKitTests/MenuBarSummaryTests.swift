@@ -42,7 +42,7 @@ struct MenuBarSummaryTests {
     @Test("스캔한 적이 없으면 회수 가능량이 0이 아니라 nil이다")
     func neverScannedIsNilNotZero() {
         let model = ScanModel(scan: finishing([]))
-        let summary = MenuBarSummary(model: model)
+        let summary = model.summary
 
         // "0바이트"라고 쓰면 "훑어봤는데 없다"는 뜻이 된다.
         // 아직 훑지 않은 것과 훑었는데 없는 것은 화면에서 달라야 한다.
@@ -58,7 +58,7 @@ struct MenuBarSummaryTests {
         let model = ScanModel(scan: finishing([]))
         await model.scan()
 
-        let summary = MenuBarSummary(model: model)
+        let summary = model.summary
         #expect(summary.reclaimable == nil)
         #expect(summary.reclaimableBytes == 0)
         #expect(summary.breakdown.isEmpty)
@@ -75,7 +75,7 @@ struct MenuBarSummaryTests {
         ]))
         await model.scan()
 
-        let summary = MenuBarSummary(model: model)
+        let summary = model.summary
 
         #expect(summary.breakdown.count == 3)
         #expect(summary.breakdown.map(\.feature) == [.junk, .largeFile, .duplicate])
@@ -97,7 +97,7 @@ struct MenuBarSummaryTests {
         let model = ScanModel(scan: finishing([item("캐시", .devCache, 500)]))
         await model.scan()
 
-        let summary = MenuBarSummary(model: model)
+        let summary = model.summary
 
         // "중복 0개"는 알려줄 것이 아니다 — 자리만 차지한다
         #expect(summary.breakdown.count == 1)
@@ -119,7 +119,7 @@ struct MenuBarSummaryTests {
         let model = ScanModel(scan: finishing(items))
         await model.scan()
 
-        let summary = MenuBarSummary(model: model)
+        let summary = model.summary
 
         // 패널과 본 화면이 다른 숫자를 말하면 안 된다
         #expect(summary.breakdown.reduce(0) { $0 + $1.bytes } == summary.reclaimableBytes)
@@ -139,7 +139,7 @@ struct MenuBarSummaryTests {
         let model = ScanModel(scan: finishing(items))
         await model.scan()
 
-        let summary = MenuBarSummary(model: model)
+        let summary = model.summary
 
         // 어느 항목도 빠지거나 두 번 세어지면 안 된다
         #expect(summary.breakdown.reduce(0) { $0 + $1.count } == items.count)
@@ -154,7 +154,7 @@ struct MenuBarSummaryTests {
         // 기다리면 Progress가 도착하기 전에 빠져나온다 — 결과가 들어올 때까지 기다린다.
         for _ in 0..<200 where model.items.isEmpty { await Task.yield() }
 
-        let summary = MenuBarSummary(model: model)
+        let summary = model.summary
         #expect(summary.isScanning == true)
         #expect(summary.scanPercent == 43)
         // 도는 중에도 지금까지 찾은 것은 보여준다
@@ -169,9 +169,44 @@ struct MenuBarSummaryTests {
         let model = ScanModel(scan: finishing([item("a", .devCache, 100)]))
         await model.scan()
 
-        let summary = MenuBarSummary(model: model)
+        let summary = model.summary
         #expect(summary.isScanning == false)
         #expect(summary.scanPercent == nil)
         #expect(summary.reclaimable != nil)
+    }
+
+    @Test("내역이 발견량 큰 순서로 정렬된다")
+    func breakdownSortedBySize() async {
+        // 일부러 작은 것을 먼저 넣는다 — 입력 순서를 따라가면 안 된다.
+        let model = ScanModel(scan: finishing([
+            item("사본", .duplicate, 100),
+            item("캐시", .devCache, 5_000),
+            item("큰것", .largeFile, 900),
+        ]))
+        await model.scan()
+
+        let rows = model.summary.breakdown
+
+        #expect(rows.map(\.feature) == [.junk, .largeFile, .duplicate])
+        #expect(rows.map(\.bytes) == [5_000, 900, 100])
+        // 내림차순이 깨지지 않는지 직접 확인
+        #expect(zip(rows, rows.dropFirst()).allSatisfy { $0.bytes >= $1.bytes })
+    }
+
+    @Test("요약은 AppModel이 아니라 그 모델 자신에서 나온다")
+    func summaryComesFromItsOwnModel() async {
+        // 주입된 모델로 그리는 화면(단계 하니스)에서 AppModel을 거치면
+        // 전혀 다른(빈) 모델을 보게 되어 목록이 통째로 사라진다.
+        let stub = ScanModel(scan: finishing([item("캐시", .devCache, 5_000)]))
+        await stub.scan()
+
+        let app = AppModel()   // 아무것도 스캔하지 않은 상태
+
+        #expect(stub.summary.reclaimable != nil)
+        #expect(stub.summary.breakdown.count == 1)
+        // AppModel의 요약은 자기 smartScan 모델을 본다 — 비어 있다
+        #expect(app.menuBarSummary.breakdown.isEmpty)
+        // 둘이 같은 값을 주면 안 된다
+        #expect(stub.summary.reclaimableBytes != app.menuBarSummary.reclaimableBytes)
     }
 }

@@ -53,7 +53,7 @@ public final class AppModel {
     /// 여러 번 세어져 총량이 부풀려진다 — 지금 구성에서는 겹치지 않지만
     /// 합산은 그 전제에 기대는 계산이라 스캐너가 바뀌면 조용히 틀린다.
     public var menuBarSummary: MenuBarSummary {
-        MenuBarSummary(model: model(for: .smartScan))
+        model(for: .smartScan).summary
     }
 }
 
@@ -89,7 +89,7 @@ public struct MenuBarSummary: Sendable {
     /// 스캔 중일 때만 값이 있다.
     public let scanPercent: Int?
 
-    init(model: ScanModel) {
+    fileprivate init(model: ScanModel) {
         isScanning = model.isBusy
         if case let .scanning(percent, _) = model.phase {
             scanPercent = percent
@@ -101,10 +101,23 @@ public struct MenuBarSummary: Sendable {
         reclaimableBytes = items.totalSize
         reclaimable = items.isEmpty ? nil : items.formattedTotalSize
 
-        breakdown = Feature.summaryCards.compactMap { feature in
+        // 발견량이 큰 것부터. 같은 크기 칸에 나열하면 5.6GB와 104MB가
+        // 같은 무게로 읽힌다 — 어디에 용량이 묶여 있는지가 첫 정보다.
+        breakdown = Feature.summaryCards.compactMap { feature -> Row? in
             let matched = feature.items(from: items)
             guard !matched.isEmpty else { return nil }
             return Row(feature: feature, bytes: matched.totalSize, count: matched.count)
         }
+        .sorted { $0.bytes > $1.bytes }
     }
+}
+
+
+extension ScanModel {
+    /// 이 모델 하나가 만들어내는 요약.
+    ///
+    /// 뷰는 **자기가 받은 모델**에서 요약을 뽑아야 한다. `AppModel`을 거쳐
+    /// 다른 모델을 보면 실앱에서는 같은 객체라 안 드러나지만, 모델을 주입해
+    /// 그리는 화면(단계 하니스)에서는 빈 결과가 나온다.
+    public var summary: MenuBarSummary { MenuBarSummary(model: self) }
 }

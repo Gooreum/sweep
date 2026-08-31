@@ -71,7 +71,7 @@ struct MenuBarPanel: View {
                     Spacer()
                     Text("\(percent)%")
                         .font(Theme.bodyText.monospacedDigit())
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentText)
                 }
             } else if let reclaimable = summary.reclaimable {
                 HStack {
@@ -79,7 +79,7 @@ struct MenuBarPanel: View {
                     Spacer()
                     Text(reclaimable)
                         .font(Theme.headlineMono)
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentText)
                 }
 
                 // 발견량이 0인 기능은 애초에 빠져 있다
