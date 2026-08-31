@@ -80,8 +80,11 @@ public final class DiskMapModel {
         self.buildTree = buildTree
     }
 
-    /// 사용자가 고를 수 있는 시작점. 정리 대상과 같은 범위만 보여준다.
-    public var availableRoots: [URL] { ProtectedPaths.allowedRoots }
+    /// 사용자가 고를 수 있는 시작점.
+    ///
+    /// 정리 범위와 **일부러 다르다.** 디스크 맵은 "용량이 어디 갔나"를 찾는
+    /// 도구라 못 지우는 곳도 보여야 한다. 지울 수 있는지는 행마다 따로 알린다.
+    public var availableRoots: [DiskMapRoot] { DiskMapRoot.all }
 
     public var current: DiskUsageNode? { path.last }
     public var tiles: [DiskUsageNode] { current?.children ?? [] }

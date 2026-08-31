@@ -107,12 +107,20 @@ struct DiskMapModelTests {
         #expect(model.path.count == 1)
     }
 
-    // TC-7
-    @Test("선택 가능한 시작점이 허용 루트와 같다")
-    func rootsMatchAllowedRoots() {
+    // TC-8
+    @Test("선택 가능한 시작점이 정리 루트보다 넓다")
+    func rootsGoBeyondCleanupScope() {
         let model = DiskMapModel()
-        #expect(model.availableRoots == ProtectedPaths.allowedRoots)
+        let paths = Set(model.availableRoots.map { $0.url.standardizedFileURL.path })
+
         #expect(!model.availableRoots.isEmpty)
+        // 정리 루트는 하나도 잃지 않는다
+        for root in ProtectedPaths.allowedRoots {
+            #expect(paths.contains(root.standardizedFileURL.path),
+                    "정리 루트가 빠졌다: \(root.path)")
+        }
+        // 그리고 그보다 넓어야 한다 — 정리 범위와 같으면 고치기 전으로 돌아간 것이다
+        #expect(model.availableRoots.count > ProtectedPaths.allowedRoots.count)
     }
 
     // TC-1 · TC-2

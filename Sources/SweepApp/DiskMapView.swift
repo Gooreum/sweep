@@ -32,7 +32,7 @@ struct DiskMapView: View {
             // 두 곳에서 부르면 순회가 두 번 돈다.
             guard model.selectedRoot == nil, model.current == nil, !model.isScanning
             else { return }
-            model.selectedRoot = model.availableRoots.first
+            model.selectedRoot = DiskMapRoot.initial?.url
         }
         // 정리 화면과 달리 여기엔 안전도 배지도 기본 선택도 없다.
         // 무엇을 지우는지 경로와 크기로 다시 보여주고 확인을 받는다.
@@ -67,12 +67,23 @@ struct DiskMapView: View {
         HStack(spacing: 12) {
             Picker("시작 지점", selection: $model.selectedRoot) {
                 Text("선택하세요").tag(URL?.none)
-                ForEach(model.availableRoots, id: \.self) { url in
-                    Text(shortName(url)).tag(URL?.some(url))
+                // 그룹으로 나눈다. 열 몇 개를 한 줄로 늘어놓으면 고르기 어렵다.
+                ForEach(DiskMapRoot.Group.allCases, id: \.self) { group in
+                    let roots = model.availableRoots.filter { $0.group == group }
+                    if !roots.isEmpty {
+                        Section(group.rawValue) {
+                            ForEach(roots) { root in
+                                Text(root.label).tag(URL?.some(root.url))
+                            }
+                        }
+                    }
                 }
             }
             .labelsHidden()
             .frame(maxWidth: 240)
+            // 도는 중에 다른 곳을 고르면 순회 두 개가 동시에 돌아
+            // 나중에 끝난 쪽이 앞선 결과를 덮는다.
+            .disabled(model.isScanning)
             .onChange(of: model.selectedRoot) { _, new in
                 guard let new else { return }
                 Task { await model.load(new) }
@@ -217,11 +228,4 @@ struct DiskMapView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    /// 홈 아래 경로는 `~`로 줄여 Picker가 넘치지 않게 한다.
-    private func shortName(_ url: URL) -> String {
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return url.path.hasPrefix(home)
-            ? "~" + url.path.dropFirst(home.count)
-            : url.path
-    }
 }
