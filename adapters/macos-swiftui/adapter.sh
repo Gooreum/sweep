@@ -25,6 +25,14 @@ kill_app() {
 # 앱을 앞으로 부른다. 창은 활성화 전에는 CGWindowList에서 onscreen=false로 나오고
 # AX에서도 잡히지 않는다 — 캡처 전에 반드시 필요하다.
 activate() {
+  # 이 어댑터가 띄운 프로세스를 **PID로** 앞에 부른다.
+  # 이름으로 부르면 사용자가 따로 띄워 둔 Sweep이 앞에 나오고, 정작 내 창은
+  # 활성화되지 않아 축소된 빈 버퍼가 찍힌다 — 실제로 그렇게 헛돌았다.
+  local pid
+  if pid=$(launched_pid); then
+    osascript -e "tell application \"System Events\" to set frontmost of (first process whose unix id is $pid) to true" \
+      >/dev/null 2>&1 && return 0
+  fi
   for name in Sweep SweepApp; do
     if osascript -e "tell application \"System Events\" to set frontmost of process \"$name\" to true" \
        >/dev/null 2>&1; then
@@ -52,12 +60,24 @@ wait_for_window() {
 HELPER_SRC="$(dirname "$0")/helper/winid.swift"
 HELPER_BIN=".design-bounce/bin/winid"
 
+PID_FILE=".design-bounce/bin/.launched-pid"
+
+# 이 어댑터가 띄운 프로세스. 사용자가 따로 띄워 둔 Sweep을 찍지 않기 위한 것이다.
+remember_pid() { mkdir -p "$(dirname "$PID_FILE")"; echo "$1" > "$PID_FILE"; }
+launched_pid() {
+  [ -f "$PID_FILE" ] || return 1
+  local pid; pid=$(cat "$PID_FILE")
+  kill -0 "$pid" 2>/dev/null || return 1
+  echo "$pid"
+}
+
 window_id() {
   if [ ! -x "$HELPER_BIN" ] || [ "$HELPER_SRC" -nt "$HELPER_BIN" ]; then
     mkdir -p "$(dirname "$HELPER_BIN")"
     swiftc -O -o "$HELPER_BIN" "$HELPER_SRC" >&2 || return 1
   fi
-  "$HELPER_BIN"
+  local pid
+  if pid=$(launched_pid); then "$HELPER_BIN" "$pid"; else "$HELPER_BIN"; fi
 }
 
 case "${1:-}" in
@@ -71,6 +91,7 @@ case "${1:-}" in
     if dry "$@"; then echo "$BIN &"; exit 0; fi
     kill_app
     "$BIN" >/dev/null 2>&1 &
+    remember_pid $!
     wait_for_window >/dev/null || { echo "창이 뜨지 않았다" >&2; exit 1; }
     echo OK
     ;;
@@ -82,6 +103,7 @@ case "${1:-}" in
     kill_app
     # shellcheck disable=SC2086
     "$BIN" $LINK >/dev/null 2>&1 &
+    remember_pid $!
     wait_for_window >/dev/null || { echo "창이 뜨지 않았다: $SCREEN" >&2; exit 1; }
     echo OK
     ;;

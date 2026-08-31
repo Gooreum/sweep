@@ -7,6 +7,12 @@ import Foundation
 
 let owners: Set<String> = ["Sweep", "SweepApp"]
 
+/// 선택 인자로 PID를 받으면 **그 프로세스의 창만** 고른다.
+///
+/// 이름으로만 고르면 사용자가 따로 띄워 둔 Sweep을 찍는다 —
+/// 실제로 어댑터가 남의 창을 찍어 검증이 통째로 헛돌았다.
+let wantedPID = CommandLine.arguments.count > 1 ? Int(CommandLine.arguments[1]) : nil
+
 guard let list = CGWindowListCopyWindowInfo(
     [.optionAll, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] else {
     exit(1)
@@ -15,6 +21,7 @@ guard let list = CGWindowListCopyWindowInfo(
 var best: (id: Int, area: Double)?
 for w in list {
     guard let owner = w[kCGWindowOwnerName as String] as? String, owners.contains(owner),
+          wantedPID == nil || (w[kCGWindowOwnerPID as String] as? Int) == wantedPID,
           let id = w[kCGWindowNumber as String] as? Int,
           // layer 0 = 일반 창. 메뉴 막대 패널은 더 높은 layer에 뜬다.
           let layer = w[kCGWindowLayer as String] as? Int, layer == 0,
