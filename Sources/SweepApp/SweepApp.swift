@@ -19,9 +19,6 @@ struct SweepApp: App {
     /// 메뉴 명령이 모델을 건드려야 해서 창이 아니라 앱이 들고 있는다.
     @State private var app = AppModel()
 
-    /// AppKit이 붙이는 빈 Help 메뉴를 기동 후에 떼어낸다.
-    @NSApplicationDelegateAdaptor(MenuTrimmer.self) private var menuTrimmer
-
     /// 상태 아이콘에서 본 창을 앞으로 부를 때 쓴다.
     @Environment(\.openWindow) private var openWindow
 

@@ -142,4 +142,74 @@ struct FeatureTests {
             #expect(feature.items(from: []).isEmpty)
         }
     }
+
+    // MARK: - 기능 색 (design-bounce)
+
+    private func rgb(_ h: UInt32) -> (Double, Double, Double) {
+        (Double((h >> 16) & 0xFF), Double((h >> 8) & 0xFF), Double(h & 0xFF))
+    }
+
+    private func luminance(_ c: (Double, Double, Double)) -> Double {
+        func f(_ v: Double) -> Double {
+            let s = v / 255
+            return s <= 0.03928 ? s / 12.92 : pow((s + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * f(c.0) + 0.7152 * f(c.1) + 0.0722 * f(c.2)
+    }
+
+    private func contrast(_ a: (Double, Double, Double), _ b: (Double, Double, Double)) -> Double {
+        let la = luminance(a), lb = luminance(b)
+        return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+    }
+
+    /// sRGB → 색상각(0~360).
+    private func hue(_ c: (Double, Double, Double)) -> Double {
+        let r = c.0 / 255, g = c.1 / 255, b = c.2 / 255
+        let mx = max(r, g, b), mn = min(r, g, b), d = mx - mn
+        guard d > 0 else { return 0 }
+        let h: Double
+        if mx == r { h = (g - b) / d }
+        else if mx == g { h = 2 + (b - r) / d }
+        else { h = 4 + (r - g) / d }
+        return (h * 60).truncatingRemainder(dividingBy: 360) + (h < 0 ? 360 : 0)
+    }
+
+    @Test("기능 색이 양쪽 모드의 표면 위에서 AA를 넘는다")
+    func featureTintsPassContrast() {
+        // 표면 토큰 실측값 (Theme와 같은 값 — 여기가 틀리면 화면에서 글자가 무너진다)
+        let darkSurface = (42.0, 44.0, 46.0)     // #2A2C2E
+        let darkRaised  = (52.0, 54.0, 58.0)     // #34363A
+        let lightSurface = (255.0, 255.0, 255.0)
+        let lightRaised  = (232.0, 232.0, 234.0) // #E8E8EA
+
+        for feature in Feature.allCases {
+            guard let tint = feature.tintHex else { continue }
+            let d = rgb(tint.dark), l = rgb(tint.light)
+            for (label, pair) in [("다크 본문", (d, darkSurface)), ("다크 카드", (d, darkRaised)),
+                                  ("라이트 본문", (l, lightSurface)), ("라이트 카드", (l, lightRaised))] {
+                let r = contrast(pair.0, pair.1)
+                #expect(r >= 4.5, "\(feature) \(label) \(r)")
+            }
+        }
+    }
+
+    @Test("기능 색끼리 색상각이 충분히 벌어져 있다")
+    func featureTintsAreDistinguishable() {
+        let hues = Feature.allCases.compactMap { $0.tintHex }.map { hue(rgb($0.dark)) }.sorted()
+        #expect(hues.count == 4, "고유색을 가진 기능이 4개여야 한다")
+
+        // 색상각이 붙어 있으면 사이드바에서 두 기능이 같은 색으로 읽힌다
+        for (a, b) in zip(hues, hues.dropFirst()) {
+            #expect(b - a >= 30, "색상각 간격 \(b - a)°가 너무 좁다")
+        }
+    }
+
+    @Test("스마트 스캔은 고유색을 갖지 않는다")
+    func smartScanHasNoTint() {
+        // 전체를 대표하는 화면이라 고유색을 주면 정크와 겹친다
+        #expect(Feature.smartScan.tintHex == nil)
+        for feature in Feature.allCases where feature != .smartScan {
+            #expect(feature.tintHex != nil, "\(feature)에 색이 없다")
+        }
+    }
 }

@@ -40,41 +40,56 @@ struct SmartScanView: View {
         }
     }
 
-    /// 디스크 현황. 스캔과 무관하게 늘 유효한 유일한 숫자다.
+    /// 히어로 도넛.
+    ///
+    /// 스캔 결과가 있으면 **회수 가능한 6.78GB의 구성**을 그린다.
+    /// 디스크 전체(494GB)를 그리면 기능 조각이 1.4%짜리 실이 되어
+    /// 색이 있으나 마나다. 전체 용량은 큰 숫자와 사이드바 게이지가 이미 말한다.
     @ViewBuilder
     private var diskCard: some View {
         if let usage = VolumeUsage.current() {
-            VStack(alignment: .leading, spacing: 16) {
+            let breakdown = model.summary.breakdown
+            let scanned = !breakdown.isEmpty
+
+            VStack(alignment: .leading, spacing: 20) {
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
-                    Text(usage.formattedAvailable)
+                    Text(scanned ? model.formattedTotalSize : usage.formattedAvailable)
                         .font(Theme.displayMono)
                         .foregroundStyle(Theme.textPrimary)
-                    Text("사용 가능")
+                    Text(scanned ? "회수 가능" : "사용 가능")
                         .font(Theme.bodyText)
                         .foregroundStyle(Theme.textSecondary)
                     Spacer()
-                    Text("\(Int(usage.usedFraction * 100))% 사용됨")
-                        .font(Theme.bodyMono)
-                        .foregroundStyle(Theme.textSecondary)
-                }
-
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(Theme.border)
-                        Capsule()
-                            .fill(Theme.accent)
-                            .frame(width: geometry.size.width * usage.usedFraction)
+                    if scanned {
+                        Text("전체 \(usage.formattedTotal) 중")
+                            .font(Theme.captionMono)
+                            .foregroundStyle(Theme.textSecondary)
                     }
                 }
-                .frame(height: 8)
 
-                Text("\(usage.formattedUsed) 사용됨 · 전체 \(usage.formattedTotal)")
-                    .font(Theme.captionMono)
-                    .foregroundStyle(Theme.textSecondary)
+                DiskDonut(slices: scanned ? reclaimSlices(breakdown) : diskSlices(usage),
+                          centerValue: scanned
+                              ? "\(breakdown.count)종"
+                              : "\(Int(usage.usedFraction * 100))%",
+                          centerCaption: scanned ? "정리 대상" : "사용됨")
             }
-            .padding(20)
+            .padding(24)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+        }
+    }
+
+    /// 스캔 전 — 디스크 전체. 회색 두 개로 끝나지 않게 사용됨에 톤을 준다.
+    private func diskSlices(_ usage: VolumeUsage) -> [DiskDonut.Slice] {
+        [.init(id: "used", label: "사용됨", bytes: usage.used, color: Theme.usedSlice),
+         .init(id: "free", label: "사용 가능", bytes: usage.available, color: Theme.freeSlice)]
+    }
+
+    /// 스캔 후 — 회수 가능한 몫의 구성. 링 전체가 기능 색으로 찬다.
+    private func reclaimSlices(_ breakdown: [MenuBarSummary.Row]) -> [DiskDonut.Slice] {
+        breakdown.map { row in
+            .init(id: row.feature.rawValue, label: row.feature.displayName,
+                  bytes: row.bytes, color: Theme.tint(row.feature))
         }
     }
 
@@ -142,40 +157,34 @@ struct SmartScanView: View {
     }
 
     private var summary: some View {
-        // 받은 모델에서 뽑는다. app을 거치면 하니스에서 다른 모델을 보게 된다.
         let summary = model.summary
         let largest = summary.breakdown.first?.bytes ?? 0
 
-        return VStack(alignment: .leading, spacing: 24) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("회수 가능")
-                    .font(Theme.bodyText)
-                    .foregroundStyle(Theme.textSecondary)
-                Text(model.formattedTotalSize)
-                    .font(Theme.displayMono)
-                    .foregroundStyle(Theme.textPrimary)
-                Text("\(model.items.count)개 항목")
-                    .font(Theme.captionMono)
-                    .foregroundStyle(Theme.textSecondary)
-            }
+        return ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                // 도넛을 여기서도 보여준다. 스캔 후에 사라지면 히어로 요소가
+                // 정작 데이터가 생긴 순간에 없어진다 — 지금은 조각이 기능 색으로 갈린다.
+                diskCard
 
-            // 같은 크기 카드 3장을 한 줄에 놓으면 5.6GB와 104MB가 같은 무게로
-            // 읽힌다. 크기순 목록 + 비율 막대로 어디에 묶여 있는지를 먼저 보인다.
-            VStack(spacing: 0) {
-                ForEach(Array(summary.breakdown.enumerated()), id: \.element.id) { index, row in
-                    breakdownRow(row, largest: largest, isTop: index == 0)
-                    if index < summary.breakdown.count - 1 {
-                        Divider().overlay(Theme.border)
+                // 같은 크기 카드 3장을 한 줄에 놓으면 5.6GB와 104MB가 같은 무게로
+                // 읽힌다. 크기순 목록 + 비율 막대로 어디에 묶여 있는지를 먼저 보인다.
+                VStack(spacing: 0) {
+                    ForEach(Array(summary.breakdown.enumerated()), id: \.element.id) { index, row in
+                        breakdownRow(row, largest: largest, isTop: index == 0)
+                        if index < summary.breakdown.count - 1 {
+                            Divider().overlay(Theme.border)
+                        }
                     }
                 }
-            }
-            .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+                .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: Theme.cardRadius))
 
-            Button("다시 검색") { Task { await model.scan() } }
-                .buttonStyle(SecondaryButtonStyle())
+                Button("다시 검색") { Task { await model.scan() } }
+                    .buttonStyle(SecondaryButtonStyle())
+            }
+            .frame(maxWidth: 640, alignment: .leading)
+            .padding(32)
+            .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: 520, alignment: .leading)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     /// 기능 한 줄. 1위만 강조색 숫자를 받는다 — 나머지까지 강조하면 위계가 없다.
@@ -187,7 +196,7 @@ struct SmartScanView: View {
             HStack(spacing: 12) {
                 Image(systemName: row.feature.systemImageName)
                     .font(.system(size: Theme.Icon.small))
-                    .foregroundStyle(isTop ? Theme.accentText : Theme.textSecondary)
+                    .foregroundStyle(Theme.tint(row.feature))
                     .frame(width: Theme.Icon.medium)
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -200,7 +209,7 @@ struct SmartScanView: View {
                         ZStack(alignment: .leading) {
                             Capsule().fill(Theme.border)
                             Capsule()
-                                .fill(isTop ? Theme.accent : Theme.textTertiary)
+                                .fill(Theme.tint(row.feature))
                                 .frame(width: max(geometry.size.width * ratio(row, largest), 2))
                         }
                     }
@@ -209,7 +218,7 @@ struct SmartScanView: View {
 
                 Text(row.formattedSize)
                     .font(isTop ? Theme.headlineMono : Theme.bodyMono)
-                    .foregroundStyle(isTop ? Theme.accentText : Theme.textPrimary)
+                    .foregroundStyle(isTop ? Theme.tint(row.feature) : Theme.textPrimary)
                     .frame(width: 88, alignment: .trailing)
 
                 Text("\(row.count)개")

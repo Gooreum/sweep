@@ -75,6 +75,24 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
 
     public var isScannable: Bool { !scanners.isEmpty }
 
+    /// 기능 고유 색 (sRGB 24bit, 다크·라이트).
+    ///
+    /// 값을 여기 두는 이유: 뷰에 두면 대비와 색상각이 맞는지 테스트할 수 없다.
+    /// 실측 기준 — 네 색 모두 다크·라이트 양쪽 표면에서 **4.5:1 이상**이고
+    /// 인접 색상각이 **40° 이상** 떨어져 있다.
+    ///
+    /// 스마트 스캔은 '전체' 화면이라 고유색을 주지 않는다. 고유색을 주면
+    /// 정크(212°)와 겹쳐 구분되지 않는다.
+    public var tintHex: (dark: UInt32, light: UInt32)? {
+        switch self {
+        case .smartScan: nil
+        case .junk:      (0x74B4FF, 0x0A5FD1)
+        case .largeFile: (0xB69BFF, 0x5B33C4)
+        case .duplicate: (0x5FD3C4, 0x0C6558)
+        case .diskMap:   (0x7ED88F, 0x186628)
+        }
+    }
+
     /// 스마트 스캔 요약에 카드로 뜨는 기능들.
     ///
     /// 자기 자신과 읽기 전용(디스크 맵)은 뺀다. 손으로 나열하지 않아

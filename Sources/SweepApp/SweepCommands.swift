@@ -21,12 +21,13 @@ struct SweepCommands: Commands {
         // 창을 하나만 만드므로 남겨둘 이유가 없다
         CommandGroup(replacing: .newItem) {}
 
-        // 도움말이 없는데 "Sweep Help"만 있으면 눌렀을 때 아무 일도 안 난다.
-        //
-        // 이것만으로는 **항목만 지워지고 빈 Help 메뉴가 남는다** — 열면
-        // 아무것도 없는 메뉴가 더 나쁘다. 메뉴 자체는 AppKit이 만들므로
-        // `MenuTrimmer`가 기동 후에 떼어낸다.
-        CommandGroup(replacing: .help) {}
+        // 기본 "Sweep Help"는 눌러도 아무 일이 없다. 지우려 해봤지만
+        // AppKit이 만드는 메뉴라 SwiftUI가 메뉴를 다시 그릴 때마다 되살아난다.
+        // **빈 껍데기를 남기고 싸우느니 쓸모를 준다** — 마침 "Sweep이 보는 곳"이
+        // 첫 화면에 생겼고, 이 앱에서 가장 자주 묻는 질문이 그것이다.
+        CommandGroup(replacing: .help) {
+            Button("Sweep이 보는 곳") { app.selected = .smartScan }
+        }
 
         // 사이드바를 마우스로만 옮길 수 있으면 키보드 사용자는 갇힌다.
         // 항목을 손으로 나열하지 않는다 — 기능이 늘면 메뉴도 따라온다.
@@ -62,22 +63,6 @@ struct SweepCommands: Commands {
                 Button(preset.rawValue) { app.currentModel?.apply(preset) }
                     .disabled(app.currentModel?.items.isEmpty ?? true)
             }
-        }
-    }
-}
-
-/// AppKit이 자동으로 붙이는 메뉴 중 이 앱에 뜻이 없는 것을 떼어낸다.
-///
-/// SwiftUI의 `CommandGroup(replacing:)`은 메뉴 **안의 항목**만 다룬다.
-/// Help 메뉴처럼 AppKit이 직접 만드는 것은 기동 후에 손대야 한다.
-final class MenuTrimmer: NSObject, NSApplicationDelegate {
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        guard let main = NSApp.mainMenu else { return }
-        // 제목으로 찾지 않는다 — 시스템 언어에 따라 "Help"가 "도움말"이 된다.
-        if let help = NSApp.helpMenu ?? main.items.first(where: {
-            $0.submenu?.items.isEmpty == true && $0.submenu != NSApp.windowsMenu
-        })?.submenu {
-            main.items.removeAll { $0.submenu === help }
         }
     }
 }

@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import SweepKit
 
 /// 화면 전체가 공유하는 색·치수·서체.
 ///
@@ -60,6 +61,18 @@ enum Theme {
     /// **글씨를 쓰면** 어두운 표면 위에서 2.60:1로 무너진다 (실측).
     /// 같은 강조색이라도 배경으로 쓸 때와 전경으로 쓸 때 필요한 명도가 반대다.
     static let accentText = adaptive(dark: 0x6AA9FF, light: 0x0B52D9)
+
+    /// 기능 고유 색. 값과 대비 검증은 `Feature.tintHex`(SweepKit)에 있다.
+    /// 스마트 스캔처럼 고유색이 없는 기능은 강조 글씨색으로 떨어진다.
+    static func tint(_ feature: Feature) -> Color {
+        guard let hex = feature.tintHex else { return accentText }
+        return adaptive(dark: hex.dark, light: hex.light)
+    }
+
+    /// 도넛의 중립 조각. 회색 두 개로 끝나면 히어로 요소가 죽는다 —
+    /// 사용됨은 톤이 있는 청회색, 사용 가능은 한 단 낮은 면으로 둔다.
+    static let usedSlice = adaptive(dark: 0x4A5563, light: 0xB6BEC9)
+    static let freeSlice = adaptive(dark: 0x2F3339, light: 0xE2E4E8)
 
     /// 창 테두리와 톤이 맞아야 해서 시맨틱을 쓴다.
     static let separator = Color(nsColor: .separatorColor)
