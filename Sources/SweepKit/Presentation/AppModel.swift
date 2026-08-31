@@ -45,6 +45,15 @@ public final class AppModel {
         return !model.isBusy && model.hasSelection
     }
 
+    /// 사이드바에 붙일 발견량. 아직 훑지 않았거나 0이면 nil이다 —
+    /// "0바이트" 배지는 알려줄 것이 아니라 자리만 차지한다.
+    public func badge(for feature: Feature) -> String? {
+        guard feature.isScannable else { return nil }
+        let items = model(for: .smartScan).items
+        let matched = feature == .smartScan ? items : feature.items(from: items)
+        return matched.isEmpty ? nil : matched.formattedTotalSize
+    }
+
     // MARK: - 상태 아이콘이 물어보는 것
 
     /// 메뉴 막대 패널이 보여줄 요약.

@@ -59,6 +59,15 @@ struct Sidebar: View {
                 .padding(.leading, 8)
 
             Spacer(minLength: 0)
+
+            // 스캔 결과를 사이드바에서 바로 본다. 어디에 용량이 묶여 있는지
+            // 화면을 옮기지 않고 알 수 있어야 한다.
+            if let badge = app.badge(for: feature) {
+                Text(badge)
+                    .font(Theme.captionMono)
+                    .foregroundStyle(isSelected ? Theme.accentText : Theme.textSecondary)
+                    .padding(.trailing, 12)
+            }
         }
         .frame(height: Theme.sidebarRowHeight)
         .background {

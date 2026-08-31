@@ -21,26 +21,109 @@ struct SmartScanView: View {
         }
     }
 
+    /// 스캔 전 화면. **빈 판을 두지 않는다.**
+    ///
+    /// 열자마자 보여줄 게 있어야 한다 — 디스크 현황은 스캔 없이 즉시 알 수 있고,
+    /// "무엇을 건드리는지"는 파일을 지우는 앱에서 첫 화면에 있을 값이다.
     private var welcome: some View {
-        VStack(spacing: 16) {
-            Image(systemName: Feature.smartScan.systemImageName)
-                .font(.system(size: Theme.Icon.large))
-                .foregroundStyle(Theme.accentText)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                diskCard
+                scopeCard
 
-            Text(Feature.smartScan.displayName)
-                .font(Theme.title)
-
-            Text(Feature.smartScan.summary)
-                .font(Theme.bodyText)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: 420)
-
-            Button("검색") { Task { await model.scan() } }
-                .buttonStyle(PrimaryButtonStyle())
-                .padding(.top, 8)
+                Button("전체 검색") { Task { await model.scan() } }
+                    .buttonStyle(PrimaryButtonStyle())
+            }
+            .frame(maxWidth: 640, alignment: .leading)
+            .padding(32)
+            .frame(maxWidth: .infinity)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// 디스크 현황. 스캔과 무관하게 늘 유효한 유일한 숫자다.
+    @ViewBuilder
+    private var diskCard: some View {
+        if let usage = VolumeUsage.current() {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    Text(usage.formattedAvailable)
+                        .font(Theme.displayMono)
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("사용 가능")
+                        .font(Theme.bodyText)
+                        .foregroundStyle(Theme.textSecondary)
+                    Spacer()
+                    Text("\(Int(usage.usedFraction * 100))% 사용됨")
+                        .font(Theme.bodyMono)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Theme.border)
+                        Capsule()
+                            .fill(Theme.accent)
+                            .frame(width: geometry.size.width * usage.usedFraction)
+                    }
+                }
+                .frame(height: 8)
+
+                Text("\(usage.formattedUsed) 사용됨 · 전체 \(usage.formattedTotal)")
+                    .font(Theme.captionMono)
+                    .foregroundStyle(Theme.textSecondary)
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+        }
+    }
+
+    /// Sweep이 들여다보는 곳. 목록은 안전 게이트의 허용 루트에서 유도된다.
+    private var scopeCard: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("Sweep이 보는 곳")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.textPrimary)
+                Spacer()
+                Text("이 밖은 건드리지 않습니다")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.textSecondary)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+
+            Divider().overlay(Theme.border)
+
+            ForEach(Array(CleanupScope.all.enumerated()), id: \.element.id) { index, scope in
+                HStack(spacing: 12) {
+                    Image(systemName: "folder")
+                        .font(.system(size: Theme.Icon.small))
+                        .foregroundStyle(Theme.textSecondary)
+                        .frame(width: Theme.Icon.medium)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(scope.label)
+                            .font(Theme.bodyMono)
+                            .foregroundStyle(Theme.textPrimary)
+                        if !scope.detail.isEmpty {
+                            Text(scope.detail)
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.textSecondary)
+                        }
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+
+                if index < CleanupScope.all.count - 1 {
+                    Divider().overlay(Theme.border).padding(.leading, 52)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: Theme.cardRadius))
     }
 
     private func scanning(percent: Int, remaining: Int?) -> some View {

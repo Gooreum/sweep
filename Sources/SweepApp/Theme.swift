@@ -23,15 +23,18 @@ enum Theme {
     // MARK: - 표면
 
     /// 본문 배경.
-    static let surface = adaptive(dark: 0x222424, light: 0xFFFFFF)
+    static let surface = adaptive(dark: 0x2A2C2E, light: 0xFFFFFF)
     /// 사이드바·패널처럼 한 단 들어간 면.
-    static let surfaceSunken = adaptive(dark: 0x1A1A1A, light: 0xF7F7F8)
+    static let surfaceSunken = adaptive(dark: 0x141414, light: 0xF2F2F4)
     /// 선택된 행·카드처럼 한 단 올라온 면.
     ///
     /// 예전 `selectionTint`(반투명 하늘색)를 대체한다. 불투명이라 배경과
-    /// 합성되지 않는다 — 다크 `#2E3033` 위에서 본문 글씨가 11.9:1이다.
-    static let surfaceRaised = adaptive(dark: 0x2E3033, light: 0xF0F0F2)
-    static let border = adaptive(dark: 0x3A3C3F, light: 0xDCDCE0)
+    /// 합성되지 않는다.
+    ///
+    /// 세 면의 간격을 벌렸다 — 처음엔 사이드바 `#1A1A1A`와 본문 `#222424`가
+    /// 차이 8이라 육안으로 구분이 안 됐고, 화면이 통째로 평평해 보였다.
+    static let surfaceRaised = adaptive(dark: 0x34363A, light: 0xE8E8EA)
+    static let border = adaptive(dark: 0x43454A, light: 0xD8D8DC)
 
     // MARK: - 텍스트
 

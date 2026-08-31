@@ -146,4 +146,16 @@ struct AppModelTests {
         #expect(summary.reclaimable == nil)
         #expect(summary.breakdown.isEmpty)
     }
+
+    @Test("사이드바 배지는 찾은 것이 있을 때만 붙는다")
+    func badgeOnlyWhenFound() {
+        let app = AppModel()
+
+        // 아직 훑지 않았다 — "0바이트" 배지는 자리만 차지한다
+        for feature in Feature.allCases {
+            #expect(app.badge(for: feature) == nil, "\(feature)에 배지가 붙었다")
+        }
+        // 스캔하지 않는 기능은 언제나 nil
+        #expect(app.badge(for: .diskMap) == nil)
+    }
 }
