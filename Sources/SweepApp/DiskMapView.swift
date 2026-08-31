@@ -171,6 +171,7 @@ struct DiskMapView: View {
     private func row(_ node: DiskUsageNode, largest: Int64) -> some View {
         let ratio = node.barRatio(largest: largest)
         let isDrillable = !node.children.isEmpty
+        let veto = model.veto(for: node)
 
         return HStack(spacing: 12) {
             Text(node.name)
@@ -190,10 +191,30 @@ struct DiskMapView: View {
             }
             .frame(height: 10)
 
-            Text(node.formattedSize)
-                .font(Theme.bodyText.monospacedDigit())
-                .foregroundStyle(.secondary)
+            // 못 읽은 폴더는 크기를 지어내지 않는다. 0 KB라고 쓰면 거짓말이다.
+            Text(node.isReadable ? node.formattedSize : "읽을 수 없음")
+                .font(node.isReadable ? Theme.bodyText.monospacedDigit() : Theme.caption)
+                .foregroundStyle(node.isReadable ? Color.secondary : Theme.textTertiary)
                 .frame(width: 84, alignment: .trailing)
+
+            statusBadge(veto)
+                .frame(width: 78, alignment: .leading)
+
+            // 우클릭해야 나오는 기능은 없는 기능이나 마찬가지다. 행에 그대로 둔다.
+            HStack(spacing: 2) {
+                iconButton("folder", "Finder에서 보기") {
+                    NSWorkspace.shared.activateFileViewerSelecting([node.url])
+                }
+                iconButton("doc.on.doc", "경로 복사") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(node.url.path, forType: .string)
+                }
+                // 왜 못 지우는지는 눌러 보고 알 일이 아니다. 사유를 미리 붙인다.
+                iconButton("trash", veto?.message ?? "휴지통으로 이동") {
+                    pendingDelete = node
+                }
+                .disabled(veto != nil)
+            }
 
             // 더 들어갈 수 있는 항목만 화살표를 준다
             Image(systemName: "chevron.right")
@@ -215,6 +236,38 @@ struct DiskMapView: View {
             Button("휴지통으로 이동", role: .destructive) { pendingDelete = node }
         }
         .help(node.url.path)
+    }
+
+    /// 지울 수 있는지를 **행에서 바로** 알린다.
+    ///
+    /// 새 색을 만들지 않는다 — 이 프로젝트의 색은 전부 대비를 실측해 고른 것이라
+    /// 여기서 임의로 더하면 그 규칙이 깨진다. 초록은 디스크 맵 고유색을 쓰고,
+    /// 보호됨은 색 대신 자물쇠 기호로 구분한다.
+    @ViewBuilder
+    private func statusBadge(_ veto: RemovalVeto?) -> some View {
+        if let veto {
+            Label("보호됨", systemImage: "lock.fill")
+                .font(Theme.caption)
+                .foregroundStyle(Theme.textTertiary)
+                .help(veto.message)
+        } else {
+            Label("정리 가능", systemImage: "checkmark")
+                .font(Theme.caption)
+                .foregroundStyle(Theme.tint(.diskMap))
+        }
+    }
+
+    /// 행 안의 작은 액션 버튼. `.plain`이라야 행 전체 탭 제스처와 다투지 않는다.
+    private func iconButton(_ symbol: String, _ hint: String,
+                            action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: Theme.Icon.small))
+                .frame(width: 22, height: 22)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(hint)
     }
 
     private func placeholder(_ title: String, detail: String) -> some View {
