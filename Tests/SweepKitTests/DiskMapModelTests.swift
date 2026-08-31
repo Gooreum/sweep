@@ -245,6 +245,154 @@ struct DiskMapModelTests {
         #expect(model.path.count == 1)
         #expect(!model.canGoUp)
     }
+
+    // MARK: - 삭제 (Step 2)
+    //
+    // **안전 규칙**: 실패 경로 TC의 대상은 관문이 깨져도 지울 것이 없어야 한다.
+    // 실제 삭제를 하는 것은 TC-5 하나뿐이고, 그 대상은 이 테스트가 직접 만든다.
+
+    // TC-2
+    @Test("drop이 자식을 빼고 현재 노드 크기를 그만큼 줄인다")
+    func dropRemovesChildAndShrinksCurrent() {
+        let model = loadedModel()
+        let big = model.tiles.first { $0.name == "big" }!
+
+        model.drop(big)
+
+        #expect(model.tiles.map(\.name) == ["small"])
+        // 600 - 500. 합계가 안 맞으면 막대 비율이 통째로 틀어진다.
+        #expect(model.current?.size == 100)
+    }
+
+    // TC-3
+    @Test("깊은 곳에서 drop하면 루트 크기까지 줄어든다")
+    func dropPropagatesToRoot() {
+        let model = loadedModel()
+        model.drillDown(into: model.tiles.first { $0.name == "big" }!)
+        let leafA = model.tiles.first { $0.name == "a" }!
+
+        model.drop(leafA)
+
+        #expect(model.tiles.map(\.name) == ["b"])
+        #expect(model.current?.size == 200)      // big: 500 - 300
+        #expect(model.path[0].size == 300)       // root: 600 - 300
+
+        // 위로 올라갔을 때 지운 노드가 되살아나면 안 된다
+        model.goUp()
+        let big = model.tiles.first { $0.name == "big" }!
+        #expect(big.size == 200)
+        #expect(big.children.map(\.name) == ["b"])
+    }
+
+    // TC-4
+    @Test("현재 지점의 자식이 아닌 노드를 drop하면 트리가 그대로다")
+    func dropIgnoresNonChild() {
+        let model = loadedModel()
+        let before = model.path
+
+        // 손자 — 지금 보고 있는 지점의 직접 자식이 아니다
+        let grandchild = model.tiles.first { $0.name == "big" }!.children[0]
+        model.drop(grandchild)
+        // 트리에 아예 없는 노드
+        model.drop(DiskUsageNode(url: URL(filePath: "/private/tmp/nowhere"), size: 999))
+
+        #expect(model.path == before, "엉뚱한 노드로 크기가 깎였다")
+    }
+
+    // TC-5
+    @Test("허용 루트 안의 실제 파일은 지워지고 트리에서도 빠진다")
+    func removeDeletesRealFileAndUpdatesTree() async throws {
+        let fm = FileManager.default
+        let dir = fm.homeDirectoryForCurrentUser
+            .appending(path: "Library/Caches/sweep-diskmap-\(UUID().uuidString)")
+        try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: dir) }
+
+        let file = dir.appending(path: "target.bin")
+        try Data(count: 128).write(to: file)
+
+        let model = DiskMapModel()
+        let child = DiskUsageNode(url: file, size: 128)
+        model.seed(DiskUsageNode(url: dir, size: 128, children: [child]))
+
+        await model.remove(child, using: Remover(movesToTrash: false))
+
+        #expect(model.removalFailure == nil)
+        #expect(model.tiles.isEmpty)
+        #expect(model.current?.size == 0)
+        #expect(!fm.fileExists(atPath: file.path))
+    }
+
+    // TC-6
+    @Test("관문이 거부하면 사유가 남고 트리는 변하지 않는다")
+    func removeKeepsTreeWhenGateRefuses() async {
+        // 만들지도 않은, 허용 루트 밖 경로. 관문이 빠져도 지울 것이 없다.
+        let outside = FileManager.default.homeDirectoryForCurrentUser
+            .appending(path: "Documents/sweep-never-exists-\(UUID().uuidString)")
+
+        let model = DiskMapModel()
+        let child = DiskUsageNode(url: outside, size: 500)
+        model.seed(DiskUsageNode(url: URL(filePath: "/private/tmp/root"),
+                                 size: 500, children: [child]))
+        let before = model.path
+
+        await model.remove(child)
+
+        #expect(model.removalFailure?.contains("정리 대상 범위 밖입니다") == true)
+        // 실패했는데 화면에서 사라지면 사용자는 지워진 줄 안다
+        #expect(model.path == before)
+    }
+
+    // TC-7
+    @Test("clearRemovalFailure가 사유를 지운다")
+    func clearRemovalFailureResetsState() async {
+        let outside = FileManager.default.homeDirectoryForCurrentUser
+            .appending(path: "Documents/sweep-never-exists-\(UUID().uuidString)")
+        let model = DiskMapModel()
+        model.seed(DiskUsageNode(url: URL(filePath: "/private/tmp/root"), size: 1,
+                                 children: [DiskUsageNode(url: outside, size: 1)]))
+
+        await model.remove(model.tiles[0])
+        #expect(model.removalFailure != nil)
+
+        model.clearRemovalFailure()
+        #expect(model.removalFailure == nil)
+    }
+
+    // TC-8
+    @Test("가지치기로 자식 합이 부모보다 커도 크기가 음수로 가지 않는다")
+    func dropClampsSizeAtZero() {
+        // build가 maxDepth·minimumSize로 가지를 쳐도 부모 size는 전체를 담는다.
+        // 그 반대(자식이 부모보다 큰 상태)가 들어와도 음수 크기를 만들면 안 된다.
+        let model = DiskMapModel()
+        let child = DiskUsageNode(url: URL(filePath: "/private/tmp/root/huge"), size: 900)
+        model.seed(DiskUsageNode(url: URL(filePath: "/private/tmp/root"),
+                                 size: 100, children: [child]))
+
+        model.drop(child)
+
+        #expect(model.current?.size == 0)
+        #expect(model.tiles.isEmpty)
+    }
+
+    // TC-10
+    @Test("조상 크기도 음수로 가지 않는다")
+    func dropClampsAncestorSizeAtZero() {
+        // TC-8은 1단 트리라 잎 쪽 클램프만 지난다. 조상 갱신 루프에도
+        // 같은 클램프가 있어야 하는데, 그쪽은 별도 트리로만 닿는다.
+        let leaf = DiskUsageNode(url: URL(filePath: "/private/tmp/root/mid/leaf"), size: 900)
+        let mid = DiskUsageNode(url: URL(filePath: "/private/tmp/root/mid"),
+                                size: 100, children: [leaf])
+        let model = DiskMapModel()
+        model.seed(DiskUsageNode(url: URL(filePath: "/private/tmp/root"),
+                                 size: 50, children: [mid]))
+        model.drillDown(into: mid)
+
+        model.drop(leaf)
+
+        #expect(model.current?.size == 0)   // mid: 100 - 900
+        #expect(model.path[0].size == 0)    // root: 50 - 900
+    }
 }
 
 /// 가짜 세기 패스를 원하는 시점까지 붙잡아 두는 문.

@@ -151,6 +151,60 @@ public final class DiskMapModel {
         path = Array(path.prefix(index + 1))
     }
 
+    // MARK: - 삭제
+
+    /// 직전 삭제가 실패한 사유. 성공했으면 nil.
+    public private(set) var removalFailure: String?
+
+    public func clearRemovalFailure() { removalFailure = nil }
+
+    /// 지금 보고 있는 지점의 자식 하나를 휴지통으로 보낸다.
+    ///
+    /// 관문은 `Remover`가 지킨다 — 디스크 맵이라고 다른 길로 가지 않는다.
+    /// 허용 루트 자체는 `allowedRootItself`로 거부되므로 최상위는 지워지지 않는다.
+    ///
+    /// **성공했을 때만 트리에서 뺀다.** 실패했는데 화면에서 사라지면
+    /// 사용자는 지워진 줄 안다.
+    public func remove(_ node: DiskUsageNode, using remover: Remover = Remover()) async {
+        let url = node.url
+        let failure = await Task.detached { remover.removeFile(at: url) }.value
+
+        removalFailure = failure
+        if failure == nil { drop(node) }
+    }
+
+    /// 지운 노드를 트리에서 뺀다.
+    ///
+    /// 다시 훑으면 10초가 걸린다. 조상의 크기도 함께 줄여야
+    /// 상위 합계와 막대 비율이 어긋나지 않는다.
+    func drop(_ node: DiskUsageNode) {
+        guard let leaf = path.indices.last,
+              path[leaf].children.contains(where: { $0.id == node.id })
+        else { return }
+
+        var rebuilt = path
+        rebuilt[leaf] = DiskUsageNode(
+            url: rebuilt[leaf].url,
+            size: max(0, rebuilt[leaf].size - node.size),
+            children: rebuilt[leaf].children.filter { $0.id != node.id })
+
+        // 조상으로 올라가며 크기를 줄이고, 바뀐 자식으로 교체한다.
+        // 교체하지 않으면 breadcrumb으로 위에 올라갔을 때 지운 노드가 되살아난다.
+        var index = leaf
+        while index > 0 {
+            let parent = index - 1
+            let updated = rebuilt[index]
+            rebuilt[parent] = DiskUsageNode(
+                url: rebuilt[parent].url,
+                size: max(0, rebuilt[parent].size - node.size),
+                children: rebuilt[parent].children.map {
+                    $0.id == updated.id ? updated : $0
+                })
+            index = parent
+        }
+        path = rebuilt
+    }
+
     /// 테스트에서 스캔 없이 트리를 넣기 위한 입구.
     public func seed(_ node: DiskUsageNode) { path = [node] }
 }
