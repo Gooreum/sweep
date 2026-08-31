@@ -17,21 +17,31 @@ public struct Remover: Sendable {
 
     /// 한 항목만 처리한다. UI가 항목 단위 진행률을 그리려면 이 입구가 필요하다.
     public func removeOne(_ item: CleanupItem) -> RemovalOutcome {
+        RemovalOutcome(item: item, failureReason: removeFile(at: item.url))
+    }
+
+    /// 경로 하나를 검증하고 지운다. 성공이면 nil, 실패면 사유를 돌려준다.
+    ///
+    /// `CleanupItem`이 없는 곳(디스크 맵)도 **같은 관문**을 지나야 한다.
+    /// 가짜 `CleanupItem`을 만들어 넘기면 `ScanCategory` 여섯 종 중 아무거나
+    /// 골라 붙이게 되고 — 어디에도 "디스크 맵에서 고른 임의 폴더"는 없다 —
+    /// 목록·요약 통계가 오염된다.
+    public func removeFile(at url: URL) -> String? {
         do {
             // 관문이 먼저다. 예외 없음.
-            try ProtectedPaths.validate(item.url)
+            try ProtectedPaths.validate(url)
 
             if movesToTrash {
-                try FileManager.default.trashItem(at: item.url, resultingItemURL: nil)
+                try FileManager.default.trashItem(at: url, resultingItemURL: nil)
             } else {
-                try FileManager.default.removeItem(at: item.url)
+                try FileManager.default.removeItem(at: url)
             }
-            return RemovalOutcome(item: item, failureReason: nil)
+            return nil
 
         } catch let veto as RemovalVeto {
-            return RemovalOutcome(item: item, failureReason: veto.message)
+            return veto.message
         } catch {
-            return RemovalOutcome(item: item, failureReason: error.localizedDescription)
+            return error.localizedDescription
         }
     }
 }
