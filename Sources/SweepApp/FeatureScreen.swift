@@ -155,6 +155,7 @@ struct FeatureScreen: View {
             .help("이 묶음 전체 선택 / 해제")
 
             Label(group.category.displayName, systemImage: group.category.systemImageName)
+                .font(Theme.bodyText.weight(.medium))
             Text("\(group.items.count)")
                 .foregroundStyle(Theme.textTertiary)
                 .monospacedDigit()
@@ -162,36 +163,42 @@ struct FeatureScreen: View {
             Spacer()
 
             Text(group.formattedTotalSize)
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
+                .font(Theme.bodyMono)
+                .foregroundStyle(Theme.textSecondary)
         }
     }
 
     // MARK: - 하단 바
 
     private var actionBar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 2) {
                 // 얻을 수 있는 양이 먼저다. 선택량만 보이면 6.9GB를 찾아놓고
                 // 111KB만 보이는 상태가 된다.
-                Text("총계 \(model.formattedTotalSize)")
-                    .font(Theme.bodyText.weight(.medium))
-                    .monospacedDigit()
+                Text(model.formattedTotalSize)
+                    .font(Theme.headlineMono)
+                    .foregroundStyle(Theme.textPrimary)
                 Text("선택됨 \(model.selectedItems.count)/\(model.items.count) · "
                      + model.formattedSelectedSize)
-                    .font(Theme.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+                    .font(Theme.captionMono)
+                    .foregroundStyle(Theme.textSecondary)
             }
 
             Spacer()
 
+            // 셋을 같은 치수·radius로 맞춘다. 메뉴만 시스템 기본 모양이면
+            // 한 줄에 버튼 스타일이 세 가지가 된다.
+            //
+            // `.borderlessButton`은 커스텀 레이블을 무시하고 셰브론을 왼쪽에
+            // 붙여 버린다. `.button`이라야 `buttonStyle`이 그대로 먹는다.
             Menu("선택") {
                 ForEach(ScanModel.SelectionPreset.allCases, id: \.self) { preset in
                     Button(preset.rawValue) { model.apply(preset) }
                 }
             }
-            .frame(width: 88)
+            .menuStyle(.button)
+            .buttonStyle(SecondaryButtonStyle())
+            .fixedSize()
 
             Button("다시 검색") { Task { await model.scan() } }
                 .buttonStyle(SecondaryButtonStyle())
@@ -200,8 +207,9 @@ struct FeatureScreen: View {
                 .buttonStyle(PrimaryButtonStyle())
                 .disabled(!model.hasSelection)
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 16)
         .padding(.vertical, 12)
+        .background(Theme.surfaceSunken)
     }
 
     // MARK: - 거들기

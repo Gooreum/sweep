@@ -1,8 +1,9 @@
 {
-  "phase": "loop",
+  "phase": "done",
   "spec_approved": true,
   "adapter": "macos-swiftui",
   "current_step": 4,
   "blockers": [],
-  "spec_version": "v2"
+  "spec_version": "v2",
+  "stop": "success"
 }
