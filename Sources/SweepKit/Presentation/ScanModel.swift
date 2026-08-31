@@ -38,6 +38,12 @@ public final class ScanModel {
     private let scanStream: @Sendable () -> AsyncStream<ScanCoordinator.Progress>
     private let performRemove: @Sendable (CleanupItem) -> RemovalOutcome
 
+    /// 스캔이 끝나면 결과를 알린다. 같은 결과를 다른 화면이 그대로 쓸 수 있다.
+    public var onScanFinished: (@MainActor ([CleanupItem]) -> Void)?
+
+    /// 삭제가 끝나면 지워진 경로를 알린다. 같은 파일을 다른 화면도 목록에 들고 있다.
+    public var onRemoved: (@MainActor ([URL]) -> Void)?
+
     /// 스캔·삭제 동작을 주입할 수 있게 열어 둔다.
     /// 실제 스캔은 17초 이상 걸리고 실제 삭제는 되돌릴 수 없어 테스트에 쓸 수 없다.
     public init(
@@ -162,6 +168,7 @@ public final class ScanModel {
                                   .map { Int($0.components.seconds) })
         }
         phase = .results
+        onScanFinished?(items)
     }
 
     public func removeSelected() async {
@@ -184,6 +191,36 @@ public final class ScanModel {
 
         report = result
         phase = .cleaned
+        // **성공한 것만** 알린다. 실패한 항목까지 넘기면 다른 화면에서
+        // 멀쩡히 남아 있는 파일이 목록에서 사라진다.
+        onRemoved?(Array(removed))
+    }
+
+    /// 다른 화면이 이미 찾아낸 결과를 그대로 받는다.
+    ///
+    /// 스마트 스캔이 전부 훑었으면 기능 탭이 같은 43초를 다시 돌 이유가 없다.
+    /// 스캔이 막 끝났을 때와 **같은 상태**로 놓는다 — 선택 기본값까지 같아야
+    /// 어느 화면에서 왔는지에 따라 다른 것을 지우게 되지 않는다.
+    ///
+    /// 결과가 비어 있어도 `.results`다. `.idle`로 두면 "검색" 버튼이 떠서,
+    /// 이미 훑어서 없다는 걸 아는데도 43초를 다시 기다리게 된다.
+    public func adopt(_ found: [CleanupItem]) {
+        items = found
+        selection = Set(found.filter(\.isSelectedByDefault).map(\.url))
+        report = nil
+        phase = .results
+    }
+
+    /// 다른 화면에서 지워진 파일을 내 목록에서도 뺀다.
+    ///
+    /// 지운 파일이 다른 탭에 남아 있으면 목록도 사이드바 배지도 거짓말을 한다.
+    /// `phase`는 건드리지 않는다 — 남은 것이 없으면 `.results`의 빈 화면
+    /// ("정리할 항목이 없음")이 뜨는데, 그게 사실이다.
+    public func forget(_ urls: [URL]) {
+        let gone = Set(urls)
+        guard items.contains(where: { gone.contains($0.url) }) else { return }
+        items.removeAll { gone.contains($0.url) }
+        selection.subtract(gone)
     }
 
     /// 완료 화면을 닫는다.

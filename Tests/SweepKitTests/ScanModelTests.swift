@@ -554,4 +554,96 @@ struct ScanModelTests {
 
         running.cancel()
     }
+
+    // MARK: - 화면끼리 결과 주고받기
+
+    // TC-2
+    @Test("adopt이 결과·선택 기본값·results를 한꺼번에 놓는다")
+    func adoptPlacesResultsAndDefaultSelection() {
+        let model = ScanModel(scan: stream([[]]))
+        let safe = item("안전.bin")
+        let risky = item("보관함", safety: .danger)
+
+        model.adopt([safe, risky])
+
+        #expect(model.items.count == 2)
+        #expect(model.phase == .results)
+        // 스캔이 막 끝났을 때와 같은 상태여야 한다 — 어느 화면에서 왔는지에
+        // 따라 다른 것을 지우게 되면 안 된다.
+        #expect(model.selection == [safe.url])
+    }
+
+    // TC-3
+    @Test("adopt에 빈 결과를 줘도 idle로 돌아가지 않는다")
+    func adoptWithNothingStaysInResults() {
+        let model = ScanModel(scan: stream([[]]))
+
+        model.adopt([])
+
+        // `.idle`이면 "검색" 버튼이 떠서, 이미 훑어 없다는 걸 알면서도
+        // 43초를 다시 기다리게 된다.
+        #expect(model.phase == .results)
+        #expect(model.items.isEmpty)
+    }
+
+    // TC-4
+    @Test("forget이 항목과 선택에서 함께 뺀다")
+    func forgetDropsItemAndSelection() {
+        let model = ScanModel(scan: stream([[]]))
+        let gone = item("사라질것")
+        let kept = item("남을것")
+        model.adopt([gone, kept])
+
+        model.forget([gone.url])
+
+        #expect(model.items.map(\.url) == [kept.url])
+        #expect(model.selection == [kept.url])
+    }
+
+    // TC-5
+    @Test("내 목록에 없는 URL로 forget하면 아무것도 바뀌지 않는다")
+    func forgetIgnoresUnknownURLs() {
+        let model = ScanModel(scan: stream([[]]))
+        let mine = [item("a"), item("b")]
+        model.adopt(mine)
+        let before = model.selection
+
+        model.forget([URL(filePath: "/private/tmp/남의것.bin")])
+
+        #expect(model.items.map(\.url) == mine.map(\.url))
+        #expect(model.selection == before)
+    }
+
+    // TC-6
+    @Test("스캔이 끝나면 결과와 함께 한 번 알린다")
+    func scanNotifiesOnceWhenFinished() async {
+        let found = [item("a"), item("b")]
+        let model = ScanModel(scan: stream([[found[0]], [found[1]]]))
+        var calls: [[CleanupItem]] = []
+        model.onScanFinished = { calls.append($0) }
+
+        await model.scan()
+
+        // 중간 Progress마다 부르면 배분이 스캔 횟수만큼 돈다
+        #expect(calls.count == 1)
+        #expect(calls.first?.map(\.url) == found.map(\.url))
+    }
+
+    // TC-7
+    @Test("삭제 알림에는 성공한 것만 담긴다")
+    func removalNotifiesOnlySucceeded() async {
+        let ok = item("지워질것")
+        let blocked = item("막힐것")
+        let model = ScanModel(scan: stream([[ok, blocked]]),
+                              removeOne: fails([blocked.displayName]))
+        await model.scan()
+        model.apply(.all)
+
+        var notified: [URL] = []
+        model.onRemoved = { notified = $0 }
+        await model.removeSelected()
+
+        // 실패한 것까지 넘기면 다른 화면에서 멀쩡한 파일이 목록에서 사라진다
+        #expect(notified == [ok.url])
+    }
 }
