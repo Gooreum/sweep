@@ -8,6 +8,14 @@ struct SmartScanView: View {
     @Bindable var app: AppModel
     @Bindable var model: ScanModel
 
+    /// 볼륨 용량은 스캔과 무관하고 화면을 보는 동안 거의 변하지 않는다.
+    /// body 안에서 부르면 스캔 진행률이 바뀔 때마다 볼륨을 다시 조회한다 —
+    /// `Sidebar`·`MenuBarPanel`이 이미 저장 프로퍼티로 쓰고 있다.
+    private let usage = VolumeUsage.current()
+
+    /// 허용 루트는 실행 중에 바뀌지 않는다. 매 렌더마다 다시 만들 이유가 없다.
+    private let scopes = CleanupScope.all
+
     var body: some View {
         switch model.phase {
         case .idle:
@@ -28,7 +36,9 @@ struct SmartScanView: View {
     private var welcome: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                diskCard
+                // 요약을 한 번만 만들어 넘긴다. 화면 안에서 두 번 부르면
+                // 그때마다 전체 항목을 기능 수만큼 필터링한다.
+                diskCard(model.summary)
                 scopeCard
 
                 Button("전체 검색") { Task { await model.scan() } }
@@ -46,9 +56,9 @@ struct SmartScanView: View {
     /// 디스크 전체(494GB)를 그리면 기능 조각이 1.4%짜리 실이 되어
     /// 색이 있으나 마나다. 전체 용량은 큰 숫자와 사이드바 게이지가 이미 말한다.
     @ViewBuilder
-    private var diskCard: some View {
-        if let usage = VolumeUsage.current() {
-            let breakdown = model.summary.breakdown
+    private func diskCard(_ summary: MenuBarSummary) -> some View {
+        if let usage {
+            let breakdown = summary.breakdown
             let scanned = !breakdown.isEmpty
 
             VStack(alignment: .leading, spacing: 20) {
@@ -110,7 +120,7 @@ struct SmartScanView: View {
 
             Divider().overlay(Theme.border)
 
-            ForEach(Array(CleanupScope.all.enumerated()), id: \.element.id) { index, scope in
+            ForEach(Array(scopes.enumerated()), id: \.element.id) { index, scope in
                 HStack(spacing: 12) {
                     Image(systemName: "folder")
                         .font(.system(size: Theme.Icon.small))
@@ -132,7 +142,7 @@ struct SmartScanView: View {
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
 
-                if index < CleanupScope.all.count - 1 {
+                if index < scopes.count - 1 {
                     Divider().overlay(Theme.border).padding(.leading, 52)
                 }
             }
@@ -164,7 +174,7 @@ struct SmartScanView: View {
             VStack(alignment: .leading, spacing: 24) {
                 // 도넛을 여기서도 보여준다. 스캔 후에 사라지면 히어로 요소가
                 // 정작 데이터가 생긴 순간에 없어진다 — 지금은 조각이 기능 색으로 갈린다.
-                diskCard
+                diskCard(summary)
 
                 // 같은 크기 카드 3장을 한 줄에 놓으면 5.6GB와 104MB가 같은 무게로
                 // 읽힌다. 크기순 목록 + 비율 막대로 어디에 묶여 있는지를 먼저 보인다.

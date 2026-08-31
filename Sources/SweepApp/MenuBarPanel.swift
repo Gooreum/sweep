@@ -16,12 +16,16 @@ struct MenuBarPanel: View {
     private let usage = VolumeUsage.current()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        // 요약을 한 번만 만들어 내려보낸다. 섹션마다 부르면 그때마다
+        // 전체 항목을 기능 수만큼 필터링한다.
+        let summary = app.menuBarSummary
+
+        return VStack(alignment: .leading, spacing: 0) {
             diskSection
             Divider()
-            scanSection
+            scanSection(summary)
             Divider()
-            actions
+            actions(isScanning: summary.isScanning)
         }
         .frame(width: Theme.panelWidth)
     }
@@ -61,10 +65,8 @@ struct MenuBarPanel: View {
     }
 
     /// 마지막 스캔 결과. 요약은 모델이 계산한다 — 여기서 다시 세면 어긋난다.
-    private var scanSection: some View {
-        let summary = app.menuBarSummary
-
-        return VStack(alignment: .leading, spacing: 8) {
+    private func scanSection(_ summary: MenuBarSummary) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
             if let percent = summary.scanPercent {
                 HStack {
                     Text("훑는 중").font(Theme.bodyText)
@@ -105,14 +107,14 @@ struct MenuBarPanel: View {
         .padding(Theme.panelPadding)
     }
 
-    private var actions: some View {
+    private func actions(isScanning: Bool) -> some View {
         HStack(spacing: 10) {
             Button("검색") {
                 let model = app.model(for: .smartScan)
                 Task { await model.scan() }
             }
             .buttonStyle(PrimaryButtonStyle())
-            .disabled(app.menuBarSummary.isScanning)
+            .disabled(isScanning)
 
             Spacer()
 
