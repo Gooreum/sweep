@@ -1,10 +1,23 @@
 import SwiftUI
+import AppKit
 import SweepKit
 
-/// 디스크 사용량을 면적으로 보여준다. 읽기 전용 — 여기서는 아무것도 지우지 않는다.
+/// 디스크 사용량을 면적으로 보여주고, 거기서 바로 손을 쓸 수 있게 한다.
+///
+/// 크기만 보여주고 아무것도 못 하면 "용량이 어디 있는지"만 알려주고 끝난다.
+/// Finder로 가기 · 경로 복사 · 휴지통 세 가지를 행에 붙인다.
 struct DiskMapView: View {
-    @State private var model = DiskMapModel()
+    @State private var model: DiskMapModel
     @State private var root: URL?
+
+    /// 삭제 확인을 기다리는 항목. nil이면 대화가 닫혀 있다.
+    @State private var pendingDelete: DiskUsageNode?
+
+    /// 하니스가 스캔 없이 트리를 넣어 화면을 띄울 수 있게 열어 둔다.
+    /// 실제 로드는 10초가 넘어 이 화면을 눈으로 확인할 방법이 달리 없다.
+    init(model: DiskMapModel = DiskMapModel()) {
+        _model = State(initialValue: model)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -18,8 +31,37 @@ struct DiskMapView: View {
             //
             // 여기서는 대입만 한다. 실제 로드는 `.onChange`가 맡는다 —
             // 두 곳에서 부르면 10초짜리 순회가 두 번 돈다.
-            guard root == nil else { return }
+            // 이미 트리가 들어와 있으면(하니스) 건드리지 않는다 —
+            // 대입하는 순간 `.onChange`가 10초짜리 순회를 시작한다.
+            guard root == nil, model.current == nil else { return }
             root = model.availableRoots.first
+        }
+        // 정리 화면과 달리 여기엔 안전도 배지도 기본 선택도 없다.
+        // 무엇을 지우는지 경로와 크기로 다시 보여주고 확인을 받는다.
+        .confirmationDialog(
+            "휴지통으로 이동할까요?",
+            isPresented: Binding(get: { pendingDelete != nil },
+                                 set: { if !$0 { pendingDelete = nil } }),
+            presenting: pendingDelete
+        ) { node in
+            Button("휴지통으로 이동", role: .destructive) {
+                Task { await model.remove(node) }
+            }
+            Button("취소", role: .cancel) {}
+        } message: { node in
+            // 목록에서는 이름만 보인다. 크기와 전체 경로를 여기서 한 번 더 보여준다.
+            //
+            // 줄바꿈으로 나누면 **뒷줄이 렌더되지 않는다** — 실측에서 경로만
+            // 보이고 크기가 통째로 사라졌다. 한 줄로 잇는다.
+            // 크기가 앞이다. "지울까?"에 답하려면 그 숫자가 먼저 필요하다.
+            Text("\(node.formattedSize) · \(node.url.path)")
+        }
+        .alert("옮기지 못했습니다",
+               isPresented: Binding(get: { model.removalFailure != nil },
+                                    set: { if !$0 { model.clearRemovalFailure() } })) {
+            Button("확인") { model.clearRemovalFailure() }
+        } message: {
+            Text(model.removalFailure ?? "")
         }
     }
 
@@ -141,6 +183,18 @@ struct DiskMapView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture { model.drillDown(into: node) }
+        .contextMenu {
+            Button("Finder에서 보기") {
+                NSWorkspace.shared.activateFileViewerSelecting([node.url])
+            }
+            Button("경로 복사") {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(node.url.path, forType: .string)
+            }
+            Divider()
+            // 바로 지우지 않는다. 확인 대화에서 경로와 크기를 다시 보여준다.
+            Button("휴지통으로 이동", role: .destructive) { pendingDelete = node }
+        }
         .help(node.url.path)
     }
 

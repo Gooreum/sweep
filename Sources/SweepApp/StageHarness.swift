@@ -22,7 +22,9 @@ struct StageHarness: View {
 
     var body: some View {
         Group {
-            if let model {
+            if stage == "diskmap" {
+                DiskMapView(model: Self.seededDiskMap())
+            } else if let model {
                 if stage.hasPrefix("smart-") {
                     SmartScanView(app: app, model: model)
                 } else {
@@ -128,9 +130,41 @@ struct StageHarness: View {
             model = created
             await created.scan()
 
+        case "diskmap":
+            // `body`가 `DiskMapView`를 직접 그린다 — 여기서 `ScanModel`은 쓰이지 않는다.
+            // `default`로 흘려보내면 쓰지도 않을 모델을 만들고, 하니스 단계 목록에서도
+            // 빠져 config와 어긋난다.
+            break
+
         default:
             model = ScanModel(scan: { AsyncStream { $0.finish() } })
         }
+    }
+
+    /// 실제 순회는 10초가 넘는다. 트리를 손으로 넣어 목록·컨텍스트 메뉴·
+    /// 확인 대화를 눈으로 확인할 수 있게 한다.
+    @MainActor
+    private static func seededDiskMap() -> DiskMapModel {
+        let caches = FileManager.default.homeDirectoryForCurrentUser
+            .appending(path: "Library/Caches")
+
+        // 자식은 **실재하지 않는** 경로를 가리킨다.
+        // 하니스는 우클릭·확인 대화를 눈으로 보려고 띄우는 화면이라, 여기서
+        // 실수로 "휴지통으로 이동"을 눌러도 지워질 것이 없어야 한다.
+        // 뿌리는 Caches 그대로 둔다 — 허용 루트 자체라 관문이 막는다.
+        let preview = caches.appending(path: "sweep-harness-preview")
+        func child(_ name: String, _ size: Int64, _ kids: [DiskUsageNode] = [])
+            -> DiskUsageNode {
+            DiskUsageNode(url: preview.appending(path: name), size: size, children: kids)
+        }
+        let model = DiskMapModel()
+        model.seed(DiskUsageNode(url: caches, size: 7_516_192_768, children: [
+            child("Homebrew", 5_368_709_120, [child("downloads", 4_294_967_296)]),
+            child("com.apple.dt.Xcode", 1_610_612_736),
+            child("org.swift.swiftpm", 419_430_400),
+            child("Google", 117_440_512),
+        ]))
+        return model
     }
 
     /// 스트림을 만들 뿐 화면 상태를 건드리지 않는다.

@@ -64,6 +64,10 @@
       "deeplink": "",
       "route": "Sources/SweepApp/ContentView.swift",
       "settleMs": 2000
+    },
+    "diskmap": {
+      "deeplink": "--stage diskmap",
+      "settleMs": 600
     }
   }
 }
