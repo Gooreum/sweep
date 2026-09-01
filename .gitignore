@@ -8,3 +8,6 @@ build/
 # 로컬 작업 문서·설정 (개인 파일 경로가 담긴다)
 .ai-bouncer-tasks/
 .claude/
+
+# 서명된 배포 산출물. 저장소에 넣지 않는다.
+dist/
