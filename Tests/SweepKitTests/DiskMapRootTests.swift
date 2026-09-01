@@ -18,17 +18,36 @@ struct DiskMapRootTests {
         #expect(paths.contains("/Applications"), "응용 프로그램이 없다")
     }
 
+    /// 임시 컨테이너인가. 접두사를 한 곳에서만 판단한다 —
+    /// 테스트가 코드와 다른 접두사를 쓰면 둘 다 틀려도 공허하게 통과한다.
+    private func isTemporary(_ path: String) -> Bool {
+        path.hasPrefix("/var/folders/") || path.hasPrefix("/private/var/folders/")
+    }
+
     // TC-3
-    @Test("정리 루트도 전부 남아 있다")
+    @Test("임시 컨테이너를 뺀 정리 루트가 전부 남아 있다")
     func keepsCleanupRoots() {
         let paths = Set(DiskMapRoot.all.map { $0.url.standardizedFileURL.path })
 
         // 범위를 넓히면서 기존 시작점을 잃으면 안 된다.
         // 그룹은 달라도 된다 — `~/Downloads`는 "홈 안"으로 올라간다.
-        for root in ProtectedPaths.allowedRoots {
+        for root in ProtectedPaths.allowedRoots where !isTemporary(root.path) {
             #expect(paths.contains(root.standardizedFileURL.path),
                     "정리 루트가 빠졌다: \(root.path)")
         }
+    }
+
+    // TC-3
+    @Test("임시 컨테이너는 하나로 묶인다")
+    func temporaryContainersCollapse() {
+        // 허용 루트에는 `.../C`와 `.../T` 둘이 있는데 둘 다 "앱 임시 폴더"다.
+        // 그대로 두면 Picker에 같은 줄이 두 번 뜬다 — `CleanupScope`와 같은 규칙.
+        let raw = ProtectedPaths.allowedRoots.filter { isTemporary($0.path) }
+        #expect(!raw.isEmpty, "임시 컨테이너가 허용 루트에 없다 — TC가 공허하다")
+
+        let shown = DiskMapRoot.all.filter { isTemporary($0.url.path) }
+        #expect(shown.count == 1)
+        #expect(shown.first?.label == "앱 임시 폴더")
     }
 
     // TC-4
@@ -41,6 +60,16 @@ struct DiskMapRootTests {
         // id도 마찬가지 — Picker의 ForEach가 같은 id를 두 번 만나면 안 된다
         let ids = DiskMapRoot.all.map(\.id)
         #expect(ids.count == Set(ids).count)
+    }
+
+    // TC-4
+    @Test("같은 라벨이 두 번 나오지 않는다")
+    func hasNoDuplicateLabels() {
+        // 경로만 보면 임시 컨테이너 `.../C`와 `.../T`가 서로 다르지만
+        // 둘 다 "앱 임시 폴더"로 줄어 **Picker에 같은 줄이 두 번 떴다.**
+        // 사용자에게는 글자가 같으면 같은 항목이다.
+        let labels = DiskMapRoot.all.map(\.label)
+        #expect(labels.count == Set(labels).count, "중복 라벨: \(labels)")
     }
 
     // TC-5

@@ -114,8 +114,13 @@ struct DiskMapModelTests {
         let paths = Set(model.availableRoots.map { $0.url.standardizedFileURL.path })
 
         #expect(!model.availableRoots.isEmpty)
-        // 정리 루트는 하나도 잃지 않는다
-        for root in ProtectedPaths.allowedRoots {
+        // 정리 루트는 하나도 잃지 않는다.
+        // 임시 컨테이너(`.../C`, `.../T`)만 "앱 임시 폴더" 하나로 묶인다 —
+        // 같은 라벨이 두 줄 뜨면 고를 때 헷갈린다.
+        func isTemporary(_ path: String) -> Bool {
+            path.hasPrefix("/var/folders/") || path.hasPrefix("/private/var/folders/")
+        }
+        for root in ProtectedPaths.allowedRoots where !isTemporary(root.path) {
             #expect(paths.contains(root.standardizedFileURL.path),
                     "정리 루트가 빠졌다: \(root.path)")
         }

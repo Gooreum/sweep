@@ -54,13 +54,22 @@ extension DiskMapRoot {
                       exists: (String) -> Bool
                           = { FileManager.default.fileExists(atPath: $0) })
         -> [DiskMapRoot] {
-        var seen = Set<String>()
+        var seenPaths = Set<String>()
+        var seenLabels = Set<String>()
         var result: [DiskMapRoot] = []
 
+        /// 경로**와 라벨** 둘 다로 거른다.
+        ///
+        /// 임시 컨테이너는 `.../C`와 `.../T` 두 경로인데 둘 다 "앱 임시 폴더"로
+        /// 줄인다. 경로만 보면 다르므로 통과해서 **같은 줄이 두 번 뜬다** —
+        /// 실제로 Picker에 그렇게 나왔다. 사용자에게는 글자가 같으면 같은 항목이다.
         func add(_ url: URL, _ label: String, _ group: Group) {
             let path = url.standardizedFileURL.path
-            guard !seen.contains(path), exists(path) else { return }
-            seen.insert(path)
+            guard !seenPaths.contains(path), !seenLabels.contains(label),
+                  exists(path)
+            else { return }
+            seenPaths.insert(path)
+            seenLabels.insert(label)
             result.append(DiskMapRoot(url: url, label: label, group: group))
         }
 
