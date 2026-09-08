@@ -106,6 +106,85 @@ let steps: [(name: String, px: Int)] = [
 let fm = FileManager.default
 let root = URL(filePath: fm.currentDirectoryPath)
 let dist = root.appending(path: "dist")
+
+/// PNG 한 장을 그려 파일로 쓴다. 두 갈래가 같은 그림을 써야 하므로 여기 모은다.
+func writePNG(_ step: (name: String, px: Int), to directory: URL) throws {
+    let image = draw(step.px)
+    let rep = NSBitmapImageRep(cgImage: image)
+    rep.size = NSSize(width: step.px, height: step.px)
+    guard let png = rep.representation(using: .png, properties: [:]) else {
+        fatalError("PNG로 못 바꿨다: \(step.name)")
+    }
+    try png.write(to: directory.appending(path: "\(step.name).png"))
+}
+
+// MARK: - --appiconset: App Store용 자산 카탈로그
+//
+// App Store 업로드는 **자산 카탈로그 안의 아이콘**을 요구한다. `.icns`만 넣으면
+// 검증에서 막힌다. 직접 배포(`make-app.sh`)는 `.icns`를 쓰므로 둘 다 필요하다.
+//
+// `steps`의 10종이 macOS appiconset이 요구하는 크기와 정확히 같아 그림은 공유한다.
+// 파일명의 `@2x`가 곧 scale이고, 앞의 숫자가 size다 — Contents.json은 여기서 유도한다.
+
+if CommandLine.arguments.contains("--appiconset") {
+    let appiconset = root.appending(path: "Resources/Assets.xcassets/AppIcon.appiconset")
+
+    try? fm.removeItem(at: appiconset)
+    try fm.createDirectory(at: appiconset, withIntermediateDirectories: true)
+
+    var images: [String] = []
+    for step in steps {
+        try writePNG(step, to: appiconset)
+
+        // "icon_128x128@2x" → size "128x128", scale "2x"
+        let body = step.name.replacingOccurrences(of: "icon_", with: "")
+        let parts = body.split(separator: "@", maxSplits: 1)
+        let size = String(parts[0])
+        let scale = parts.count > 1 ? String(parts[1]) : "1x"
+
+        images.append("""
+            {
+              "filename" : "\(step.name).png",
+              "idiom" : "mac",
+              "scale" : "\(scale)",
+              "size" : "\(size)"
+            }
+        """)
+    }
+
+    let contents = """
+    {
+      "images" : [
+    \(images.joined(separator: ",\n"))
+      ],
+      "info" : {
+        "author" : "make-icon.swift",
+        "version" : 1
+      }
+    }
+
+    """
+    try contents.write(to: appiconset.appending(path: "Contents.json"),
+                       atomically: true, encoding: .utf8)
+
+    // 카탈로그 루트에도 Contents.json이 있어야 Xcode가 카탈로그로 인식한다.
+    let catalog = root.appending(path: "Resources/Assets.xcassets")
+    try """
+    {
+      "info" : {
+        "author" : "make-icon.swift",
+        "version" : 1
+      }
+    }
+
+    """.write(to: catalog.appending(path: "Contents.json"), atomically: true, encoding: .utf8)
+
+    print("만듦: \(appiconset.path) (PNG \(steps.count)장 + Contents.json)")
+    exit(0)
+}
+
+// MARK: - 기본: 직접 배포용 .icns
+
 let iconset = dist.appending(path: "AppIcon.iconset")
 
 // `dist/`가 없어도 돌아야 한다 — 새로 받은 저장소에는 없다.
@@ -113,13 +192,7 @@ try? fm.removeItem(at: iconset)
 try fm.createDirectory(at: iconset, withIntermediateDirectories: true)
 
 for step in steps {
-    let image = draw(step.px)
-    let rep = NSBitmapImageRep(cgImage: image)
-    rep.size = NSSize(width: step.px, height: step.px)
-    guard let png = rep.representation(using: .png, properties: [:]) else {
-        fatalError("PNG로 못 바꿨다: \(step.name)")
-    }
-    try png.write(to: iconset.appending(path: "\(step.name).png"))
+    try writePNG(step, to: iconset)
 }
 
 let icns = dist.appending(path: "AppIcon.icns")
