@@ -44,7 +44,20 @@ let project = Project(
             // `scripts/make-icon.swift --appiconset`이 만든다. 저장소에는 없다.
             resources: ["Resources/Assets.xcassets"],
             entitlements: .file(path: "Sources/SweepApp/Sweep.entitlements"),
-            dependencies: [.target(name: "SweepKit")]
+            dependencies: [.target(name: "SweepKit")],
+            // 아카이브는 **개발 서명**으로 만든다. 배포 인증서를 여기 적으면
+            // "conflicting provisioning settings"로 아카이브 자체가 실패한다 —
+            // 자동 서명은 아카이브 단계에서 개발용으로 서명하고, Apple
+            // Distribution은 Organizer의 Distribute App 단계에서 붙는다.
+            // 이건 Xcode의 Product > Archive와 같은 동작이다.
+            //
+            // 셋 다 있어야 한다. 팀이 없으면 "Sign to Run Locally"로 떨어져
+            // ad-hoc이 되고, 아카이브 Info.plist의 SigningIdentity가 빈 채로 남는다.
+            settings: .settings(base: [
+                "DEVELOPMENT_TEAM": "LHW4ZX343L",
+                "CODE_SIGN_STYLE": "Automatic",
+                "CODE_SIGN_IDENTITY": "Apple Development",
+            ])
         ),
     ]
 )
