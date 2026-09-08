@@ -11,3 +11,12 @@ build/
 
 # 서명된 배포 산출물. 저장소에 넣지 않는다.
 dist/
+
+# Xcode 프로젝트·아카이브는 생성물이다. 원본은 Project.swift.
+Derived/
+*.xcarchive
+.tuist-*
+
+# 아이콘 자산 카탈로그도 생성물 -- scripts/make-icon.swift --appiconset이 만든다.
+# 이미지 파일을 저장소에 넣지 않는 것이 이 저장소의 방침이다.
+Resources/Assets.xcassets/

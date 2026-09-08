@@ -30,6 +30,11 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 
+	<!-- 없으면 App Store Connect가 업로드마다 수출 규정 질문을 띄운다.
+	     Sweep은 암호화를 쓰지 않으므로 미리 못박는다. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
 	<!-- 디스크 맵이 홈 전체를 훑는다. 이 문자열이 없으면 macOS가
 	     권한 대화를 띄우지 않고 조용히 빈 결과를 준다. -->
 	<key>NSDesktopFolderUsageDescription</key>

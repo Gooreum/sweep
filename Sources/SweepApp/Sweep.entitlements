@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- App Store는 샌드박스가 필수다. 끄면 업로드 검증에서 막힌다.
+
+	     대가가 크다: `ProtectedPaths.allowedRoots`의 6개 루트 중
+	     ~/Library/Caches · ~/Library/Developer · ~/Library/Logs ·
+	     /private/tmp · /var/folders 다섯이 전부 차단된다. 남의 앱이 만든
+	     파일을 여는 entitlement는 존재하지 않는다 — 설정으로 뚫는 게 아니다.
+
+	     자세한 것은 docs/APPSTORE.md. 직접 배포본(Developer ID)에는
+	     이 파일이 적용되지 않으므로 그쪽은 기능이 온전하다. -->
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+
+	<!-- 사용자가 열기 대화상자에서 직접 고른 폴더. 샌드박스에서 홈을 훑는
+	     유일한 길이다. 디스크 맵이 이 위에서 동작한다. -->
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+
+	<!-- 6개 루트 중 유일하게 전용 entitlement가 있는 곳. -->
+	<key>com.apple.security.files.downloads.read-write</key>
+	<true/>
+
+	<!-- 고른 폴더를 다음 실행에서도 기억하려면 필요하다. 이게 없으면
+	     앱을 다시 열 때마다 사용자가 폴더를 또 골라야 한다. -->
+	<key>com.apple.security.files.bookmarks.app-scope</key>
+	<true/>
+</dict>
+</plist>
