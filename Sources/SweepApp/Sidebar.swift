@@ -18,7 +18,7 @@ struct Sidebar: View {
 
         return VStack(alignment: .leading, spacing: 0) {
             // 항목을 손으로 나열하지 않는다. 기능이 늘면 사이드바가 따라와야 한다.
-            ForEach(Feature.allCases) { row($0, badge: badges[$0]) }
+            ForEach(Feature.available) { row($0, badge: badges[$0]) }
 
             // 디스크는 스캔과 무관하게 늘 유효한 유일한 숫자다. 맨 아래 구석이
             // 아니라 항목 바로 아래에 둬서 눈이 닿는 자리에 놓는다.

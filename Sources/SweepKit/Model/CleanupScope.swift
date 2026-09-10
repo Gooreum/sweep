@@ -19,14 +19,17 @@ extension CleanupScope {
     ///
     /// 손으로 적으면 안전 게이트가 바뀔 때 화면만 낡아 거짓말을 하게 된다.
     /// 설명이 없는 루트는 목록에서 빠지는 것이 아니라 경로만 보여준다.
-    public static var all: [CleanupScope] {
+    public static var all: [CleanupScope] { scopes(roots: ProtectedPaths.allowedRoots) }
+
+    /// 루트를 주입할 수 있게 연다 — 샌드박스 쪽 목록은 테스트 프로세스에서 만들 수 없다.
+    static func scopes(roots: [URL]) -> [CleanupScope] {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
 
         /// 임시 컨테이너는 `/private/var/folders/<해시>/C` 같은 경로라
         /// 화면에 그대로 쓰면 읽히지 않는다. 하나로 묶는다.
         var sawTemporary = false
 
-        return ProtectedPaths.allowedRoots.compactMap { url -> CleanupScope? in
+        return roots.compactMap { url -> CleanupScope? in
             let path = url.path
 
             // `/private/var/folders/...`와 `/var/folders/...` 둘 다 나온다.

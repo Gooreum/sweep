@@ -43,7 +43,8 @@ extension DiskMapRoot {
     /// 같은 경로가 두 그룹에 겹치면(`~/Downloads`는 홈이자 정리 대상)
     /// 먼저 나온 그룹만 남긴다 — 같은 줄이 두 번 보이면 고를 때 헷갈린다.
     public static var all: [DiskMapRoot] {
-        roots(home: FileManager.default.homeDirectoryForCurrentUser)
+        roots(home: FileManager.default.homeDirectoryForCurrentUser,
+              sandboxed: Sandbox.isActive)
     }
 
     /// 홈과 실재 판정을 주입할 수 있게 열어 둔다.
@@ -51,6 +52,7 @@ extension DiskMapRoot {
     /// 이 기계에 홈 폴더가 전부 있으면 "없는 건 뺀다"는 성질을 확인할 방법이 없다 —
     /// 실제로 검사를 지워 봐도 TC가 통과했다. 공허한 TC를 남기지 않으려고 뚫는다.
     static func roots(home: URL,
+                      sandboxed: Bool = false,
                       exists: (String) -> Bool
                           = { FileManager.default.fileExists(atPath: $0) })
         -> [DiskMapRoot] {
@@ -71,6 +73,13 @@ extension DiskMapRoot {
             seenPaths.insert(path)
             seenLabels.insert(label)
             result.append(DiskMapRoot(url: url, label: label, group: group))
+        }
+
+        // 샌드박스에서 홈은 컨테이너다. 거기서 열 수 있는 사용자 폴더는 Downloads뿐이고,
+        // 그것도 링크를 풀어야 순회된다.
+        if sandboxed {
+            add(DownloadsFolder.url(in: home), "~/Downloads", .home)
+            return result
         }
 
         add(home, "홈", .whole)

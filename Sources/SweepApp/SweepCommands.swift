@@ -32,7 +32,7 @@ struct SweepCommands: Commands {
         // 사이드바를 마우스로만 옮길 수 있으면 키보드 사용자는 갇힌다.
         // 항목을 손으로 나열하지 않는다 — 기능이 늘면 메뉴도 따라온다.
         CommandMenu("기능") {
-            ForEach(Array(Feature.allCases.enumerated()), id: \.element) { index, feature in
+            ForEach(Array(Feature.available.enumerated()), id: \.element) { index, feature in
                 Button(feature.displayName) { app.selected = feature }
                     .keyboardShortcut(
                         KeyEquivalent(Character("\(index + 1)")), modifiers: .command)

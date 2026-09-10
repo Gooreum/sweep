@@ -6,17 +6,9 @@ public struct ScanCoordinator: Sendable {
 
     public init(scanners: [any CleanupScanner]) { self.scanners = scanners }
 
-    /// 앱이 실제로 쓰는 기본 구성.
-    public static func standard() -> ScanCoordinator {
-        ScanCoordinator(scanners: [
-            RunawayTempScanner(),
-            XcodeScanner(),
-            DevCacheScanner(),
-            StaleCacheScanner(),
-            LargeFileScanner(),
-            DuplicateScanner(),
-        ])
-    }
+    /// 앱이 실제로 쓰는 기본 구성 — 스마트 스캔과 같다.
+    /// 목록을 여기 따로 적어 두면 샌드박스 분기가 한쪽에만 들어간다.
+    public static func standard() -> ScanCoordinator { Feature.smartScan.coordinator }
 
     /// 스캔 도중 한 번씩 흘러나오는 중간 상태.
     public struct Progress: Sendable {

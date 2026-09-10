@@ -44,12 +44,26 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// 이 실행 환경에서 쓸 수 있는 기능. 사이드바·메뉴·요약 카드가 이것을 본다.
+    /// 샌드박스에서는 정크 파일이 빠진다 — 그 스캐너들이 여는 곳이 전부 막혀 있다.
+    public static var available: [Feature] { available(sandboxed: Sandbox.isActive) }
+
+    static func available(sandboxed: Bool) -> [Feature] {
+        sandboxed ? allCases.filter { $0 != .junk } : allCases
+    }
+
     /// 이 기능이 돌리는 스캐너. 디스크 맵은 읽기 전용이라 하나도 없다.
-    public var scanners: [any CleanupScanner] {
+    public var scanners: [any CleanupScanner] { scanners(sandboxed: Sandbox.isActive) }
+
+    /// 샌드박스의 스마트 스캔은 Downloads를 보는 둘만 돌린다.
+    /// 막힌 곳을 훑는 스캐너를 남기면 결과 없이 시간만 쓴다(폭주 감지는 3초 표본 수집).
+    func scanners(sandboxed: Bool) -> [any CleanupScanner] {
         switch self {
         case .smartScan:
-            [RunawayTempScanner(), XcodeScanner(), DevCacheScanner(),
-             StaleCacheScanner(), LargeFileScanner(), DuplicateScanner()]
+            sandboxed
+                ? [LargeFileScanner(), DuplicateScanner()]
+                : [RunawayTempScanner(), XcodeScanner(), DevCacheScanner(),
+                   StaleCacheScanner(), LargeFileScanner(), DuplicateScanner()]
         case .junk:
             [RunawayTempScanner(), XcodeScanner(), DevCacheScanner(), StaleCacheScanner()]
         case .largeFile:
@@ -98,7 +112,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
     /// 자기 자신과 읽기 전용(디스크 맵)은 뺀다. 손으로 나열하지 않아
     /// 기능을 추가하면 요약에도 자동으로 따라 붙는다.
     public static var summaryCards: [Feature] {
-        allCases.filter { $0 != .smartScan && $0.isScannable }
+        available.filter { $0 != .smartScan && $0.isScannable }
     }
 
     /// 스캔 결과 중 이 기능이 담당하는 것만.

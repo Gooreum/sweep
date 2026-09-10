@@ -58,13 +58,22 @@ public enum ProtectedPaths {
     }
 
     /// 이 루트들의 **하위**만 삭제할 수 있다.
-    public static let allowedRoots: [URL] = [
-        inHome("Library/Developer"),
-        inHome("Library/Caches"),
-        inHome("Library/Logs"),
-        inHome("Downloads"),
-        URL(filePath: "/private/tmp"),
-    ] + userTemporaryRoots
+    public static let allowedRoots: [URL] = roots(sandboxed: Sandbox.isActive)
+
+    /// 샌드박스 안에서는 `~/Downloads`만 남는다 — `files.downloads.read-write`가 여는
+    /// 유일한 곳이다. 나머지는 실측에서 전부 권한 거부였다.
+    /// 샌드박스의 임시 폴더는 컨테이너 안(`Data/tmp`)이라 `userTemporaryRoots`도 뜻이 없다.
+    static func roots(sandboxed: Bool) -> [URL] {
+        let downloads = inHome("Downloads")
+        guard !sandboxed else { return [downloads] }
+        return [
+            inHome("Library/Developer"),
+            inHome("Library/Caches"),
+            inHome("Library/Logs"),
+            downloads,
+            URL(filePath: "/private/tmp"),
+        ] + userTemporaryRoots
+    }
 
     /// 허용 루트 안이어도 절대 건드리지 않는 경로.
     /// 재생성 비용이 크거나(프로비저닝 프로파일) 사용자 설정(키바인딩·테마)이다.

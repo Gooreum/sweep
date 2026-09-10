@@ -24,6 +24,54 @@ struct SandboxTests {
         return (home, target)
     }
 
+    // MARK: - 판정과 범위
+
+    @Test("테스트 프로세스는 샌드박스 밖이다")
+    func testProcessIsNotSandboxed() {
+        #expect(Sandbox.isActive == false)
+    }
+
+    @Test("샌드박스면 허용 루트는 ~/Downloads 하나다")
+    func sandboxedRootsAreDownloadsOnly() {
+        let downloads = fm.homeDirectoryForCurrentUser.appending(path: "Downloads")
+        #expect(ProtectedPaths.roots(sandboxed: true).map(\.path) == [downloads.path])
+    }
+
+    @Test("샌드박스 밖의 허용 루트는 그대로다")
+    func unsandboxedRootsAreUnchanged() {
+        #expect(ProtectedPaths.roots(sandboxed: false) == ProtectedPaths.allowedRoots)
+        #expect(ProtectedPaths.allowedRoots.count > 1)
+    }
+
+    @Test("샌드박스의 'Sweep이 보는 곳'은 ~/Downloads 한 줄이다")
+    func sandboxedScopeIsSingleLine() {
+        let scopes = CleanupScope.scopes(roots: ProtectedPaths.roots(sandboxed: true))
+        #expect(scopes.map(\.label) == ["~/Downloads"])
+        #expect(scopes.first?.detail.isEmpty == false)
+    }
+
+    @Test("샌드박스에서는 정크 파일 기능이 빠진다")
+    func sandboxedFeaturesDropJunk() {
+        let available = Feature.available(sandboxed: true)
+        #expect(!available.contains(.junk))
+        #expect(available == [.smartScan, .largeFile, .duplicate, .diskMap])
+        #expect(Feature.available(sandboxed: false) == Feature.allCases)
+    }
+
+    @Test("샌드박스의 스마트 스캔은 큰 파일·중복 파일만 훑는다")
+    func sandboxedSmartScanScanners() {
+        let categories = Feature.smartScan.scanners(sandboxed: true).map(\.category)
+        #expect(categories == [.largeFile, .duplicate])
+        #expect(Feature.smartScan.scanners(sandboxed: false).count == 6)
+    }
+
+    @Test("샌드박스의 디스크 맵 시작 지점은 ~/Downloads 하나다")
+    func sandboxedDiskMapRoots() {
+        let home = URL(filePath: "/Users/someone/Library/Containers/app/Data")
+        let roots = DiskMapRoot.roots(home: home, sandboxed: true, exists: { _ in true })
+        #expect(roots.map(\.label) == ["~/Downloads"])
+    }
+
     // MARK: - Downloads 링크
 
     @Test("Downloads가 링크면 가리키는 폴더를 준다")
