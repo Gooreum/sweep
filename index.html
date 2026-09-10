@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sweep 지원</title>
+<meta name="description" content="Mac 다운로드 폴더의 큰 파일과 중복 파일을 찾아 정리하는 앱, Sweep의 지원 페이지">
+<style>
+  :root {
+    --bg: #f6f7fb; --surface: #ffffff; --text: #16181d; --muted: #5b6270;
+    --line: #e3e6ee; --accent: #2f5bea; --accent-soft: #e8eeff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121418; --surface: #1b1e24; --text: #eceef3; --muted: #a2a9b7;
+      --line: #2a2f38; --accent: #7c9cff; --accent-soft: #1f2740;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.7 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    word-break: keep-all; padding-inline: 20px;
+  }
+  main { max-width: 720px; margin: 0 auto; padding-block: 56px 72px; }
+  header { margin-bottom: 40px; }
+  .app { display: flex; align-items: center; gap: 14px; }
+  .mark {
+    width: 52px; height: 52px; border-radius: 12px; flex: none;
+    background: linear-gradient(160deg, #4d6cff, #2536b8);
+    display: grid; place-items: center; color: #fff; font-size: 26px;
+  }
+  h1 { font-size: 30px; line-height: 1.2; margin: 0; letter-spacing: -0.5px; }
+  .tagline { color: var(--muted); margin: 14px 0 0; font-size: 17px; }
+  h2 { font-size: 20px; margin: 44px 0 14px; letter-spacing: -0.3px; }
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .card strong { display: block; margin-bottom: 4px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; }
+  summary { cursor: pointer; font-weight: 600; }
+  details p { margin: 10px 0 2px; color: var(--muted); }
+  .contact { background: var(--accent-soft); border-radius: 12px; padding: 20px 22px; }
+  .contact p { margin: 0 0 6px; }
+  a { color: var(--accent); }
+  footer { margin-top: 48px; color: var(--muted); font-size: 14px; display: flex; gap: 16px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="app">
+      <div class="mark" aria-hidden="true">✦</div>
+      <h1>Sweep</h1>
+    </div>
+    <p class="tagline">Mac 다운로드 폴더에 쌓인 큰 파일과 중복 파일을 찾아, 안전하게 정리하는 앱이에요.</p>
+  </header>
+
+  <h2>할 수 있는 일</h2>
+  <div class="features">
+    <div class="card"><strong>스마트 스캔</strong><p>한 번 훑으면 회수할 수 있는 용량이 바로 나와요.</p></div>
+    <div class="card"><strong>큰 파일</strong><p>100MB가 넘는 파일을 크기순으로, 언제 받았는지와 함께 보여줘요.</p></div>
+    <div class="card"><strong>중복 파일</strong><p>내용까지 비교해 똑같은 파일을 찾고, 먼저 받은 원본은 남겨요.</p></div>
+    <div class="card"><strong>디스크 맵</strong><p>파일과 폴더의 크기를 막대로 비교하고 그 자리에서 정리해요.</p></div>
+  </div>
+
+  <h2>자주 묻는 질문</h2>
+  <details>
+    <summary>지운 파일은 어디로 가나요?</summary>
+    <p>바로 사라지지 않고 휴지통으로 가요. 실수로 지웠다면 휴지통에서 되돌릴 수 있어요.</p>
+  </details>
+  <details>
+    <summary>왜 다운로드 폴더만 보나요?</summary>
+    <p>App Store 앱은 macOS의 샌드박스 안에서 동작해서, 다른 앱이 만든 캐시나 로그 같은 파일을 열 수 없어요. Sweep은 권한이 주어진 다운로드 폴더 안에서만 파일을 찾고 정리해요.</p>
+  </details>
+  <details>
+    <summary>무엇이 지워지는지 어떻게 알 수 있나요?</summary>
+    <p>모든 항목에 안전 · 주의 · 위험 표시가 붙어요. 안전한 항목만 미리 체크되고, 나머지는 직접 골라야 정리돼요. 정리하기 전에 목록에서 이름과 크기를 확인할 수 있어요.</p>
+  </details>
+  <details>
+    <summary>파일 정보가 밖으로 나가나요?</summary>
+    <p>아니요. Sweep은 인터넷에 연결하지 않고, 어떤 데이터도 수집하지 않아요. 자세한 내용은 <a href="privacy.html">개인정보 처리방침</a>을 참고하세요.</p>
+  </details>
+  <details>
+    <summary>어떤 macOS에서 쓸 수 있나요?</summary>
+    <p>macOS 14 이상에서 동작해요.</p>
+  </details>
+
+  <h2>문의</h2>
+  <div class="contact">
+    <p>버그 제보, 기능 제안, 그 밖의 문의는 이메일로 보내 주세요.</p>
+    <p><a href="mailto:mg.seo.dev@gmail.com">mg.seo.dev@gmail.com</a></p>
+  </div>
+
+  <footer>
+    <span>© 2026 MINGU SEO</span>
+    <a href="privacy.html">개인정보 처리방침</a>
+  </footer>
+</main>
+</body>
+</html>
