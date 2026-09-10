@@ -78,6 +78,9 @@ Xcode Organizer가 열린다 → **Distribute App** → **App Store Connect** �
      https://developer.apple.com/account/resources/identifiers 에서 먼저 등록
 2. **심사용 메타데이터** — 스크린샷(1280×800 이상), 설명, 키워드, 지원 URL,
    **개인정보 처리방침 URL**(필수), 연령 등급
+   - 지원 URL: https://gooreum.github.io/sweep/
+   - 개인정보 처리방침 URL: https://gooreum.github.io/sweep/privacy.html
+   - 두 페이지의 원본은 `gh-pages` 브랜치다. 푸시하면 GitHub Pages가 다시 배포한다
 3. **팀** — `LHW4ZX343L (MINGU SEO)`. 유료 멤버십이 붙은 팀이다
 
 업로드 후 App Store Connect에서 빌드가 "처리 중"을 지나면 심사에 제출할 수 있다.
