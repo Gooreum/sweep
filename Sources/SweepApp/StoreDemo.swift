@@ -83,8 +83,11 @@ enum StoreDemo {
         let shoot = preview.appending(path: "촬영본 0612")
         let model = DiskMapModel()
         // seed보다 먼저 넣는다. DiskMapView의 .task가 selectedRoot가 비었을 때만 자동 순회를 건다.
-        model.selectedRoot = downloads
-        model.seed(DiskUsageNode(url: downloads, size: 29_100_000_000, children: [
+        // Picker 목록의 Downloads와 같은 URL이어야 "선택하세요"로 빠지지 않는다.
+        // 샌드박스에서는 그 URL이 컨테이너 링크가 아니라 링크를 푼 경로다.
+        let root = DiskMapRoot.all.first { $0.label == "~/Downloads" }?.url ?? downloads
+        model.selectedRoot = root
+        model.seed(DiskUsageNode(url: root, size: 29_100_000_000, children: [
             node("Xcode_26.0.xip", 9_800_000_000),
             node("Windows11_ARM64.iso", 6_120_000_000),
             node("제주 여행 원본.mov", 4_210_000_000),
