@@ -23,7 +23,7 @@ public struct LargeFileScanner: CleanupScanner {
     public var progressWeight: Double { 0.3 }
 
     public func scan() async -> [CleanupItem] {
-        let root = home.appending(path: "Downloads")
+        let root = DownloadsFolder.url(in: home)
         return Self.largeFiles(under: root, minimumSize: minimumSize).map { found in
             CleanupItem(
                 url: found.url,

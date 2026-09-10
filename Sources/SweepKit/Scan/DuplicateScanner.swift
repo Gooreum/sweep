@@ -27,7 +27,7 @@ public struct DuplicateScanner: CleanupScanner {
     public var progressWeight: Double { 0.2 }
 
     public func scan() async -> [CleanupItem] {
-        let root = home.appending(path: "Downloads")
+        let root = DownloadsFolder.url(in: home)
         let files = Self.regularFiles(under: root).filter { $0.size >= minimumSize }
 
         var items: [CleanupItem] = []
