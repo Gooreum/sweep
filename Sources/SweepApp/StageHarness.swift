@@ -21,10 +21,18 @@ struct StageHarness: View {
     /// `body`에서 만들면 렌더마다 새 모델이 되어 트리가 매번 초기화된다.
     @State private var diskMap: DiskMapModel?
     @State private var app = AppModel()
+    /// `store-*` 단계는 사이드바까지 있는 실제 창을 그린다. 스토어 스크린샷용이다.
+    @State private var storeApp: AppModel?
 
     var body: some View {
         Group {
-            if stage == "diskmap" {
+            if stage.hasPrefix("store-") {
+                if let storeApp {
+                    ContentView(app: storeApp)
+                } else {
+                    Text("준비 중").font(Theme.bodyText)
+                }
+            } else if stage == "diskmap" {
                 if let diskMap {
                     DiskMapView(model: diskMap)
                 } else {
@@ -136,6 +144,9 @@ struct StageHarness: View {
             model = created
             await created.scan()
 
+        case "store-summary", "store-large", "store-duplicate", "store-diskmap", "store-cleaned":
+            storeApp = await StoreDemo.app(for: stage)
+
         case "diskmap":
             // `body`가 `DiskMapView`를 직접 그린다 — 여기서 `ScanModel`은 쓰이지 않는다.
             // `default`로 흘려보내면 쓰지도 않을 모델을 만들고, 하니스 단계 목록에서도
@@ -187,7 +198,7 @@ struct StageHarness: View {
 
     /// 스트림을 만들 뿐 화면 상태를 건드리지 않는다.
     /// 메인 액터에 묶어 두면 `@Sendable` 클로저 안에서 부를 수 없다.
-    nonisolated private static func finishing(_ items: [CleanupItem])
+    nonisolated static func finishing(_ items: [CleanupItem])
         -> AsyncStream<ScanCoordinator.Progress> {
         AsyncStream { continuation in
             continuation.yield(ScanCoordinator.Progress(
