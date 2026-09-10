@@ -68,6 +68,31 @@
     "diskmap": {
       "deeplink": "--stage diskmap",
       "settleMs": 600
+    },
+    "store-summary": {
+      "deeplink": "--stage store-summary",
+      "route": "Sources/SweepApp/StoreDemo.swift",
+      "settleMs": 2000
+    },
+    "store-large": {
+      "deeplink": "--stage store-large",
+      "route": "Sources/SweepApp/StoreDemo.swift",
+      "settleMs": 1500
+    },
+    "store-duplicate": {
+      "deeplink": "--stage store-duplicate",
+      "route": "Sources/SweepApp/StoreDemo.swift",
+      "settleMs": 1500
+    },
+    "store-diskmap": {
+      "deeplink": "--stage store-diskmap",
+      "route": "Sources/SweepApp/StoreDemo.swift",
+      "settleMs": 1500
+    },
+    "store-cleaned": {
+      "deeplink": "--stage store-cleaned",
+      "route": "Sources/SweepApp/StoreDemo.swift",
+      "settleMs": 1500
     }
   }
 }
