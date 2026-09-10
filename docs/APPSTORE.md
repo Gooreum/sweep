@@ -49,7 +49,10 @@ bash scripts/make-archive.sh
    App Store는 **자산 카탈로그 안의 아이콘**을 요구한다 — `.icns`만으로는 막힌다
 2. `tuist generate` → `Sweep.xcworkspace` (원본은 `Project.swift`, 프로젝트는 생성물이다)
 3. `xcodebuild archive` → `dist/Sweep.xcarchive`
-4. 버전과 App Sandbox 적용 여부를 확인한다
+4. 결과물 번호가 소스와 같은지, App Sandbox가 붙었는지 확인한다
+
+1~3 전에 **버전 검사**를 먼저 한다. 형식(정수 1~3개)이 틀리거나, 빌드 번호가 이미
+올라간 번호 이하면 아카이브하지 않고 멈춘다.
 
 아카이브는 **개발 서명**으로 만들어진다. 정상이다 — Apple Distribution 인증서는
 Organizer의 Distribute App 단계에서 붙는다. 아카이브 단계에서 배포 인증서를 지정하면
@@ -60,6 +63,29 @@ Organizer의 Distribute App 단계에서 붙는다. 아카이브 단계에서 �
 
 > **같은 빌드 번호는 두 번 못 올린다.** App Store Connect는 이미 받은
 > `CFBundleVersion`을 거부한다. 업로드할 때마다 빌드 번호를 올려야 한다.
+
+값은 파일을 직접 고친다. `PlistBuddy -c "Set ..."`은 파일을 다시 써서 주석을 지우고
+키 순서를 바꾸므로 쓰지 않는다. 스크립트가 멈추면서 한 줄만 바꾸는 `sed` 명령을 알려준다.
+
+```bash
+bash scripts/make-archive.sh --check-only   # 번호만 확인 (아카이브 안 함)
+bash scripts/make-archive.sh --verify-only  # 이미 만든 아카이브가 소스와 같은지만
+```
+
+**이미 올라간 번호는 Organizer 기록에서 읽는다.** Organizer는 업로드할 때마다
+`~/Library/Developer/Xcode/Archives/*/*.xcarchive/Info.plist`의 `Distributions`에
+`uploadedBuildNumber`를 남긴다. 이 Mac의 Organizer로 올린 것만 보이고, 다른 Mac이나
+Transporter로 올린 번호는 모른다 — 그런 업로드를 했으면 App Store Connect에서 직접 확인한다.
+
+**Distribute App의 "Manage Version and Build Number"는 끈다.** 켜 두면 번호가 겹칠 때
+Organizer가 조용히 올려서 업로드한다. 실제로 소스 빌드 1이 빌드 2로 올라가 소스와 어긋났다.
+
+### 올라간 빌드
+
+| 빌드 | 날짜 | 비고 |
+|---|---|---|
+| 1.0.0 (1) | 2026-09-08 | **쓰지 않는다** — 샌드박스에서 다운로드 폴더를 못 읽어 결과가 0개 |
+| 1.0.0 (2) | 2026-09-10 | `8bff69a`. TestFlight·심사에는 이 빌드를 쓴다 |
 
 ---
 
