@@ -74,6 +74,11 @@
       "route": "Sources/SweepApp/StoreDemo.swift",
       "settleMs": 2000
     },
+    "store-xcode": {
+      "deeplink": "--stage store-xcode",
+      "route": "Sources/SweepApp/StoreDemo.swift",
+      "settleMs": 1500
+    },
     "store-large": {
       "deeplink": "--stage store-large",
       "route": "Sources/SweepApp/StoreDemo.swift",
