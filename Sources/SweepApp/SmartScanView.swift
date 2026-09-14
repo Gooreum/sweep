@@ -13,7 +13,8 @@ struct SmartScanView: View {
     /// `Sidebar`·`MenuBarPanel`이 이미 저장 프로퍼티로 쓰고 있다.
     private let usage = VolumeUsage.current()
 
-    /// 허용 루트는 실행 중에 바뀌지 않는다. 매 렌더마다 다시 만들 이유가 없다.
+    /// 허용 루트는 샌드박스에서 개발 폴더를 허락할 때만 바뀐다. 그때는 부모가
+    /// 다시 그려 이 뷰가 새로 만들어지므로, 렌더마다가 아니라 생성 때 한 번 읽는다.
     private let scopes = CleanupScope.all
 
     var body: some View {

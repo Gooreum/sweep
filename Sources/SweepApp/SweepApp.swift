@@ -11,6 +11,11 @@ struct SweepApp: App {
         if CommandLine.arguments.contains("--scan-only") {
             Self.runScanAndExit()
         }
+        // 지난 실행에서 허락받은 개발 폴더를 다시 연다. 첫 스캔보다 먼저여야
+        // 스마트 스캔이 Xcode를 빠뜨리지 않는다.
+        if Sandbox.isActive {
+            DeveloperAccess.shared.restore()
+        }
         // SPM 실행 파일은 앱 번들이 아니라서 기본이 백그라운드 프로세스다.
         // .regular로 올려야 창이 앞으로 나오고 메뉴 막대가 붙는다.
         NSApplication.shared.setActivationPolicy(.regular)
