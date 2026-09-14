@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sweep 지원</title>
-<meta name="description" content="Mac 다운로드 폴더의 큰 파일과 중복 파일을 찾아 정리하는 앱, Sweep의 지원 페이지">
+<meta name="description" content="Mac 다운로드 폴더와 Xcode가 쌓아둔 파일을 찾아 정리하는 앱, Sweep의 지원 페이지">
 <style>
   :root {
     --bg: #f6f7fb; --surface: #ffffff; --text: #16181d; --muted: #5b6270;
@@ -33,7 +33,7 @@
   h1 { font-size: 30px; line-height: 1.2; margin: 0; letter-spacing: -0.5px; }
   .tagline { color: var(--muted); margin: 14px 0 0; font-size: 17px; }
   h2 { font-size: 20px; margin: 44px 0 14px; letter-spacing: -0.3px; }
-  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
   .card strong { display: block; margin-bottom: 4px; }
   .card p { margin: 0; color: var(--muted); font-size: 15px; }
@@ -53,15 +53,17 @@
       <div class="mark" aria-hidden="true">✦</div>
       <h1>Sweep</h1>
     </div>
-    <p class="tagline">Mac 다운로드 폴더에 쌓인 큰 파일과 중복 파일을 찾아, 안전하게 정리하는 앱이에요.</p>
+    <p class="tagline">Mac 다운로드 폴더에 쌓인 큰 파일·중복 파일과 Xcode가 쌓아둔 빌드 산출물을 찾아, 안전하게 정리하는 앱이에요.</p>
   </header>
 
   <h2>할 수 있는 일</h2>
   <div class="features">
     <div class="card"><strong>스마트 스캔</strong><p>한 번 훑으면 회수할 수 있는 용량이 바로 나와요.</p></div>
+    <div class="card"><strong>Xcode · 시뮬레이터</strong><p>DerivedData, 기기 지원 파일, 시뮬레이터 캐시를 찾아 비워요.</p></div>
     <div class="card"><strong>큰 파일</strong><p>100MB가 넘는 파일을 크기순으로, 언제 받았는지와 함께 보여줘요.</p></div>
     <div class="card"><strong>중복 파일</strong><p>내용까지 비교해 똑같은 파일을 찾고, 먼저 받은 원본은 남겨요.</p></div>
     <div class="card"><strong>디스크 맵</strong><p>파일과 폴더의 크기를 막대로 비교하고 그 자리에서 정리해요.</p></div>
+    <div class="card"><strong>안전 표시</strong><p>항목마다 안전 · 주의 · 위험을 붙이고, 안전한 것만 미리 골라둬요.</p></div>
   </div>
 
   <h2>자주 묻는 질문</h2>
@@ -70,8 +72,12 @@
     <p>바로 사라지지 않고 휴지통으로 가요. 실수로 지웠다면 휴지통에서 되돌릴 수 있어요.</p>
   </details>
   <details>
-    <summary>왜 다운로드 폴더만 보나요?</summary>
-    <p>App Store 앱은 macOS의 샌드박스 안에서 동작해서, 다른 앱이 만든 캐시나 로그 같은 파일을 열 수 없어요. Sweep은 권한이 주어진 다운로드 폴더 안에서만 파일을 찾고 정리해요.</p>
+    <summary>Xcode 정리는 왜 폴더를 직접 열어야 하나요?</summary>
+    <p>App Store 앱은 macOS의 샌드박스 안에서 동작해서, 사용자가 허락하지 않은 폴더는 열 수 없어요. 정크 파일 탭에서 "개발 폴더 열기…"를 누르고, 열린 창에서 Library › Developer 폴더가 선택된 그대로 "허용"을 누르면 돼요. 한 번만 하면 다음부터는 기억해요.</p>
+  </details>
+  <details>
+    <summary>어떤 폴더를 보나요?</summary>
+    <p>다운로드 폴더와, 허락한 경우 ~/Library/Developer 폴더만 봐요. 다른 앱의 캐시나 로그, 시스템 임시 파일은 샌드박스 때문에 App Store 버전에서 다루지 않아요.</p>
   </details>
   <details>
     <summary>무엇이 지워지는지 어떻게 알 수 있나요?</summary>

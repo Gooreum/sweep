@@ -31,13 +31,14 @@
   p, li { color: var(--text); }
   ul { padding-left: 22px; margin: 8px 0; }
   a { color: var(--accent); }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; }
   footer { margin-top: 48px; color: var(--muted); font-size: 14px; display: flex; gap: 16px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
 <main>
   <h1>Sweep 개인정보 처리방침</h1>
-  <p class="meta">시행일 2026년 9월 10일</p>
+  <p class="meta">시행일 2026년 9월 10일 · 개정 2026년 9월 14일</p>
 
   <div class="summary">
     <p><strong>Sweep은 개인정보를 수집하지 않습니다.</strong> 인터넷에 연결하지 않으며, 파일 목록과 내용은 사용자의 Mac 안에서만 처리됩니다.</p>
@@ -47,10 +48,11 @@
   <p>Sweep은 이름, 이메일, 기기 식별자, 위치, 사용 기록 등 어떠한 개인정보도 수집하거나 저장하지 않습니다. 회원가입이나 로그인 기능도 없습니다.</p>
 
   <h2>2. 파일 접근</h2>
-  <p>Sweep은 정리할 파일을 찾기 위해 사용자의 다운로드 폴더에 있는 파일의 이름, 크기, 날짜를 읽고, 중복 여부를 확인하기 위해 파일 내용을 비교합니다.</p>
+  <p>Sweep은 정리할 파일을 찾기 위해 사용자의 다운로드 폴더와, 사용자가 직접 허락한 경우 <code>~/Library/Developer</code> 폴더에 있는 파일의 이름, 크기, 날짜를 읽고, 중복 여부를 확인하기 위해 파일 내용을 비교합니다.</p>
   <ul>
     <li>이 작업은 모두 사용자의 Mac 안에서 이루어지며, 결과는 외부로 전송되지 않습니다.</li>
     <li>사용자가 정리를 선택한 파일만 휴지통으로 이동합니다. 휴지통으로 이동한 파일은 되돌릴 수 있습니다.</li>
+    <li>개발 폴더 접근 권한은 이 Mac 안에만 저장되며, macOS 설정에서 앱을 지우면 함께 사라집니다.</li>
   </ul>
 
   <h2>3. 네트워크</h2>
