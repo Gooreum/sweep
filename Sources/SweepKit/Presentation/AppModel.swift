@@ -123,7 +123,10 @@ public final class AppModel {
 
     /// 지금 보고 있는 기능의 모델. 디스크 맵은 스캔하지 않으므로 nil이다.
     public var currentModel: ScanModel? {
-        selected.isScannable ? model(for: selected) : nil
+        // 허락 여부를 먼저 읽는다. 스캐너 목록은 관찰되지 않는 저장소를 봐서,
+        // 이 값을 읽지 않으면 허락한 뒤에도 메뉴(⌘R)가 잠긴 채로 남는다 — 실측.
+        if selected == .junk && needsDeveloperAccess { return nil }
+        return selected.isScannable ? model(for: selected) : nil
     }
 
     /// 검색을 시작할 수 있는가. 이미 도는 중이면 안 된다.

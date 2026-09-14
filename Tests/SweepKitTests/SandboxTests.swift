@@ -214,6 +214,23 @@ struct SandboxTests {
         #expect(access.isGranted)
     }
 
+    @Test("허락 전 정크 탭에서는 검색할 모델이 없고, 허락하면 생긴다 (⌘R)")
+    @MainActor
+    func currentModelFollowsGrant() throws {
+        let (access, folder, _, cleanup) = try makeAccess()
+        defer { cleanup() }
+        let app = AppModel(makeModel: { _ in ScanModel(scan: { AsyncStream { $0.finish() } }) },
+                           developerAccess: access, needsDeveloperAccess: true)
+        app.selected = .junk
+
+        #expect(app.currentModel == nil)
+        #expect(!app.canScan)
+
+        try app.grantDeveloperAccess(folder)
+        #expect(app.currentModel != nil)
+        #expect(app.canScan)
+    }
+
     @Test("앱 모델 기본값: 샌드박스 밖에서는 허락이 필요 없다")
     @MainActor
     func appModelOutsideSandboxNeedsNothing() throws {
