@@ -13,7 +13,7 @@ App Store는 **App Sandbox가 필수**다. 끄면 업로드 검증에서 막힌�
 | 정리 루트 | 직접 배포 | App Store (샌드박스) |
 |---|---|---|
 | `~/Library/Caches` (남의 앱 캐시) | ✅ | ❌ **여는 entitlement가 없다** |
-| `~/Library/Developer` (Xcode DerivedData) | ✅ | ❌ |
+| `~/Library/Developer` (Xcode DerivedData) | ✅ | ✅ 사용자가 **한 번 허락**하면 (아래) |
 | `~/Library/Logs` | ✅ | ❌ |
 | `/private/tmp` | ✅ | ❌ |
 | `/var/folders/…/C`,`/T` (앱 임시) | ✅ | ❌ |
@@ -27,13 +27,29 @@ App Store는 **App Sandbox가 필수**다. 끄면 업로드 검증에서 막힌�
 CleanMyMac이 App Store에 없고 DaisyDisk는 있는 이유가 이것이다 — DaisyDisk는
 "사용자가 고른 폴더를 시각화"로 제품을 샌드박스에 맞췄다.
 
-**그래서 App Store 빌드는 다운로드 폴더만 다룬다.** 앱이 실행 중에 샌드박스를 감지해
-(`Sandbox.isActive`) 정크 파일 탭을 숨기고, "Sweep이 보는 곳"과 디스크 맵 시작 지점을
-`~/Downloads` 하나로 줄인다. 직접 배포본은 샌드박스가 아니라 기능이 온전하다.
+**그래서 App Store 빌드는 다운로드 폴더와, 사용자가 허락한 개발 폴더만 다룬다.**
+앱이 실행 중에 샌드박스를 감지해(`Sandbox.isActive`) 이렇게 동작한다.
 
-> 샌드박스 안에서 `~/Downloads`는 컨테이너 안의 **심볼릭 링크**다. 열거자는 링크 루트를
-> 열지 못해서, 링크를 풀지 않으면 스캔 결과가 0개가 된다(`DownloadsFolder`가 푼다).
-> 아카이브를 만들면 `Sweep.app/Contents/MacOS/Sweep --scan-only`로 실제 결과를 확인한다.
+- 스마트 스캔 · 큰 파일 · 중복 파일 · 디스크 맵은 `~/Downloads`를 본다.
+- 정크 파일 탭은 처음에 **허락 화면**을 띄운다. "개발 폴더 열기…"를 누르면 열기 대화상자가
+  `~/Library/Developer`에서 열리고, 사용자가 "허용"을 누르면 그 폴더가 열린다
+  (`files.user-selected.read-write`). 보안 범위 북마크(`files.bookmarks.app-scope`)로
+  저장해 다음 실행에도 다시 연다(`DeveloperAccess`).
+- 허락한 뒤에는 Xcode · 시뮬레이터 정리(`XcodeScanner`)가 정크 파일과 스마트 스캔에 붙고,
+  "Sweep이 보는 곳"과 디스크 맵 시작 지점에 `~/Library/Developer`가 한 줄 는다.
+- 캐시 · 로그 · 임시 폴더 정리는 샌드박스에서 쓰지 않는다. 캐시와 로그는 같은 방식으로
+  열 수 있지만 아직 넣지 않았다.
+
+직접 배포본은 샌드박스가 아니라 기능이 온전하다.
+
+> 샌드박스에서 `homeDirectoryForCurrentUser`는 컨테이너(`~/Library/Containers/<id>/Data`)다.
+> SweepKit은 사용자 홈을 passwd 항목에서 읽는다(`Sandbox.userHome`). 그러지 않으면 허락한
+> 폴더 대신 컨테이너를 훑고, 보호 목록(`denyList`)이 진짜 프로비저닝 프로파일을 지키지 못한다.
+
+> 컨테이너 안의 `Downloads`는 진짜 폴더를 가리키는 **심볼릭 링크**라, 그 경로로 열거하면
+> 0개가 된다(빌드 1의 버그). 지금은 진짜 홈을 써서 링크를 거치지 않고, `DownloadsFolder`가
+> 링크를 푸는 방어로 남아 있다. 아카이브를 만들면
+> `Sweep.app/Contents/MacOS/Sweep --scan-only`로 실제 결과를 확인한다.
 
 ---
 
@@ -85,7 +101,8 @@ Organizer가 조용히 올려서 업로드한다. 실제로 소스 빌드 1이 �
 | 빌드 | 날짜 | 비고 |
 |---|---|---|
 | 1.0.0 (1) | 2026-09-08 | **쓰지 않는다** — 샌드박스에서 다운로드 폴더를 못 읽어 결과가 0개 |
-| 1.0.0 (2) | 2026-09-10 | `8bff69a`. TestFlight·심사에는 이 빌드를 쓴다 |
+| 1.0.0 (2) | 2026-09-10 | `8bff69a`. 다운로드 폴더만 — 정크 파일 탭이 없다 |
+| 1.0.0 (3) | 업로드 전 | `40ce256`. 개발 폴더 허락으로 Xcode 정리. 올리면 TestFlight·심사에 이 빌드를 쓴다 |
 
 ---
 
