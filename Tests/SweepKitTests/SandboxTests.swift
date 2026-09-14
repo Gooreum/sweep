@@ -43,6 +43,26 @@ struct SandboxTests {
         #expect(ProtectedPaths.roots(sandboxed: true).map(\.path) == [downloads.path])
     }
 
+    @Test("개발 폴더를 허락하면 허용 루트에 더해진다")
+    func sandboxedRootsIncludeGrantedDeveloper() {
+        let downloads = fm.homeDirectoryForCurrentUser.appending(path: "Downloads")
+        let developer = fm.homeDirectoryForCurrentUser.appending(path: "Library/Developer")
+        #expect(ProtectedPaths.roots(sandboxed: true, developer: developer).map(\.path)
+                == [downloads.path, developer.path])
+    }
+
+    @Test("샌드박스 밖에서는 지금 허용 루트가 시작 때 루트와 같다")
+    func currentRootsOutsideSandbox() {
+        #expect(ProtectedPaths.currentRoots == ProtectedPaths.allowedRoots)
+    }
+
+    @Test("보호 목록은 진짜 홈의 Xcode UserData를 가리킨다")
+    func denyListPointsAtUserHome() {
+        let profiles = Sandbox.userHome
+            .appending(path: "Library/Developer/Xcode/UserData/Provisioning Profiles")
+        #expect(ProtectedPaths.denyList.map(\.path).contains(profiles.path))
+    }
+
     @Test("샌드박스 밖의 허용 루트는 그대로다")
     func unsandboxedRootsAreUnchanged() {
         #expect(ProtectedPaths.roots(sandboxed: false) == ProtectedPaths.allowedRoots)
@@ -56,26 +76,38 @@ struct SandboxTests {
         #expect(scopes.first?.detail.isEmpty == false)
     }
 
-    @Test("샌드박스에서는 정크 파일 기능이 빠진다")
-    func sandboxedFeaturesDropJunk() {
-        let available = Feature.available(sandboxed: true)
-        #expect(!available.contains(.junk))
-        #expect(available == [.smartScan, .largeFile, .duplicate, .diskMap])
-        #expect(Feature.available(sandboxed: false) == Feature.allCases)
+    @Test("허락 전 샌드박스: 스마트 스캔은 큰 파일·중복만, 정크는 스캐너가 없다")
+    func sandboxedScannersWithoutDeveloper() {
+        let smart = Feature.smartScan.scanners(sandboxed: true, developer: nil).map(\.category)
+        #expect(smart == [.largeFile, .duplicate])
+        #expect(Feature.junk.scanners(sandboxed: true, developer: nil).isEmpty)
     }
 
-    @Test("샌드박스의 스마트 스캔은 큰 파일·중복 파일만 훑는다")
-    func sandboxedSmartScanScanners() {
-        let categories = Feature.smartScan.scanners(sandboxed: true).map(\.category)
-        #expect(categories == [.largeFile, .duplicate])
-        #expect(Feature.smartScan.scanners(sandboxed: false).count == 6)
+    @Test("허락 후 샌드박스: 스마트 스캔과 정크가 Xcode를 훑는다")
+    func sandboxedScannersWithDeveloper() {
+        let developer = URL(filePath: "/Users/someone/Library/Developer")
+        let smart = Feature.smartScan.scanners(sandboxed: true, developer: developer).map(\.category)
+        #expect(smart == [.xcode, .largeFile, .duplicate])
+        let junk = Feature.junk.scanners(sandboxed: true, developer: developer).map(\.category)
+        #expect(junk == [.xcode])
     }
 
-    @Test("샌드박스의 디스크 맵 시작 지점은 ~/Downloads 하나다")
+    @Test("샌드박스 밖 스캐너는 허락과 무관하게 그대로다")
+    func unsandboxedScannersUnchanged() {
+        #expect(Feature.smartScan.scanners(sandboxed: false, developer: nil).count == 6)
+        #expect(Feature.junk.scanners(sandboxed: false, developer: nil).count == 4)
+    }
+
+    @Test("샌드박스의 디스크 맵 시작 지점은 허락 전 Downloads, 허락 후 개발 폴더까지")
     func sandboxedDiskMapRoots() {
-        let home = URL(filePath: "/Users/someone/Library/Containers/app/Data")
-        let roots = DiskMapRoot.roots(home: home, sandboxed: true, exists: { _ in true })
-        #expect(roots.map(\.label) == ["~/Downloads"])
+        let home = URL(filePath: "/Users/someone")
+        let before = DiskMapRoot.roots(home: home, sandboxed: true, exists: { _ in true })
+        #expect(before.map(\.label) == ["~/Downloads"])
+
+        let developer = home.appending(path: "Library/Developer")
+        let after = DiskMapRoot.roots(home: home, sandboxed: true, developer: developer,
+                                      exists: { _ in true })
+        #expect(after.map(\.label) == ["~/Downloads", "~/Library/Developer"])
     }
 
     // MARK: - 개발 폴더 허락
@@ -163,6 +195,31 @@ struct SandboxTests {
 
         #expect(access.url == nil)
         #expect(defaults.data(forKey: "developerFolderBookmark") == nil)
+    }
+
+    @Test("앱 모델: 틀린 폴더면 허락 화면에 머물고, 맞으면 벗어난다")
+    @MainActor
+    func appModelGrantFlow() throws {
+        let (access, folder, _, cleanup) = try makeAccess()
+        defer { cleanup() }
+        let app = AppModel(developerAccess: access, needsDeveloperAccess: true)
+
+        #expect(throws: DeveloperAccess.Failure.self) {
+            try app.grantDeveloperAccess(folder.deletingLastPathComponent())
+        }
+        #expect(app.needsDeveloperAccess)
+
+        try app.grantDeveloperAccess(folder)
+        #expect(!app.needsDeveloperAccess)
+        #expect(access.isGranted)
+    }
+
+    @Test("앱 모델 기본값: 샌드박스 밖에서는 허락이 필요 없다")
+    @MainActor
+    func appModelOutsideSandboxNeedsNothing() throws {
+        let (access, _, _, cleanup) = try makeAccess()
+        defer { cleanup() }
+        #expect(!AppModel(developerAccess: access).needsDeveloperAccess)
     }
 
     // MARK: - Downloads 링크

@@ -19,7 +19,8 @@ extension CleanupScope {
     ///
     /// 손으로 적으면 안전 게이트가 바뀔 때 화면만 낡아 거짓말을 하게 된다.
     /// 설명이 없는 루트는 목록에서 빠지는 것이 아니라 경로만 보여준다.
-    public static var all: [CleanupScope] { scopes(roots: ProtectedPaths.allowedRoots) }
+    /// 지금 허용 루트(`currentRoots`)를 본다 — 샌드박스에서 개발 폴더를 허락하면 한 줄 는다.
+    public static var all: [CleanupScope] { scopes(roots: ProtectedPaths.currentRoots) }
 
     /// 루트를 주입할 수 있게 연다 — 샌드박스 쪽 목록은 테스트 프로세스에서 만들 수 없다.
     static func scopes(roots: [URL]) -> [CleanupScope] {

@@ -44,34 +44,37 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// 이 실행 환경에서 쓸 수 있는 기능. 사이드바·메뉴·요약 카드가 이것을 본다.
-    /// 샌드박스에서는 정크 파일이 빠진다 — 그 스캐너들이 여는 곳이 전부 막혀 있다.
-    public static var available: [Feature] { available(sandboxed: Sandbox.isActive) }
-
-    static func available(sandboxed: Bool) -> [Feature] {
-        sandboxed ? allCases.filter { $0 != .junk } : allCases
+    /// 이 기능이 돌리는 스캐너. 디스크 맵은 읽기 전용이라 하나도 없다.
+    ///
+    /// 허락은 실행 중에 생긴다. 스캔할 때마다 새로 묻는다 — 모델이 시작할 때 한 번
+    /// 받아 두면 허락한 뒤에도 Xcode를 훑지 않는다.
+    public var scanners: [any CleanupScanner] {
+        scanners(sandboxed: Sandbox.isActive, developer: DeveloperAccess.shared.url)
     }
 
-    /// 이 기능이 돌리는 스캐너. 디스크 맵은 읽기 전용이라 하나도 없다.
-    public var scanners: [any CleanupScanner] { scanners(sandboxed: Sandbox.isActive) }
-
-    /// 샌드박스의 스마트 스캔은 Downloads를 보는 둘만 돌린다.
+    /// 샌드박스에서는 열린 곳만 훑는다: Downloads는 늘, Developer는 사용자가 허락했을 때만.
     /// 막힌 곳을 훑는 스캐너를 남기면 결과 없이 시간만 쓴다(폭주 감지는 3초 표본 수집).
-    func scanners(sandboxed: Bool) -> [any CleanupScanner] {
+    ///
+    /// 정크 파일은 허락 전에는 스캐너가 없다. `isScannable`이 false라 요약 카드와
+    /// ⌘R에서 빠지고, 화면은 허락을 받는 입구가 된다.
+    func scanners(sandboxed: Bool, developer: URL?) -> [any CleanupScanner] {
+        let xcode: [any CleanupScanner] = developer == nil ? [] : [XcodeScanner()]
         switch self {
         case .smartScan:
-            sandboxed
-                ? [LargeFileScanner(), DuplicateScanner()]
+            return sandboxed
+                ? xcode + [LargeFileScanner(), DuplicateScanner()]
                 : [RunawayTempScanner(), XcodeScanner(), DevCacheScanner(),
                    StaleCacheScanner(), LargeFileScanner(), DuplicateScanner()]
         case .junk:
-            [RunawayTempScanner(), XcodeScanner(), DevCacheScanner(), StaleCacheScanner()]
+            return sandboxed
+                ? xcode
+                : [RunawayTempScanner(), XcodeScanner(), DevCacheScanner(), StaleCacheScanner()]
         case .largeFile:
-            [LargeFileScanner()]
+            return [LargeFileScanner()]
         case .duplicate:
-            [DuplicateScanner()]
+            return [DuplicateScanner()]
         case .diskMap:
-            []
+            return []
         }
     }
 
@@ -112,7 +115,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
     /// 자기 자신과 읽기 전용(디스크 맵)은 뺀다. 손으로 나열하지 않아
     /// 기능을 추가하면 요약에도 자동으로 따라 붙는다.
     public static var summaryCards: [Feature] {
-        available.filter { $0 != .smartScan && $0.isScannable }
+        allCases.filter { $0 != .smartScan && $0.isScannable }
     }
 
     /// 스캔 결과 중 이 기능이 담당하는 것만.

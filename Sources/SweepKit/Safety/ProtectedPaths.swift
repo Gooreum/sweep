@@ -60,12 +60,13 @@ public enum ProtectedPaths {
     /// 이 루트들의 **하위**만 삭제할 수 있다.
     public static let allowedRoots: [URL] = roots(sandboxed: Sandbox.isActive)
 
-    /// 샌드박스 안에서는 `~/Downloads`만 남는다 — `files.downloads.read-write`가 여는
-    /// 유일한 곳이다. 나머지는 실측에서 전부 권한 거부였다.
+    /// 샌드박스 안에서는 `~/Downloads`만 늘 열린다 — `files.downloads.read-write`가 여는
+    /// 유일한 곳이다. 나머지는 실측에서 전부 권한 거부였다. 사용자가 열어 준
+    /// `~/Library/Developer`(`developer`)가 있으면 그것도 더한다.
     /// 샌드박스의 임시 폴더는 컨테이너 안(`Data/tmp`)이라 `userTemporaryRoots`도 뜻이 없다.
-    static func roots(sandboxed: Bool) -> [URL] {
+    static func roots(sandboxed: Bool, developer: URL? = nil) -> [URL] {
         let downloads = inHome("Downloads")
-        guard !sandboxed else { return [downloads] }
+        guard !sandboxed else { return [downloads] + (developer.map { [$0] } ?? []) }
         return [
             inHome("Library/Developer"),
             inHome("Library/Caches"),
@@ -73,6 +74,14 @@ public enum ProtectedPaths {
             downloads,
             URL(filePath: "/private/tmp"),
         ] + userTemporaryRoots
+    }
+
+    /// 지금 이 순간의 허용 루트. 허락은 실행 중에 생기므로 시작할 때 고정되는
+    /// `allowedRoots`와 따로 둔다. 화면(보는 곳 목록)이 이것을 본다.
+    public static var currentRoots: [URL] {
+        Sandbox.isActive
+            ? roots(sandboxed: true, developer: DeveloperAccess.shared.url)
+            : allowedRoots
     }
 
     /// 허용 루트 안이어도 절대 건드리지 않는 경로.
@@ -245,7 +254,15 @@ public enum ProtectedPaths {
 
     private static func resolvedRoots() -> [URL] { cachedRoots }
 
-    private static func rootComponents() -> [[String]] { cachedRootComponents }
+    /// 사용자가 열어 준 개발 폴더는 실행 중에 생겨서 캐시에 넣을 수 없다.
+    /// 하나뿐이고 이미 정규 경로로 저장돼 있어(`DeveloperAccess.start`) 매번 붙여도 싸다.
+    /// 샌드박스 밖에서는 붙이지 않는다 — 거기서는 이미 허용 루트다.
+    private static func rootComponents() -> [[String]] {
+        guard Sandbox.isActive, let developer = DeveloperAccess.shared.url else {
+            return cachedRootComponents
+        }
+        return cachedRootComponents + [developer.pathComponents]
+    }
 
     /// 경로 구성요소 단위 하위 판정. URL을 다시 정규화하지 않아 값싸다.
     private static func isDescendant(_ path: [String], of ancestor: [String]) -> Bool {

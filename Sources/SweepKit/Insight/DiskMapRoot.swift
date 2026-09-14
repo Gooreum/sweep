@@ -44,7 +44,8 @@ extension DiskMapRoot {
     /// 먼저 나온 그룹만 남긴다 — 같은 줄이 두 번 보이면 고를 때 헷갈린다.
     public static var all: [DiskMapRoot] {
         roots(home: Sandbox.userHome,
-              sandboxed: Sandbox.isActive)
+              sandboxed: Sandbox.isActive,
+              developer: DeveloperAccess.shared.url)
     }
 
     /// 홈과 실재 판정을 주입할 수 있게 열어 둔다.
@@ -53,6 +54,7 @@ extension DiskMapRoot {
     /// 실제로 검사를 지워 봐도 TC가 통과했다. 공허한 TC를 남기지 않으려고 뚫는다.
     static func roots(home: URL,
                       sandboxed: Bool = false,
+                      developer: URL? = nil,
                       exists: (String) -> Bool
                           = { FileManager.default.fileExists(atPath: $0) })
         -> [DiskMapRoot] {
@@ -75,10 +77,10 @@ extension DiskMapRoot {
             result.append(DiskMapRoot(url: url, label: label, group: group))
         }
 
-        // 샌드박스에서 홈은 컨테이너다. 거기서 열 수 있는 사용자 폴더는 Downloads뿐이고,
-        // 그것도 링크를 풀어야 순회된다.
+        // 샌드박스에서 열 수 있는 곳은 Downloads와, 사용자가 열어 준 개발 폴더뿐이다.
         if sandboxed {
             add(DownloadsFolder.url(in: home), "~/Downloads", .home)
+            if let developer { add(developer, "~/Library/Developer", .cleanup) }
             return result
         }
 
