@@ -78,6 +78,93 @@ struct SandboxTests {
         #expect(roots.map(\.label) == ["~/Downloads"])
     }
 
+    // MARK: - 개발 폴더 허락
+
+    /// 진짜 홈과 `.standard`를 건드리지 않는 허락 저장소.
+    private func makeAccess() throws -> (access: DeveloperAccess, folder: URL,
+                                         defaults: UserDefaults, cleanup: () -> Void) {
+        let base = URL(filePath: NSTemporaryDirectory())
+            .appending(path: "sweep-dev-\(UUID().uuidString)")
+        let folder = base.appending(path: "Library/Developer")
+        try fm.createDirectory(at: folder, withIntermediateDirectories: true)
+        let suite = "sweep-test-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        let access = DeveloperAccess(folder: folder, defaults: defaults)
+        return (access, folder, defaults, {
+            defaults.removePersistentDomain(forName: suite)
+            try? FileManager.default.removeItem(at: base)
+        })
+    }
+
+    @Test("같은 폴더는 끝의 / 나 .. 가 섞여도 맞다고 본다")
+    func matchesSameFolder() throws {
+        let (_, folder, _, cleanup) = try makeAccess()
+        defer { cleanup() }
+
+        #expect(DeveloperAccess.matches(folder, folder: folder))
+        #expect(DeveloperAccess.matches(URL(filePath: folder.path + "/"), folder: folder))
+        let dotted = folder.appending(path: "Xcode").appending(path: "..")
+        #expect(DeveloperAccess.matches(dotted, folder: folder))
+    }
+
+    @Test("형제·하위·상위 폴더는 아니라고 본다")
+    func rejectsOtherFolders() throws {
+        let (_, folder, _, cleanup) = try makeAccess()
+        defer { cleanup() }
+
+        let parent = folder.deletingLastPathComponent()
+        #expect(!DeveloperAccess.matches(parent.appending(path: "Caches"), folder: folder))
+        #expect(!DeveloperAccess.matches(folder.appending(path: "Xcode"), folder: folder))
+        #expect(!DeveloperAccess.matches(parent, folder: folder))
+    }
+
+    @Test("다른 폴더를 고르면 거절하고 아무것도 저장하지 않는다")
+    func grantRejectsWrongFolder() throws {
+        let (access, folder, defaults, cleanup) = try makeAccess()
+        defer { cleanup() }
+        let wrong = folder.deletingLastPathComponent()
+
+        #expect(throws: DeveloperAccess.Failure.wrongFolder(wrong)) { try access.grant(wrong) }
+        #expect(access.url == nil)
+        #expect(defaults.dictionaryRepresentation()["developerFolderBookmark"] == nil)
+    }
+
+    @Test("맞는 폴더를 고르면 열리고 북마크가 저장된다")
+    func grantOpensFolder() throws {
+        let (access, folder, defaults, cleanup) = try makeAccess()
+        defer { cleanup() }
+
+        try access.grant(folder)
+
+        #expect(access.url?.path == folder.resolvingSymlinksInPath().path)
+        #expect(defaults.data(forKey: "developerFolderBookmark") != nil)
+    }
+
+    @Test("다음 실행에서 저장한 북마크로 다시 연다")
+    func restoreReopensFolder() throws {
+        let (access, folder, defaults, cleanup) = try makeAccess()
+        defer { cleanup() }
+        try access.grant(folder)
+
+        let nextLaunch = DeveloperAccess(folder: folder, defaults: defaults)
+        #expect(nextLaunch.url == nil)
+        nextLaunch.restore()
+
+        #expect(nextLaunch.url?.path == folder.resolvingSymlinksInPath().path)
+    }
+
+    @Test("망가진 북마크는 지우고 닫힌 채로 둔다")
+    func restoreDropsBrokenBookmark() throws {
+        let (access, _, defaults, cleanup) = try makeAccess()
+        defer { cleanup() }
+        defaults.set(Data([0x00, 0x01, 0x02]), forKey: "developerFolderBookmark")
+
+        access.restore()
+
+        #expect(access.url == nil)
+        #expect(defaults.data(forKey: "developerFolderBookmark") == nil)
+    }
+
     // MARK: - Downloads 링크
 
     @Test("Downloads가 링크면 가리키는 폴더를 준다")
