@@ -12,7 +12,7 @@ public struct DuplicateScanner: CleanupScanner {
     private let home: URL
 
     public init(minimumSize: Int64 = 1024 * 1024,
-                home: URL = FileManager.default.homeDirectoryForCurrentUser) {
+                home: URL = Sandbox.userHome) {
         self.minimumSize = minimumSize
         self.home = home
     }

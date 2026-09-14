@@ -23,7 +23,7 @@ extension CleanupScope {
 
     /// 루트를 주입할 수 있게 연다 — 샌드박스 쪽 목록은 테스트 프로세스에서 만들 수 없다.
     static func scopes(roots: [URL]) -> [CleanupScope] {
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let home = Sandbox.userHome.path
 
         /// 임시 컨테이너는 `/private/var/folders/<해시>/C` 같은 경로라
         /// 화면에 그대로 쓰면 읽히지 않는다. 하나로 묶는다.

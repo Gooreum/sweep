@@ -31,6 +31,12 @@ struct SandboxTests {
         #expect(Sandbox.isActive == false)
     }
 
+    @Test("샌드박스 밖에서 진짜 홈은 홈 디렉토리와 같다")
+    func userHomeMatchesHomeOutsideSandbox() {
+        #expect(Sandbox.userHome.standardizedFileURL.path
+                == fm.homeDirectoryForCurrentUser.standardizedFileURL.path)
+    }
+
     @Test("샌드박스면 허용 루트는 ~/Downloads 하나다")
     func sandboxedRootsAreDownloadsOnly() {
         let downloads = fm.homeDirectoryForCurrentUser.appending(path: "Downloads")

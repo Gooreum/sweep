@@ -32,7 +32,7 @@ public struct VolumeUsage: Sendable, Equatable {
     /// 읽지 못하면 nil이다. 0을 지어내면 화면에 "0바이트 중 0바이트"가 뜬다 —
     /// 값을 모른다는 것과 값이 0이라는 것은 다르다.
     public static func current(
-        for url: URL = FileManager.default.homeDirectoryForCurrentUser
+        for url: URL = Sandbox.userHome
     ) -> VolumeUsage? {
         let keys: Set<URLResourceKey> = [
             .volumeTotalCapacityKey,

@@ -9,7 +9,7 @@ import SweepKit
 @MainActor
 enum StoreDemo {
 
-    private static let downloads = FileManager.default.homeDirectoryForCurrentUser
+    private static let downloads = Sandbox.userHome
         .appending(path: "Downloads")
     /// 실재하지 않는 폴더. 목록에는 이름만 보이고, 눌러도 지워질 것이 없다.
     private static let preview = downloads.appending(path: "sweep-harness-preview")

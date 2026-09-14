@@ -8,7 +8,7 @@ public struct XcodeScanner: CleanupScanner {
     /// 실제 홈에 의존하면 Xcode 설치 여부에 따라 결과가 달라진다.
     private let home: URL
 
-    public init(home: URL = FileManager.default.homeDirectoryForCurrentUser) {
+    public init(home: URL = Sandbox.userHome) {
         self.home = home
     }
 

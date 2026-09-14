@@ -7,7 +7,7 @@ public struct DevCacheScanner: CleanupScanner {
 
     private let home: URL
 
-    public init(home: URL = FileManager.default.homeDirectoryForCurrentUser) {
+    public init(home: URL = Sandbox.userHome) {
         self.home = home
     }
 

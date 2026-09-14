@@ -17,7 +17,7 @@ public struct StaleCacheScanner: CleanupScanner {
 
     public init(staleAfter: TimeInterval = 90 * 86_400,
                 minimumSize: Int64 = 1024 * 1024,
-                home: URL = FileManager.default.homeDirectoryForCurrentUser) {
+                home: URL = Sandbox.userHome) {
         self.staleAfter = staleAfter
         self.minimumSize = minimumSize
         self.home = home

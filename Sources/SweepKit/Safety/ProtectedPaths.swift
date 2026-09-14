@@ -37,7 +37,7 @@ public enum RemovalVeto: Error, Equatable, Sendable {
 public enum ProtectedPaths {
 
     private static func inHome(_ relative: String) -> URL {
-        FileManager.default.homeDirectoryForCurrentUser.appending(path: relative)
+        Sandbox.userHome.appending(path: relative)
     }
 
     /// 이 사용자의 임시 파일 컨테이너 안 `C`(Caches)와 `T`(TemporaryItems).
@@ -241,7 +241,7 @@ public enum ProtectedPaths {
         cachedDenyList.map { $0.standardizedFileURL.pathComponents }
     /// 홈은 프로세스 수명 동안 바뀌지 않는다.
     private static let cachedHome: URL = canonical(
-        FileManager.default.homeDirectoryForCurrentUser)
+        Sandbox.userHome)
 
     private static func resolvedRoots() -> [URL] { cachedRoots }
 

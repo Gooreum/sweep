@@ -43,7 +43,7 @@ extension DiskMapRoot {
     /// 같은 경로가 두 그룹에 겹치면(`~/Downloads`는 홈이자 정리 대상)
     /// 먼저 나온 그룹만 남긴다 — 같은 줄이 두 번 보이면 고를 때 헷갈린다.
     public static var all: [DiskMapRoot] {
-        roots(home: FileManager.default.homeDirectoryForCurrentUser,
+        roots(home: Sandbox.userHome,
               sandboxed: Sandbox.isActive)
     }
 
@@ -104,7 +104,7 @@ extension DiskMapRoot {
     /// 홈이 없을 리 없지만, 없으면 첫 항목으로 떨어진다 —
     /// nil을 돌려주면 화면이 "시작 지점을 고르세요"에서 멈춘다.
     public static var initial: DiskMapRoot? {
-        let home = FileManager.default.homeDirectoryForCurrentUser.standardizedFileURL
+        let home = Sandbox.userHome.standardizedFileURL
         let roots = all
         return roots.first { $0.url.standardizedFileURL == home } ?? roots.first
     }
