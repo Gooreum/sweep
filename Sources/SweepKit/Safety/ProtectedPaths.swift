@@ -287,10 +287,26 @@ public enum ProtectedPaths {
         //
         // 경로가 없으면 nil이 되어 두 검사를 모두 건너뛴다 —
         // 존재 여부는 관문의 관심사가 아니고, 실제 삭제 시 자연스럽게 실패한다.
+        let isApp = isApplicationBundle(resolvedComponents,
+                                       folders: cachedApplicationComponents)
+
         if let info = fileInfo(of: resolved) {
             // 6. 남의 소유는 거부한다. 지울 수 없을 뿐 아니라, 지워지면 다른 프로세스가 깨진다.
-            guard info.uid == getuid() else {
-                throw RemovalVeto.notOwnedByCurrentUser(resolved)
+            //
+            //    **앱 번들만 뺀다.** `/Applications`의 앱은 root 소유가 정상이다 —
+            //    실측으로 이 기계의 35개 중 24개가 root:wheel이고, pkg·App Store로
+            //    설치하면 그렇게 된다. 그런데 휴지통으로 옮기는 데 실제로 필요한 것은
+            //    항목의 소유권이 아니라 **부모 폴더 쓰기 권한**이다
+            //    (`/Applications`는 `drwxrwxr-x root:admin`이라 관리자는 옮길 수 있다).
+            //    그래서 앱에는 그 조건을 대신 건다 — 규칙을 푸는 게 아니라 바꿔 끼운다.
+            if isApp {
+                guard canWriteParent(of: resolved) else {
+                    throw RemovalVeto.notOwnedByCurrentUser(resolved)
+                }
+            } else {
+                guard info.uid == getuid() else {
+                    throw RemovalVeto.notOwnedByCurrentUser(resolved)
+                }
             }
 
             // 7. 커널이 삭제를 거부하는 플래그가 걸려 있으면 후보로 올리지 않는다.
@@ -303,6 +319,15 @@ public enum ProtectedPaths {
                 throw RemovalVeto.systemProtected(resolved)
             }
         }
+    }
+
+    /// 이 항목을 담고 있는 폴더에 쓸 수 있는가.
+    ///
+    /// 휴지통으로 옮기는 것은 이름 바꾸기라 **항목이 아니라 부모 폴더**에 쓰기 권한이
+    /// 필요하다. 소유권 검사로는 이것을 알 수 없다 — `/Applications`의 root 소유 앱은
+    /// 소유자가 내가 아니지만 부모가 `admin` 그룹에 열려 있어 실제로 옮겨진다.
+    static func canWriteParent(of url: URL) -> Bool {
+        access(url.deletingLastPathComponent().path, W_OK) == 0
     }
 
     /// 심볼릭 링크를 따라가지 않고 소유자와 파일 플래그를 **한 번의 lstat으로** 읽는다.

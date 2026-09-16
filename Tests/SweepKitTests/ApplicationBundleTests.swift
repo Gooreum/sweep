@@ -162,3 +162,70 @@ struct ApplicationVetoTests {
         #expect(ProtectedPaths.isRemovable(cache))
     }
 }
+
+/// 앱에만 적용되는 소유권 예외.
+///
+/// 기전(부모 폴더 쓰기 권한)은 **임시 폴더**로 검증한다 — 사용자의 실제
+/// `~/Applications` 권한을 건드리지 않는다. 실기 확인은 읽기 전용 조회뿐이다.
+@Suite("앱 소유권 예외")
+struct ApplicationOwnershipTests {
+
+    // TC-1 / TC-2
+    @Test("부모 폴더에 쓸 수 있을 때만 참이다")
+    func parentWritability() throws {
+        let parent = URL(filePath: NSTemporaryDirectory())
+            .appending(path: "sweep-owner-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: parent, withIntermediateDirectories: true)
+        defer {
+            try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: parent.path)
+            try? FileManager.default.removeItem(at: parent)
+        }
+        let child = parent.appending(path: "Thing.app")
+
+        #expect(ProtectedPaths.canWriteParent(of: child))
+
+        // 읽기·실행만 남기면 이름 바꾸기가 막힌다 — 휴지통 이동이 실패하는 상태다.
+        try FileManager.default.setAttributes([.posixPermissions: 0o555],
+                                              ofItemAtPath: parent.path)
+        #expect(!ProtectedPaths.canWriteParent(of: child))
+    }
+
+    // TC-3
+    @Test("부모가 없으면 쓸 수 없다")
+    func missingParent() {
+        let orphan = URL(filePath: "/sweep-없는폴더-9E3A1C/Thing.app")
+        #expect(!ProtectedPaths.canWriteParent(of: orphan))
+    }
+
+    // TC-4
+    @Test("root 소유 앱은 소유권으로 막히지 않는다")
+    func rootOwnedApplicationIsNotVetoedByOwnership() throws {
+        let apps = URL(filePath: "/Applications")
+        let contents = (try? FileManager.default.contentsOfDirectory(
+            at: apps, includingPropertiesForKeys: nil)) ?? []
+
+        // root 소유이면서 삭제 금지 플래그가 없는 앱 하나. 없으면 확인할 것이 없다.
+        let candidate = contents.first { url in
+            guard url.lastPathComponent.hasSuffix(".app"),
+                  let info = ProtectedPaths.fileInfo(of: url)
+            else { return false }
+            return info.uid != getuid() && info.flags & ProtectedPaths.undeletableFlags == 0
+        }
+        guard let candidate else { return }
+
+        // 실행 중일 수도 있으므로 "통과"가 아니라 **소유권 사유가 아님**을 단정한다.
+        #expect(ProtectedPaths.veto(for: candidate)
+                != .notOwnedByCurrentUser(candidate.standardizedFileURL))
+    }
+
+    // TC-5
+    @Test("앱이 아니면 소유권 규칙이 그대로다")
+    func nonApplicationKeepsOwnershipRule() {
+        let powerlog = URL(filePath: "/private/tmp/powerlog")
+        guard let info = ProtectedPaths.fileInfo(of: powerlog), info.uid != getuid()
+        else { return }
+
+        #expect(ProtectedPaths.veto(for: powerlog)
+                == .notOwnedByCurrentUser(ProtectedPaths.canonical(powerlog)))
+    }
+}
