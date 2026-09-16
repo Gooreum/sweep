@@ -29,6 +29,11 @@ public struct XcodeScanner: CleanupScanner {
               safety: .safe, detail: "시뮬레이터 캐시입니다", expandsChildren: false),
         .init(path: "Library/Developer/CoreSimulator/Temp",
               safety: .safe, detail: "시뮬레이터 임시 파일입니다", expandsChildren: false),
+        // 기기 하나가 2~3GB다. 통째로 묶으면 무엇을 지우는지 알 수 없어 기기별로 펼친다.
+        // 지우면 그 시뮬레이터에 설치한 앱과 설정이 사라진다. 기기 자체는 Xcode가 다시 만든다.
+        .init(path: "Library/Developer/CoreSimulator/Devices",
+              safety: .caution, detail: "시뮬레이터에 설치한 앱과 설정이 사라집니다",
+              expandsChildren: true),
         .init(path: "Library/Developer/Xcode/iOS DeviceSupport",
               safety: .caution, detail: "기기를 다시 연결하면 내려받습니다", expandsChildren: true),
         .init(path: "Library/Developer/XCTestDevices",

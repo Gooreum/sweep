@@ -123,4 +123,74 @@ struct XcodeScannerTests {
         #expect(byName["Beta-bbb"]?.size ?? 0 >= Int64(2 * Self.oneMB))
         #expect(byName["Beta-bbb"]!.size > byName["Alpha-aaa"]!.size)
     }
+
+    // TC-9
+    @Test("시뮬레이터 기기가 기기별 항목으로 펼쳐진다")
+    func expandsSimulatorDevicesPerDevice() async throws {
+        let home = try makeFakeHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+
+        let devices = home.appending(path: "Library/Developer/CoreSimulator/Devices")
+        try write(Self.oneMB, at: devices.appending(path: "AAAA-1111/data/app.bin"))
+        try write(2 * Self.oneMB, at: devices.appending(path: "BBBB-2222/data/app.bin"))
+
+        let items = await XcodeScanner(home: home).scan()
+        let byName = Dictionary(uniqueKeysWithValues: items.map { ($0.displayName, $0) })
+
+        #expect(items.count == 2)
+        #expect(byName["AAAA-1111"]?.size ?? 0 >= Int64(Self.oneMB))
+        #expect(byName["BBBB-2222"]?.size ?? 0 >= Int64(2 * Self.oneMB))
+    }
+
+    // TC-10
+    @Test("시뮬레이터 기기는 caution이라 기본 선택되지 않는다")
+    func simulatorDevicesAreCautionAndUnchecked() async throws {
+        let home = try makeFakeHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+
+        try write(Self.oneMB, at: home.appending(
+            path: "Library/Developer/CoreSimulator/Devices/AAAA-1111/data/app.bin"))
+
+        let items = await XcodeScanner(home: home).scan()
+        #expect(items.count == 1)
+        #expect(items.first?.safety == .caution)
+        #expect(items.first?.isSelectedByDefault == false)
+        #expect(items.first?.detail == "시뮬레이터에 설치한 앱과 설정이 사라집니다")
+    }
+
+    // TC-11
+    @Test("기기 폴더가 비어 있으면 후보로 올리지 않는다")
+    func emptyDevicesYieldNothing() async throws {
+        let home = try makeFakeHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+
+        try FileManager.default.createDirectory(
+            at: home.appending(path: "Library/Developer/CoreSimulator/Devices"),
+            withIntermediateDirectories: true)
+
+        let items = await XcodeScanner(home: home).scan()
+        #expect(items.isEmpty)
+    }
+
+    // TC-12
+    @Test("기기를 추가해도 기존 타깃의 안전 등급이 그대로다")
+    func existingTargetsKeepSafetyAfterDevicesAdded() async throws {
+        let home = try makeFakeHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+
+        try write(Self.oneMB, at: home.appending(
+            path: "Library/Developer/Xcode/DerivedData/App-abc/out.o"))
+        try write(Self.oneMB, at: home.appending(
+            path: "Library/Developer/Xcode/Archives/2026-09-16/App.xcarchive/payload.bin"))
+        try write(Self.oneMB, at: home.appending(
+            path: "Library/Developer/CoreSimulator/Devices/AAAA-1111/data/app.bin"))
+
+        let items = await XcodeScanner(home: home).scan()
+        let safetyByName = Dictionary(uniqueKeysWithValues: items.map { ($0.displayName, $0.safety) })
+
+        #expect(items.count == 3)
+        #expect(safetyByName["App-abc"] == .safe)
+        #expect(safetyByName["2026-09-16"] == .danger)
+        #expect(safetyByName["AAAA-1111"] == .caution)
+    }
 }
