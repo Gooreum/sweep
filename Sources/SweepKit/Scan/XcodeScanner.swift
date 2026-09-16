@@ -47,10 +47,22 @@ public struct XcodeScanner: CleanupScanner {
     /// 실측 1.0초. 1초 안에 끝나므로 중간 보고 없이 완료 시점만 알린다.
     public var progressWeight: Double { 1.0 }
 
+    /// 펼치기는 디렉토리만 대상으로 한다.
+    ///
+    /// `Devices` 아래에는 기기 폴더와 함께 `device_set.plist`가 있다. 기기 목록 인덱스라
+    /// 지우면 CoreSimulator가 기기를 잃는다. 12KB뿐이라 목록 맨 아래에 묻히지만
+    /// "전체 선택 → 삭제"에는 함께 딸려간다. `expandsChildren`이 뜻하는 것은
+    /// 프로젝트별·기기별로 펼치는 것이므로 파일은 애초에 후보가 아니다.
+    private func expandedChildren(of root: URL) -> [URL] {
+        children(of: root).filter { url in
+            (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
+        }
+    }
+
     public func scan() async -> [CleanupItem] {
         Self.targets.flatMap { target -> [CleanupItem] in
             let root = home.appending(path: target.path)
-            let urls = target.expandsChildren ? children(of: root) : [root]
+            let urls = target.expandsChildren ? expandedChildren(of: root) : [root]
             return urls.compactMap { url in
                 let size = DirectorySize.bytes(at: url)
                 // 크기 0은 대상이 없거나 비어 있다는 뜻이다. 목록에 올릴 이유가 없다.

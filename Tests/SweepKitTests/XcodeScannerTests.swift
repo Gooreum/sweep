@@ -172,6 +172,38 @@ struct XcodeScannerTests {
         #expect(items.isEmpty)
     }
 
+    // TC-13
+    @Test("기기 목록 인덱스(device_set.plist)는 후보로 올리지 않는다")
+    func excludesDeviceSetPlist() async throws {
+        let home = try makeFakeHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+
+        let devices = home.appending(path: "Library/Developer/CoreSimulator/Devices")
+        try write(Self.oneMB, at: devices.appending(path: "AAAA-1111/data/app.bin"))
+        // 기기 폴더와 나란히 놓이는 파일. 지우면 CoreSimulator가 기기 목록을 잃는다.
+        try write(12 * 1024, at: devices.appending(path: "device_set.plist"))
+
+        let items = await XcodeScanner(home: home).scan()
+
+        #expect(items.count == 1)
+        #expect(items.first?.displayName == "AAAA-1111")
+        #expect(!items.contains { $0.url.lastPathComponent == "device_set.plist" })
+    }
+
+    // TC-14
+    @Test("펼치지 않는 타깃은 디렉토리 필터의 영향을 받지 않는다")
+    func nonExpandingTargetsUnaffectedByDirectoryFilter() async throws {
+        let home = try makeFakeHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+
+        try write(Self.oneMB, at: home.appending(
+            path: "Library/Developer/DVTDownloads/component.dmg"))
+
+        let items = await XcodeScanner(home: home).scan()
+        #expect(items.count == 1)
+        #expect(items.first?.displayName == "DVTDownloads")
+    }
+
     // TC-12
     @Test("기기를 추가해도 기존 타깃의 안전 등급이 그대로다")
     func existingTargetsKeepSafetyAfterDevicesAdded() async throws {
