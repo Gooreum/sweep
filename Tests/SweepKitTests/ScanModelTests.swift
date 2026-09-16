@@ -646,4 +646,63 @@ struct ScanModelTests {
         // 실패한 것까지 넘기면 다른 화면에서 멀쩡한 파일이 목록에서 사라진다
         #expect(notified == [ok.url])
     }
+
+    // MARK: - 검색
+
+    @MainActor
+    private func modelWithItems(_ items: [CleanupItem]) async -> ScanModel {
+        let model = ScanModel(scan: stream([items]))
+        await model.scan()
+        return model
+    }
+
+    @Test("검색어가 비면 전부 보인다")
+    @MainActor
+    func emptyQueryShowsEverything() async {
+        let model = await modelWithItems([item("a.bin"), item("b.bin")])
+        #expect(model.visibleItems.count == 2)
+    }
+
+    @Test("이름으로 좁힌다")
+    @MainActor
+    func filtersByName() async {
+        let model = await modelWithItems([item("Xcode.xip"), item("영상.mov")])
+        model.query = "xcode"
+        // 대소문자를 가리지 않는다 — 파일 이름은 사용자가 외워 치는 것이 아니다.
+        #expect(model.visibleItems.map(\.displayName) == ["Xcode.xip"])
+    }
+
+    @Test("경로로도 좁힌다")
+    @MainActor
+    func filtersByPath() async {
+        let model = await modelWithItems([item("a.bin"), item("b.bin")])
+        model.query = "/private/tmp"
+        // 이름만 보면 `~/Library/Caches/Google`을 "Caches"로 못 찾는다.
+        #expect(model.visibleItems.count == 2)
+    }
+
+    @Test("검색은 선택을 건드리지 않는다")
+    @MainActor
+    func searchKeepsSelection() async {
+        let model = await modelWithItems([item("Xcode.xip"), item("영상.mov")])
+        let before = model.selection
+
+        model.query = "xcode"
+        // 가려진 항목이 선택에서 빠지면 검색어를 지우는 순간 골라 둔 것이
+        // 사라진 것처럼 보이고, 독의 합계와 목록이 어긋난다.
+        #expect(model.selection == before)
+        #expect(model.selectedItems.count == 2)
+    }
+
+    @Test("검색어로 묶음도 함께 좁혀진다")
+    @MainActor
+    func searchNarrowsGroups() async {
+        let model = await modelWithItems([
+            item("Xcode.xip", category: .xcode),
+            item("cache.bin", category: .devCache),
+        ])
+        model.query = "xcode"
+        #expect(model.groups.count == 1)
+        #expect(model.safetyGroups.flatMap(\.items).count == 1)
+    }
 }

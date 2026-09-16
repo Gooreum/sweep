@@ -23,6 +23,33 @@ struct ContentView: View {
                     .foregroundStyle(Theme.textPrimary)
             }
 
+            // 목록을 좁히는 검색. 결과가 수십 개일 때 스크롤로 찾는 것보다 빠르다.
+            ToolbarItem(placement: .principal) {
+                if let model = app.currentModel, !model.items.isEmpty {
+                    HStack(spacing: 6) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 11))
+                            .foregroundStyle(Theme.textTertiary)
+                        TextField("이름·경로로 찾기", text: Binding(
+                            get: { model.query },
+                            set: { model.query = $0 }))
+                            .textFieldStyle(.plain)
+                            .font(Theme.bodyText)
+                        if !model.query.isEmpty {
+                            Button { model.query = "" } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(Theme.textTertiary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    .frame(width: 260, height: 26)
+                    .background(Color.white.opacity(0.07),
+                                in: RoundedRectangle(cornerRadius: Theme.rowCornerRadius))
+                }
+            }
+
             ToolbarItemGroup(placement: .primaryAction) {
                 // 한 번에 고르는 가장 흔한 경우. 메뉴로 접어 두면 두 번 눌러야 한다.
                 Button("안전 항목 선택") { app.currentModel?.apply(.safeOnly) }

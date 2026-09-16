@@ -2,11 +2,8 @@
   "phase": "done",
   "spec_approved": true,
   "adapter": "macos-swiftui",
-  "current_step": 6,
-  "blockers": [
-    "검색 필드(ScanModel 필터 필요)",
-    "사이드바 폭 220→212"
-  ],
+  "current_step": 7,
+  "blockers": [],
   "spec_version": "v3",
   "stop": "success",
   "note": "핸드오프(초점 스택) 리디자인. 샘플 = 검토 목록 화면",

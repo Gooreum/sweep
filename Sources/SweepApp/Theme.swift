@@ -107,7 +107,9 @@ enum Theme {
 
     static let windowWidth: CGFloat = 1160
     static let windowHeight: CGFloat = 680
-    static let sidebarWidth: CGFloat = 220
+    /// 212. 우측 선택 독(252)이 생기면서 본문에 남는 폭이 줄었다 —
+    /// 사이드바에서 8을 덜어 목록 이름이 잘리는 지점을 뒤로 민다.
+    static let sidebarWidth: CGFloat = 212
 
     /// macOS 사이드바는 포인터 조작이라 iOS의 44pt 터치타겟 규칙이 없다.
     /// Finder·Xcode·Raycast가 모두 28~32 구간이다.
