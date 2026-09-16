@@ -433,4 +433,81 @@ struct AppModelTests {
         }
         #expect(badges[.smartScan] == mixed.formattedTotalSize)
     }
+
+    // MARK: - 허락이 바뀌어도 보던 자리는 남는다
+
+    /// 진짜 홈과 `.standard`를 건드리지 않는 허락 저장소 하나.
+    private func makeGrant() throws
+        -> (registry: FolderAccess.Registry, grantable: FolderAccess.Grantable,
+            cleanup: () -> Void) {
+        let base = URL(filePath: NSTemporaryDirectory())
+            .appending(path: "sweep-appmodel-\(UUID().uuidString)")
+        let folder = base.appending(path: "Library")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let suite = "sweep-test-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        return (FolderAccess.Registry(defaults: defaults),
+                .init(folder: folder, label: "~/Library", purpose: "테스트용"),
+                {
+                    defaults.removePersistentDomain(forName: suite)
+                    try? FileManager.default.removeItem(at: base)
+                })
+    }
+
+    // TC-1
+    @Test("폴더를 허락해도 디스크 맵 모델은 그대로다")
+    func grantKeepsDiskMapModel() throws {
+        let (registry, grantable, cleanup) = try makeGrant()
+        defer { cleanup() }
+        let app = AppModel(folderAccess: registry, needsFolderAccess: true)
+        let before = app.diskMap()
+
+        try app.grantFolderAccess(grantable.folder, as: grantable)
+
+        // 버리면 화면이 "시작 지점을 고르세요"로 되돌아간다 —
+        // 디스크 맵 안에서 허락하는 순간 보던 자리가 날아간다는 뜻이다.
+        #expect(app.diskMap() === before)
+    }
+
+    // TC-2
+    @Test("허락하면 화면이 받을 신호가 올라간다")
+    func grantRaisesCount() throws {
+        let (registry, grantable, cleanup) = try makeGrant()
+        defer { cleanup() }
+        let app = AppModel(folderAccess: registry, needsFolderAccess: true)
+        #expect(app.grantedFolderCount == 0)
+
+        try app.grantFolderAccess(grantable.folder, as: grantable)
+
+        // 화면은 이 값이 바뀌는 것을 보고 제자리에서 다시 읽는다.
+        #expect(app.grantedFolderCount == 1)
+    }
+
+    // TC-3
+    @Test("허락하면 스캔 결과는 여전히 버린다")
+    func grantStillForgetsScans() throws {
+        let (registry, grantable, cleanup) = try makeGrant()
+        defer { cleanup() }
+        let app = AppModel(folderAccess: registry, needsFolderAccess: true)
+        let before = app.model(for: .junk)
+
+        try app.grantFolderAccess(grantable.folder, as: grantable)
+
+        // 훑을 곳이 달라졌으니 스캔 결과는 낡았다. 디스크 맵과 사정이 다르다.
+        #expect(app.model(for: .junk) !== before)
+    }
+
+    // TC-4
+    @Test("허락을 해제해도 디스크 맵 모델은 그대로다")
+    func revokeKeepsDiskMapModel() throws {
+        let (registry, grantable, cleanup) = try makeGrant()
+        defer { cleanup() }
+        let app = AppModel(folderAccess: registry, needsFolderAccess: true)
+        try app.grantFolderAccess(grantable.folder, as: grantable)
+        let before = app.diskMap()
+
+        app.revokeFolderAccess(grantable)
+
+        #expect(app.diskMap() === before)
+    }
 }
