@@ -399,7 +399,15 @@ extension URL {
         return Array(mine.prefix(theirs.count)) == theirs
     }
 
+    /// 자신이거나 하위인가. **경로 구성요소로 비교한다.**
+    ///
+    /// `URL ==`를 쓰면 안 된다 — 보안 범위 북마크에서 푼 URL은 디렉토리라 끝에 `/`가
+    /// 붙어 나오고, `standardizedFileURL`은 그것을 지우지 않는다. 같은 곳을 가리켜도
+    /// 값이 달라져서, 사용자가 허락한 폴더를 스캐너와 관문이 못 알아봤다.
     func isSameOrDescendant(of ancestor: URL) -> Bool {
-        standardizedFileURL == ancestor.standardizedFileURL || isDescendant(of: ancestor)
+        let mine = standardizedFileURL.pathComponents
+        let theirs = ancestor.standardizedFileURL.pathComponents
+        guard mine.count >= theirs.count else { return false }
+        return Array(mine.prefix(theirs.count)) == theirs
     }
 }

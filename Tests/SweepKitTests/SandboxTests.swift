@@ -80,6 +80,33 @@ struct SandboxTests {
         }
     }
 
+    @Test("끝에 슬래시가 붙은 허락 경로도 같은 폴더로 본다")
+    func trailingSlashGrantIsRecognized() {
+        let home = Sandbox.userHome
+        // 보안 범위 북마크에서 푼 URL은 디렉토리라 끝에 `/`가 붙어 나온다.
+        // 예전에는 `URL ==` 비교라 같은 폴더인데도 허락을 못 알아봤다.
+        let granted = URL(filePath: home.appending(path: "Library").path + "/")
+
+        let paths = ProtectedPaths.roots(sandboxed: true, granted: [granted]).map(\.path)
+        #expect(paths.contains(home.appending(path: "Library/Caches").path))
+        #expect(paths.contains(home.appending(path: "Library/Developer").path))
+
+        #expect(ProtectedPaths.appSupportReadable(sandboxed: true, granted: [granted]))
+
+        let junk = Feature.junk.scanners(sandboxed: true, granted: [granted]).map(\.category)
+        #expect(junk == [.xcode, .devCache, .appCache, .staleCache])
+    }
+
+    @Test("허락한 폴더 자신도 열린 것으로 본다")
+    func grantedFolderItselfCounts() {
+        let developer = Sandbox.userHome.appending(path: "Library/Developer")
+        // 정확히 그 폴더를 허락하면 그 루트가 켜져야 한다. 하위만 인정하면
+        // `~/Library/Developer`를 열어 준 사용자에게 아무것도 안 열린다.
+        #expect(developer.isSameOrDescendant(of: developer))
+        #expect(developer.isSameOrDescendant(of: URL(filePath: developer.path + "/")))
+        #expect(!developer.isSameOrDescendant(of: developer.appending(path: "Xcode")))
+    }
+
     @Test("앱 캐시는 Application Support가 허락 범위에 들어와야 열린다")
     func appCacheNeedsApplicationSupportGranted() {
         let home = Sandbox.userHome
