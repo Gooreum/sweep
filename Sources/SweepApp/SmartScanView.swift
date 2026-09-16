@@ -21,6 +21,9 @@ struct SmartScanView: View {
     /// 허락한 폴더 수가 바뀔 때만 다시 읽는다.
     @State private var scopes = CleanupScope.all
 
+    /// 틀린 폴더를 골랐을 때 알려줄 말. nil이면 닫혀 있다.
+    @State private var grantFailure: String?
+
     var body: some View {
         Group {
             switch model.phase {
@@ -156,9 +159,70 @@ struct SmartScanView: View {
                     Divider().overlay(Theme.border).padding(.leading, 52)
                 }
             }
+
+            folderAccessRows
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+        .alert("다른 폴더를 골랐습니다",
+               isPresented: Binding(get: { grantFailure != nil },
+                                    set: { if !$0 { grantFailure = nil } })) {
+            Button("확인") { grantFailure = nil }
+        } message: {
+            Text(grantFailure ?? "")
+        }
+    }
+
+    /// 폴더를 더 열거나 거두는 줄. **샌드박스에서만 보인다.**
+    ///
+    /// 이 허락은 시스템 설정 어디에도 나타나지 않는다. 앱이 입구를 주지 않으면
+    /// 사용자는 마음을 바꿀 방법이 없다 — 여기가 그 유일한 곳이다.
+    ///
+    /// 얼마나 더 찾을 수 있는지(용량)는 보여줄 수 없다. 크기를 재려면 그 폴더를
+    /// 읽어야 하는데 허락 전에는 읽지 못한다. 대신 무엇이 있는지를 말한다.
+    @ViewBuilder
+    private var folderAccessRows: some View {
+        if Sandbox.isActive {
+            Divider().overlay(Theme.border)
+
+            ForEach(FolderAccess.grantables) { grantable in
+                let granted = app.isGranted(grantable)
+
+                HStack(spacing: 12) {
+                    Image(systemName: granted ? "folder.fill" : "plus.circle")
+                        .font(.system(size: Theme.Icon.small))
+                        .foregroundStyle(granted ? Theme.accentText : Theme.textSecondary)
+                        .frame(width: Theme.Icon.medium)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(grantable.label)
+                            .font(Theme.bodyMono)
+                            .foregroundStyle(Theme.textPrimary)
+                        Text(grantable.purpose)
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                    Spacer(minLength: 12)
+
+                    if granted {
+                        Button("해제") { app.revokeFolderAccess(grantable) }
+                    } else {
+                        Button("열기…") { grant(grantable) }
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+            }
+        }
+    }
+
+    private func grant(_ grantable: FolderAccess.Grantable) {
+        guard let picked = FolderPicker.ask(for: grantable) else { return }
+        do {
+            try app.grantFolderAccess(picked, as: grantable)
+        } catch {
+            grantFailure = error.message
+        }
     }
 
     private func scanning(percent: Int, remaining: Int?) -> some View {
