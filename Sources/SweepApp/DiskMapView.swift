@@ -254,7 +254,11 @@ struct DiskMapView: View {
             }
             Divider()
             // 바로 지우지 않는다. 확인 대화에서 경로와 크기를 다시 보여준다.
+            //
+            // 옆의 휴지통 아이콘과 **같은 조건**으로 잠근다. 예전엔 메뉴에만 검사가
+            // 없어서, 아이콘은 비활성인데 메뉴에서는 눌리고 조용히 실패했다.
             Button("휴지통으로 이동", role: .destructive) { pendingDelete = node }
+                .disabled(veto != nil)
         }
         .help(node.url.path)
     }
