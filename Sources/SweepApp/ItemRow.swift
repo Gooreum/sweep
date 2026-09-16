@@ -1,80 +1,91 @@
 import SwiftUI
 import SweepKit
 
-/// 안전도를 색으로 구분해 보여주는 작은 배지.
-/// 위험한 항목이 목록에서 눈에 띄어야 실수로 지우지 않는다.
-struct SafetyBadge: View {
-    let level: SafetyLevel
-
-    var body: some View {
-        Text(level.displayName)
-            .font(Theme.caption.weight(.semibold))
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(level.tint.opacity(0.18), in: Capsule())
-            .foregroundStyle(level.tint)
-    }
-}
-
 extension SafetyLevel {
-    /// 신호등과 같은 색 배치. 별도 학습 없이 위험도를 읽을 수 있다.
+
+    /// 안전도를 나타내는 아이콘.
+    ///
+    /// **안전에는 색을 쓰지 않는다.** 안전이 기본값이라 목록 대부분이 안전인데,
+    /// 거기에 초록 알약을 붙이면 화면이 통째로 색으로 덮여 정작 위험한 것이 묻힌다.
+    /// 예전 `SafetyBadge`가 그랬다.
+    var symbolName: String {
+        switch self {
+        case .safe: "circle"
+        case .caution: "exclamationmark.triangle"
+        case .danger: "lock.fill"
+        }
+    }
+
+    /// 아이콘과 설명글에 쓰는 색. 안전은 무채색이다.
+    ///
+    /// 값은 `Theme`에 있다 — 화면에서 hex를 직접 쓰지 않는다.
     var tint: Color {
         switch self {
-        case .safe: .green
-        case .caution: .orange
-        case .danger: .red
+        case .safe: Theme.textTertiary
+        case .caution: Theme.cautionText
+        case .danger: Theme.dangerText
         }
     }
 }
 
-/// 정리 후보 한 줄. 경고 바 · 체크박스 · (이름 + 배지) · 설명 · 크기.
+/// 정리 후보 한 줄. 체크박스 · 안전도 아이콘 · (이름 + 설명) · 크기.
+///
+/// 높이 56. 예전에는 이름 옆에 색 배지가, 왼쪽에 3pt 경고 바가 있었다.
+/// 배지를 아이콘 한 칸으로 바꾸고 경고 바를 없애 이름이 시작하는 x가 모든 행에서 같아졌다.
 struct ItemRow: View {
     let item: CleanupItem
     @Binding var isOn: Bool
 
-    var body: some View {
-        HStack(spacing: 10) {
-            // 되돌릴 수 없는 항목은 훑어보다가도 걸리도록 좌측에 색 바를 둔다
-            RoundedRectangle(cornerRadius: 1.5)
-                .fill(item.safety.needsWarningBar ? item.safety.tint : .clear)
-                .frame(width: 3)
+    /// 되돌릴 수 없는 항목은 **고를 수 없다.** 실수로 지울 여지를 남기지 않는다.
+    private var isLocked: Bool { item.safety == .danger }
 
+    var body: some View {
+        HStack(spacing: 14) {
             Toggle("", isOn: $isOn)
                 .toggleStyle(.checkbox)
                 .labelsHidden()
+                .disabled(isLocked)
 
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(item.displayName)
-                        .font(Theme.bodyText)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                    // 배지는 이름 옆에 둔다. 크기 옆에 두면 숫자 열 정렬을 방해한다.
-                    SafetyBadge(level: item.safety)
-                }
-                // 설명이 없는 항목까지 빈 줄을 만들면 목록 높이가 들쭉날쭉해진다
+            // 등급마다 도형이 달라도 이름 열이 흔들리지 않게 칸을 고정한다.
+            Image(systemName: item.safety.symbolName)
+                .font(.system(size: Theme.safetyIconSlot))
+                .foregroundStyle(item.safety.tint)
+                .frame(width: Theme.safetyIconSlot + 4)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(item.displayName)
+                    .font(Theme.bodyText)
+                    .foregroundStyle(Theme.textPrimary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+
+                // 설명이 없는 항목까지 빈 줄을 만들면 목록 높이가 들쭉날쭉해진다.
                 if !item.detail.isEmpty {
                     Text(item.detail)
                         .font(Theme.caption)
-                        .foregroundStyle(.secondary)
+                        // 위험도가 여기서 한 번 더 읽힌다 — 아이콘만으로는 작다.
+                        .foregroundStyle(item.safety == .safe
+                                         ? Theme.textSecondary : item.safety.tint)
                         .lineLimit(1)
                 }
             }
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 12)
 
-            // 우측은 크기 열만 남겨 값끼리 비교할 수 있게 한다
+            // 우측은 크기 열만 남겨 값끼리 비교할 수 있게 한다.
+            // 고른 것만 또렷하게 — 훑을 때 무엇을 담았는지가 숫자로 보인다.
             Text(item.formattedSize)
-                .font(Theme.bodyText.monospacedDigit())
-                .foregroundStyle(isOn ? .primary : .secondary)
+                .font(Theme.bodyMono)
+                .foregroundStyle(isOn ? Theme.textPrimary : Theme.textTertiary)
                 .frame(width: 88, alignment: .trailing)
         }
-        .padding(.vertical, 2)
-        // 불투명 표면을 쓴다. 반투명 하늘색을 다크 배경에 깔면 탁한 회색이 되어
-        // 이 행 위의 모든 글자가 1.54~2.85:1로 무너졌다 (실측).
-        .listRowBackground(isOn ? Theme.surfaceRaised : Color.clear)
+        .padding(.horizontal, 24)
+        .frame(height: Theme.rowHeightComfortable)
+        // 면을 통째로 칠하지 않고 9%만 얹는다. 예전에는 불투명 `surfaceRaised`였는데,
+        // 목록의 절반이 선택된 상태에서 화면이 두 덩어리로 갈려 보였다.
+        .background(isOn ? Theme.rowSelected : Color.clear)
         .contentShape(Rectangle())
-        .onTapGesture { isOn.toggle() }
-        .help(item.url.path)
+        .onTapGesture { if !isLocked { isOn.toggle() } }
+        .help(isLocked ? "되돌릴 수 없어 선택할 수 없습니다 — \(item.url.path)" : item.url.path)
     }
 }

@@ -1,9 +1,11 @@
 {
-  "phase": "done",
+  "phase": "bulk",
   "spec_approved": true,
   "adapter": "macos-swiftui",
-  "current_step": 4,
+  "current_step": 3,
   "blockers": [],
-  "spec_version": "v2",
-  "stop": "success"
+  "spec_version": "v3",
+  "stop": null,
+  "note": "핸드오프(초점 스택) 리디자인. 샘플 = 검토 목록 화면",
+  "sample_approved": true
 }

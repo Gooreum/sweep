@@ -125,6 +125,24 @@ public final class ScanModel {
         return picked == group.items.count ? .all : .partial
     }
 
+    /// 접어 둔 묶음.
+    ///
+    /// 뷰가 들면 탭을 옮겼다 돌아올 때 초기화된다 — 스무 줄을 도로 펼쳐 놓고
+    /// 다시 접게 만든다. 선택과 같은 수명을 가져야 하므로 모델이 소유한다.
+    public private(set) var collapsedGroups: Set<ScanCategory> = []
+
+    public func isCollapsed(_ group: ScanGroup) -> Bool {
+        collapsedGroups.contains(group.category)
+    }
+
+    public func toggleCollapsed(_ group: ScanGroup) {
+        if collapsedGroups.contains(group.category) {
+            collapsedGroups.remove(group.category)
+        } else {
+            collapsedGroups.insert(group.category)
+        }
+    }
+
     /// 부분 선택이면 전체 선택으로 올린다. 이미 전체면 해제한다.
     public func toggleAll(in group: ScanGroup) {
         let urls = group.items.map(\.url)

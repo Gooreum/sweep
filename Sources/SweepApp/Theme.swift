@@ -62,6 +62,22 @@ enum Theme {
     /// 같은 강조색이라도 배경으로 쓸 때와 전경으로 쓸 때 필요한 명도가 반대다.
     static let accentText = adaptive(dark: 0x6AA9FF, light: 0x0B52D9)
 
+    // MARK: - 안전도 (v3 — 배지를 버리고 아이콘·글씨 색으로만 쓴다)
+
+    /// 주의. 기존 `.orange`의 형광기를 뺀 흙빛.
+    ///
+    /// 핸드오프 원안은 `#B4894E`였는데 **`surfaceRaised` 위 3.82:1로 미달**이었다
+    /// (선택된 행이 그 면 위에 그려지고, 행 설명글이 이 색으로 칠해진다).
+    /// 색상각과 채도는 그대로 두고 명도만 올려 4.5:1을 넘긴 값이다 — 실측 4.57:1.
+    static let cautionText = adaptive(dark: 0xBE9965, light: 0x8A5F1E)
+
+    /// 위험. 같은 이유로 핸드오프 `#B2685A`(2.89:1)를 올렸다 — 실측 4.51:1.
+    static let dangerText = adaptive(dark: 0xC79187, light: 0x9A3B2A)
+
+    /// 선택된 행. 면을 `accent`로 채우지 않고 9%만 얹는다 —
+    /// 목록 전체가 파랗게 덮이면 정작 무엇을 골랐는지가 안 보인다.
+    static let rowSelected = accent.opacity(0.09)
+
     /// 기능 색 — **글씨·아이콘용**. 값과 대비 검증은 `Feature.tintHex`(SweepKit)에 있다.
     /// 고유색이 없는 기능(스마트 스캔)은 글씨용 강조색으로 떨어진다.
     static func tint(_ feature: Feature) -> Color {
@@ -106,6 +122,21 @@ enum Theme {
 
     static let panelWidth: CGFloat = 400
     static let panelPadding: CGFloat = 16
+
+    // MARK: - 검토 목록 (v3)
+
+    /// 우측 선택 독. 하단 액션 바를 대신한다 — 선택 요약·안전도 분포·주 동작이 한곳에.
+    static let dockWidth: CGFloat = 252
+
+    /// 목록 행. 기본은 여유롭게, 촘촘하게는 설정으로 고를 수 있다.
+    static let rowHeightComfortable: CGFloat = 56
+    static let rowHeightCompact: CGFloat = 46
+
+    /// 섹션 헤더. 스크롤해도 위에 붙어 있어 지금 어느 묶음인지 잃지 않는다.
+    static let sectionHeaderHeight: CGFloat = 34
+
+    /// 안전도 아이콘이 차지하는 칸. 등급마다 도형이 달라도 이름 열이 흔들리지 않게 고정한다.
+    static let safetyIconSlot: CGFloat = 11
 
     /// 아이콘 크기는 폰트 스케일과 분리한다.
     enum Icon {

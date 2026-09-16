@@ -8,17 +8,36 @@ struct FeatureScreen: View {
     let feature: Feature
     @Bindable var model: ScanModel
 
+    /// 확인 시트를 띄울지. 목록에서 바로 지우지 않는다 —
+    /// 되돌릴 수 없는 항목이 몇 개 빠졌는지 한 번 더 보여줘야 한다.
+    @State private var showsConfirm = false
+
     var body: some View {
-        VStack(spacing: 0) {
+        HStack(spacing: 0) {
             stage
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            // 결과 목록일 때만 하단 바가 있다. 시작·검색 중에는 고를 것이 없다.
-            if case .results = model.phase, !model.items.isEmpty {
+            // 결과 목록일 때만 독이 붙는다. 시작·검색 중에는 고를 것이 없고,
+            // 완료 화면에서는 같은 항목을 다시 정리할 수 있게 되므로 내린다.
+            if showsDock {
                 Divider()
-                actionBar
+                SelectionDock(model: model) { showsConfirm = true }
+                    .background(Theme.surfaceSunken)
             }
         }
+        .sheet(isPresented: $showsConfirm) {
+            CleanupConfirmSheet(model: model) {
+                showsConfirm = false
+                Task { await model.removeSelected() }
+            } onCancel: {
+                showsConfirm = false
+            }
+        }
+    }
+
+    private var showsDock: Bool {
+        if case .results = model.phase { return !model.items.isEmpty }
+        return false
     }
 
     // MARK: - 단계
@@ -128,23 +147,49 @@ struct FeatureScreen: View {
     // MARK: - 결과 목록
 
     private var resultList: some View {
-        List {
-            ForEach(model.groups) { group in
-                Section {
-                    ForEach(group.items) { item in
-                        ItemRow(item: item, isOn: binding(for: item))
+        VStack(spacing: 0) {
+            // 이 화면이 무엇을 보여주는지 한 문장. 목록만 던지면
+            // 무엇을 기준으로 고르라는 것인지가 없다.
+            Text(feature.reviewHint)
+                .font(Theme.bodyText)
+                .foregroundStyle(Theme.textSecondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 14)
+
+            Divider().overlay(Theme.border)
+
+            List {
+                ForEach(model.groups) { group in
+                    Section {
+                        // 접었으면 행을 그리지 않는다. 높이 0으로 숨기면
+                        // 스크롤 길이가 그대로라 접은 보람이 없다.
+                        if !model.isCollapsed(group) {
+                            ForEach(group.items) { item in
+                                ItemRow(item: item, isOn: binding(for: item))
+                                    .listRowInsets(EdgeInsets())
+                                    .listRowSeparator(.hidden)
+                            }
+                        }
+                    } header: {
+                        sectionHeader(group)
                     }
-                } header: {
-                    sectionHeader(group)
                 }
             }
+            .listStyle(.plain)
+            // 아래에 섹션이 더 있다는 유일한 단서
+            .scrollIndicators(.visible)
         }
-        // 아래에 섹션이 더 있다는 유일한 단서
-        .scrollIndicators(.visible)
     }
 
     private func sectionHeader(_ group: ScanGroup) -> some View {
         HStack(spacing: 8) {
+            // 접힘 표시는 caret 하나로 충분하다. 헤더 어디를 눌러도 접힌다.
+            Image(systemName: model.isCollapsed(group) ? "chevron.right" : "chevron.down")
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(Theme.textTertiary)
+                .frame(width: 10)
+
             // SwiftUI Toggle은 부분 선택을 표현하지 못해 버튼으로 그린다
             Button { model.toggleAll(in: group) } label: {
                 let state = model.selectionState(of: group)
@@ -154,63 +199,34 @@ struct FeatureScreen: View {
             .buttonStyle(.plain)
             .help("이 묶음 전체 선택 / 해제")
 
-            Label(group.category.displayName, systemImage: group.category.systemImageName)
-                .font(Theme.bodyText.weight(.medium))
+            // 묶음 이름은 본문보다 작게. 헤더가 행보다 커 보이면 목록이 헤더에 눌린다.
+            Text(group.category.displayName)
+                .font(Theme.caption.weight(.semibold))
+                .kerning(0.4)
+                .foregroundStyle(Theme.textSecondary)
             Text("\(group.items.count)")
+                .font(Theme.captionMono)
                 .foregroundStyle(Theme.textTertiary)
-                .monospacedDigit()
 
             Spacer()
 
             Text(group.formattedTotalSize)
-                .font(Theme.bodyMono)
-                .foregroundStyle(Theme.textSecondary)
+                .font(Theme.captionMono)
+                .foregroundStyle(Theme.textTertiary)
         }
-    }
-
-    // MARK: - 하단 바
-
-    private var actionBar: some View {
-        HStack(spacing: 8) {
-            VStack(alignment: .leading, spacing: 2) {
-                // 얻을 수 있는 양이 먼저다. 선택량만 보이면 6.9GB를 찾아놓고
-                // 111KB만 보이는 상태가 된다.
-                Text(model.formattedTotalSize)
-                    .font(Theme.headlineMono)
-                    .foregroundStyle(Theme.textPrimary)
-                Text("선택됨 \(model.selectedItems.count)/\(model.items.count) · "
-                     + model.formattedSelectedSize)
-                    .font(Theme.captionMono)
-                    .foregroundStyle(Theme.textSecondary)
-            }
-
-            Spacer()
-
-            // 셋을 같은 치수·radius로 맞춘다. 메뉴만 시스템 기본 모양이면
-            // 한 줄에 버튼 스타일이 세 가지가 된다.
-            //
-            // `.borderlessButton`은 커스텀 레이블을 무시하고 셰브론을 왼쪽에
-            // 붙여 버린다. `.button`이라야 `buttonStyle`이 그대로 먹는다.
-            Menu("선택") {
-                ForEach(ScanModel.SelectionPreset.allCases, id: \.self) { preset in
-                    Button(preset.rawValue) { model.apply(preset) }
-                }
-            }
-            .menuStyle(.button)
-            .buttonStyle(SecondaryButtonStyle())
-            .fixedSize()
-
-            Button("다시 검색") { Task { await model.scan() } }
-                .buttonStyle(SecondaryButtonStyle())
-
-            Button("정리") { Task { await model.removeSelected() } }
-                .buttonStyle(PrimaryButtonStyle())
-                .disabled(!model.hasSelection)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 24)
+        .frame(height: Theme.sectionHeaderHeight)
+        .frame(maxWidth: .infinity)
         .background(Theme.surfaceSunken)
+        .contentShape(Rectangle())
+        .onTapGesture { model.toggleCollapsed(group) }
     }
+
+    // 하단 액션 바는 `SelectionDock`이 대신한다.
+    //
+    // 바는 가로로 길어서 "얼마를 골랐나"(요약)와 "무엇을 할 수 있나"(버튼)가
+    // 한 줄에 눌려 들어갔다. 세로 독은 그 둘을 위아래로 벌려 놓는다.
+    // `선택` 프리셋과 `다시 검색`은 툴바로 올라간다(핸드오프 1절).
 
     // MARK: - 거들기
 
