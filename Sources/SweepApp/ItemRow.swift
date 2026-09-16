@@ -36,15 +36,17 @@ struct ItemRow: View {
     let item: CleanupItem
     @Binding var isOn: Bool
 
-    /// 되돌릴 수 없는 항목은 **고를 수 없다.** 실수로 지울 여지를 남기지 않는다.
-    private var isLocked: Bool { item.safety == .danger }
 
     var body: some View {
         HStack(spacing: 14) {
+            // 되돌릴 수 없는 항목도 **고를 수는 있다.**
+            //
+            // 한때 아예 막아 뒀는데, 그러면 진짜로 지우려는 사람이 앱에서 할 방법이
+            // 없어진다 — 심사 제출본을 정리하는 것도 정당한 작업이다.
+            // 실수 방지는 기본 미선택 · 자물쇠 아이콘 · 확인 시트가 맡는다.
             Toggle("", isOn: $isOn)
                 .toggleStyle(.checkbox)
                 .labelsHidden()
-                .disabled(isLocked)
 
             // 등급마다 도형이 달라도 이름 열이 흔들리지 않게 칸을 고정한다.
             Image(systemName: item.safety.symbolName)
@@ -85,7 +87,8 @@ struct ItemRow: View {
         // 목록의 절반이 선택된 상태에서 화면이 두 덩어리로 갈려 보였다.
         .background(isOn ? Theme.rowSelected : Color.clear)
         .contentShape(Rectangle())
-        .onTapGesture { if !isLocked { isOn.toggle() } }
-        .help(isLocked ? "되돌릴 수 없어 선택할 수 없습니다 — \(item.url.path)" : item.url.path)
+        .onTapGesture { isOn.toggle() }
+        .help(item.safety == .danger
+              ? "되돌릴 수 없습니다 — \(item.url.path)" : item.url.path)
     }
 }

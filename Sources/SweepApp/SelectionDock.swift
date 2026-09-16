@@ -90,7 +90,7 @@ extension SafetyLevel {
         switch self {
         case .safe: "다시 만들 수 있음"
         case .caution: "확인 필요"
-        case .danger: "보호됨 · 선택 불가"
+        case .danger: "되돌릴 수 없음"
         }
     }
 }

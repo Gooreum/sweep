@@ -6,16 +6,17 @@ import SweepKit
 /// `.confirmationDialog`을 쓰지 않는다 — 세 줄 요약 블록이 필요하기 때문이다.
 /// 시스템 다이얼로그는 제목과 버튼만 받는다.
 ///
-/// **무엇이 빠졌는지를 여기서 말한다.** 되돌릴 수 없는 항목은 선택 자체가 막혀 있는데,
-/// 목록만 보면 "왜 이건 안 골라지지"로 남는다. 지우기 직전이 그것을 설명할 마지막 자리다.
+/// **되돌릴 수 없는 것이 섞였는지를 여기서 말한다.** 한때 그런 항목은 아예 고를 수
+/// 없게 막아 뒀는데, 그러면 진짜로 지우려는 사람이 앱에서 할 방법이 없어진다.
+/// 막는 대신 **지우기 직전에 몇 개가 섞였는지 세어 보여준다** — 여기가 마지막 자리다.
 struct CleanupConfirmSheet: View {
     @Bindable var model: ScanModel
     let onConfirm: () -> Void
     let onCancel: () -> Void
 
-    /// 선택에서 빠진 보호 항목 수.
-    private var lockedCount: Int {
-        model.items.filter { $0.safety == .danger }.count
+    /// **고른 것 중** 되돌릴 수 없는 항목 수. 목록 전체가 아니라 선택분을 센다.
+    private var riskyCount: Int {
+        model.selectedItems.filter { $0.safety == .danger }.count
     }
 
     var body: some View {
@@ -49,10 +50,10 @@ struct CleanupConfirmSheet: View {
         .background(Theme.surfaceRaised)
     }
 
-    /// 보호 항목이 있을 때만 그것을 먼저 말한다. 없으면 군더더기가 된다.
+    /// 위험한 것이 섞였을 때만 그것을 먼저 말한다. 없으면 군더더기가 된다.
     private var bodyText: String {
-        lockedCount > 0
-            ? "되돌릴 수 없는 항목 \(lockedCount)개는 선택에서 빠져 있습니다. "
+        riskyCount > 0
+            ? "이 중 \(riskyCount)개는 되돌릴 수 없습니다 — 다시 만들려면 처음부터 받아야 합니다. "
                 + "나머지는 휴지통에서 30일간 복구할 수 있습니다."
             : "휴지통에서 30일간 복구할 수 있습니다."
     }
@@ -61,8 +62,8 @@ struct CleanupConfirmSheet: View {
         VStack(spacing: 0) {
             row("옮길 항목", "\(model.selectedItems.count)개", tint: Theme.textPrimary)
             row("확보 용량", model.formattedSelectedSize, tint: Theme.accentText)
-            if lockedCount > 0 {
-                row("제외한 보호 항목", "\(lockedCount)개", tint: Theme.textTertiary)
+            if riskyCount > 0 {
+                row("되돌릴 수 없음", "\(riskyCount)개", tint: Theme.dangerText)
             }
         }
         .padding(.horizontal, 14)
