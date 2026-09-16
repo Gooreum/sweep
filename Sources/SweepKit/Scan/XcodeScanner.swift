@@ -25,15 +25,13 @@ public struct XcodeScanner: CleanupScanner {
     private static let targets: [Target] = [
         .init(path: "Library/Developer/Xcode/DerivedData",
               safety: .safe, detail: "빌드하면 다시 생성됩니다", expandsChildren: true),
+        // 이 기계에서는 실측 0B다. 용량을 먹는 dyld 공유 캐시는
+        // `/Library/Developer/CoreSimulator/Caches`(root 소유, 11G)로 옮겨가 홈 쪽은 비어 있다.
+        // 그래도 남겨 둔다 — Xcode 14 이하는 아직 여기에 쌓고, 비어 있으면 size 0으로 걸러진다.
         .init(path: "Library/Developer/CoreSimulator/Caches",
               safety: .safe, detail: "시뮬레이터 캐시입니다", expandsChildren: false),
         .init(path: "Library/Developer/CoreSimulator/Temp",
               safety: .safe, detail: "시뮬레이터 임시 파일입니다", expandsChildren: false),
-        // 기기 하나가 2~3GB다. 통째로 묶으면 무엇을 지우는지 알 수 없어 기기별로 펼친다.
-        // 지우면 그 시뮬레이터에 설치한 앱과 설정이 사라진다. 기기 자체는 Xcode가 다시 만든다.
-        .init(path: "Library/Developer/CoreSimulator/Devices",
-              safety: .caution, detail: "시뮬레이터에 설치한 앱과 설정이 사라집니다",
-              expandsChildren: true),
         .init(path: "Library/Developer/Xcode/iOS DeviceSupport",
               safety: .caution, detail: "기기를 다시 연결하면 내려받습니다", expandsChildren: true),
         .init(path: "Library/Developer/XCTestDevices",
@@ -60,6 +58,10 @@ public struct XcodeScanner: CleanupScanner {
     }
 
     public func scan() async -> [CleanupItem] {
+        targetItems() + simulatorDeviceItems()
+    }
+
+    private func targetItems() -> [CleanupItem] {
         Self.targets.flatMap { target -> [CleanupItem] in
             let root = home.appending(path: target.path)
             let urls = target.expandsChildren ? expandedChildren(of: root) : [root]
@@ -71,5 +73,59 @@ public struct XcodeScanner: CleanupScanner {
                                    safety: target.safety, detail: target.detail)
             }
         }
+    }
+
+    /// 시뮬레이터 기기를 하나씩 후보로 올린다. 기기 하나가 2~3GB고 여러 대라
+    /// 한 덩어리로 보여주면 무엇을 버리는지 고를 수 없다.
+    ///
+    /// `Target`에 넣지 않고 따로 두는 이유는 기기에만 필요한 규칙이 둘 있어서다.
+    ///
+    /// 하나는 **부팅 중인 기기를 빼는 것**이다. `Remover`는 휴지통으로 옮기는데(이름 바꾸기)
+    /// 그래서 오류가 나지 않는다. 그런데 CoreSimulator는 옛 경로의 파일 기술자를 계속
+    /// 붙들고 있어 시뮬레이터만 깨지고, 용량은 휴지통을 비우기 전까지 회수되지 않는다.
+    /// 실패로 보고되지 않으니 안전 등급 배지로는 막을 수 없다 — 목록에서 빼야 한다.
+    ///
+    /// 다른 하나는 **이름을 보여주는 것**이다. 폴더 이름이 UUID라 그것만으로는
+    /// 어느 기기인지 알 수 없다.
+    ///
+    /// `simctl`은 부르지 않는다. 샌드박스에서 프로세스를 띄울 수 없고, 필요한 값은
+    /// 전부 기기 폴더 안 `device.plist`에 있다.
+    private func simulatorDeviceItems() -> [CleanupItem] {
+        let devices = home.appending(path: "Library/Developer/CoreSimulator/Devices")
+        return expandedChildren(of: devices).compactMap { url in
+            // `device.plist`가 없으면 기기가 아니다. `device_set.plist`(기기 목록 인덱스)도
+            // 파일이라 `expandedChildren`에서 이미 빠지지만, 여기서 한 번 더 걸러진다.
+            guard let device = Self.device(at: url), device.state == Self.shutdownState
+            else { return nil }
+
+            let size = DirectorySize.bytes(at: url)
+            guard size > 0 else { return nil }
+
+            return CleanupItem(url: url, size: size, category: .xcode,
+                               safety: .caution,
+                               detail: "\(device.name) · \(device.runtime) — "
+                                     + "설치한 앱과 설정이 사라집니다")
+        }
+    }
+
+    /// Shutdown. 2(Booting)·3(Booted)·4(Shutting Down)은 쓰는 중이라 건드리지 않는다.
+    private static let shutdownState = 1
+
+    private static func device(at url: URL) -> (name: String, runtime: String, state: Int)? {
+        guard let data = try? Data(contentsOf: url.appending(path: "device.plist")),
+              let plist = try? PropertyListSerialization.propertyList(from: data, format: nil)
+                  as? [String: Any],
+              let name = plist["name"] as? String,
+              let state = plist["state"] as? Int
+        else { return nil }
+        return (name, Self.shortRuntime(plist["runtime"] as? String), state)
+    }
+
+    /// `com.apple.CoreSimulator.SimRuntime.iOS-26-2` → `iOS 26.2`
+    private static func shortRuntime(_ identifier: String?) -> String {
+        guard let tail = identifier?.split(separator: ".").last else { return "알 수 없는 런타임" }
+        let parts = tail.split(separator: "-")
+        guard let platform = parts.first, parts.count > 1 else { return String(tail) }
+        return "\(platform) \(parts.dropFirst().joined(separator: "."))"
     }
 }
