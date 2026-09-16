@@ -45,7 +45,7 @@ extension DiskMapRoot {
     public static var all: [DiskMapRoot] {
         roots(home: Sandbox.userHome,
               sandboxed: Sandbox.isActive,
-              developer: DeveloperAccess.shared.url)
+              granted: FolderAccess.shared.urls)
     }
 
     /// 홈과 실재 판정을 주입할 수 있게 열어 둔다.
@@ -54,7 +54,7 @@ extension DiskMapRoot {
     /// 실제로 검사를 지워 봐도 TC가 통과했다. 공허한 TC를 남기지 않으려고 뚫는다.
     static func roots(home: URL,
                       sandboxed: Bool = false,
-                      developer: URL? = nil,
+                      granted: [URL] = [],
                       exists: (String) -> Bool
                           = { FileManager.default.fileExists(atPath: $0) })
         -> [DiskMapRoot] {
@@ -77,10 +77,15 @@ extension DiskMapRoot {
             result.append(DiskMapRoot(url: url, label: label, group: group))
         }
 
-        // 샌드박스에서 열 수 있는 곳은 Downloads와, 사용자가 열어 준 개발 폴더뿐이다.
+        // 샌드박스에서 열 수 있는 곳은 Downloads와, 사용자가 열어 준 폴더뿐이다.
         if sandboxed {
             add(DownloadsFolder.url(in: home), "~/Downloads", .home)
-            if let developer { add(developer, "~/Library/Developer", .cleanup) }
+            // 허락받은 폴더를 그대로 시작점으로 둔다. 디스크 맵은 읽기 전용이고
+            // "용량이 어디 갔나"를 보는 화면이라, 지울 수 있는 범위보다 넓어도 된다 —
+            // 타일의 휴지통 버튼은 관문(`ProtectedPaths`)이 따로 잠근다.
+            for url in granted {
+                add(url, cleanupLabel(for: url, home: home), .cleanup)
+            }
             return result
         }
 

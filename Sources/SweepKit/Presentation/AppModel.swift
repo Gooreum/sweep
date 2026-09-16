@@ -17,13 +17,13 @@ public final class AppModel {
     private var diskMapModel: DiskMapModel?
     private let makeDiskMap: @MainActor () -> DiskMapModel
 
-    /// 샌드박스에서 정크 파일은 `~/Library/Developer`를 열어 줘야 동작한다.
+    /// 샌드박스에서 정크 파일은 폴더를 하나라도 열어 줘야 동작한다.
     /// 허락하면 false가 되고, 정크 탭이 허락 화면에서 검색 화면으로 바뀐다.
     ///
-    /// 허락 상태 자체는 `DeveloperAccess`가 들고 있다. 그건 관찰되지 않는 저장소라
+    /// 허락 상태 자체는 `FolderAccess`가 들고 있다. 그건 관찰되지 않는 저장소라
     /// 화면이 바뀌려면 여기 관찰되는 값이 하나 있어야 한다.
-    public private(set) var needsDeveloperAccess: Bool
-    private let developerAccess: DeveloperAccess
+    public private(set) var needsFolderAccess: Bool
+    private let folderAccess: FolderAccess.Registry
 
     /// 기능 모델을 만드는 방법을 주입할 수 있게 열어 둔다.
     ///
@@ -36,19 +36,26 @@ public final class AppModel {
                     = { ScanModel(feature: $0) },
                 makeDiskMap: @escaping @MainActor () -> DiskMapModel
                     = { DiskMapModel() },
-                developerAccess: DeveloperAccess = .shared,
-                needsDeveloperAccess: Bool? = nil) {
+                folderAccess: FolderAccess.Registry = FolderAccess.shared,
+                needsFolderAccess: Bool? = nil) {
         self.makeModel = makeModel
         self.makeDiskMap = makeDiskMap
-        self.developerAccess = developerAccess
-        self.needsDeveloperAccess = needsDeveloperAccess
-            ?? (Sandbox.isActive && !developerAccess.isGranted)
+        self.folderAccess = folderAccess
+        self.needsFolderAccess = needsFolderAccess
+            ?? (Sandbox.isActive && !folderAccess.hasAny)
     }
 
     /// 열기 대화상자에서 고른 폴더로 허락을 받는다. 틀린 폴더면 던지고 상태는 그대로다.
-    public func grantDeveloperAccess(_ picked: URL) throws(DeveloperAccess.Failure) {
-        try developerAccess.grant(picked)
-        needsDeveloperAccess = false
+    public func grantFolderAccess(_ picked: URL,
+                                  as grantable: FolderAccess.Grantable)
+        throws(FolderAccess.Failure) {
+        try folderAccess.grant(picked, as: grantable)
+        needsFolderAccess = false
+    }
+
+    /// 이 폴더가 이미 열려 있는가. 허락 화면이 체크 표시를 그린다.
+    public func isGranted(_ grantable: FolderAccess.Grantable) -> Bool {
+        folderAccess.isGranted(grantable)
     }
 
     /// 기능마다 모델을 하나씩만 만들어 재사용한다.
@@ -125,7 +132,7 @@ public final class AppModel {
     public var currentModel: ScanModel? {
         // 허락 여부를 먼저 읽는다. 스캐너 목록은 관찰되지 않는 저장소를 봐서,
         // 이 값을 읽지 않으면 허락한 뒤에도 메뉴(⌘R)가 잠긴 채로 남는다 — 실측.
-        if selected == .junk && needsDeveloperAccess { return nil }
+        if selected == .junk && needsFolderAccess { return nil }
         return selected.isScannable ? model(for: selected) : nil
     }
 

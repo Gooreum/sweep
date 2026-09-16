@@ -52,29 +52,52 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
     /// 허락은 실행 중에 생긴다. 스캔할 때마다 새로 묻는다 — 모델이 시작할 때 한 번
     /// 받아 두면 허락한 뒤에도 Xcode를 훑지 않는다.
     public var scanners: [any CleanupScanner] {
-        scanners(sandboxed: Sandbox.isActive, developer: DeveloperAccess.shared.url)
+        scanners(sandboxed: Sandbox.isActive, granted: FolderAccess.shared.urls)
     }
 
-    /// 샌드박스에서는 열린 곳만 훑는다: Downloads는 늘, Developer는 사용자가 허락했을 때만.
+    /// 샌드박스에서는 **열린 곳만** 훑는다. Downloads는 entitlement로 늘 열리고,
+    /// 나머지는 사용자가 그 폴더를 허락했을 때만 붙는다.
     /// 막힌 곳을 훑는 스캐너를 남기면 결과 없이 시간만 쓴다(폭주 감지는 3초 표본 수집).
     ///
     /// 정크 파일은 허락 전에는 스캐너가 없다. `isScannable`이 false라 요약 카드와
     /// ⌘R에서 빠지고, 화면은 허락을 받는 입구가 된다.
-    func scanners(sandboxed: Bool, developer: URL?) -> [any CleanupScanner] {
-        let xcode: [any CleanupScanner] = developer == nil ? [] : [XcodeScanner()]
+    ///
+    /// 폭주 임시 파일(`/private/tmp`·임시 컨테이너)은 샌드박스에서 살릴 방법이 없다 —
+    /// 사용자가 열기 대화상자에서 고를 수 있는 경로가 아니다.
+    func scanners(sandboxed: Bool, granted: [URL]) -> [any CleanupScanner] {
+        let home = Sandbox.userHome
+
+        /// 나열한 곳 중 **하나라도** 읽을 수 있으면 스캐너를 붙인다.
+        /// 스캐너가 빈 배열을 내는 것과 아예 안 붙는 것은 다르다 — 안 붙어야 진행률
+        /// 가중치에서도 빠져서, 막힌 곳을 기다리는 시간이 사라진다.
+        /// 여러 곳을 보는 스캐너는 일부만 열려도 붙인다. 못 읽는 쪽은 크기 0으로 걸러진다.
+        func ifReadable(_ relatives: [String],
+                        _ make: () -> any CleanupScanner) -> [any CleanupScanner] {
+            guard sandboxed else { return [make()] }
+            let open = relatives.contains { relative in
+                let folder = home.appending(path: relative)
+                return granted.contains { folder.isSameOrDescendant(of: $0) }
+            }
+            return open ? [make()] : []
+        }
+
+        let xcode = ifReadable(["Library/Developer"]) { XcodeScanner() }
+        let appCache = ifReadable(["Library/Application Support", "Library/Caches"]) {
+            AppCacheScanner()
+        }
+        let staleCache = ifReadable(["Library/Caches"]) { StaleCacheScanner() }
+        let devCache = ifReadable(["Library/Caches", "Library/Logs", ".npm", ".expo"]) {
+            DevCacheScanner()
+        }
+        // 폭주 임시 파일은 샌드박스에서 살릴 방법이 없다.
+        let runaway: [any CleanupScanner] = sandboxed ? [] : [RunawayTempScanner()]
+
         switch self {
-        // `AppCacheScanner`는 샌드박스 쪽에 넣지 않는다 —
-        // `~/Library/Application Support`는 컨테이너 밖이라 읽을 수 없다.
         case .smartScan:
-            return sandboxed
-                ? xcode + [LargeFileScanner(), DuplicateScanner()]
-                : [RunawayTempScanner(), XcodeScanner(), DevCacheScanner(), AppCacheScanner(),
-                   StaleCacheScanner(), LargeFileScanner(), DuplicateScanner()]
+            return runaway + xcode + devCache + appCache + staleCache
+                + [LargeFileScanner(), DuplicateScanner()]
         case .junk:
-            return sandboxed
-                ? xcode
-                : [RunawayTempScanner(), XcodeScanner(), DevCacheScanner(),
-                   AppCacheScanner(), StaleCacheScanner()]
+            return runaway + xcode + devCache + appCache + staleCache
         case .largeFile:
             return [LargeFileScanner()]
         case .duplicate:

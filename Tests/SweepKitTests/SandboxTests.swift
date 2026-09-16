@@ -43,12 +43,50 @@ struct SandboxTests {
         #expect(ProtectedPaths.roots(sandboxed: true).map(\.path) == [downloads.path])
     }
 
-    @Test("개발 폴더를 허락하면 허용 루트에 더해진다")
+    @Test("개발 폴더를 허락하면 그 루트만 켜진다")
     func sandboxedRootsIncludeGrantedDeveloper() {
+        let home = Sandbox.userHome
         let downloads = fm.homeDirectoryForCurrentUser.appending(path: "Downloads")
-        let developer = fm.homeDirectoryForCurrentUser.appending(path: "Library/Developer")
-        #expect(ProtectedPaths.roots(sandboxed: true, developer: developer).map(\.path)
+        let developer = home.appending(path: "Library/Developer")
+        #expect(ProtectedPaths.roots(sandboxed: true, granted: [developer]).map(\.path)
                 == [downloads.path, developer.path])
+    }
+
+    @Test("~/Library를 허락하면 그 안의 정리 루트가 전부 켜진다")
+    func grantingLibraryOpensItsRoots() {
+        let home = Sandbox.userHome
+        let paths = ProtectedPaths.roots(sandboxed: true,
+                                         granted: [home.appending(path: "Library")]).map(\.path)
+
+        for relative in ["Library/Developer", "Library/Caches", "Library/Logs"] {
+            #expect(paths.contains(home.appending(path: relative).path), "\(relative)가 안 켜졌다")
+        }
+        // 고를 수 없는 경로라 샌드박스에서는 살릴 방법이 없다.
+        #expect(!paths.contains("/private/tmp"))
+    }
+
+    @Test("허락이 넓어져도 루트 목록에 없는 곳은 열리지 않는다")
+    func grantingLibraryDoesNotOpenUnlistedFolders() {
+        let home = Sandbox.userHome
+        let paths = ProtectedPaths.roots(sandboxed: true,
+                                         granted: [home.appending(path: "Library")]).map(\.path)
+
+        // ~/Library를 통째로 열어 줘도 지울 수 있는 것은 늘어나지 않는다 —
+        // 허락은 "읽을 수 있는가"만, 루트 목록은 "지워도 되는가"만 정한다.
+        for relative in ["Library/Safari", "Library/Mail", "Library/Messages",
+                         "Library/Application Support"] {
+            #expect(!paths.contains(home.appending(path: relative).path),
+                    "\(relative)가 루트로 열렸다")
+        }
+    }
+
+    @Test("홈 직속 도구 폴더도 허락하면 켜진다")
+    func grantingHomeToolFolderOpensIt() {
+        let home = Sandbox.userHome
+        let npm = home.appending(path: ".npm")
+        let paths = ProtectedPaths.roots(sandboxed: true, granted: [npm]).map(\.path)
+        #expect(paths.contains(npm.path))
+        #expect(!paths.contains(home.appending(path: "Library/Caches").path))
     }
 
     @Test("샌드박스 밖에서는 지금 허용 루트가 시작 때 루트와 같다")
@@ -77,25 +115,42 @@ struct SandboxTests {
     }
 
     @Test("허락 전 샌드박스: 스마트 스캔은 큰 파일·중복만, 정크는 스캐너가 없다")
-    func sandboxedScannersWithoutDeveloper() {
-        let smart = Feature.smartScan.scanners(sandboxed: true, developer: nil).map(\.category)
+    func sandboxedScannersWithoutGrant() {
+        let smart = Feature.smartScan.scanners(sandboxed: true, granted: []).map(\.category)
         #expect(smart == [.largeFile, .duplicate])
-        #expect(Feature.junk.scanners(sandboxed: true, developer: nil).isEmpty)
+        #expect(Feature.junk.scanners(sandboxed: true, granted: []).isEmpty)
     }
 
-    @Test("허락 후 샌드박스: 스마트 스캔과 정크가 Xcode를 훑는다")
-    func sandboxedScannersWithDeveloper() {
-        let developer = URL(filePath: "/Users/someone/Library/Developer")
-        let smart = Feature.smartScan.scanners(sandboxed: true, developer: developer).map(\.category)
+    @Test("개발 폴더만 허락하면 Xcode만 붙는다")
+    func sandboxedScannersWithDeveloperOnly() {
+        let developer = Sandbox.userHome.appending(path: "Library/Developer")
+        let smart = Feature.smartScan.scanners(sandboxed: true, granted: [developer])
+            .map(\.category)
         #expect(smart == [.xcode, .largeFile, .duplicate])
-        let junk = Feature.junk.scanners(sandboxed: true, developer: developer).map(\.category)
-        #expect(junk == [.xcode])
+        #expect(Feature.junk.scanners(sandboxed: true, granted: [developer]).map(\.category)
+                == [.xcode])
+    }
+
+    @Test("~/Library를 허락하면 캐시 계열 스캐너가 전부 붙는다")
+    func sandboxedScannersWithLibrary() {
+        let library = Sandbox.userHome.appending(path: "Library")
+        let junk = Feature.junk.scanners(sandboxed: true, granted: [library]).map(\.category)
+
+        // 폭주 임시 파일은 고를 수 없는 경로라 샌드박스에서는 빠진다.
+        #expect(junk == [.xcode, .devCache, .appCache, .staleCache])
+    }
+
+    @Test("홈 직속 도구 폴더만 허락하면 개발 캐시만 붙는다")
+    func sandboxedScannersWithHomeToolOnly() {
+        let npm = Sandbox.userHome.appending(path: ".npm")
+        #expect(Feature.junk.scanners(sandboxed: true, granted: [npm]).map(\.category)
+                == [.devCache])
     }
 
     @Test("샌드박스 밖 스캐너는 허락과 무관하게 그대로다")
     func unsandboxedScannersUnchanged() {
-        #expect(Feature.smartScan.scanners(sandboxed: false, developer: nil).count == 7)
-        #expect(Feature.junk.scanners(sandboxed: false, developer: nil).count == 5)
+        #expect(Feature.smartScan.scanners(sandboxed: false, granted: []).count == 7)
+        #expect(Feature.junk.scanners(sandboxed: false, granted: []).count == 5)
     }
 
     @Test("샌드박스의 디스크 맵 시작 지점은 허락 전 Downloads, 허락 후 개발 폴더까지")
@@ -104,25 +159,31 @@ struct SandboxTests {
         let before = DiskMapRoot.roots(home: home, sandboxed: true, exists: { _ in true })
         #expect(before.map(\.label) == ["~/Downloads"])
 
-        let developer = home.appending(path: "Library/Developer")
-        let after = DiskMapRoot.roots(home: home, sandboxed: true, developer: developer,
-                                      exists: { _ in true })
+        let developer = Sandbox.userHome.appending(path: "Library/Developer")
+        let after = DiskMapRoot.roots(home: Sandbox.userHome, sandboxed: true,
+                                      granted: [developer], exists: { _ in true })
         #expect(after.map(\.label) == ["~/Downloads", "~/Library/Developer"])
     }
 
-    // MARK: - 개발 폴더 허락
+    // MARK: - 폴더 허락
 
     /// 진짜 홈과 `.standard`를 건드리지 않는 허락 저장소.
-    private func makeAccess() throws -> (access: DeveloperAccess, folder: URL,
-                                         defaults: UserDefaults, cleanup: () -> Void) {
+    ///
+    /// 허락 자체의 동작은 `FolderAccessTests`가 본다. 여기서는 **앱 모델과의 연동**만
+    /// 확인한다 — 허락이 화면 상태(`needsFolderAccess`)와 ⌘R로 이어지는지.
+    private func makeAccess() throws
+        -> (registry: FolderAccess.Registry, grantable: FolderAccess.Grantable,
+            defaults: UserDefaults, cleanup: () -> Void) {
         let base = URL(filePath: NSTemporaryDirectory())
             .appending(path: "sweep-dev-\(UUID().uuidString)")
         let folder = base.appending(path: "Library/Developer")
         try fm.createDirectory(at: folder, withIntermediateDirectories: true)
         let suite = "sweep-test-\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suite))
-        let access = DeveloperAccess(folder: folder, defaults: defaults)
-        return (access, folder, defaults, {
+        let grantable = FolderAccess.Grantable(folder: folder, label: "~/Library/Developer",
+                                               purpose: "테스트용")
+        return (FolderAccess.Registry(defaults: defaults, legacy: grantable), grantable,
+                defaults, {
             defaults.removePersistentDomain(forName: suite)
             try? FileManager.default.removeItem(at: base)
         })
@@ -130,103 +191,60 @@ struct SandboxTests {
 
     @Test("같은 폴더는 끝의 / 나 .. 가 섞여도 맞다고 본다")
     func matchesSameFolder() throws {
-        let (_, folder, _, cleanup) = try makeAccess()
+        let (_, grantable, _, cleanup) = try makeAccess()
         defer { cleanup() }
+        let folder = grantable.folder
 
-        #expect(DeveloperAccess.matches(folder, folder: folder))
-        #expect(DeveloperAccess.matches(URL(filePath: folder.path + "/"), folder: folder))
+        #expect(FolderAccess.matches(folder, folder: folder))
+        #expect(FolderAccess.matches(URL(filePath: folder.path + "/"), folder: folder))
         let dotted = folder.appending(path: "Xcode").appending(path: "..")
-        #expect(DeveloperAccess.matches(dotted, folder: folder))
+        #expect(FolderAccess.matches(dotted, folder: folder))
     }
 
     @Test("형제·하위·상위 폴더는 아니라고 본다")
     func rejectsOtherFolders() throws {
-        let (_, folder, _, cleanup) = try makeAccess()
+        let (_, grantable, _, cleanup) = try makeAccess()
         defer { cleanup() }
-
+        let folder = grantable.folder
         let parent = folder.deletingLastPathComponent()
-        #expect(!DeveloperAccess.matches(parent.appending(path: "Caches"), folder: folder))
-        #expect(!DeveloperAccess.matches(folder.appending(path: "Xcode"), folder: folder))
-        #expect(!DeveloperAccess.matches(parent, folder: folder))
-    }
 
-    @Test("다른 폴더를 고르면 거절하고 아무것도 저장하지 않는다")
-    func grantRejectsWrongFolder() throws {
-        let (access, folder, defaults, cleanup) = try makeAccess()
-        defer { cleanup() }
-        let wrong = folder.deletingLastPathComponent()
-
-        #expect(throws: DeveloperAccess.Failure.wrongFolder(wrong)) { try access.grant(wrong) }
-        #expect(access.url == nil)
-        #expect(defaults.dictionaryRepresentation()["developerFolderBookmark"] == nil)
-    }
-
-    @Test("맞는 폴더를 고르면 열리고 북마크가 저장된다")
-    func grantOpensFolder() throws {
-        let (access, folder, defaults, cleanup) = try makeAccess()
-        defer { cleanup() }
-
-        try access.grant(folder)
-
-        #expect(access.url?.path == folder.resolvingSymlinksInPath().path)
-        #expect(defaults.data(forKey: "developerFolderBookmark") != nil)
-    }
-
-    @Test("다음 실행에서 저장한 북마크로 다시 연다")
-    func restoreReopensFolder() throws {
-        let (access, folder, defaults, cleanup) = try makeAccess()
-        defer { cleanup() }
-        try access.grant(folder)
-
-        let nextLaunch = DeveloperAccess(folder: folder, defaults: defaults)
-        #expect(nextLaunch.url == nil)
-        nextLaunch.restore()
-
-        #expect(nextLaunch.url?.path == folder.resolvingSymlinksInPath().path)
-    }
-
-    @Test("망가진 북마크는 지우고 닫힌 채로 둔다")
-    func restoreDropsBrokenBookmark() throws {
-        let (access, _, defaults, cleanup) = try makeAccess()
-        defer { cleanup() }
-        defaults.set(Data([0x00, 0x01, 0x02]), forKey: "developerFolderBookmark")
-
-        access.restore()
-
-        #expect(access.url == nil)
-        #expect(defaults.data(forKey: "developerFolderBookmark") == nil)
+        #expect(!FolderAccess.matches(parent.appending(path: "Caches"), folder: folder))
+        #expect(!FolderAccess.matches(folder.appending(path: "Xcode"), folder: folder))
+        #expect(!FolderAccess.matches(parent, folder: folder))
     }
 
     @Test("앱 모델: 틀린 폴더면 허락 화면에 머물고, 맞으면 벗어난다")
     @MainActor
     func appModelGrantFlow() throws {
-        let (access, folder, _, cleanup) = try makeAccess()
+        let (registry, grantable, _, cleanup) = try makeAccess()
         defer { cleanup() }
-        let app = AppModel(developerAccess: access, needsDeveloperAccess: true)
+        let app = AppModel(folderAccess: registry, needsFolderAccess: true)
 
-        #expect(throws: DeveloperAccess.Failure.self) {
-            try app.grantDeveloperAccess(folder.deletingLastPathComponent())
+        #expect(throws: FolderAccess.Failure.self) {
+            try app.grantFolderAccess(grantable.folder.deletingLastPathComponent(),
+                                      as: grantable)
         }
-        #expect(app.needsDeveloperAccess)
+        #expect(app.needsFolderAccess)
 
-        try app.grantDeveloperAccess(folder)
-        #expect(!app.needsDeveloperAccess)
-        #expect(access.isGranted)
+        try app.grantFolderAccess(grantable.folder, as: grantable)
+        #expect(!app.needsFolderAccess)
+        #expect(registry.isGranted(grantable))
+        #expect(app.isGranted(grantable))
     }
 
     @Test("허락 전 정크 탭에서는 검색할 모델이 없고, 허락하면 생긴다 (⌘R)")
     @MainActor
     func currentModelFollowsGrant() throws {
-        let (access, folder, _, cleanup) = try makeAccess()
+        let (registry, grantable, _, cleanup) = try makeAccess()
         defer { cleanup() }
         let app = AppModel(makeModel: { _ in ScanModel(scan: { AsyncStream { $0.finish() } }) },
-                           developerAccess: access, needsDeveloperAccess: true)
+                           folderAccess: registry, needsFolderAccess: true)
         app.selected = .junk
 
         #expect(app.currentModel == nil)
         #expect(!app.canScan)
 
-        try app.grantDeveloperAccess(folder)
+        try app.grantFolderAccess(grantable.folder, as: grantable)
         #expect(app.currentModel != nil)
         #expect(app.canScan)
     }
@@ -234,9 +252,9 @@ struct SandboxTests {
     @Test("앱 모델 기본값: 샌드박스 밖에서는 허락이 필요 없다")
     @MainActor
     func appModelOutsideSandboxNeedsNothing() throws {
-        let (access, _, _, cleanup) = try makeAccess()
+        let (registry, _, _, cleanup) = try makeAccess()
         defer { cleanup() }
-        #expect(!AppModel(developerAccess: access).needsDeveloperAccess)
+        #expect(!AppModel(folderAccess: registry).needsFolderAccess)
     }
 
     // MARK: - Downloads 링크

@@ -28,7 +28,7 @@ enum StoreDemo {
             },
             makeDiskMap: { diskMap() },
             // 허락한 뒤의 화면을 보여준다
-            needsDeveloperAccess: false)
+            needsFolderAccess: false)
         await app.model(for: .smartScan).scan()
 
         switch stage {

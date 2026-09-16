@@ -6,10 +6,10 @@ import SweepKit
 struct SweepApp: App {
 
     init() {
-        // 지난 실행에서 허락받은 개발 폴더를 다시 연다. 첫 스캔보다 먼저여야
+        // 지난 실행에서 허락받은 폴더를 다시 연다. 첫 스캔보다 먼저여야
         // 스마트 스캔이 Xcode를 빠뜨리지 않는다 — `--scan-only`도 스캔이다.
         if Sandbox.isActive {
-            DeveloperAccess.shared.restore()
+            FolderAccess.shared.restoreAll()
         }
         // 헤드리스 검증 경로. GUI는 자동으로 돌릴 수 없으므로
         // 스캔 파이프라인 전체를 확인할 수 있는 입구를 열어 둔다.
@@ -25,7 +25,7 @@ struct SweepApp: App {
     /// 메뉴 명령이 모델을 건드려야 해서 창이 아니라 앱이 들고 있는다.
     ///
     /// 선언에서 바로 만들지 않는다. 프로퍼티 초기값은 `init` 본문보다 먼저 돌아서,
-    /// 개발 폴더 허락을 복원하기 전에 모델이 "허락 필요"로 굳는다 — 실측에서
+    /// 폴더 허락을 복원하기 전에 모델이 "허락 필요"로 굳는다 — 실측에서
     /// 다시 열 때마다 허락 화면이 떴다. `init`에서 복원한 뒤에 만든다.
     @State private var app: AppModel
 

@@ -6,7 +6,7 @@ import SweepKit
 ///
 /// 샌드박스는 이 폴더를 스스로 열 수 없다. 사용자가 열기 대화상자에서 고른 폴더만
 /// 열리므로, 무엇을 왜 고르는지 먼저 말하고 대화상자를 그 폴더에서 연다.
-struct DeveloperAccessView: View {
+struct FolderAccessView: View {
     @Bindable var app: AppModel
 
     /// 틀린 폴더를 골랐을 때 알려줄 말. nil이면 닫혀 있다.
@@ -42,19 +42,22 @@ struct DeveloperAccessView: View {
         }
     }
 
+    /// Phase 4에서 폴더별 줄로 펼친다. 지금은 첫 항목(`~/Library`)만 연다.
+    private var grantable: FolderAccess.Grantable { FolderAccess.grantables[0] }
+
     private func choose() {
         let panel = NSOpenPanel()
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
         // 그 폴더 안에서 연다. 사용자는 아무것도 고르지 않고 "허용"만 누르면 된다.
-        panel.directoryURL = DeveloperAccess.shared.folder
+        panel.directoryURL = grantable.folder
         panel.prompt = "허용"
         panel.message = "Sweep이 Xcode 산출물과 시뮬레이터 파일을 찾을 수 있게 Developer 폴더를 허용하세요."
 
         guard panel.runModal() == .OK, let picked = panel.url else { return }
         do {
-            try app.grantDeveloperAccess(picked)
+            try app.grantFolderAccess(picked, as: grantable)
         } catch {
             failure = error.message
         }

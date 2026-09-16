@@ -76,23 +76,42 @@ public enum ProtectedPaths {
     /// `ngrok.yml`(인증 토큰)과 `state.json`(로그인 상태)이 있어 통째로 올리면 안 된다.
     static let homeToolRoots: [String] = [".npm", ".expo"]
 
-    static func roots(sandboxed: Bool, developer: URL? = nil) -> [URL] {
+    static func roots(sandboxed: Bool, granted: [URL] = []) -> [URL] {
         let downloads = inHome("Downloads")
-        guard !sandboxed else { return [downloads] + (developer.map { [$0] } ?? []) }
-        return [
+        let all = [
             inHome("Library/Developer"),
             inHome("Library/Caches"),
             inHome("Library/Logs"),
             downloads,
             URL(filePath: "/private/tmp"),
         ] + homeToolRoots.map(inHome) + userTemporaryRoots
+
+        guard sandboxed else { return all }
+
+        // 샌드박스에서도 **같은 목록**을 쓰고, 사용자가 열어 준 폴더 안에 있는 것만 켠다.
+        //
+        // 허락받은 폴더를 그대로 루트로 넣지 않는 것이 핵심이다. `~/Library`를 루트로 만들면
+        // `~/Library/Safari`·`Mail`이 전부 삭제 가능해진다. 루트 목록은 그대로 두고
+        // **켜고 끄는 열쇠**로만 쓰면, 허락이 넓어져도 지울 수 있는 것은 넓어지지 않는다.
+        //
+        // `/private/tmp`와 임시 컨테이너는 샌드박스에서 살릴 방법이 없다 —
+        // 사용자가 열기 대화상자에서 고를 수 있는 경로가 아니다.
+        return [downloads] + all.filter { root in
+            root != downloads && granted.contains { root.isSameOrDescendant(of: $0) }
+        }
+    }
+
+    /// 앱 캐시를 들여다볼 수 있는 상태인가. 샌드박스 밖에서는 늘 그렇다.
+    private static var isAppSupportReadable: Bool {
+        guard Sandbox.isActive else { return true }
+        return FolderAccess.shared.urls.contains { appSupportRoot.isSameOrDescendant(of: $0) }
     }
 
     /// 지금 이 순간의 허용 루트. 허락은 실행 중에 생기므로 시작할 때 고정되는
     /// `allowedRoots`와 따로 둔다. 화면(보는 곳 목록)이 이것을 본다.
     public static var currentRoots: [URL] {
         Sandbox.isActive
-            ? roots(sandboxed: true, developer: DeveloperAccess.shared.url)
+            ? roots(sandboxed: true, granted: FolderAccess.shared.urls)
             : allowedRoots
     }
 
@@ -330,14 +349,18 @@ public enum ProtectedPaths {
 
     private static func resolvedRoots() -> [URL] { cachedRoots }
 
-    /// 사용자가 열어 준 개발 폴더는 실행 중에 생겨서 캐시에 넣을 수 없다.
-    /// 하나뿐이고 이미 정규 경로로 저장돼 있어(`DeveloperAccess.start`) 매번 붙여도 싸다.
+    /// 사용자가 열어 준 폴더는 실행 중에 생겨서 캐시에 넣을 수 없다.
+    /// 몇 개뿐이고 이미 정규 경로로 저장돼 있어(`FolderAccess.start`) 매번 붙여도 싸다.
     /// 샌드박스 밖에서는 붙이지 않는다 — 거기서는 이미 허용 루트다.
+    ///
+    /// 허락받은 폴더 자체가 아니라 **그 안에서 켜진 루트**를 붙인다.
+    /// `~/Library`를 열어 줬다고 `~/Library/Safari`까지 지울 수 있으면 안 된다.
     private static func rootComponents() -> [[String]] {
-        guard Sandbox.isActive, let developer = DeveloperAccess.shared.url else {
-            return cachedRootComponents
-        }
-        return cachedRootComponents + [developer.pathComponents]
+        guard Sandbox.isActive else { return cachedRootComponents }
+        let granted = FolderAccess.shared.urls
+        guard !granted.isEmpty else { return cachedRootComponents }
+        return roots(sandboxed: true, granted: granted)
+            .map { canonical($0).standardizedFileURL.pathComponents }
     }
 
     /// 경로 구성요소 단위 하위 판정. URL을 다시 정규화하지 않아 값싸다.
@@ -355,7 +378,7 @@ public enum ProtectedPaths {
     private static func isInsideAllowedArea(_ components: [String], roots: [[String]]) -> Bool {
         if roots.contains(where: { isDescendant(components, of: $0) }) { return true }
         // 샌드박스에서는 `Application Support` 자체를 읽을 수 없어 이 길이 열려도 뜻이 없다.
-        guard !Sandbox.isActive else { return false }
+        guard isAppSupportReadable else { return false }
         return isAppCacheFolder(components, appSupport: cachedAppSupportComponents)
     }
 }

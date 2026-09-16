@@ -28,10 +28,10 @@ struct ContentView: View {
             // 첫 화면. 전체를 훑고 기능별로 얼마가 나왔는지 카드로 보여준다.
             SmartScanView(app: app, model: app.model(for: .smartScan))
 
-        case .junk where app.needsDeveloperAccess:
+        case .junk where app.needsFolderAccess:
             // App Store 빌드에서 개발 폴더를 아직 열지 않았다. 검색 버튼을 두면
             // 훑을 곳이 없어 늘 "정리할 항목이 없음"이 나온다 — 허락부터 받는다.
-            DeveloperAccessView(app: app)
+            FolderAccessView(app: app)
 
         case let feature:
             FeatureScreen(feature: feature, model: app.model(for: feature))
