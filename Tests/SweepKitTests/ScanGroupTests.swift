@@ -14,17 +14,29 @@ struct ScanGroupTests {
     }
 
     // TC-3
-    @Test("ScanGroup은 category를 id로 삼아 ForEach에 바로 쓸 수 있다")
-    func groupIsIdentifiableByCategory() {
-        let group = ScanGroup(category: .xcode,
+    @Test("ScanGroup은 나눈 기준을 id로 삼아 ForEach에 바로 쓸 수 있다")
+    func groupIsIdentifiableByKind() {
+        let group = ScanGroup(kind: .category(.xcode),
                               items: [item("a", size: 1, category: .xcode)])
-        #expect(group.id == .xcode)
+        #expect(group.id == .category(.xcode))
+        #expect(group.category == ScanCategory.xcode)
+        #expect(group.displayName == ScanCategory.xcode.displayName)
+    }
+
+    // TC-3b
+    @Test("판단 기준으로 묶으면 이름이 등급이 아니라 뜻으로 나온다")
+    func safetyGroupNamesTheJudgement() {
+        let group = ScanGroup(kind: .safety(.safe),
+                              items: [item("a", size: 1, category: .xcode)])
+        // "안전 4개"보다 "다시 만들 수 있음 4개"가 고를 때 쓸모 있다.
+        #expect(group.displayName == "다시 만들 수 있음")
+        #expect(group.category == nil)
     }
 
     // TC-4
     @Test("섹션 헤더용 합계가 사람이 읽는 단위로 나온다")
     func groupTotalIsFormatted() {
-        let group = ScanGroup(category: .devCache, items: [
+        let group = ScanGroup(kind: .category(.devCache), items: [
             item("a", size: 3_000_000_000, category: .devCache),
             item("b", size: 2_000_000_000, category: .devCache),
         ])

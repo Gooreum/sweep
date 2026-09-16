@@ -146,6 +146,12 @@ struct FeatureScreen: View {
 
     // MARK: - 결과 목록
 
+    /// 기능 화면은 **판단 기준**으로 묶는다. 스마트 스캔만 카테고리로 나눈다 —
+    /// 거기서는 어느 기능이 얼마를 찾았는지가 정보다.
+    private var groups: [ScanGroup] {
+        feature == .smartScan ? model.groups : model.safetyGroups
+    }
+
     private var resultList: some View {
         VStack(spacing: 0) {
             // 이 화면이 무엇을 보여주는지 한 문장. 목록만 던지면
@@ -160,7 +166,7 @@ struct FeatureScreen: View {
             Divider().overlay(Theme.border)
 
             List {
-                ForEach(model.groups) { group in
+                ForEach(groups) { group in
                     Section {
                         // 접었으면 행을 그리지 않는다. 높이 0으로 숨기면
                         // 스크롤 길이가 그대로라 접은 보람이 없다.
@@ -200,7 +206,7 @@ struct FeatureScreen: View {
             .help("이 묶음 전체 선택 / 해제")
 
             // 묶음 이름은 본문보다 작게. 헤더가 행보다 커 보이면 목록이 헤더에 눌린다.
-            Text(group.category.displayName)
+            Text(group.displayName)
                 .font(Theme.caption.weight(.semibold))
                 .kerning(0.4)
                 .foregroundStyle(Theme.textSecondary)

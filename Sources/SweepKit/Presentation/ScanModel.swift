@@ -3,11 +3,48 @@ import Observation
 
 /// 화면에 보여줄 카테고리 섹션 하나.
 public struct ScanGroup: Identifiable, Sendable, Hashable {
-    public let category: ScanCategory
+    /// 이 묶음을 무엇으로 나눴는가.
+    ///
+    /// 기능 화면은 **판단 기준**으로 나눈다 — `Xcode_26.0.xip`(다시 받으면 된다)와
+    /// `제주 여행 원본.mov`(없으면 끝)가 같은 카테고리라고 한 덩어리에 섞이면,
+    /// 크기는 비슷한데 판단이 정반대인 것들을 하나씩 열어 봐야 한다.
+    ///
+    /// 스마트 스캔만 카테고리로 나눈다. 거기서는 기능별로 갈리는 것이 정보다.
+    public enum Kind: Sendable, Hashable {
+        case category(ScanCategory)
+        case safety(SafetyLevel)
+    }
+
+    public let kind: Kind
     public let items: [CleanupItem]
 
-    public var id: ScanCategory { category }
+    public var id: Kind { kind }
     public var formattedTotalSize: String { items.formattedTotalSize }
+
+    /// 화면에 쓰는 이름.
+    public var displayName: String {
+        switch kind {
+        case .category(let category): category.displayName
+        case .safety(let level): level.groupLabel
+        }
+    }
+
+    /// 예전 API. 카테고리로 나눈 묶음에서만 뜻이 있다.
+    public var category: ScanCategory? {
+        if case .category(let category) = kind { return category }
+        return nil
+    }
+}
+
+extension SafetyLevel {
+    /// 묶음 머리에 쓰는 이름. 등급 이름("안전")이 아니라 **무엇을 뜻하는지**를 적는다.
+    public var groupLabel: String {
+        switch self {
+        case .safe: "다시 만들 수 있음"
+        case .caution: "확인 필요"
+        case .danger: "보호됨 · 선택 불가"
+        }
+    }
 }
 
 /// 스캔 → 선택 → 삭제 흐름의 상태를 들고 있는다.
@@ -129,17 +166,17 @@ public final class ScanModel {
     ///
     /// 뷰가 들면 탭을 옮겼다 돌아올 때 초기화된다 — 스무 줄을 도로 펼쳐 놓고
     /// 다시 접게 만든다. 선택과 같은 수명을 가져야 하므로 모델이 소유한다.
-    public private(set) var collapsedGroups: Set<ScanCategory> = []
+    public private(set) var collapsedGroups: Set<ScanGroup.Kind> = []
 
     public func isCollapsed(_ group: ScanGroup) -> Bool {
-        collapsedGroups.contains(group.category)
+        collapsedGroups.contains(group.kind)
     }
 
     public func toggleCollapsed(_ group: ScanGroup) {
-        if collapsedGroups.contains(group.category) {
-            collapsedGroups.remove(group.category)
+        if collapsedGroups.contains(group.kind) {
+            collapsedGroups.remove(group.kind)
         } else {
-            collapsedGroups.insert(group.category)
+            collapsedGroups.insert(group.kind)
         }
     }
 
@@ -154,10 +191,27 @@ public final class ScanModel {
     }
 
     /// 카테고리별 섹션. 위험한 카테고리가 위로 온다.
+    ///
+    /// 스마트 스캔이 쓴다 — 거기서는 기능별로 갈리는 것이 정보다.
     public var groups: [ScanGroup] {
         Dictionary(grouping: items, by: \.category)
-            .map { ScanGroup(category: $0.key, items: $0.value) }
-            .sorted { $0.category.sortOrder < $1.category.sortOrder }
+            .map { ScanGroup(kind: .category($0.key), items: $0.value) }
+            .sorted { ($0.category?.sortOrder ?? 0) < ($1.category?.sortOrder ?? 0) }
+    }
+
+    /// 판단 기준별 섹션. **다시 만들 수 있는 것부터** 위로 온다.
+    ///
+    /// 기능 화면이 쓴다. 같은 카테고리라도 판단이 정반대인 것들이 섞여 있다 —
+    /// `Xcode_26.0.xip`(다시 받으면 된다)와 `제주 여행 원본.mov`(없으면 끝)가
+    /// 한 덩어리에 있으면 하나씩 열어 봐야 고를 수 있다.
+    public var safetyGroups: [ScanGroup] {
+        Dictionary(grouping: items, by: \.safety)
+            .map { ScanGroup(kind: .safety($0.key), items: $0.value) }
+            .sorted { lhs, rhs in
+                guard case .safety(let l) = lhs.kind, case .safety(let r) = rhs.kind
+                else { return false }
+                return l < r
+            }
     }
 
     public func isSelected(_ item: CleanupItem) -> Bool { selection.contains(item.url) }
