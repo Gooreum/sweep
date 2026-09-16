@@ -66,6 +66,10 @@ public enum FolderAccess {
               purpose: "npm 내려받기 캐시"),
         .init(folder: inHome(".expo"), label: "~/.expo",
               purpose: "Expo 캐시"),
+        // 홈 밖이지만 같은 방식으로 열린다 — 열기 대화상자로 고른 폴더는 위치를 가리지 않는다.
+        // 이것을 열어도 지울 수 있는 것은 **바로 아래 `.app` 하나씩**뿐이다(`ProtectedPaths`).
+        .init(folder: URL(filePath: "/Applications"), label: "응용 프로그램",
+              purpose: "쓰지 않는 앱 지우기"),
     ]
 
     /// 앱 전체가 공유하는 허락 상태.

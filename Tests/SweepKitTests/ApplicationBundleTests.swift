@@ -300,6 +300,45 @@ struct RunningApplicationTests {
     }
 }
 
+/// 샌드박스에서 앱을 지우려면 `/Applications`를 허락받아야 한다.
+@Suite("앱 폴더 허락")
+struct ApplicationGrantableTests {
+
+    private var applications: FolderAccess.Grantable? {
+        FolderAccess.grantables.first { $0.folder.path == "/Applications" }
+    }
+
+    // TC-1
+    @Test("허락 목록에 응용 프로그램이 있다")
+    func listed() throws {
+        let grantable = try #require(applications)
+        #expect(grantable.label == "응용 프로그램")
+        #expect(!grantable.purpose.isEmpty)
+    }
+
+    // TC-2
+    @Test("북마크 키가 서로 겹치지 않는다")
+    func uniqueKeys() {
+        let keys = FolderAccess.grantables.map(\.key)
+        #expect(Set(keys).count == keys.count, "북마크가 서로 덮어쓴다")
+    }
+
+    // TC-3
+    @Test("그 폴더를 허락하면 앱이 열린다")
+    func grantOpensApplications() throws {
+        let grantable = try #require(applications)
+        #expect(ProtectedPaths.applicationsRemovable(
+            sandboxed: true, granted: [grantable.folder]))
+    }
+
+    // TC-4
+    @Test("기존 허락 대상이 그대로다")
+    func existingGrantablesUnchanged() {
+        let labels = FolderAccess.grantables.map(\.label)
+        #expect(labels.prefix(3) == ["~/Library", "~/.npm", "~/.expo"])
+    }
+}
+
 /// 이 기계의 실제 `/Applications`를 훑어 판정 분포가 의도대로인지 본다.
 ///
 /// **읽기 전용이다.** `veto` 조회만 하고 아무것도 지우거나 바꾸지 않는다.
