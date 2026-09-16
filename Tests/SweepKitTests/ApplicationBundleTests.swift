@@ -299,3 +299,66 @@ struct RunningApplicationTests {
         #expect(!RunningApplications.urls.isEmpty)
     }
 }
+
+/// 이 기계의 실제 `/Applications`를 훑어 판정 분포가 의도대로인지 본다.
+///
+/// **읽기 전용이다.** `veto` 조회만 하고 아무것도 지우거나 바꾸지 않는다.
+/// 가짜 경로 TC만으로는 "실제 앱들이 정말 열렸는가"를 알 수 없어서 둔다 —
+/// 소유권 예외를 넣은 이유가 바로 실기에서 2/3이 막혔기 때문이다.
+@Suite("실제 응용 프로그램 판정")
+struct ApplicationSurveyTests {
+
+    private var bundles: [URL] {
+        let apps = URL(filePath: "/Applications")
+        let contents = (try? FileManager.default.contentsOfDirectory(
+            at: apps, includingPropertiesForKeys: nil)) ?? []
+        return contents.filter { $0.lastPathComponent.hasSuffix(".app") }
+    }
+
+    /// 심볼릭 링크는 빼고 본다.
+    ///
+    /// 실측: `/Applications/Safari.app`은 폴더가 아니라
+    /// `/System/Volumes/Preboot/Cryptexes/App/...`를 가리키는 링크다. 관문은 실경로로
+    /// 판정하므로 이런 앱은 `outsideAllowedRoots`로 막힌다 — **의도한 대로**지만
+    /// 사유가 다르다. 링크를 섞으면 "일반 앱이 열렸는가"를 잴 수 없다.
+    private func isSymbolicLink(_ url: URL) -> Bool {
+        (try? url.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) ?? false
+    }
+
+    // TC-1
+    @Test("앱은 통과하거나 시스템 보호·실행 중으로만 막힌다")
+    func onlyExpectedVetoes() {
+        for bundle in bundles where !isSymbolicLink(bundle) {
+            switch ProtectedPaths.veto(for: bundle) {
+            case nil, .systemProtected, .applicationRunning:
+                continue
+            case .some(let veto):
+                Issue.record("앱이 뜻밖의 사유로 막혔다: \(veto.message)")
+            }
+        }
+    }
+
+    // TC-2
+    @Test("시스템이 심어 둔 앱은 어떤 식으로든 막힌다")
+    func systemAppsProtected() {
+        // 삭제 금지 플래그가 걸렸거나, 시스템 볼륨을 가리키는 링크이거나.
+        let systemOwned = bundles.filter { bundle in
+            if let info = ProtectedPaths.fileInfo(of: bundle),
+               info.flags & ProtectedPaths.undeletableFlags != 0 { return true }
+            return isSymbolicLink(bundle)
+        }
+        // 이 기계에 그런 앱이 없을 수도 있다. 있으면 하나도 열려서는 안 된다.
+        for bundle in systemOwned {
+            #expect(ProtectedPaths.veto(for: bundle) != nil,
+                    "시스템 앱이 열렸다: \(bundle.lastPathComponent)")
+        }
+    }
+
+    // TC-3
+    @Test("번들 내부는 잠겨 있다")
+    func bundleInteriorLocked() {
+        guard let bundle = bundles.first else { return }
+        let inside = bundle.appending(path: "Contents")
+        #expect(ProtectedPaths.veto(for: inside) != nil)
+    }
+}
