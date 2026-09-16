@@ -5,42 +5,65 @@ Mac App Store로 내보내는 절차. **직접 배포(`docs/RELEASE.md`)와는 �
 
 ---
 
-## 먼저 읽을 것: 샌드박스가 기능 대부분을 막는다
+## 먼저 읽을 것: 샌드박스에서는 폴더를 허락받아야 한다
 
 App Store는 **App Sandbox가 필수**다. 끄면 업로드 검증에서 막힌다.
-켜면 Sweep이 들여다보는 곳(`ProtectedPaths.allowedRoots`) 6곳 중 5곳이 차단된다.
+켜면 앱이 스스로 열 수 있는 곳은 `~/Downloads` 하나뿐이다 —
+`files.downloads.read-write`가 여는 유일한 곳이다.
 
-| 정리 루트 | 직접 배포 | App Store (샌드박스) |
-|---|---|---|
-| `~/Library/Caches` (남의 앱 캐시) | ✅ | ❌ **여는 entitlement가 없다** |
-| `~/Library/Developer` (Xcode DerivedData) | ✅ | ✅ 사용자가 **한 번 허락**하면 (아래) |
-| `~/Library/Logs` | ✅ | ❌ |
-| `/private/tmp` | ✅ | ❌ |
-| `/var/folders/…/C`,`/T` (앱 임시) | ✅ | ❌ |
-| `~/Downloads` | ✅ | ✅ `files.downloads.read-write` |
-| 디스크 맵 홈 전체 순회 | ✅ (전체 디스크 접근 권한) | ⚠️ 사용자가 **직접 고른 폴더**만 |
+실측: 허락이 없으면 33.9GB 중 **384MB(1.1%)** 만 잡힌다.
 
-설정으로 뚫는 문제가 아니다. 남의 앱이 만든 파일을 여는 entitlement가 존재하지 않는다.
-`temporary-exception.files.absolute-path.*`는 형식상 있지만 요즘 심사에서 이 용도로는
-승인되지 않고, 넣으면 반려 사유만 늘어난다.
+```
+$ APP_SANDBOX_CONTAINER_ID=test .build/release/SweepApp --scan-only
+largeFile  caution  256.8 MB  ~/Downloads/coinness-ios-develop (1).zip
+largeFile  caution  127.7 MB  ~/Downloads/coinness-ios-develop.zip
+총 2개 · 384.5 MB
+```
+
+나머지는 **사용자가 열기 대화상자에서 고른 폴더**로 연다
+(`files.user-selected.read-write` + `files.bookmarks.app-scope`).
+남의 앱이 만든 파일을 앱이 알아서 여는 entitlement는 존재하지 않는다 —
+`temporary-exception.files.absolute-path.*`는 형식상 있지만 요즘 심사에서
+이 용도로는 승인되지 않고, 넣으면 반려 사유만 늘어난다.
 
 CleanMyMac이 App Store에 없고 DaisyDisk는 있는 이유가 이것이다 — DaisyDisk는
 "사용자가 고른 폴더를 시각화"로 제품을 샌드박스에 맞췄다.
 
-**그래서 App Store 빌드는 다운로드 폴더와, 사용자가 허락한 개발 폴더만 다룬다.**
-앱이 실행 중에 샌드박스를 감지해(`Sandbox.isActive`) 이렇게 동작한다.
+### 허락 한 번이 무엇을 여는가
 
-- 스마트 스캔 · 큰 파일 · 중복 파일 · 디스크 맵은 `~/Downloads`를 본다.
-- 정크 파일 탭은 처음에 **허락 화면**을 띄운다. "개발 폴더 열기…"를 누르면 열기 대화상자가
-  `~/Library/Developer`에서 열리고, 사용자가 "허용"을 누르면 그 폴더가 열린다
-  (`files.user-selected.read-write`). 보안 범위 북마크(`files.bookmarks.app-scope`)로
-  저장해 다음 실행에도 다시 연다(`DeveloperAccess`).
-- 허락한 뒤에는 Xcode · 시뮬레이터 정리(`XcodeScanner`)가 정크 파일과 스마트 스캔에 붙고,
-  "Sweep이 보는 곳"과 디스크 맵 시작 지점에 `~/Library/Developer`가 한 줄 는다.
-- 캐시 · 로그 · 임시 폴더 정리는 샌드박스에서 쓰지 않는다. 캐시와 로그는 같은 방식으로
-  열 수 있지만 아직 넣지 않았다.
+| 허락 폴더 | 켜지는 정리 루트 | 회수량(실측) |
+|---|---|---:|
+| `~/Library` | `Library/Developer` · `Library/Caches` · `Library/Logs` + 앱 웹 캐시 | ~25 GB |
+| `~/.npm` | `.npm` | ~7.7 GB |
+| `~/.expo` | `.expo` | ~0.3 GB |
 
-직접 배포본은 샌드박스가 아니라 기능이 온전하다.
+`~/Library`는 Finder에서 숨김이지만 `NSOpenPanel.directoryURL`로 지정하면 그 폴더가
+선택된 채 열려서, 사용자는 "허용"만 누르면 된다. **맨 위 하나면 대부분 된다.**
+
+### 허락받은 폴더를 루트로 쓰지 않는다
+
+`~/Library`를 열어 줬다고 그것을 허용 루트에 넣으면 `~/Library/Safari`·`Mail`·
+`Messages`가 전부 삭제 가능해진다. 그래서 루트 목록은 그대로 두고 **켜고 끄는 열쇠**로만
+쓴다(`ProtectedPaths.roots(sandboxed:granted:)`).
+
+- 허락 = "읽을 수 있는가" (`FolderAccess`)
+- 루트 = "지워도 되는가" (`ProtectedPaths`)
+
+두 축이 분리돼 있어 허락이 넓어져도 지울 수 있는 것은 넓어지지 않는다.
+
+### 샌드박스에서 못 살리는 것
+
+`/private/tmp`와 `/var/folders/*/C,T`(폭주 임시 파일)는 사용자가 열기 대화상자에서
+고를 수 있는 경로가 아니다. 방법이 없다.
+
+### 허락 흐름
+
+- 정크 파일 탭은 허락이 하나도 없으면 **허락 화면**을 띄운다(`FolderAccessView`).
+  폴더마다 한 줄이고, 이미 허락한 것은 체크로 표시한다
+- 고른 폴더는 보안 범위 북마크로 저장해 다음 실행에서도 연다(`FolderAccess.Registry`)
+- 접근은 프로세스 수명 동안 유지한다 — `stopAccessingSecurityScopedResource`를 부르지 않는다
+- 빌드 3까지 쓰던 단일 키(`developerFolderBookmark`)는 새 키로 자동으로 옮겨진다.
+  이미 허락한 사용자가 허락 화면을 다시 보지 않는다
 
 > 샌드박스에서 `homeDirectoryForCurrentUser`는 컨테이너(`~/Library/Containers/<id>/Data`)다.
 > SweepKit은 사용자 홈을 passwd 항목에서 읽는다(`Sandbox.userHome`). 그러지 않으면 허락한

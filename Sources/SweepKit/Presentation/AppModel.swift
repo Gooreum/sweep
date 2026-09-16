@@ -23,6 +23,12 @@ public final class AppModel {
     /// 허락 상태 자체는 `FolderAccess`가 들고 있다. 그건 관찰되지 않는 저장소라
     /// 화면이 바뀌려면 여기 관찰되는 값이 하나 있어야 한다.
     public private(set) var needsFolderAccess: Bool
+
+    /// 허락한 폴더 수. 화면이 "보는 곳" 목록을 다시 읽을 시점을 아는 데 쓴다.
+    ///
+    /// `needsFolderAccess`로는 부족하다 — 그건 첫 허락에 한 번 false가 되고 끝이라,
+    /// 두 번째·세 번째 허락을 화면이 알아챌 수 없다.
+    public private(set) var grantedFolderCount: Int = 0
     private let folderAccess: FolderAccess.Registry
 
     /// 기능 모델을 만드는 방법을 주입할 수 있게 열어 둔다.
@@ -43,6 +49,7 @@ public final class AppModel {
         self.folderAccess = folderAccess
         self.needsFolderAccess = needsFolderAccess
             ?? (Sandbox.isActive && !folderAccess.hasAny)
+        self.grantedFolderCount = folderAccess.urls.count
     }
 
     /// 열기 대화상자에서 고른 폴더로 허락을 받는다. 틀린 폴더면 던지고 상태는 그대로다.
@@ -51,6 +58,7 @@ public final class AppModel {
         throws(FolderAccess.Failure) {
         try folderAccess.grant(picked, as: grantable)
         needsFolderAccess = false
+        grantedFolderCount = folderAccess.urls.count
     }
 
     /// 이 폴더가 이미 열려 있는가. 허락 화면이 체크 표시를 그린다.

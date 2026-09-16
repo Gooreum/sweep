@@ -22,9 +22,14 @@ duplicate    safe    16.2 MB   ~/Downloads/...
 아래 루트의 *하위*가 아니면 전부 거부한다.
 
 ```
-~/Library/Developer   ~/Library/Caches   ~/Downloads
-/private/var/folders  /private/tmp
+~/Library/Developer   ~/Library/Caches   ~/Library/Logs   ~/Downloads
+~/.npm                ~/.expo            /private/var/folders   /private/tmp
 ```
+
+`~/Library/Application Support`는 루트에 **없다.** 그 아래는 기본이 사용자 데이터라
+통째로 열면 관문이 무너진다. 대신 끝 이름이 맞는 캐시 폴더만 연다 —
+`Cache`·`Code Cache`·`GPUCache`·`Dawn*Cache`·`Service Worker/CacheStorage`.
+`IndexedDB`·`Local Storage`·앱의 로컬 DB는 이름이 다르므로 계속 거부된다.
 
 허용 루트 안이어도 프로비저닝 프로파일·키바인딩·테마는 deny-list로 막는다.
 경로 비교는 문자열 접두사가 아니라 구성요소 단위라 `~/Downloads-backup`을

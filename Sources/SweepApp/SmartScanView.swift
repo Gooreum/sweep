@@ -13,22 +13,31 @@ struct SmartScanView: View {
     /// `Sidebar`·`MenuBarPanel`이 이미 저장 프로퍼티로 쓰고 있다.
     private let usage = VolumeUsage.current()
 
-    /// 허용 루트는 샌드박스에서 개발 폴더를 허락할 때만 바뀐다. 그때는 부모가
-    /// 다시 그려 이 뷰가 새로 만들어지므로, 렌더마다가 아니라 생성 때 한 번 읽는다.
-    private let scopes = CleanupScope.all
+    /// 샌드박스에서는 폴더를 **여러 번** 허락할 수 있다. 생성 때 한 번만 읽으면
+    /// 두 번째 허락이 목록에 반영되지 않는다 — 예전에는 허락이 한 번뿐이라
+    /// `let`으로 두고 부모가 다시 그리는 것에 기댔다.
+    ///
+    /// 그렇다고 `body`에서 매번 부르면 스캔 진행률이 바뀔 때마다 루트를 다시 계산한다.
+    /// 허락한 폴더 수가 바뀔 때만 다시 읽는다.
+    @State private var scopes = CleanupScope.all
 
     var body: some View {
-        switch model.phase {
-        case .idle:
-            welcome
-        case let .scanning(percent, remaining):
-            scanning(percent: percent, remaining: remaining)
-        case let .removing(done, total):
-            RingGauge(percent: total > 0 ? done * 100 / total : 0, caption: "정리하는 중")
-        case .results, .cleaned:
-            summary
+        Group {
+            switch model.phase {
+            case .idle:
+                welcome
+            case let .scanning(percent, remaining):
+                scanning(percent: percent, remaining: remaining)
+            case let .removing(done, total):
+                RingGauge(percent: total > 0 ? done * 100 / total : 0, caption: "정리하는 중")
+            case .results, .cleaned:
+                summary
+            }
         }
+        // 폴더를 새로 허락하면 "보는 곳" 목록이 늘어난다.
+        .onChange(of: app.grantedFolderCount) { scopes = CleanupScope.all }
     }
+
 
     /// 스캔 전 화면. **빈 판을 두지 않는다.**
     ///

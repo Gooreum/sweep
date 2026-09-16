@@ -2,10 +2,13 @@ import SwiftUI
 import AppKit
 import SweepKit
 
-/// 샌드박스(App Store 빌드)의 정크 파일 탭. `~/Library/Developer`를 열어 달라고 한다.
+/// 샌드박스(App Store 빌드)의 정크 파일 탭. 훑을 폴더를 열어 달라고 한다.
 ///
-/// 샌드박스는 이 폴더를 스스로 열 수 없다. 사용자가 열기 대화상자에서 고른 폴더만
+/// 샌드박스는 홈 아래를 스스로 열 수 없다. 사용자가 열기 대화상자에서 고른 폴더만
 /// 열리므로, 무엇을 왜 고르는지 먼저 말하고 대화상자를 그 폴더에서 연다.
+///
+/// 폴더가 여럿이라 한 줄씩 늘어놓되 **맨 위 하나면 대부분 된다**고 말한다.
+/// 셋 다 눌러야 할 것처럼 보이면 첫 화면부터 일이 많아 보인다.
 struct FolderAccessView: View {
     @Bindable var app: AppModel
 
@@ -14,25 +17,29 @@ struct FolderAccessView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "hammer")
+            Image(systemName: "folder.badge.plus")
                 .font(.system(size: Theme.Icon.large))
                 .foregroundStyle(Theme.accentText)
 
-            Text("Xcode · 시뮬레이터 정리")
+            Text("정리할 폴더 열기")
                 .font(Theme.title)
 
             VStack(spacing: 6) {
-                Text("App Store 버전은 macOS 샌드박스 안에서 동작해서, 개발 폴더를 열려면 한 번 허락이 필요해요.")
-                Text("다음 창에서 Library › Developer 폴더가 선택된 그대로 \"허용\"을 누르세요.")
+                Text("App Store 버전은 macOS 샌드박스 안에서 동작해서, 폴더를 열려면 한 번 허락이 필요해요.")
+                Text("맨 위 하나만 허용해도 대부분 찾을 수 있어요.")
             }
             .font(Theme.bodyText)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
             .frame(maxWidth: 460)
 
-            Button("개발 폴더 열기…") { choose() }
-                .buttonStyle(PrimaryButtonStyle())
-                .padding(.top, 8)
+            VStack(spacing: 8) {
+                ForEach(FolderAccess.grantables) { grantable in
+                    row(for: grantable)
+                }
+            }
+            .frame(maxWidth: 460)
+            .padding(.top, 8)
         }
         .alert("다른 폴더를 골랐습니다",
                isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) {
@@ -42,18 +49,49 @@ struct FolderAccessView: View {
         }
     }
 
-    /// Phase 4에서 폴더별 줄로 펼친다. 지금은 첫 항목(`~/Library`)만 연다.
-    private var grantable: FolderAccess.Grantable { FolderAccess.grantables[0] }
+    @ViewBuilder
+    private func row(for grantable: FolderAccess.Grantable) -> some View {
+        let granted = app.isGranted(grantable)
 
-    private func choose() {
+        HStack(spacing: 12) {
+            Image(systemName: granted ? "checkmark.circle.fill" : "circle")
+                .foregroundStyle(granted ? Color.green : Color.secondary)
+                .font(.system(size: Theme.Icon.small))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(grantable.label)
+                    .font(Theme.bodyText)
+                Text(grantable.purpose)
+                    .font(Theme.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer(minLength: 12)
+
+            if granted {
+                Text("허용됨")
+                    .font(Theme.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                Button("열기…") { choose(grantable) }
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+    }
+
+    private func choose(_ grantable: FolderAccess.Grantable) {
         let panel = NSOpenPanel()
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
         // 그 폴더 안에서 연다. 사용자는 아무것도 고르지 않고 "허용"만 누르면 된다.
+        // `~/Library`처럼 Finder에서 숨겨진 곳도 이렇게 지정하면 그대로 열린다.
         panel.directoryURL = grantable.folder
         panel.prompt = "허용"
-        panel.message = "Sweep이 Xcode 산출물과 시뮬레이터 파일을 찾을 수 있게 Developer 폴더를 허용하세요."
+        panel.message = "Sweep이 \(grantable.purpose)을(를) 찾을 수 있게 "
+            + "\(grantable.label) 폴더를 허용하세요."
 
         guard panel.runModal() == .OK, let picked = panel.url else { return }
         do {
