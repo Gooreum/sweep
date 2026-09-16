@@ -94,8 +94,8 @@ struct SandboxTests {
 
     @Test("샌드박스 밖 스캐너는 허락과 무관하게 그대로다")
     func unsandboxedScannersUnchanged() {
-        #expect(Feature.smartScan.scanners(sandboxed: false, developer: nil).count == 6)
-        #expect(Feature.junk.scanners(sandboxed: false, developer: nil).count == 4)
+        #expect(Feature.smartScan.scanners(sandboxed: false, developer: nil).count == 7)
+        #expect(Feature.junk.scanners(sandboxed: false, developer: nil).count == 5)
     }
 
     @Test("샌드박스의 디스크 맵 시작 지점은 허락 전 Downloads, 허락 후 개발 폴더까지")

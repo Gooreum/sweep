@@ -129,6 +129,20 @@ public enum ProtectedPaths {
 
     static var appSupportRoot: URL { inHome("Library/Application Support") }
 
+    /// 끝 이름이 앱 캐시 폴더 이름인가. **위치는 보지 않는다.**
+    ///
+    /// 스캐너가 후보를 고를 때 쓴다. 스캐너는 가짜 홈을 주입받아 돌 수 있어야 하는데
+    /// 위치까지 따지면 실제 홈 기준이라 테스트에서 전부 걸러진다.
+    /// 위치 판정은 관문이 `validate`에서 따로 한다 — 스캐너가 이름을 잘못 골라도
+    /// `ScanCoordinator.normalize`의 2차 방어선에서 막힌다.
+    static func matchesAppCacheName(_ url: URL) -> Bool {
+        let components = url.standardizedFileURL.pathComponents
+        return appCacheSuffixes.contains { suffix in
+            components.count >= suffix.count
+                && Array(components.suffix(suffix.count)) == suffix
+        }
+    }
+
     /// `~/Library/Application Support` 아래의 앱 캐시 폴더인가.
     ///
     /// 세 조건을 모두 만족해야 한다 — 그 아래에 있을 것, 끝 이름이 맞을 것,
