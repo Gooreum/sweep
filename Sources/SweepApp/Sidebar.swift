@@ -29,7 +29,9 @@ struct Sidebar: View {
         }
         .padding(.top, 8)
         .frame(width: Theme.sidebarWidth)
-        .background(Theme.surfaceSunken)
+        // 실물 재질. 불투명 색을 깔면 본문과 같은 평면으로 보인다 —
+        // 창 뒤가 실제로 비쳐야 사이드바가 한 겹 뒤에 있는 것으로 읽힌다.
+        .sidebarMaterial()
         .overlay(alignment: .trailing) {
             Rectangle()
                 .fill(Theme.border)

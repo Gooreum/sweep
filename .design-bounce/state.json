@@ -2,8 +2,12 @@
   "phase": "bulk",
   "spec_approved": true,
   "adapter": "macos-swiftui",
-  "current_step": 4,
-  "blockers": [],
+  "current_step": 5,
+  "blockers": [
+    "툴바 통합 미구현",
+    "디스크맵·메뉴바 치수 정리",
+    "묶음 기준 변경(스캐너 분류 필요)"
+  ],
   "spec_version": "v3",
   "stop": null,
   "note": "핸드오프(초점 스택) 리디자인. 샘플 = 검토 목록 화면",

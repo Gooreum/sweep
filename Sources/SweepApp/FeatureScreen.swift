@@ -22,7 +22,7 @@ struct FeatureScreen: View {
             if showsDock {
                 Divider()
                 SelectionDock(model: model) { showsConfirm = true }
-                    .background(Theme.surfaceSunken)
+                    .sidebarMaterial()
             }
         }
         .sheet(isPresented: $showsConfirm) {
