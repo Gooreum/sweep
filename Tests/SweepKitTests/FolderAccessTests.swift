@@ -138,6 +138,45 @@ struct FolderAccessTests {
         #expect(next.isGranted(library))
     }
 
+    // TC-9
+    @Test("이전 버전의 북마크가 새 키로 옮겨져 그대로 열린다")
+    func migratesLegacyBookmark() throws {
+        let (registry, base, defaults, cleanup) = try makeRegistry()
+        defer { cleanup() }
+
+        // 빌드 3까지 쓰던 키 하나. 가리키는 곳은 늘 ~/Library/Developer였다.
+        // 진짜 홈에 폴더를 만들지 않도록 임시 트리로 대신한다.
+        let developer = try makeGrantable("Library/Developer", in: base)
+        let data = try developer.folder.bookmarkData(options: .withSecurityScope,
+                                                     includingResourceValuesForKeys: nil,
+                                                     relativeTo: nil)
+        defaults.set(data, forKey: "developerFolderBookmark")
+        _ = registry   // 저장만 해 두고 새 인스턴스로 다음 실행을 흉내 낸다
+
+        let next = FolderAccess.Registry(defaults: defaults, legacy: developer)
+        next.restoreAll()
+
+        // 이미 허락한 사용자가 허락 화면을 다시 보면 안 된다.
+        #expect(next.hasAny)
+        #expect(next.isGranted(developer))
+        #expect(defaults.data(forKey: "developerFolderBookmark") == nil, "옛 키가 남았다")
+        #expect(defaults.data(forKey: developer.key) != nil, "새 키로 옮겨지지 않았다")
+    }
+
+    // TC-10
+    @Test("이전 북마크가 없으면 마이그레이션이 아무 일도 하지 않는다")
+    func migrationIsNoopWithoutLegacyKey() throws {
+        let (_, base, defaults, cleanup) = try makeRegistry()
+        defer { cleanup() }
+        let developer = try makeGrantable("Library/Developer", in: base)
+
+        let registry = FolderAccess.Registry(defaults: defaults, legacy: developer)
+        registry.restoreAll()
+
+        #expect(!registry.hasAny)
+        #expect(defaults.data(forKey: developer.key) == nil)
+    }
+
     // TC-8
     @Test("깨진 북마크는 복원에 실패하고 지워진다")
     func restoreDropsBrokenBookmark() throws {

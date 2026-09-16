@@ -66,12 +66,16 @@ public enum FolderAccess {
     /// 지금 열려 있는 폴더들을 들고 있는 곳. 관문·스캐너가 이것만 본다.
     public final class Registry: @unchecked Sendable {
         private let defaults: UserDefaults
+        /// 이전 버전 북마크가 가리키던 곳. 테스트가 진짜 홈에 폴더를 만들지 않게 주입한다.
+        private let legacy: Grantable
         private let lock = NSLock()
         private var grantedURLs: [URL] = []
 
-        /// 저장소를 주입할 수 있게 연다 — 테스트가 `.standard`를 건드리지 않게.
-        init(defaults: UserDefaults = .standard) {
+        /// 저장소를 주입할 수 있게 연다 — 테스트가 `.standard`나 진짜 홈을 건드리지 않게.
+        init(defaults: UserDefaults = .standard,
+             legacy: Grantable = FolderAccess.legacyGrantable) {
             self.defaults = defaults
+            self.legacy = legacy
         }
 
         /// 지금 열려 있는 폴더들(링크를 푼 정규 경로).
@@ -124,7 +128,7 @@ public enum FolderAccess {
             migrateLegacyBookmark()
             // `legacyGrantable`도 함께 돈다. 새로 허락받을 목록(`grantables`)에는 없지만
             // 이전 버전에서 그것만 허락한 사용자의 접근을 열어야 한다.
-            for grantable in FolderAccess.grantables + [FolderAccess.legacyGrantable] {
+            for grantable in FolderAccess.grantables + [legacy] {
                 restore(grantable)
             }
         }
@@ -175,7 +179,7 @@ public enum FolderAccess {
         /// "왜 다시 묻지"가 되고, 업데이트가 기능을 되돌린 것처럼 보인다.
         private func migrateLegacyBookmark() {
             guard let data = defaults.data(forKey: Self.legacyKey) else { return }
-            defaults.set(data, forKey: FolderAccess.legacyGrantable.key)
+            defaults.set(data, forKey: legacy.key)
             defaults.removeObject(forKey: Self.legacyKey)
         }
     }
