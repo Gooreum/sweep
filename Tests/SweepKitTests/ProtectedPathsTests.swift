@@ -210,10 +210,39 @@ struct ProtectedPathsTests {
         ]
         probes += ProtectedPaths.allowedRoots
         probes += ProtectedPaths.allowedRoots.map { $0.appending(path: "child.bin") }
+        probes += [
+            home.appending(path: ".npm/_cacache"),
+            home.appending(path: ".turso/turso"),
+            home.appending(path: ".nvm/versions"),
+        ]
 
         for url in probes {
             #expect(ProtectedPaths.isRemovable(url) == (ProtectedPaths.veto(for: url) == nil),
                     "판정이 갈라졌다: \(url.path)")
+        }
+    }
+
+    @Test("홈 직속 개발 캐시는 하위만 열린다")
+    func homeToolCachesAreRemovableBelowRootOnly() {
+        #expect(ProtectedPaths.isRemovable(home.appending(path: ".npm/_cacache")))
+        #expect(ProtectedPaths.isRemovable(home.appending(path: ".npm/_npx")))
+        #expect(ProtectedPaths.isRemovable(home.appending(path: ".expo/versions-cache")))
+
+        // 루트 자체는 기존 allowedRootItself 규칙이 막는다.
+        #expect(!ProtectedPaths.isRemovable(home.appending(path: ".npm")))
+        #expect(!ProtectedPaths.isRemovable(home.appending(path: ".expo")))
+    }
+
+    @Test("실행 파일이 든 도구 폴더는 열지 않는다")
+    func toolFoldersWithBinariesStayClosed() {
+        // ~/.turso는 sqld(39M)·turso(17M) 실행 파일 둘뿐이고,
+        // ~/.nvm은 node 런타임 설치본이다. 지우면 명령어가 사라진다.
+        for path in [".turso", ".turso/turso", ".nvm", ".nvm/versions"] {
+            let url = home.appending(path: path)
+            guard case .outsideAllowedRoots = ProtectedPaths.veto(for: url) else {
+                Issue.record("\(path): outsideAllowedRoots로 거부되어야 한다")
+                continue
+            }
         }
     }
 }

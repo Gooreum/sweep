@@ -64,6 +64,18 @@ public enum ProtectedPaths {
     /// 유일한 곳이다. 나머지는 실측에서 전부 권한 거부였다. 사용자가 열어 준
     /// `~/Library/Developer`(`developer`)가 있으면 그것도 더한다.
     /// 샌드박스의 임시 폴더는 컨테이너 안(`Data/tmp`)이라 `userTemporaryRoots`도 뜻이 없다.
+    /// 홈 바로 아래 개발 도구 폴더. 도구의 최상위 폴더를 루트로 둔다 —
+    /// "루트 자체는 삭제할 수 없다"는 기존 규칙이 `~/.npm`을 지키고 하위만 후보가 된다.
+    /// 새 규칙을 만들지 않고 있는 규칙을 쓰는 것이다.
+    ///
+    /// 안에 캐시만 들어 있는 폴더여야 한다. 실행 파일이 섞인 곳은 넣지 않는다 —
+    /// `~/.nvm`은 node 런타임이고, `~/.turso`는 `sqld`(39M)·`turso`(17M) 실행 파일 둘뿐이다.
+    /// 지우면 명령어가 사라진다.
+    ///
+    /// `~/.expo`는 루트로 두되 스캐너가 하위 캐시 폴더만 고른다. 같은 층에
+    /// `ngrok.yml`(인증 토큰)과 `state.json`(로그인 상태)이 있어 통째로 올리면 안 된다.
+    static let homeToolRoots: [String] = [".npm", ".expo"]
+
     static func roots(sandboxed: Bool, developer: URL? = nil) -> [URL] {
         let downloads = inHome("Downloads")
         guard !sandboxed else { return [downloads] + (developer.map { [$0] } ?? []) }
@@ -73,7 +85,7 @@ public enum ProtectedPaths {
             inHome("Library/Logs"),
             downloads,
             URL(filePath: "/private/tmp"),
-        ] + userTemporaryRoots
+        ] + homeToolRoots.map(inHome) + userTemporaryRoots
     }
 
     /// 지금 이 순간의 허용 루트. 허락은 실행 중에 생기므로 시작할 때 고정되는
