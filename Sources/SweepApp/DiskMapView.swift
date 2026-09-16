@@ -202,14 +202,15 @@ struct DiskMapView: View {
 
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Theme.border)
-                    Capsule()
+                    // 알약이 아니라 막대다. 창 안의 다른 막대와 radius를 맞춘다.
+                    RoundedRectangle(cornerRadius: 3).fill(Theme.border)
+                    RoundedRectangle(cornerRadius: 3)
                         .fill(Theme.accent.opacity(0.55))
                         // 아주 작아도 흔적은 남긴다. 0폭이면 있는지조차 모른다.
                         .frame(width: max(geometry.size.width * ratio, 2))
                 }
             }
-            .frame(height: 10)
+            .frame(height: 6)
 
             // 못 읽은 폴더는 크기를 지어내지 않는다. 0 KB라고 쓰면 거짓말이다.
             Text(node.isReadable ? node.formattedSize : "읽을 수 없음")

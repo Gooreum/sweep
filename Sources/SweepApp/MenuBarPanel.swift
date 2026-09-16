@@ -48,8 +48,10 @@ struct MenuBarPanel: View {
 
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Theme.border)
-                        Capsule()
+                        // Capsule은 높이 8에서 양 끝이 과하게 둥글어 막대가 알약이 된다.
+                        // 창 안의 다른 막대(디스크 맵·개요)와 같은 radius를 쓴다.
+                        RoundedRectangle(cornerRadius: 4).fill(Theme.border)
+                        RoundedRectangle(cornerRadius: 4)
                             .fill(Theme.accent)
                             .frame(width: geometry.size.width * usage.usedFraction)
                     }

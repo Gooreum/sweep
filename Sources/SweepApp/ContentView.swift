@@ -14,6 +14,27 @@ struct ContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Theme.surface)
         }
+        // 전역 액션을 타이틀바로 올린다. 별도 툴바 줄을 만들면 사이드바 위에
+        // 가로줄이 하나 더 생겨 화면이 그만큼 낮아진다 — 타이틀바는 어차피 비어 있다.
+        .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Text(app.selected.displayName)
+                    .font(Theme.bodyText.weight(.medium))
+                    .foregroundStyle(Theme.textPrimary)
+            }
+
+            ToolbarItemGroup(placement: .primaryAction) {
+                // 한 번에 고르는 가장 흔한 경우. 메뉴로 접어 두면 두 번 눌러야 한다.
+                Button("안전 항목 선택") { app.currentModel?.apply(.safeOnly) }
+                    .disabled(app.currentModel?.items.isEmpty ?? true)
+
+                Button("다시 검색") {
+                    guard let model = app.currentModel else { return }
+                    Task { await model.scan() }
+                }
+                .disabled(!app.canScan)
+            }
+        }
     }
 
     @ViewBuilder

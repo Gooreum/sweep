@@ -1,15 +1,14 @@
 {
-  "phase": "bulk",
+  "phase": "done",
   "spec_approved": true,
   "adapter": "macos-swiftui",
-  "current_step": 5,
+  "current_step": 6,
   "blockers": [
-    "툴바 통합 미구현",
-    "디스크맵·메뉴바 치수 정리",
-    "묶음 기준 변경(스캐너 분류 필요)"
+    "검색 필드(ScanModel 필터 필요)",
+    "사이드바 폭 220→212"
   ],
   "spec_version": "v3",
-  "stop": null,
+  "stop": "success",
   "note": "핸드오프(초점 스택) 리디자인. 샘플 = 검토 목록 화면",
   "sample_approved": true
 }
