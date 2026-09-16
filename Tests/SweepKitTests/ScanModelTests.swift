@@ -705,4 +705,33 @@ struct ScanModelTests {
         #expect(model.groups.count == 1)
         #expect(model.safetyGroups.flatMap(\.items).count == 1)
     }
+
+    // MARK: - 정렬
+
+    @Test("묶음 안은 큰 것부터 나온다")
+    @MainActor
+    func groupItemsAreSortedBySize() async {
+        // 여러 카테고리가 한 묶음(safety)에 섞이는 상황을 만든다.
+        // 스캔 결과는 카테고리 우선으로 정렬돼 오므로, 그대로 묶으면 크기순이 깨진다.
+        let model = await modelWithItems([
+            item("작은.bin", size: 200, category: .xcode),
+            item("큰.bin", size: 5_000, category: .devCache),
+            item("중간.bin", size: 3_000, category: .appCache),
+        ])
+
+        let sizes = model.safetyGroups.flatMap(\.items).map(\.size)
+        #expect(sizes == [5_000, 3_000, 200])
+    }
+
+    @Test("카테고리 묶음 안에서도 큰 것부터다")
+    @MainActor
+    func categoryGroupItemsAreSortedBySize() async {
+        let model = await modelWithItems([
+            item("a.bin", size: 100, category: .devCache),
+            item("b.bin", size: 900, category: .devCache),
+        ])
+
+        let sizes = model.groups.flatMap(\.items).map(\.size)
+        #expect(sizes == [900, 100])
+    }
 }

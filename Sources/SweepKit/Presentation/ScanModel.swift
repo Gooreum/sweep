@@ -36,6 +36,17 @@ public struct ScanGroup: Identifiable, Sendable, Hashable {
     }
 }
 
+extension Array where Element == CleanupItem {
+    /// 큰 것부터. **묶음 안에서는 크기가 유일한 정렬 기준이다.**
+    ///
+    /// `Dictionary(grouping:)`은 원본 순서를 그대로 물려준다. 스캔 결과는
+    /// 카테고리 우선으로 정렬돼 있어서, 판단 기준으로 다시 묶으면 여러 카테고리가
+    /// 한 묶음에 섞이며 크기순이 깨진다 — 5GB 아래에 200MB가 오고 그 아래 3GB가 온다.
+    var sortedBySize: [CleanupItem] {
+        sorted { $0.size > $1.size }
+    }
+}
+
 extension SafetyLevel {
     /// 묶음 머리에 쓰는 이름. 등급 이름("안전")이 아니라 **무엇을 뜻하는지**를 적는다.
     public var groupLabel: String {
@@ -215,7 +226,7 @@ public final class ScanModel {
     /// 스마트 스캔이 쓴다 — 거기서는 기능별로 갈리는 것이 정보다.
     public var groups: [ScanGroup] {
         Dictionary(grouping: visibleItems, by: \.category)
-            .map { ScanGroup(kind: .category($0.key), items: $0.value) }
+            .map { ScanGroup(kind: .category($0.key), items: $0.value.sortedBySize) }
             .sorted { ($0.category?.sortOrder ?? 0) < ($1.category?.sortOrder ?? 0) }
     }
 
@@ -226,7 +237,7 @@ public final class ScanModel {
     /// 한 덩어리에 있으면 하나씩 열어 봐야 고를 수 있다.
     public var safetyGroups: [ScanGroup] {
         Dictionary(grouping: visibleItems, by: \.safety)
-            .map { ScanGroup(kind: .safety($0.key), items: $0.value) }
+            .map { ScanGroup(kind: .safety($0.key), items: $0.value.sortedBySize) }
             .sorted { lhs, rhs in
                 guard case .safety(let l) = lhs.kind, case .safety(let r) = rhs.kind
                 else { return false }
