@@ -154,6 +154,44 @@ public enum ProtectedPaths {
 
     static var appSupportRoot: URL { inHome("Library/Application Support") }
 
+    // MARK: - 응용 프로그램
+
+    /// 앱 번들이 놓이는 곳. **루트가 아니다** — 이 바로 아래의 `*.app`만 연다.
+    ///
+    /// 루트로 넣으면 `/Applications/Xcode.app/Contents/MacOS/xcodebuild`까지
+    /// 전부 후보가 된다. `Application Support`와 같은 상황이고 같은 답을 쓴다:
+    /// 범위를 넓히지 않고 **모양으로만** 연다.
+    static var applicationFolders: [URL] {
+        [URL(filePath: "/Applications"), inHome("Applications")]
+    }
+
+    /// 앱 폴더 **바로 아래**의 `.app` 번들인가.
+    ///
+    /// 깊이 1로 못박는다. `~/Applications/Chrome Apps.localized/*.app`처럼 한 단
+    /// 아래 있는 것은 열지 않는다 — 열 이유가 생기면 그때 명시적으로 더한다.
+    ///
+    /// `appCacheSuffixes`와 달리 **위치를 본다.** 이름만 보면 어디에 있는
+    /// `.app`이든 지울 수 있게 되는데, 그건 열려는 범위가 아니다.
+    static func isApplicationBundle(_ components: [String], folders: [[String]]) -> Bool {
+        guard let name = components.last, name.hasSuffix(".app") else { return false }
+        return folders.contains { folder in
+            components.count == folder.count + 1
+                && Array(components.prefix(folder.count)) == folder
+        }
+    }
+
+    /// 앱을 지울 수 있는 상태인가. 샌드박스 밖에서는 늘 그렇다.
+    ///
+    /// 샌드박스에서는 `/Applications`에 쓸 수 없다 — 전용 entitlement가 없고,
+    /// 사용자가 열기 대화상자에서 골라 줘야만 열린다. `appSupportReadable`과
+    /// 같은 모양으로 둔다.
+    static func applicationsRemovable(sandboxed: Bool, granted: [URL]) -> Bool {
+        guard sandboxed else { return true }
+        return applicationFolders.contains { folder in
+            granted.contains { folder.isSameOrDescendant(of: $0) }
+        }
+    }
+
     /// 끝 이름이 앱 캐시 폴더 이름인가. **위치는 보지 않는다.**
     ///
     /// 스캐너가 후보를 고를 때 쓴다. 스캐너는 가짜 홈을 주입받아 돌 수 있어야 하는데
