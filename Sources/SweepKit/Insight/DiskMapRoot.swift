@@ -97,6 +97,9 @@ extension DiskMapRoot {
         }
 
         add(URL(filePath: "/Applications"), "응용 프로그램", .apps)
+        // 이 사용자만 쓰는 앱이 여기 놓인다. 관문은 이 아래의 `.app`도 여는데
+        // 시작점이 없으면 화면에서 도달할 길이 없었다. 없으면 `add`가 알아서 거른다.
+        add(home.appending(path: "Applications"), "~/Applications", .apps)
 
         // 정리 화면과 같은 범위. 여기서 시작하면 "보이는 건 다 지울 수 있다"가 성립한다.
         for url in ProtectedPaths.allowedRoots {

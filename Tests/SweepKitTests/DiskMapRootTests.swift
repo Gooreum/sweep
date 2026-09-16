@@ -111,6 +111,56 @@ struct DiskMapRootTests {
                 == home.standardizedFileURL)
     }
 
+    // MARK: - 응용 프로그램 (앱 삭제)
+
+    private func appPaths(in roots: [DiskMapRoot]) -> [String] {
+        roots.filter { $0.group == .apps }.map { $0.url.standardizedFileURL.path }
+    }
+
+    // TC-1
+    @Test("앱 폴더 두 곳이 모두 시작 지점이다")
+    func bothApplicationFolders() {
+        let roots = DiskMapRoot.roots(home: home) { _ in true }
+        let paths = appPaths(in: roots)
+
+        // 관문이 두 곳 아래의 `.app`을 여는데, 시작점이 없으면 화면에서 도달할 수 없다.
+        #expect(paths.contains("/Applications"))
+        #expect(paths.contains(home.appending(path: "Applications")
+                               .standardizedFileURL.path))
+    }
+
+    // TC-2
+    @Test("~/Applications가 없으면 걸러진다")
+    func homeApplicationsDroppedWhenMissing() {
+        let homeApps = home.appending(path: "Applications").standardizedFileURL.path
+        let roots = DiskMapRoot.roots(home: home) { $0 != homeApps }
+
+        #expect(appPaths(in: roots) == ["/Applications"])
+    }
+
+    // TC-3
+    @Test("~/Applications 라벨이 홈 절대경로를 드러내지 않는다")
+    func homeApplicationsLabel() {
+        let roots = DiskMapRoot.roots(home: home) { _ in true }
+        let label = roots.first {
+            $0.url.standardizedFileURL.path
+                == home.appending(path: "Applications").standardizedFileURL.path
+        }?.label
+
+        #expect(label == "~/Applications")
+    }
+
+    // TC-4
+    @Test("앱 폴더를 더해도 경로·라벨이 겹치지 않는다")
+    func stillNoDuplicates() {
+        let roots = DiskMapRoot.roots(home: home) { _ in true }
+        let paths = roots.map { $0.url.standardizedFileURL.path }
+        let labels = roots.map(\.label)
+
+        #expect(Set(paths).count == paths.count, "같은 경로가 두 번 올라왔다")
+        #expect(Set(labels).count == labels.count, "같은 라벨이 두 번 올라왔다")
+    }
+
     // TC-7
     @Test("그룹마다 항목이 있다")
     func everyGroupIsPopulated() {
