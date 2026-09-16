@@ -2,7 +2,7 @@
   "phase": "bulk",
   "spec_approved": true,
   "adapter": "macos-swiftui",
-  "current_step": 3,
+  "current_step": 4,
   "blockers": [],
   "spec_version": "v3",
   "stop": null,

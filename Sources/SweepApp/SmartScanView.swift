@@ -89,18 +89,25 @@ struct SmartScanView: View {
                         .font(Theme.bodyText)
                         .foregroundStyle(Theme.textSecondary)
                     Spacer()
-                    if scanned {
-                        Text("전체 \(usage.formattedTotal) 중")
-                            .font(Theme.captionMono)
-                            .foregroundStyle(Theme.textSecondary)
-                    }
+                    Text(scanned
+                         ? "\(summary.breakdown.reduce(0) { $0 + $1.count })개 항목"
+                         : "전체 \(usage.formattedTotal) 중")
+                        .font(Theme.captionMono)
+                        .foregroundStyle(Theme.textSecondary)
                 }
 
-                DiskDonut(slices: scanned ? reclaimSlices(breakdown) : diskSlices(usage),
-                          centerValue: scanned
-                              ? "\(breakdown.count)종"
-                              : "\(Int(usage.usedFraction * 100))%",
-                          centerCaption: scanned ? "정리 대상" : "사용됨")
+                if scanned {
+                    // 스캔 후에는 **회수 가능한 몫의 구성**을 막대로 그린다.
+                    // 도넛은 조각이 셋이고 비율이 1:1:0.01일 때 가장 작은 것이
+                    // 실처럼 사라져 색만 있고 읽히지 않았다.
+                    ReclaimBar(rows: breakdown)
+                    ReclaimLegend(rows: breakdown)
+                } else {
+                    // 스캔 전에는 조각이 둘(사용/사용가능)뿐이라 링이 제 몫을 한다.
+                    DiskDonut(slices: diskSlices(usage),
+                              centerValue: "\(Int(usage.usedFraction * 100))%",
+                              centerCaption: "사용됨")
+                }
             }
             .padding(24)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -112,14 +119,6 @@ struct SmartScanView: View {
     private func diskSlices(_ usage: VolumeUsage) -> [DiskDonut.Slice] {
         [.init(id: "used", label: "사용됨", bytes: usage.used, color: Theme.usedSlice),
          .init(id: "free", label: "사용 가능", bytes: usage.available, color: Theme.freeSlice)]
-    }
-
-    /// 스캔 후 — 회수 가능한 몫의 구성. 링 전체가 기능 색으로 찬다.
-    private func reclaimSlices(_ breakdown: [MenuBarSummary.Row]) -> [DiskDonut.Slice] {
-        breakdown.map { row in
-            .init(id: row.feature.rawValue, label: row.feature.displayName,
-                  bytes: row.bytes, color: Theme.tintFill(row.feature))
-        }
     }
 
     /// Sweep이 들여다보는 곳. 목록은 안전 게이트의 허용 루트에서 유도된다.
