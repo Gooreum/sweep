@@ -31,6 +31,13 @@ public final class AppModel {
     public private(set) var grantedFolderCount: Int = 0
     private let folderAccess: FolderAccess.Registry
 
+    /// 이 앱이 폴더 허락을 요구하는 환경인가(= 샌드박스인가).
+    ///
+    /// 허락을 거둘 때 다시 물어야 하므로 판정을 기억해 둔다. 그때마다
+    /// `Sandbox.isActive`를 다시 읽으면 주입으로 샌드박스를 흉내 낸 테스트가
+    /// 거둔 직후 "허락이 필요 없다"고 답한다.
+    private let requiresFolderAccess: Bool
+
     /// 기능 모델을 만드는 방법을 주입할 수 있게 열어 둔다.
     ///
     /// `ScanModel(scan:removeOne:)`과 같은 이유다 — 기본 구성은 실제 스캐너를
@@ -47,8 +54,9 @@ public final class AppModel {
         self.makeModel = makeModel
         self.makeDiskMap = makeDiskMap
         self.folderAccess = folderAccess
-        self.needsFolderAccess = needsFolderAccess
-            ?? (Sandbox.isActive && !folderAccess.hasAny)
+        // 주입값이 있으면 그것이 "허락을 요구하는 환경인가"를 대신한다 — 테스트·데모용.
+        self.requiresFolderAccess = needsFolderAccess ?? Sandbox.isActive
+        self.needsFolderAccess = self.requiresFolderAccess && !folderAccess.hasAny
         self.grantedFolderCount = folderAccess.urls.count
     }
 
@@ -59,6 +67,25 @@ public final class AppModel {
         try folderAccess.grant(picked, as: grantable)
         needsFolderAccess = false
         grantedFolderCount = folderAccess.urls.count
+        forgetScans()
+    }
+
+    /// 허락을 거둔다. 화면이 즉시 따라오도록 관찰 값도 함께 되돌린다.
+    ///
+    /// 마지막 하나를 거두면 허락 화면으로 돌아간다 — 훑을 곳이 없는 상태이므로
+    /// 검색 버튼을 두면 늘 "정리할 항목 없음"만 나온다.
+    public func revokeFolderAccess(_ grantable: FolderAccess.Grantable) {
+        folderAccess.revoke(grantable)
+        grantedFolderCount = folderAccess.urls.count
+        needsFolderAccess = requiresFolderAccess && !folderAccess.hasAny
+        forgetScans()
+    }
+
+    /// 허락이 바뀌면 훑을 곳이 달라진다. 낡은 결과를 남겨 두면
+    /// 사용자 눈에는 "허락했는데 그대로"로 보인다 — 실제로 그렇게 보였다.
+    private func forgetScans() {
+        models.removeAll()
+        diskMapModel = nil
     }
 
     /// 이 폴더가 이미 열려 있는가. 허락 화면이 체크 표시를 그린다.

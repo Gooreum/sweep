@@ -177,6 +177,70 @@ struct FolderAccessTests {
         #expect(defaults.data(forKey: developer.key) == nil)
     }
 
+    // TC-11
+    @Test("허락을 거두면 목록과 저장소에서 사라진다")
+    func revokeClosesFolder() throws {
+        let (registry, base, defaults, cleanup) = try makeRegistry()
+        defer { cleanup() }
+        let library = try makeGrantable("Library", in: base)
+        try registry.grant(library.folder, as: library)
+
+        registry.revoke(library)
+
+        // 이 권한은 시스템 설정에 안 나타나므로 여기서 거두지 못하면 영영 못 바꾼다.
+        #expect(registry.urls.isEmpty)
+        #expect(!registry.isGranted(library))
+        #expect(!registry.hasAny)
+        #expect(defaults.data(forKey: library.key) == nil)
+    }
+
+    // TC-12
+    @Test("한 폴더를 거둬도 다른 허락은 남는다")
+    func revokeLeavesOtherGrants() throws {
+        let (registry, base, _, cleanup) = try makeRegistry()
+        defer { cleanup() }
+        let library = try makeGrantable("Library", in: base)
+        let npm = try makeGrantable(".npm", in: base)
+        try registry.grant(library.folder, as: library)
+        try registry.grant(npm.folder, as: npm)
+
+        registry.revoke(library)
+
+        #expect(registry.urls.count == 1)
+        #expect(!registry.isGranted(library))
+        #expect(registry.isGranted(npm))
+    }
+
+    // TC-13
+    @Test("거둔 뒤 다시 열면 그대로 열린다")
+    func canGrantAgainAfterRevoke() throws {
+        let (registry, base, defaults, cleanup) = try makeRegistry()
+        defer { cleanup() }
+        let library = try makeGrantable("Library", in: base)
+
+        try registry.grant(library.folder, as: library)
+        registry.revoke(library)
+        try registry.grant(library.folder, as: library)
+
+        #expect(registry.isGranted(library))
+        #expect(defaults.data(forKey: library.key) != nil)
+    }
+
+    // TC-14
+    @Test("허락한 적 없는 폴더를 거둬도 아무 일도 없다")
+    func revokeUngrantedIsNoop() throws {
+        let (registry, base, _, cleanup) = try makeRegistry()
+        defer { cleanup() }
+        let library = try makeGrantable("Library", in: base)
+        let npm = try makeGrantable(".npm", in: base)
+        try registry.grant(library.folder, as: library)
+
+        registry.revoke(npm)
+
+        #expect(registry.urls.count == 1)
+        #expect(registry.isGranted(library))
+    }
+
     // TC-8
     @Test("깨진 북마크는 복원에 실패하고 지워진다")
     func restoreDropsBrokenBookmark() throws {

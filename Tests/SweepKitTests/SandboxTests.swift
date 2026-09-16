@@ -297,6 +297,43 @@ struct SandboxTests {
         #expect(app.canScan)
     }
 
+    @Test("앱 모델: 마지막 허락을 거두면 허락 화면으로 돌아간다")
+    @MainActor
+    func revokeReturnsToAccessScreen() throws {
+        let (registry, grantable, _, cleanup) = try makeAccess()
+        defer { cleanup() }
+        let app = AppModel(folderAccess: registry, needsFolderAccess: true)
+
+        try app.grantFolderAccess(grantable.folder, as: grantable)
+        #expect(!app.needsFolderAccess)
+        #expect(app.grantedFolderCount == 1)
+
+        app.revokeFolderAccess(grantable)
+
+        // 훑을 곳이 없으면 검색 버튼 대신 허락 화면이 나와야 한다.
+        #expect(app.needsFolderAccess)
+        #expect(app.grantedFolderCount == 0)
+        #expect(!app.isGranted(grantable))
+    }
+
+    @Test("앱 모델: 허락이 바뀌면 낡은 스캔 결과를 버린다")
+    @MainActor
+    func accessChangeForgetsScans() throws {
+        let (registry, grantable, _, cleanup) = try makeAccess()
+        defer { cleanup() }
+        let app = AppModel(makeModel: { _ in ScanModel(scan: { AsyncStream { $0.finish() } }) },
+                           folderAccess: registry, needsFolderAccess: true)
+
+        try app.grantFolderAccess(grantable.folder, as: grantable)
+        let afterGrant = app.model(for: .junk)
+
+        app.revokeFolderAccess(grantable)
+
+        // 허락이 바뀌면 훑을 곳이 달라진다. 같은 모델을 계속 쓰면
+        // 사용자 눈에는 "허락했는데 그대로"로 보인다.
+        #expect(app.model(for: .junk) !== afterGrant)
+    }
+
     @Test("앱 모델 기본값: 샌드박스 밖에서는 허락이 필요 없다")
     @MainActor
     func appModelOutsideSandboxNeedsNothing() throws {

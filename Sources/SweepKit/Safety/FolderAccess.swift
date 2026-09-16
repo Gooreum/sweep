@@ -119,6 +119,23 @@ public enum FolderAccess {
             start(picked)
         }
 
+        /// 허락을 거둔다. 저장된 북마크를 지우고 접근을 닫는다.
+        ///
+        /// 이 권한은 시스템 설정 어디에도 나타나지 않는다. TCC 권한과 달리
+        /// 사용자가 macOS 설정에서 관리할 방법이 없으므로, **앱이 거두는 길을 주지 않으면
+        /// 마음을 바꿀 방법이 아예 없다.**
+        public func revoke(_ grantable: Grantable) {
+            defaults.removeObject(forKey: grantable.key)
+
+            lock.lock(); defer { lock.unlock() }
+            let target = FolderAccess.components(of: grantable.folder)
+            // `start`가 프로세스 수명 내내 열어 둔 접근을 여기서만 닫는다.
+            for url in grantedURLs where FolderAccess.components(of: url) == target {
+                url.stopAccessingSecurityScopedResource()
+            }
+            grantedURLs.removeAll { FolderAccess.components(of: $0) == target }
+        }
+
         /// 앱 시작 때 한 번. 저장된 북마크를 전부 풀어 접근을 다시 연다.
         ///
         /// 낡았으면(폴더가 옮겨졌다 돌아온 경우 등) 새로 저장한다. 못 풀거나 엉뚱한 곳을
