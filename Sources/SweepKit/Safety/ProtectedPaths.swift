@@ -16,6 +16,8 @@ public enum RemovalVeto: Error, Equatable, Sendable {
     case notOwnedByCurrentUser(URL)
     /// 파일 플래그(불변·삭제금지·SIP)가 걸려 있어 커널이 삭제를 거부한다.
     case systemProtected(URL)
+    /// 지금 실행 중인 앱이다.
+    case applicationRunning(URL)
 
     public var message: String {
         switch self {
@@ -26,6 +28,7 @@ public enum RemovalVeto: Error, Equatable, Sendable {
         case .allowedRootItself(let u): "정리 루트 자체는 삭제할 수 없습니다: \(u.path)"
         case .notOwnedByCurrentUser(let u): "다른 사용자·시스템 소유라 정리할 수 없습니다: \(u.path)"
         case .systemProtected(let u): "시스템이 보호 중이라 삭제할 수 없습니다: \(u.path)"
+        case .applicationRunning(let u): "실행 중인 앱입니다. 종료한 뒤 다시 시도해 주세요: \(u.path)"
         }
     }
 }
@@ -319,6 +322,25 @@ public enum ProtectedPaths {
                 throw RemovalVeto.systemProtected(resolved)
             }
         }
+
+        // 8. 실행 중인 앱은 지우지 않는다.
+        //
+        //    `trashItem`은 이름 바꾸기라 **실행 중이어도 성공한다.** 앱은 휴지통에서
+        //    계속 돌다가 다음 실행에 깨진다 — 부팅된 시뮬레이터 때와 같은 함정이다.
+        //    앱 번들일 때만 물어본다. 후보 수천 개마다 프로세스 목록을 훑으면 비싸다.
+        if isApp {
+            let running = runningApplicationURLs()
+            if running.contains(where: {
+                canonical($0).standardizedFileURL.pathComponents == resolvedComponents
+            }) {
+                throw RemovalVeto.applicationRunning(resolved)
+            }
+        }
+    }
+
+    /// 지금 실행 중인 앱의 번들 경로. 테스트에서 갈아끼운다 — 앱을 띄울 수는 없다.
+    nonisolated(unsafe) static var runningApplicationURLs: @Sendable () -> [URL] = {
+        RunningApplications.urls
     }
 
     /// 이 항목을 담고 있는 폴더에 쓸 수 있는가.

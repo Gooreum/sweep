@@ -229,3 +229,73 @@ struct ApplicationOwnershipTests {
                 == .notOwnedByCurrentUser(ProtectedPaths.canonical(powerlog)))
     }
 }
+
+/// 실행 중인 앱은 지우지 않는다.
+///
+/// `trashItem`은 이름 바꾸기라 실행 중이어도 성공한다 — 앱은 휴지통에서 계속 돌다가
+/// 다음 실행에 깨진다. 실행 목록을 갈아끼워 검증한다. 테스트가 앱을 띄울 수는 없고,
+/// 띄운다면 그것을 지우는 TC가 되어 버린다.
+@Suite("실행 중인 앱 보호", .serialized)
+struct RunningApplicationTests {
+
+    private let ghost = URL(filePath: "/Applications/sweep-없는앱-9E3A1C.app")
+
+    /// 실행 목록을 잠시 바꾸고 원래대로 돌려 둔다.
+    private func withRunning(_ urls: [URL], _ body: () -> Void) {
+        let original = ProtectedPaths.runningApplicationURLs
+        ProtectedPaths.runningApplicationURLs = { urls }
+        defer { ProtectedPaths.runningApplicationURLs = original }
+        body()
+    }
+
+    // TC-1
+    @Test("실행 목록이 비면 막지 않는다")
+    func notRunning() {
+        withRunning([]) {
+            #expect(ProtectedPaths.veto(for: ghost) == nil)
+        }
+    }
+
+    // TC-2
+    @Test("실행 중이면 거부한다")
+    func running() {
+        withRunning([ghost]) {
+            #expect(ProtectedPaths.veto(for: ghost)
+                    == .applicationRunning(ghost.standardizedFileURL))
+        }
+    }
+
+    // TC-3
+    @Test("다른 앱이 실행 중인 것은 상관없다")
+    func otherAppRunning() {
+        withRunning([URL(filePath: "/Applications/sweep-다른앱-9E3A1C.app")]) {
+            #expect(ProtectedPaths.veto(for: ghost) == nil)
+        }
+    }
+
+    // TC-4
+    @Test("앱이 아닌 경로는 이 검사를 타지 않는다")
+    func nonApplicationSkipsCheck() {
+        let cache = Sandbox.userHome
+            .appending(path: "Library/Caches")
+            .appending(path: "sweep-없는폴더-9E3A1C")
+        withRunning([cache]) {
+            #expect(ProtectedPaths.veto(for: cache) == nil)
+        }
+    }
+
+    // TC-5
+    @Test("사유 문구가 무엇을 해야 하는지 말한다")
+    func message() {
+        let message = RemovalVeto.applicationRunning(ghost).message
+        #expect(message.hasPrefix("실행 중인 앱입니다"))
+        #expect(message.contains(ghost.path))
+    }
+
+    // TC-6
+    @Test("기본 구현이 실제 실행 중인 앱을 집는다")
+    func defaultImplementation() {
+        // 테스트 프로세스 자신은 번들이 없을 수 있다. Finder·Dock 등 무엇이든 있으면 된다.
+        #expect(!RunningApplications.urls.isEmpty)
+    }
+}
