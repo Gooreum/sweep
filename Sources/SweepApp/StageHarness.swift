@@ -34,7 +34,7 @@ struct StageHarness: View {
                 }
             } else if stage == "diskmap" {
                 if let diskMap {
-                    DiskMapView(model: diskMap)
+                    DiskMapView(model: diskMap, app: app)
                 } else {
                     Text("준비 중").font(Theme.bodyText)
                 }

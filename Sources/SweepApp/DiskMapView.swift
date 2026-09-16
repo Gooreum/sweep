@@ -12,8 +12,14 @@ struct DiskMapView: View {
     /// 10초짜리 순회를 다시 돈다.
     @Bindable var model: DiskMapModel
 
+    /// 막힌 폴더를 그 자리에서 허락받으려면 필요하다.
+    @Bindable var app: AppModel
+
     /// 삭제 확인을 기다리는 항목. nil이면 대화가 닫혀 있다.
     @State private var pendingDelete: DiskUsageNode?
+
+    /// 허락에 실패한 사유. 성공했으면 nil.
+    @State private var grantFailure: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -60,6 +66,20 @@ struct DiskMapView: View {
             Button("확인") { model.clearRemovalFailure() }
         } message: {
             Text(model.removalFailure ?? "")
+        }
+        .alert("다른 폴더를 골랐습니다",
+               isPresented: Binding(get: { grantFailure != nil },
+                                    set: { if !$0 { grantFailure = nil } })) {
+            Button("확인") { grantFailure = nil }
+        } message: {
+            Text(grantFailure ?? "")
+        }
+        // 허락이 늘거나 줄면 보던 자리를 **제자리에서** 다시 읽는다.
+        //
+        // 이 한 줄이 두 경우를 함께 처리한다 — 이 화면에서 허락한 경우와
+        // 다른 화면(스마트 스캔·허락 화면)에서 허락한 경우.
+        .onChange(of: app.grantedFolderCount) {
+            Task { await model.reload() }
         }
     }
 
@@ -181,11 +201,59 @@ struct DiskMapView: View {
     /// 크기순 막대 목록. 트리맵은 이 데이터에 맞지 않았다 —
     /// 5.76GB짜리 하나가 나머지를 눌러 면적 비교가 성립하지 않는다.
     private var usageList: some View {
-        List(model.tiles) { node in
-            row(node, largest: model.tiles.first?.size ?? 0)
+        VStack(spacing: 0) {
+            List(model.tiles) { node in
+                row(node, largest: model.tiles.first?.size ?? 0)
+            }
+            .listStyle(.inset)
+            .scrollIndicators(.visible)
+
+            blockedFooter
         }
-        .listStyle(.inset)
-        .scrollIndicators(.visible)
+    }
+
+    /// 보이는 것 중 못 읽는 것이 하나라도 있으면 나온다.
+    ///
+    /// 열기 대화상자로 고르면 대개 풀리지만, TCC가 이미 거부를 기록했다면
+    /// 시스템 설정에서 되돌리는 것이 확실한 길이다. 둘 다 준다 —
+    /// 스마트 스캔의 같은 이름 장치와 문구·동작을 맞춘다.
+    @ViewBuilder
+    private var blockedFooter: some View {
+        if model.tiles.contains(where: { !$0.isReadable }) {
+            Divider().overlay(Theme.border)
+
+            HStack(spacing: 12) {
+                Text("권한이 막혀 못 읽는 폴더가 있어요")
+                    .font(Theme.caption)
+                    .foregroundStyle(SafetyLevel.caution.tint)
+                Spacer(minLength: 12)
+                Button("시스템 설정 열기") { PrivacySettings.openFilesAndFolders() }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+        }
+    }
+
+    /// 막힌 폴더를 열기 대화상자로 직접 고르게 한다.
+    ///
+    /// TCC 거부는 "앱이 알아서 여는 것"을 막는 것이라, 사용자가 명시적으로 고른
+    /// 폴더는 접근이 따로 부여된다. `SmartScanView.unblock`과 **같은 길**을 쓴다 —
+    /// 두 벌로 두면 언젠가 갈라진다.
+    ///
+    /// 다시 읽는 것은 여기서 하지 않는다. 허락이 늘면 `grantedFolderCount`가 바뀌고
+    /// `onChange`가 받아 제자리에서 다시 읽는다.
+    private func unblock(_ node: DiskUsageNode) {
+        let grantable = FolderAccess.Grantable(folder: node.url,
+                                               label: node.name,
+                                               purpose: "용량 확인")
+        guard let picked = FolderPicker.ask(for: grantable) else { return }
+        do {
+            try app.grantFolderAccess(picked, as: grantable)
+        } catch let failure as FolderAccess.Failure {
+            grantFailure = failure.message
+        } catch {
+            grantFailure = error.localizedDescription
+        }
     }
 
     private func row(_ node: DiskUsageNode, largest: Int64) -> some View {
@@ -213,16 +281,25 @@ struct DiskMapView: View {
             .frame(height: 6)
 
             // 못 읽은 폴더는 크기를 지어내지 않는다. 0 KB라고 쓰면 거짓말이다.
-            Text(node.isReadable ? node.formattedSize : "읽을 수 없음")
+            //
+            // 무채색으로 두면 "작아서 안 보이는 것"과 구분되지 않는다. 경고색을 준다.
+            Text(node.isReadable ? node.formattedSize : "권한 없음")
                 .font(node.isReadable ? Theme.bodyText.monospacedDigit() : Theme.caption)
-                .foregroundStyle(node.isReadable ? Color.secondary : Theme.textTertiary)
+                .foregroundStyle(node.isReadable
+                                 ? Color.secondary : SafetyLevel.caution.tint)
                 .frame(width: 84, alignment: .trailing)
 
-            statusBadge(veto)
+            statusBadge(node, veto: veto)
                 .frame(width: 78, alignment: .leading)
 
             // 우클릭해야 나오는 기능은 없는 기능이나 마찬가지다. 행에 그대로 둔다.
             HStack(spacing: 2) {
+                // 못 읽는 줄에는 지우기보다 **여는 것**이 먼저다.
+                // 알려만 주고 길을 주지 않으면 사용자가 할 수 있는 게 없다.
+                if !node.isReadable {
+                    Button("열기…") { unblock(node) }
+                        .font(Theme.caption)
+                }
                 iconButton("folder", "Finder에서 보기") {
                     NSWorkspace.shared.activateFileViewerSelecting([node.url])
                 }
@@ -268,9 +345,17 @@ struct DiskMapView: View {
     /// 새 색을 만들지 않는다 — 이 프로젝트의 색은 전부 대비를 실측해 고른 것이라
     /// 여기서 임의로 더하면 그 규칙이 깨진다. 초록은 디스크 맵 고유색을 쓰고,
     /// 보호됨은 색 대신 자물쇠 기호로 구분한다.
+    ///
+    /// **못 읽는 것이 먼저다.** 예전엔 `veto`만 봐서, 권한이 막혀 안을 볼 수도 없는
+    /// 폴더가 "정리 가능 ✓"으로 떴다.
     @ViewBuilder
-    private func statusBadge(_ veto: RemovalVeto?) -> some View {
-        if let veto {
+    private func statusBadge(_ node: DiskUsageNode, veto: RemovalVeto?) -> some View {
+        if !node.isReadable {
+            Label("권한 없음", systemImage: "exclamationmark.triangle.fill")
+                .font(Theme.caption)
+                .foregroundStyle(SafetyLevel.caution.tint)
+                .help("권한이 막혀 안을 볼 수 없습니다")
+        } else if let veto {
             Label("보호됨", systemImage: "lock.fill")
                 .font(Theme.caption)
                 .foregroundStyle(Theme.textTertiary)

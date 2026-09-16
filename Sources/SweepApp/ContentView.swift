@@ -70,7 +70,7 @@ struct ContentView: View {
         case .diskMap:
             // 스캔 모델은 아니지만 **소유는 다른 기능과 똑같이** AppModel이 한다.
             // 뷰가 들고 있으면 탭을 옮기는 순간 트리가 사라져 10초를 다시 기다린다.
-            DiskMapView(model: app.diskMap())
+            DiskMapView(model: app.diskMap(), app: app)
 
         case .smartScan:
             // 첫 화면. 전체를 훑고 기능별로 얼마가 나왔는지 카드로 보여준다.
