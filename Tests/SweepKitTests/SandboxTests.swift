@@ -80,6 +80,27 @@ struct SandboxTests {
         }
     }
 
+    @Test("앱 캐시는 Application Support가 허락 범위에 들어와야 열린다")
+    func appCacheNeedsApplicationSupportGranted() {
+        let home = Sandbox.userHome
+
+        // 샌드박스 밖에서는 늘 볼 수 있다.
+        #expect(ProtectedPaths.appSupportReadable(sandboxed: false, granted: []))
+
+        // 샌드박스에서는 허락이 있어야 한다.
+        #expect(!ProtectedPaths.appSupportReadable(sandboxed: true, granted: []))
+        #expect(ProtectedPaths.appSupportReadable(
+            sandboxed: true, granted: [home.appending(path: "Library")]))
+        #expect(ProtectedPaths.appSupportReadable(
+            sandboxed: true, granted: [home.appending(path: "Library/Application Support")]))
+
+        // 엉뚱한 폴더를 열어 줘도 앱 캐시가 열리지는 않는다.
+        #expect(!ProtectedPaths.appSupportReadable(
+            sandboxed: true, granted: [home.appending(path: ".npm")]))
+        #expect(!ProtectedPaths.appSupportReadable(
+            sandboxed: true, granted: [home.appending(path: "Library/Developer")]))
+    }
+
     @Test("홈 직속 도구 폴더도 허락하면 켜진다")
     func grantingHomeToolFolderOpensIt() {
         let home = Sandbox.userHome

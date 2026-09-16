@@ -103,8 +103,14 @@ public enum ProtectedPaths {
 
     /// 앱 캐시를 들여다볼 수 있는 상태인가. 샌드박스 밖에서는 늘 그렇다.
     private static var isAppSupportReadable: Bool {
-        guard Sandbox.isActive else { return true }
-        return FolderAccess.shared.urls.contains { appSupportRoot.isSameOrDescendant(of: $0) }
+        appSupportReadable(sandboxed: Sandbox.isActive, granted: FolderAccess.shared.urls)
+    }
+
+    /// 순수 함수로 갈라 둔다 — 전역 상태(`Sandbox.isActive`·싱글턴)를 보는 채로는
+    /// 테스트에서 샌드박스 쪽 분기를 확인할 방법이 없다.
+    static func appSupportReadable(sandboxed: Bool, granted: [URL]) -> Bool {
+        guard sandboxed else { return true }
+        return granted.contains { appSupportRoot.isSameOrDescendant(of: $0) }
     }
 
     /// 지금 이 순간의 허용 루트. 허락은 실행 중에 생기므로 시작할 때 고정되는
