@@ -64,6 +64,18 @@ public enum ProtectedPaths {
     /// 유일한 곳이다. 나머지는 실측에서 전부 권한 거부였다. 사용자가 열어 준
     /// `~/Library/Developer`(`developer`)가 있으면 그것도 더한다.
     /// 샌드박스의 임시 폴더는 컨테이너 안(`Data/tmp`)이라 `userTemporaryRoots`도 뜻이 없다.
+    /// 홈 바로 아래 개발 도구 폴더. 도구의 최상위 폴더를 루트로 둔다 —
+    /// "루트 자체는 삭제할 수 없다"는 기존 규칙이 `~/.npm`을 지키고 하위만 후보가 된다.
+    /// 새 규칙을 만들지 않고 있는 규칙을 쓰는 것이다.
+    ///
+    /// 안에 캐시만 들어 있는 폴더여야 한다. 실행 파일이 섞인 곳은 넣지 않는다 —
+    /// `~/.nvm`은 node 런타임이고, `~/.turso`는 `sqld`(39M)·`turso`(17M) 실행 파일 둘뿐이다.
+    /// 지우면 명령어가 사라진다.
+    ///
+    /// `~/.expo`는 루트로 두되 스캐너가 하위 캐시 폴더만 고른다. 같은 층에
+    /// `ngrok.yml`(인증 토큰)과 `state.json`(로그인 상태)이 있어 통째로 올리면 안 된다.
+    static let homeToolRoots: [String] = [".npm", ".expo"]
+
     static func roots(sandboxed: Bool, developer: URL? = nil) -> [URL] {
         let downloads = inHome("Downloads")
         guard !sandboxed else { return [downloads] + (developer.map { [$0] } ?? []) }
@@ -73,7 +85,7 @@ public enum ProtectedPaths {
             inHome("Library/Logs"),
             downloads,
             URL(filePath: "/private/tmp"),
-        ] + userTemporaryRoots
+        ] + homeToolRoots.map(inHome) + userTemporaryRoots
     }
 
     /// 지금 이 순간의 허용 루트. 허락은 실행 중에 생기므로 시작할 때 고정되는
@@ -82,6 +94,69 @@ public enum ProtectedPaths {
         Sandbox.isActive
             ? roots(sandboxed: true, developer: DeveloperAccess.shared.url)
             : allowedRoots
+    }
+
+    /// Electron·Chromium 앱이 공통으로 쓰는 캐시 폴더 이름.
+    ///
+    /// `~/Library/Application Support`는 **허용 루트에 넣지 않는다.** 그 아래는 기본이
+    /// 사용자 데이터다 — 실측으로 앱 로그인 세션, 로컬 DB(`notion.db` 79M),
+    /// iCloud·Dropbox 상태(`FileProvider` 829M)가 들어 있다. `userTemporaryRoots`와 같은
+    /// 상황이고 같은 답을 쓴다: 사용자 소유라 소유권 검사가 듣지 않으니 범위를 좁히는 수밖에 없다.
+    ///
+    /// 게다가 관문은 스캐너만 지나는 문이 아니다. 디스크 맵은 스캐너를 거치지 않고
+    /// 관문에게만 물어보고 휴지통 버튼을 켠다. 루트를 넓히면 그 폴더들이 클릭 한 번 거리로 들어온다.
+    ///
+    /// 그래서 루트 대신 **끝 이름**으로 연다. 정확한 경로 목록은 쓸 수 없다 —
+    /// 앱 이름도, 프로필 버전(`Figma/DesktopProfile/v39`)도, 파티션 이름도 기계마다 다르다.
+    ///
+    /// `Service Worker`는 통째로 열지 않는다. 그 아래 `Database`가 서비스 워커 등록 정보라
+    /// 지우면 켜져 있는 앱이 재등록에 실패한다. 캐시 실체인 `CacheStorage`만 연다.
+    ///
+    /// 뺀 것: `IndexedDB`, `Local Storage`, `Local Extension Settings`, `WebStorage`,
+    /// `File System`, `Shared Dictionary` — 전부 사용자 데이터다.
+    static let appCacheSuffixes: [[String]] = [
+        ["Cache"], ["Code Cache"], ["GPUCache"],
+        ["DawnCache"], ["DawnGraphiteCache"], ["DawnWebGPUCache"],
+        ["GrShaderCache"], ["GraphiteDawnCache"],
+        ["Service Worker", "CacheStorage"],
+    ]
+
+    /// `Application Support`로부터 몇 단계까지 내려가 찾을지.
+    ///
+    /// 실측: `Google/Chrome/Default/Service Worker/CacheStorage`가 5단계다.
+    /// 6으로 넓혀도 잡히는 건 `Chrome-headless/scoped_dir*` 찌꺼기뿐이었다.
+    static let appCacheMaxDepth = 5
+
+    static var appSupportRoot: URL { inHome("Library/Application Support") }
+
+    /// 끝 이름이 앱 캐시 폴더 이름인가. **위치는 보지 않는다.**
+    ///
+    /// 스캐너가 후보를 고를 때 쓴다. 스캐너는 가짜 홈을 주입받아 돌 수 있어야 하는데
+    /// 위치까지 따지면 실제 홈 기준이라 테스트에서 전부 걸러진다.
+    /// 위치 판정은 관문이 `validate`에서 따로 한다 — 스캐너가 이름을 잘못 골라도
+    /// `ScanCoordinator.normalize`의 2차 방어선에서 막힌다.
+    static func matchesAppCacheName(_ url: URL) -> Bool {
+        let components = url.standardizedFileURL.pathComponents
+        return appCacheSuffixes.contains { suffix in
+            components.count >= suffix.count
+                && Array(components.suffix(suffix.count)) == suffix
+        }
+    }
+
+    /// `~/Library/Application Support` 아래의 앱 캐시 폴더인가.
+    ///
+    /// 세 조건을 모두 만족해야 한다 — 그 아래에 있을 것, 끝 이름이 맞을 것,
+    /// 너무 깊지 않을 것. 하나라도 어긋나면 관문은 이 경로를 모르는 것으로 친다.
+    static func isAppCacheFolder(_ components: [String], appSupport: [String]) -> Bool {
+        let depth = components.count - appSupport.count
+        guard depth > 0, depth <= appCacheMaxDepth,
+              Array(components.prefix(appSupport.count)) == appSupport
+        else { return false }
+
+        return appCacheSuffixes.contains { suffix in
+            components.count >= suffix.count
+                && Array(components.suffix(suffix.count)) == suffix
+        }
     }
 
     /// 허용 루트 안이어도 절대 건드리지 않는 경로.
@@ -126,19 +201,20 @@ public enum ProtectedPaths {
             throw RemovalVeto.protectedPath(resolved)
         }
 
-        // 4. 실경로가 허용 루트 하위여야 한다.
+        // 4. 실경로가 허용 루트 하위이거나, 이름으로 열어 준 앱 캐시 폴더여야 한다.
         //    허용 루트 안의 심볼릭 링크가 바깥을 가리키면 여기서 걸린다.
-        guard roots.contains(where: { Self.isDescendant(resolvedComponents, of: $0) }) else {
+        guard Self.isInsideAllowedArea(resolvedComponents, roots: roots) else {
             throw RemovalVeto.outsideAllowedRoots(resolved)
         }
 
         // 5. 링크를 타고 들어온 경우(요청 경로 ≠ 실경로), 요청 경로 자체도 허용 범위여야 한다.
         //    마지막 구성요소는 그것 자체가 링크일 수 있으므로 풀지 않고, 그 위치만 따진다.
+        //    4단계와 같은 판정을 쓴다 — 두 벌로 두면 언젠가 갈라진다.
         let requestedLocation = canonical(requested.deletingLastPathComponent())
             .appending(path: requested.lastPathComponent)
         if resolved != requestedLocation {
             let locationComponents = requestedLocation.standardizedFileURL.pathComponents
-            guard roots.contains(where: { Self.isDescendant(locationComponents, of: $0) }) else {
+            guard Self.isInsideAllowedArea(locationComponents, roots: roots) else {
                 throw RemovalVeto.symlinkEscape(requested)
             }
         }
@@ -267,6 +343,20 @@ public enum ProtectedPaths {
     /// 경로 구성요소 단위 하위 판정. URL을 다시 정규화하지 않아 값싸다.
     private static func isDescendant(_ path: [String], of ancestor: [String]) -> Bool {
         path.count > ancestor.count && Array(path.prefix(ancestor.count)) == ancestor
+    }
+
+    /// 루트와 같은 이유로 미리 쪼개 둔다 — `validate`가 후보마다 부른다.
+    private static let cachedAppSupportComponents: [String] =
+        canonical(appSupportRoot).standardizedFileURL.pathComponents
+
+    /// 허용 루트의 하위이거나, 이름으로 열어 준 앱 캐시 폴더인가.
+    ///
+    /// `validate`의 4단계(실경로)와 5단계(링크를 타고 온 요청 경로)가 같은 판정을 쓴다.
+    private static func isInsideAllowedArea(_ components: [String], roots: [[String]]) -> Bool {
+        if roots.contains(where: { isDescendant(components, of: $0) }) { return true }
+        // 샌드박스에서는 `Application Support` 자체를 읽을 수 없어 이 길이 열려도 뜻이 없다.
+        guard !Sandbox.isActive else { return false }
+        return isAppCacheFolder(components, appSupport: cachedAppSupportComponents)
     }
 }
 

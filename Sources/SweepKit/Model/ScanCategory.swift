@@ -8,6 +8,8 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
     case xcode
     /// 재생성 가능한 개발 도구 캐시.
     case devCache
+    /// 앱이 만든 웹 캐시. Electron·Chromium 앱이 공통 이름으로 쌓는다.
+    case appCache
     /// 오래 손대지 않은 캐시.
     /// 주인이 사라졌는지는 알 수 없으므로 "묵었다"고만 말한다.
     case staleCache
@@ -21,6 +23,7 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
         case .runawayTemp: "폭주 임시 파일"
         case .xcode: "Xcode · 시뮬레이터"
         case .devCache: "개발 캐시"
+        case .appCache: "앱 웹 캐시"
         case .staleCache: "묵은 캐시"
         case .largeFile: "대용량 파일"
         case .duplicate: "중복 파일"
@@ -34,9 +37,10 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
         case .runawayTemp: 0
         case .xcode: 1
         case .devCache: 2
-        case .staleCache: 3
-        case .largeFile: 4
-        case .duplicate: 5
+        case .appCache: 3
+        case .staleCache: 4
+        case .largeFile: 5
+        case .duplicate: 6
         }
     }
 
@@ -45,6 +49,7 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
         case .runawayTemp: "exclamationmark.triangle.fill"
         case .xcode: "hammer.fill"
         case .devCache: "shippingbox.fill"
+        case .appCache: "globe"
         case .staleCache: "clock.arrow.circlepath"
         case .largeFile: "arrow.down.doc.fill"
         case .duplicate: "doc.on.doc.fill"

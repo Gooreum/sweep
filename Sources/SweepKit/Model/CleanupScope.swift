@@ -57,6 +57,9 @@ extension CleanupScope {
         case "~/Library/Logs": "앱 로그"
         case "~/Downloads": "내려받은 파일 · 중복본"
         case "/private/tmp": "시스템 임시 파일"
+        // 폴더 전체가 아니라 안의 캐시만 본다. 설정과 인증 정보는 건드리지 않는다.
+        case "~/.npm": "npm 내려받기 캐시"
+        case "~/.expo": "Expo 캐시"
         default: ""
         }
     }

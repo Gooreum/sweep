@@ -63,15 +63,18 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
     func scanners(sandboxed: Bool, developer: URL?) -> [any CleanupScanner] {
         let xcode: [any CleanupScanner] = developer == nil ? [] : [XcodeScanner()]
         switch self {
+        // `AppCacheScanner`는 샌드박스 쪽에 넣지 않는다 —
+        // `~/Library/Application Support`는 컨테이너 밖이라 읽을 수 없다.
         case .smartScan:
             return sandboxed
                 ? xcode + [LargeFileScanner(), DuplicateScanner()]
-                : [RunawayTempScanner(), XcodeScanner(), DevCacheScanner(),
+                : [RunawayTempScanner(), XcodeScanner(), DevCacheScanner(), AppCacheScanner(),
                    StaleCacheScanner(), LargeFileScanner(), DuplicateScanner()]
         case .junk:
             return sandboxed
                 ? xcode
-                : [RunawayTempScanner(), XcodeScanner(), DevCacheScanner(), StaleCacheScanner()]
+                : [RunawayTempScanner(), XcodeScanner(), DevCacheScanner(),
+                   AppCacheScanner(), StaleCacheScanner()]
         case .largeFile:
             return [LargeFileScanner()]
         case .duplicate:

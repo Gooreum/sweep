@@ -57,7 +57,7 @@ struct ModelTests {
     // TC-5
     @Test("ScanCategory는 6종이며 모두 표시명을 가진다")
     func scanCategoryHasSixCasesWithNames() {
-        #expect(ScanCategory.allCases.count == 6)
+        #expect(ScanCategory.allCases.count == 7)
         for category in ScanCategory.allCases {
             #expect(!category.displayName.isEmpty)
             #expect(!category.systemImageName.isEmpty)

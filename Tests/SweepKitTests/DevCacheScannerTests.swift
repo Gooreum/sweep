@@ -218,4 +218,63 @@ struct DevCacheScannerTests {
             #expect(ProtectedPaths.isRemovable(item.url), "관문 미통과: \(item.url.path)")
         }
     }
+
+    /// 홈 바로 아래 경로에 1MB 파일 하나를 심는다.
+    private func seedHomePath(_ path: String, in home: URL, bytes: Int = 1024 * 1024) throws {
+        let dir = home.appending(path: path)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try Data(repeating: 0x41, count: bytes).write(to: dir.appending(path: "blob.bin"))
+    }
+
+    // TC-10
+    @Test("홈 직속 npm 캐시가 후보로 올라온다")
+    func findsHomeNpmCaches() async throws {
+        let home = try makeFakeHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+
+        try seedHomePath(".npm/_cacache", in: home)
+        try seedHomePath(".npm/_npx", in: home, bytes: 2 * 1024 * 1024)
+
+        let items = await DevCacheScanner(home: home).scan()
+        let byDetail = Dictionary(uniqueKeysWithValues: items.map { ($0.detail, $0) })
+
+        #expect(items.count == 2)
+        #expect(byDetail["npm 내려받기 캐시"]?.safety == .safe)
+        #expect(byDetail["npx 실행 캐시"] != nil)
+        #expect(items.allSatisfy { $0.category == .devCache })
+    }
+
+    // TC-11
+    @Test("Expo 인증 정보는 캐시와 같은 층에 있어도 후보가 되지 않는다")
+    func expoCredentialsNeverBecomeCandidates() async throws {
+        let home = try makeFakeHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+
+        try seedHomePath(".expo/versions-cache", in: home)
+        // 캐시 폴더와 나란히 놓이는 인증 토큰·로그인 상태. 지우면 다시 로그인해야 한다.
+        try FileManager.default.createDirectory(
+            at: home.appending(path: ".expo"), withIntermediateDirectories: true)
+        try Data("authtoken: secret".utf8).write(to: home.appending(path: ".expo/ngrok.yml"))
+        try Data(#"{"auth":{}}"#.utf8).write(to: home.appending(path: ".expo/state.json"))
+
+        let items = await DevCacheScanner(home: home).scan()
+
+        #expect(items.count == 1)
+        #expect(items.first?.detail == "Expo 버전 캐시")
+        #expect(!items.contains { $0.url.lastPathComponent == "ngrok.yml" })
+        #expect(!items.contains { $0.url.lastPathComponent == "state.json" })
+    }
+
+    // TC-12
+    @Test("도구 폴더는 있으나 캐시가 없으면 후보로 올리지 않는다")
+    func missingHomeCacheYieldsNothing() async throws {
+        let home = try makeFakeHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+
+        try FileManager.default.createDirectory(
+            at: home.appending(path: ".npm"), withIntermediateDirectories: true)
+
+        let items = await DevCacheScanner(home: home).scan()
+        #expect(items.isEmpty)
+    }
 }

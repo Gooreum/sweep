@@ -19,11 +19,11 @@ struct FeatureTests {
     }
 
     // TC-2
-    @Test("정크 파일은 임시·Xcode·개발 캐시·묵은 캐시 4종을 돌린다")
-    func junkRunsFourScanners() {
+    @Test("정크 파일은 임시·Xcode·개발 캐시·앱 웹 캐시·묵은 캐시 5종을 돌린다")
+    func junkRunsFiveScanners() {
         let categories = Feature.junk.categories
-        #expect(Feature.junk.scanners.count == 4)
-        #expect(Set(categories) == [.runawayTemp, .xcode, .devCache, .staleCache])
+        #expect(Feature.junk.scanners.count == 5)
+        #expect(Set(categories) == [.runawayTemp, .xcode, .devCache, .appCache, .staleCache])
         // 큰 파일·중복은 별도 기능이므로 정크에 섞이면 안 된다
         #expect(!categories.contains(.largeFile))
         #expect(!categories.contains(.duplicate))
@@ -47,7 +47,7 @@ struct FeatureTests {
     func smartScanCoversEveryCategory() {
         // 스캐너를 추가하고 Feature에 넣는 것을 잊으면 여기서 걸린다.
         // 카테고리 전수와 맞춰 두면 목록이 어긋난 채로 지나가지 않는다.
-        #expect(Feature.smartScan.scanners.count == 6)
+        #expect(Feature.smartScan.scanners.count == 7)
         #expect(Set(Feature.smartScan.categories) == Set(ScanCategory.allCases))
     }
 
@@ -107,6 +107,7 @@ struct FeatureTests {
             item("임시", .runawayTemp, 100),
             item("빌드", .xcode, 200),
             item("캐시", .devCache, 300),
+            item("웹캐시", .appCache, 350),
             item("묵은", .staleCache, 400),
             item("큰것", .largeFile, 500),
             item("사본", .duplicate, 600),
@@ -122,7 +123,7 @@ struct FeatureTests {
         let urls = split.flatMap { $0 }.map(\.url)
         #expect(urls.count == Set(urls).count)
 
-        #expect(Feature.junk.items(from: all).count == 4)
+        #expect(Feature.junk.items(from: all).count == 5)
         #expect(Feature.largeFile.items(from: all).map(\.displayName) == ["큰것"])
         #expect(Feature.duplicate.items(from: all).map(\.displayName) == ["사본"])
     }
