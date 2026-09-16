@@ -8,7 +8,7 @@ struct ScanCategoryTests {
     // TC-1
     @Test("카테고리는 6종이다")
     func hasSixCases() {
-        #expect(ScanCategory.allCases.count == 6)
+        #expect(ScanCategory.allCases.count == 7)
     }
 
     // TC-2
@@ -52,7 +52,8 @@ struct ScanCategoryTests {
     func sortedOrderIsMeaningful() {
         let sorted = ScanCategory.allCases.sorted { $0.sortOrder < $1.sortOrder }
 
-        #expect(sorted == [.runawayTemp, .xcode, .devCache, .staleCache, .largeFile, .duplicate])
+        #expect(sorted == [.runawayTemp, .xcode, .devCache, .appCache,
+                           .staleCache, .largeFile, .duplicate])
     }
 
     // TC-7
@@ -62,6 +63,7 @@ struct ScanCategoryTests {
         #expect(ScanCategory.runawayTemp.rawValue == "runawayTemp")
         #expect(ScanCategory.xcode.rawValue == "xcode")
         #expect(ScanCategory.devCache.rawValue == "devCache")
+        #expect(ScanCategory.appCache.rawValue == "appCache")
         #expect(ScanCategory.duplicate.rawValue == "duplicate")
         #expect(ScanCategory.staleCache.rawValue == "staleCache")
         #expect(ScanCategory.largeFile.rawValue == "largeFile")

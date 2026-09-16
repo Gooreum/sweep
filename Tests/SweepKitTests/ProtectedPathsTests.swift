@@ -233,6 +233,58 @@ struct ProtectedPathsTests {
         #expect(!ProtectedPaths.isRemovable(home.appending(path: ".expo")))
     }
 
+    @Test("앱 캐시 폴더는 이름이 맞을 때만 열린다")
+    func appCacheFoldersOpenByNameOnly() {
+        let appSupport = home.appending(path: "Library/Application Support")
+
+        // 실측된 실제 경로들. depth 2·4·5가 섞여 있다.
+        #expect(ProtectedPaths.isRemovable(appSupport.appending(path: "Slack/Cache")))
+        #expect(ProtectedPaths.isRemovable(appSupport.appending(path: "Slack/Code Cache")))
+        #expect(ProtectedPaths.isRemovable(
+            appSupport.appending(path: "Notion/Partitions/notion/Cache")))
+        #expect(ProtectedPaths.isRemovable(
+            appSupport.appending(path: "Figma/DesktopProfile/v39/GPUCache")))
+        #expect(ProtectedPaths.isRemovable(
+            appSupport.appending(path: "Google/Chrome/Default/Service Worker/CacheStorage")))
+    }
+
+    @Test("앱 캐시 규칙이 사용자 데이터까지 열지는 않는다")
+    func appCacheRuleKeepsUserDataClosed() {
+        let appSupport = home.appending(path: "Library/Application Support")
+
+        for path in [
+            "",                                  // Application Support 자체
+            "Slack",                             // 앱 폴더 자체
+            "Notion/notion.db",                  // 로컬 DB
+            "Slack/IndexedDB",                   // 웹앱 데이터
+            "Google/Chrome/Default/Local Storage",
+            "Google/Chrome/Default/Local Extension Settings",
+            "FileProvider",                      // iCloud·Dropbox 상태
+            "Slack/Cache/Cache_Data",            // 캐시 폴더 안쪽 — 캐시 자체만 연다
+            // Service Worker는 통째로 열지 않는다. Database가 등록 정보다.
+            "Google/Chrome/Default/Service Worker",
+            "Google/Chrome/Default/Service Worker/Database",
+        ] {
+            let url = path.isEmpty ? appSupport : appSupport.appending(path: path)
+            #expect(!ProtectedPaths.isRemovable(url), "열리면 안 되는 경로가 열렸다: \(path)")
+        }
+    }
+
+    @Test("앱 캐시 이름이라도 Application Support 밖이면 열리지 않는다")
+    func appCacheNamesOutsideAppSupportStayClosed() {
+        // 이름만 맞다고 열면 관문이 이름 하나로 뚫린다.
+        #expect(!ProtectedPaths.isRemovable(home.appending(path: "Documents/Cache")))
+        #expect(!ProtectedPaths.isRemovable(home.appending(path: "Desktop/GPUCache")))
+    }
+
+    @Test("너무 깊은 앱 캐시는 열지 않는다")
+    func deeplyNestedAppCacheStaysClosed() {
+        // 실측상 가장 깊은 것이 5단계(Chrome의 Service Worker/CacheStorage)다.
+        let deep = home.appending(
+            path: "Library/Application Support/a/b/c/d/e/f/Cache")
+        #expect(!ProtectedPaths.isRemovable(deep))
+    }
+
     @Test("실행 파일이 든 도구 폴더는 열지 않는다")
     func toolFoldersWithBinariesStayClosed() {
         // ~/.turso는 sqld(39M)·turso(17M) 실행 파일 둘뿐이고,
