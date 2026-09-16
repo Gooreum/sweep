@@ -416,11 +416,25 @@ public enum ProtectedPaths {
     private static let cachedAppSupportComponents: [String] =
         canonical(appSupportRoot).standardizedFileURL.pathComponents
 
+    /// 앱 폴더도 같은 이유로 미리 쪼개 둔다.
+    private static let cachedApplicationComponents: [[String]] =
+        applicationFolders.map { canonical($0).standardizedFileURL.pathComponents }
+
+    /// 앱을 지울 수 있는 상태인가. 허락은 실행 중에 생기므로 캐시하지 않는다.
+    private static var isApplicationsRemovable: Bool {
+        applicationsRemovable(sandboxed: Sandbox.isActive, granted: FolderAccess.shared.urls)
+    }
+
     /// 허용 루트의 하위이거나, 이름으로 열어 준 앱 캐시 폴더인가.
     ///
     /// `validate`의 4단계(실경로)와 5단계(링크를 타고 온 요청 경로)가 같은 판정을 쓴다.
     private static func isInsideAllowedArea(_ components: [String], roots: [[String]]) -> Bool {
         if roots.contains(where: { isDescendant(components, of: $0) }) { return true }
+        // 앱 번들은 루트 없이 모양으로 연다. 앱 폴더 바로 아래 `.app` 하나뿐이다.
+        if isApplicationsRemovable,
+           isApplicationBundle(components, folders: cachedApplicationComponents) {
+            return true
+        }
         // 샌드박스에서는 `Application Support` 자체를 읽을 수 없어 이 길이 열려도 뜻이 없다.
         guard isAppSupportReadable else { return false }
         return isAppCacheFolder(components, appSupport: cachedAppSupportComponents)

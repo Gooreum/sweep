@@ -100,3 +100,65 @@ struct ApplicationBundleTests {
             sandboxed: true, granted: [Sandbox.userHome.appending(path: "Downloads")]))
     }
 }
+
+/// 관문 전체(`veto`)가 앱 번들을 통과시키는지.
+///
+/// **안전 규칙**: 모든 대상이 **실재하지 않는 경로**다. 관문이 깨져도 지울 것이 없다.
+/// `validate`는 경로가 없으면 소유권·플래그 검사를 건너뛰므로 위치 판정만 정확히 겨눈다.
+@Suite("응용 프로그램 관문 통과")
+struct ApplicationVetoTests {
+
+    /// 실재할 리 없는 이름. 실수로 만들어져도 알아볼 수 있게 접두사를 붙인다.
+    private let ghost = "sweep-없는앱-9E3A1C.app"
+
+    private var systemApps: URL { URL(filePath: "/Applications") }
+    private var homeApps: URL { Sandbox.userHome.appending(path: "Applications") }
+
+    // TC-1
+    @Test("/Applications 아래 앱은 범위 밖이 아니다")
+    func systemBundlePasses() {
+        #expect(ProtectedPaths.veto(for: systemApps.appending(path: ghost)) == nil)
+    }
+
+    // TC-2
+    @Test("번들 내부는 범위 밖이다")
+    func insideBundleVetoed() {
+        let inside = systemApps.appending(path: ghost).appending(path: "Contents")
+        #expect(ProtectedPaths.veto(for: inside) != nil)
+    }
+
+    // TC-3
+    @Test(".app이 아닌 것은 범위 밖이다")
+    func nonBundleVetoed() {
+        #expect(ProtectedPaths.veto(
+            for: systemApps.appending(path: "sweep-없는파일-9E3A1C.txt")) != nil)
+    }
+
+    // TC-4
+    @Test("~/Applications 아래 앱도 통과한다")
+    func homeBundlePasses() {
+        #expect(ProtectedPaths.veto(for: homeApps.appending(path: ghost)) == nil)
+    }
+
+    // TC-5
+    @Test("앱 폴더 자체는 지울 수 없다")
+    func folderItselfVetoed() {
+        #expect(ProtectedPaths.veto(for: systemApps) != nil)
+    }
+
+    // TC-6
+    @Test("다른 곳의 .app은 여전히 막힌다")
+    func bundleElsewhereVetoed() {
+        let elsewhere = Sandbox.userHome.appending(path: "Documents").appending(path: ghost)
+        #expect(ProtectedPaths.veto(for: elsewhere) != nil)
+    }
+
+    // TC-7
+    @Test("기존 루트 판정은 그대로다")
+    func existingRootsUnchanged() {
+        let cache = Sandbox.userHome
+            .appending(path: "Library/Caches")
+            .appending(path: "sweep-없는폴더-9E3A1C")
+        #expect(ProtectedPaths.isRemovable(cache))
+    }
+}
