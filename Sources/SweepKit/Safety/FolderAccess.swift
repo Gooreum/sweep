@@ -31,6 +31,14 @@ public enum FolderAccess {
 
     /// 허락을 받을 수 있는 폴더 하나와, 그것을 열면 무엇을 볼 수 있는지.
     public struct Grantable: Sendable, Hashable, Identifiable {
+        /// 목록에 없는 폴더로도 만들 수 있다 — 권한이 막힌 곳을 그 자리에서
+        /// 다시 열어 달라고 할 때 쓴다(`SmartScanView.unblock`).
+        public init(folder: URL, label: String, purpose: String) {
+            self.folder = folder
+            self.label = label
+            self.purpose = purpose
+        }
+
         public let folder: URL
         /// 화면에 쓰는 짧은 이름.
         public let label: String

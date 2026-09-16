@@ -24,6 +24,12 @@ struct SmartScanView: View {
     /// 틀린 폴더를 골랐을 때 알려줄 말. nil이면 닫혀 있다.
     @State private var grantFailure: String?
 
+    /// 보는 곳마다 지금 읽을 수 있는지. 줄마다 디스크를 두드리지 않도록 한 번에 만든다.
+    ///
+    /// 권한은 실행 중에 막히거나 풀린다 — TCC 프롬프트를 거부하거나, 시스템 설정에서
+    /// 켜고 돌아오거나. 화면이 그것을 반영하지 못하면 사용자는 "정리할 항목 없음"만 본다.
+    @State private var readability: [String: FolderReadability] = [:]
+
     var body: some View {
         Group {
             switch model.phase {
@@ -37,8 +43,8 @@ struct SmartScanView: View {
                 summary
             }
         }
-        // 폴더를 새로 허락하면 "보는 곳" 목록이 늘어난다.
-        .onChange(of: app.grantedFolderCount) { scopes = CleanupScope.all }
+        // 폴더를 새로 허락하면 "보는 곳" 목록이 늘고, 읽기 상태도 달라진다.
+        .onChange(of: app.grantedFolderCount) { refreshReadability() }
     }
 
 
@@ -134,23 +140,34 @@ struct SmartScanView: View {
             Divider().overlay(Theme.border)
 
             ForEach(Array(scopes.enumerated()), id: \.element.id) { index, scope in
+                let blocked = readability[scope.id] == .denied
+
                 HStack(spacing: 12) {
-                    Image(systemName: "folder")
+                    Image(systemName: blocked ? "exclamationmark.triangle.fill" : "folder")
                         .font(.system(size: Theme.Icon.small))
-                        .foregroundStyle(Theme.textSecondary)
+                        .foregroundStyle(blocked ? SafetyLevel.caution.tint : Theme.textSecondary)
                         .frame(width: Theme.Icon.medium)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(scope.label)
                             .font(Theme.bodyMono)
                             .foregroundStyle(Theme.textPrimary)
-                        if !scope.detail.isEmpty {
+                        // 막혔으면 무엇을 찾는 곳인지보다 왜 비어 있는지가 먼저다.
+                        if blocked {
+                            Text("권한이 막혀 읽을 수 없습니다")
+                                .font(Theme.caption)
+                                .foregroundStyle(SafetyLevel.caution.tint)
+                        } else if !scope.detail.isEmpty {
                             Text(scope.detail)
                                 .font(Theme.caption)
                                 .foregroundStyle(Theme.textSecondary)
                         }
                     }
-                    Spacer()
+                    Spacer(minLength: 12)
+
+                    if blocked {
+                        Button("열기…") { unblock(scope) }
+                    }
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
@@ -161,9 +178,11 @@ struct SmartScanView: View {
             }
 
             folderAccessRows
+            blockedFooter
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+        .task { refreshReadability() }
         .alert("다른 폴더를 골랐습니다",
                isPresented: Binding(get: { grantFailure != nil },
                                     set: { if !$0 { grantFailure = nil } })) {
@@ -220,9 +239,58 @@ struct SmartScanView: View {
         guard let picked = FolderPicker.ask(for: grantable) else { return }
         do {
             try app.grantFolderAccess(picked, as: grantable)
+            refreshReadability()
         } catch {
             grantFailure = error.message
         }
+    }
+
+    /// 막힌 폴더가 하나라도 있으면 보인다.
+    ///
+    /// 열기 대화상자로 고르면 대개 풀리지만, TCC가 이미 거부를 기록했다면
+    /// 시스템 설정에서 되돌리는 것이 확실한 길이다. 둘 다 준다.
+    @ViewBuilder
+    private var blockedFooter: some View {
+        if readability.values.contains(.denied) {
+            Divider().overlay(Theme.border)
+
+            HStack(spacing: 12) {
+                Text("권한이 막힌 폴더가 있어요")
+                    .font(Theme.caption)
+                    .foregroundStyle(SafetyLevel.caution.tint)
+                Spacer(minLength: 12)
+                Button("시스템 설정 열기") { PrivacySettings.openFilesAndFolders() }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+        }
+    }
+
+    /// 막힌 폴더를 열기 대화상자로 직접 고르게 한다.
+    ///
+    /// TCC 거부는 "앱이 알아서 여는 것"을 막는 것이라, 사용자가 명시적으로 고른
+    /// 폴더는 보안 범위 접근이 따로 부여된다. 그것으로도 안 풀리면 시스템 설정이 남는다.
+    private func unblock(_ scope: CleanupScope) {
+        let grantable = FolderAccess.Grantable(folder: scope.url,
+                                               label: scope.label,
+                                               purpose: scope.detail.isEmpty
+                                                   ? "정리 대상" : scope.detail)
+        guard let picked = FolderPicker.ask(for: grantable) else { return }
+        do {
+            try app.grantFolderAccess(picked, as: grantable)
+        } catch let failure as FolderAccess.Failure {
+            grantFailure = failure.message
+        } catch {
+            grantFailure = error.localizedDescription
+        }
+        // 허락에 실패해도 다시 읽어 본다 — 사용자가 그 사이 설정에서 풀었을 수 있다.
+        refreshReadability()
+    }
+
+    /// 보는 곳의 읽기 상태를 다시 계산한다. 권한은 실행 중에 바뀐다.
+    private func refreshReadability() {
+        scopes = CleanupScope.all
+        readability = CleanupScope.readabilityMap(of: scopes)
     }
 
     private func scanning(percent: Int, remaining: Int?) -> some View {
