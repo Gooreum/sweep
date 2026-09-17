@@ -9,6 +9,9 @@ build/
 .ai-bouncer-tasks/
 .claude/
 
+# 스토어 스크린샷 작업 폴더. 캡처에 개인 파일 경로가 그대로 담긴다.
+.appshot/
+
 # 서명된 배포 산출물. 저장소에 넣지 않는다.
 dist/
 
