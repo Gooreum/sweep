@@ -159,6 +159,8 @@ public enum DiskUsageTree {
     ///
     /// 숨김 파일을 포함하는 이유는 `build`도 포함하기 때문이다. 한쪽만 빼면 분모가 어긋난다.
     public static func countEntries(at url: URL,
+                                    canReadAppData: Bool = FullDiskAccess.isGranted,
+                                    appDataHome: URL = Sandbox.userHome,
                                     isCancelled: @Sendable () -> Bool = { false },
                                     onCounted: (@Sendable (Int) -> Void)? = nil) -> Int {
         var total = 0
@@ -169,6 +171,14 @@ public enum DiskUsageTree {
             // 디렉토리 단위로 보고한다. 분모가 생기기 전에도 숫자가 움직여야
             // 멈춘 것처럼 보이지 않는다.
             onCounted?(total)
+
+            // **세기도 집계와 같은 곳을 건너뛴다.** `build`가 안 내려가는데 여기서만
+            // 세면 분모가 커져 퍼센트가 100에 닿지 못한다 — 링크 232개 때문에
+            // 99%에서 멈췄던 것과 같은 함정이다. `opendir`도 TCC를 지나므로
+            // 프롬프트를 부르지 않으려면 여기서도 막아야 한다.
+            if !canReadAppData,
+               AppDataPaths.isInside(URL(filePath: path), home: appDataHome) { continue }
+
             guard let handle = opendir(path) else { continue }
             defer { closedir(handle) }
 
