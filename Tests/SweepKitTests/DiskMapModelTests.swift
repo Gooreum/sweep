@@ -737,3 +737,107 @@ private final class Gate: @unchecked Sendable {
     func wait() { semaphore.wait() }
     func signal() { semaphore.signal() }
 }
+/// 지금 보는 층을 검색으로 좁힌다.
+///
+/// 트리 전체를 가로지르지 않는다 — 층 단위로 파고드는 화면 구조와 맞지 않고,
+/// 50만 개를 글자마다 훑게 된다.
+@Suite("디스크 맵 검색")
+@MainActor
+struct DiskMapSearchTests {
+
+    /// root → [big(자식 2), small]. 이름과 경로가 서로 다른 조각을 갖게 둔다.
+    private func loaded() -> DiskMapModel {
+        let leafA = DiskUsageNode(url: URL(filePath: "/private/tmp/root/big/a"), size: 300)
+        let leafB = DiskUsageNode(url: URL(filePath: "/private/tmp/root/big/b"), size: 200)
+        let big = DiskUsageNode(url: URL(filePath: "/private/tmp/root/big"),
+                                size: 500, children: [leafA, leafB])
+        let small = DiskUsageNode(url: URL(filePath: "/private/tmp/root/small"), size: 100)
+        let model = DiskMapModel()
+        model.seed(DiskUsageNode(url: URL(filePath: "/private/tmp/root"),
+                                 size: 600, children: [big, small]))
+        return model
+    }
+
+    // TC-1
+    @Test("이름으로 좁힌다")
+    func filtersByName() {
+        let model = loaded()
+        model.query = "big"
+
+        #expect(model.tiles.map(\.name) == ["big"])
+    }
+
+    // TC-2
+    @Test("경로로도 좁힌다")
+    func filtersByPath() {
+        let model = loaded()
+        // 이름에는 없고 경로에만 있는 조각.
+        model.query = "/private/tmp/root/sm"
+
+        #expect(model.tiles.map(\.name) == ["small"])
+    }
+
+    // TC-3
+    @Test("공백뿐인 검색어는 좁히지 않는다")
+    func blankQueryShowsAll() {
+        let model = loaded()
+        model.query = "   "
+
+        #expect(model.tiles.count == 2)
+        #expect(!model.isFiltered)
+    }
+
+    // TC-4
+    @Test("아무것도 안 맞으면 비고, 걸러졌다고 알린다")
+    func noMatch() {
+        let model = loaded()
+        model.query = "zzz없는것"
+
+        #expect(model.tiles.isEmpty)
+        // 화면이 "원래 비었다"와 "검색에 안 걸렸다"를 갈라야 한다.
+        #expect(model.isFiltered)
+    }
+
+    // TC-5
+    @Test("한 층 내려가면 검색어가 지워진다")
+    func drillDownClearsQuery() {
+        let model = loaded()
+        model.query = "big"
+        let big = try! #require(model.tiles.first)
+
+        model.drillDown(into: big)
+
+        // 위층 검색어가 따라오면 아래층이 빈 화면이 된다.
+        #expect(model.query.isEmpty)
+        #expect(model.tiles.count == 2)
+    }
+
+    // TC-6
+    @Test("위로 가거나 건너뛰어도 검색어가 지워진다")
+    func goUpAndJumpClearQuery() {
+        let model = loaded()
+        let big = try! #require(model.tiles.first)
+        model.drillDown(into: big)
+
+        model.query = "a"
+        model.goUp()
+        #expect(model.query.isEmpty)
+
+        model.drillDown(into: big)
+        model.query = "a"
+        model.jump(to: 0)
+        #expect(model.query.isEmpty)
+    }
+
+    // TC-7
+    @Test("검색이 걸려도 판정은 걸러지지 않은 자식 전부에 남아 있다")
+    func vetoesCoverUnfilteredChildren() {
+        let model = loaded()
+        model.query = "big"
+
+        // 검색으로 가려진 `small`도 판정을 들고 있어야 한다 —
+        // 검색어를 지우는 순간 그 행이 판정 없이 그려지면 안 된다.
+        let small = URL(filePath: "/private/tmp/root/small")
+        #expect(model.tileVetoes.keys.contains(small))
+    }
+}
