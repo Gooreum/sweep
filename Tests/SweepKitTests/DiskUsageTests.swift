@@ -288,3 +288,100 @@ struct BarListTests {
         #expect(tree.children.first?.size == tree.children.map(\.size).max())
     }
 }
+
+/// 전체 디스크 접근이 없을 때 앱 데이터 구역을 **열지 않는다.**
+///
+/// 여는 순간 그 앱마다 "다른 앱의 데이터" 프롬프트가 뜬다 — 열기 전에 막아야 한다.
+@Suite("앱 데이터 구역 회피")
+struct DiskUsageAppDataTests {
+
+    private let fm = FileManager.default
+
+    /// 진짜 홈을 건드리지 않는 가짜 홈. 보호 구역과 그 밖을 함께 만든다.
+    private func makeHome() throws -> (home: URL, cleanup: () -> Void) {
+        let home = URL(filePath: NSTemporaryDirectory())
+            .appending(path: "sweep-appdata-\(UUID().uuidString)")
+        for relative in ["Library/Containers/com.example.app",
+                         "Library/Application Support/Example",
+                         "Library/Caches/Example"] {
+            try fm.createDirectory(at: home.appending(path: relative),
+                                   withIntermediateDirectories: true)
+        }
+        // 크기를 만들어 둔다 — 0바이트면 "못 읽음"과 구분이 안 된다.
+        for relative in ["Library/Containers/com.example.app/big.bin",
+                         "Library/Application Support/Example/big.bin",
+                         "Library/Caches/Example/big.bin"] {
+            try Data(repeating: 0, count: 2_000_000).write(to: home.appending(path: relative))
+        }
+        return (home, { try? self.fm.removeItem(at: home) })
+    }
+
+    private func find(_ name: String, in node: DiskUsageNode) -> DiskUsageNode? {
+        if node.name == name { return node }
+        for child in node.children {
+            if let found = find(name, in: child) { return found }
+        }
+        return nil
+    }
+
+    // TC-1
+    @Test("접근이 없으면 앱 폴더를 못 읽는 것으로 표시한다")
+    func blocksAppDataWhenDenied() throws {
+        let (home, cleanup) = try makeHome()
+        defer { cleanup() }
+
+        let tree = DiskUsageTree.build(at: home.appending(path: "Library"),
+                                       minimumSize: 0,
+                                       canReadAppData: false, appDataHome: home)
+
+        let app = try #require(find("com.example.app", in: tree))
+        #expect(!app.isReadable)
+        #expect(app.size == 0)
+    }
+
+    // TC-2
+    @Test("접근이 있으면 평소대로 내려간다")
+    func readsAppDataWhenGranted() throws {
+        let (home, cleanup) = try makeHome()
+        defer { cleanup() }
+
+        let tree = DiskUsageTree.build(at: home.appending(path: "Library"),
+                                       minimumSize: 0,
+                                       canReadAppData: true, appDataHome: home)
+
+        let app = try #require(find("com.example.app", in: tree))
+        #expect(app.isReadable)
+        #expect(app.size >= 2_000_000)
+    }
+
+    // TC-3
+    @Test("구역 자신은 읽을 수 있다")
+    func rootItselfStaysReadable() throws {
+        let (home, cleanup) = try makeHome()
+        defer { cleanup() }
+
+        let tree = DiskUsageTree.build(at: home.appending(path: "Library"),
+                                       minimumSize: 0,
+                                       canReadAppData: false, appDataHome: home)
+
+        // 목록에는 보여야 한다 — 그 자체를 여는 것은 묻지 않는다.
+        let containers = try #require(find("Containers", in: tree))
+        #expect(containers.isReadable)
+    }
+
+    // TC-4
+    @Test("캐시는 접근 여부와 무관하게 잡힌다")
+    func cachesUnaffected() throws {
+        let (home, cleanup) = try makeHome()
+        defer { cleanup() }
+
+        for granted in [true, false] {
+            let tree = DiskUsageTree.build(at: home.appending(path: "Library"),
+                                           minimumSize: 0,
+                                           canReadAppData: granted, appDataHome: home)
+            let cachesRoot = try #require(find("Caches", in: tree))
+            let caches = try #require(find("Example", in: cachesRoot))
+            #expect(caches.size >= 2_000_000, "캐시가 가려졌다 (granted: \(granted))")
+        }
+    }
+}

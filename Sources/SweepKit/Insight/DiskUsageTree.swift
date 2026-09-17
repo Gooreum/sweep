@@ -71,9 +71,12 @@ public enum DiskUsageTree {
     public static func build(at url: URL,
                              maxDepth: Int = 4,
                              minimumSize: Int64 = 1024 * 1024,
+                             canReadAppData: Bool = FullDiskAccess.isGranted,
+                             appDataHome: URL = Sandbox.userHome,
                              isCancelled: @escaping @Sendable () -> Bool = { false },
                              onEntryScanned: (@Sendable () -> Void)? = nil) -> DiskUsageNode {
         node(at: url, depth: maxDepth, minimumSize: minimumSize,
+             canReadAppData: canReadAppData, appDataHome: appDataHome,
              isCancelled: isCancelled, onEntryScanned: onEntryScanned)
     }
 
@@ -82,12 +85,21 @@ public enum DiskUsageTree {
     /// 예전에는 노드마다 `DirectorySize.bytes(at:)`를 불렀는데, 그 함수가 하위 전체를
     /// 훑으므로 같은 파일을 깊이만큼 반복해서 셌다 — 실측 30.7초가 이것 때문이었다.
     private static func node(at url: URL, depth: Int, minimumSize: Int64,
+                             canReadAppData: Bool, appDataHome: URL,
                              isCancelled: @escaping @Sendable () -> Bool,
                              onEntryScanned: (@Sendable () -> Void)?) -> DiskUsageNode {
         // 무엇이든 들여다봤으면 보고한다. `countEntries`가 링크와 읽기 실패 항목까지
         // 세므로 여기서 빼먹으면 분모가 커져 퍼센트가 100에 닿지 못한다 —
         // 실측에서 링크 232개 때문에 99%에서 멈췄다.
         onEntryScanned?()
+
+        // 전체 디스크 접근이 없으면 남의 앱 폴더를 **열어 보지도 않는다.**
+        // 열면 그 앱마다 "다른 앱의 데이터에 접근하려고 합니다"가 뜬다 —
+        // 앱 폴더 수만큼 물으므로 한 번 허용으로 끝나지 않는다.
+        // 못 읽는다고 표시하면 화면이 배너로 켜는 길을 알려 준다.
+        if !canReadAppData, AppDataPaths.isInside(url, home: appDataHome) {
+            return DiskUsageNode(url: url, size: 0, isReadable: false)
+        }
 
         guard let values = try? url.resourceValues(forKeys: keys) else {
             return DiskUsageNode(url: url, size: 0)
@@ -113,6 +125,7 @@ public enum DiskUsageTree {
             if isCancelled() { break }
 
             let node = node(at: child, depth: depth - 1, minimumSize: minimumSize,
+                            canReadAppData: canReadAppData, appDataHome: appDataHome,
                             isCancelled: isCancelled, onEntryScanned: onEntryScanned)
             total += node.size
             // 깊이를 넘어서도 **순회는 계속한다** — 크기를 정확히 합치려면 끝까지 세야 한다.
