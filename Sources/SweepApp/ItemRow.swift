@@ -56,34 +56,49 @@ struct ItemRow: View {
             //   거기에 아래의 그린 체크박스 → 1 / 3 / 0
             //
             // 그려서 쓰면 모양은 같고 비용이 없다. 누르는 것은 행 전체 탭이 맡는다.
+            // 글자 블록과 같은 높이를 주고 위로 붙인다. 안 그러면 세 줄 블록의
+            // **가운데**에 맞춰져 이름보다 한 줄 아래로 내려간다 — 실기에서 그랬다.
             Image(systemName: isOn ? "checkmark.square.fill" : "square")
                 .font(.system(size: Theme.checkboxSize))
                 .foregroundStyle(isOn ? Color.accentColor : Theme.textTertiary)
                 .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
                 .accessibilityLabel(item.displayName)
+                .frame(height: Theme.rowTextBlockHeight, alignment: .top)
 
             // 등급마다 도형이 달라도 이름 열이 흔들리지 않게 칸을 고정한다.
             Image(systemName: item.safety.symbolName)
                 .font(.system(size: Theme.safetyIconSlot))
                 .foregroundStyle(item.safety.tint)
-                .frame(width: Theme.safetyIconSlot + 4)
+                .frame(width: Theme.safetyIconSlot + 4,
+                       height: Theme.rowTextBlockHeight, alignment: .top)
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(item.displayName)
                     .font(Theme.bodyText)
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(1)
                     .truncationMode(.middle)
 
-                // 설명이 없는 항목까지 빈 줄을 만들면 목록 높이가 들쭉날쭉해진다.
-                if !item.detail.isEmpty {
-                    Text(item.detail)
-                        .font(Theme.caption)
-                        // 위험도가 여기서 한 번 더 읽힌다 — 아이콘만으로는 작다.
-                        .foregroundStyle(item.safety == .safe
-                                         ? Theme.textSecondary : item.safety.tint)
-                        .lineLimit(1)
-                }
+                // 설명이 비어도 **자리는 남긴다.** 안 그러면 경로가 둘째 줄로 올라와
+                // 행마다 셋째 줄의 위치가 달라진다.
+                Text(item.detail)
+                    .font(Theme.caption)
+                    // 위험도가 여기서 한 번 더 읽힌다 — 아이콘만으로는 작다.
+                    .foregroundStyle(item.safety == .safe
+                                     ? Theme.textSecondary : item.safety.tint)
+                    .lineLimit(1)
+                    .frame(height: Theme.rowDetailLineHeight, alignment: .leading)
+
+                // 이름만으로는 무엇인지 알 수 없는 항목이 많다 — `Cache`가 어느 앱 것인지,
+                // UUID 폴더가 어느 기기인지는 경로를 봐야 안다.
+                //
+                // **가운데를 자른다.** 끝을 자르면 긴 경로가 전부
+                // `~/Library/Developer/…`로 끝나 서로 구분되지 않는다.
+                Text(item.displayPath)
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.textTertiary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
             }
             // 두 열의 높이를 맞춰 **이름과 크기가 같은 선에** 놓이게 한다.
             // 한쪽만 두 줄이면 SwiftUI가 각자 가운데를 맞춰 첫 줄이 어긋난다.
@@ -115,10 +130,12 @@ struct ItemRow: View {
         .background(isOn ? Theme.rowSelected : Color.clear)
         .contentShape(Rectangle())
         .onTapGesture { isOn.toggle() }
-        // 목록에는 짧은 말로 쓰고, 정확한 날짜는 마우스를 올린 사람에게만 준다.
-        .help([item.safety == .danger ? "되돌릴 수 없습니다" : nil,
-               item.dates.tooltipLine(),
-               item.url.path].compactMap { $0 }.joined(separator: "\n"))
+        // **툴팁을 달지 않는다.** 마우스를 올린 채로 목록을 훑으면 행마다 말풍선이
+        // 떴다 사라져 거슬린다. 담겨 있던 것은 이제 전부 행에 있다 —
+        // 경로는 셋째 줄에, 날짜는 우측 열에, 위험 표시는 자물쇠 아이콘에.
+        //
+        // 경로가 잘려 보일 때 전체를 보려면 우클릭 → 경로 복사를 쓴다.
+        //
         // 지우기 전에 **열어 보는 길**이 있어야 한다. 정리 목록에는 그게 없었다.
         .contextMenu {
             Button("Finder에서 보기") { ItemActions.reveal(item.url) }

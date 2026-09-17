@@ -131,12 +131,18 @@ enum Theme {
     static let dockWidth: CGFloat = 252
 
     /// 목록 행. 기본은 여유롭게, 촘촘하게는 설정으로 고를 수 있다.
-    static let rowHeightComfortable: CGFloat = 56
+    /// 목록 행 높이. 이름 · 설명 · 경로 세 줄이 들어간다.
+    ///
+    /// 예전에는 56(두 줄)이었다. 경로를 보여주려고 한 줄을 더했고, 그 대가로
+    /// 한 화면에 보이는 항목이 13개에서 10개로 줄었다.
+    static let rowHeightComfortable: CGFloat = 68
     /// 목록 행의 체크박스 크기. 시스템 체크박스와 비슷하게 보이는 값이다.
     static let checkboxSize: CGFloat = 14
-    /// 행 안에서 글자 두 줄이 차지하는 높이. 13pt + 3 + 11pt 줄높이를 담는다.
+    /// 행 안에서 글자가 차지하는 높이. 13pt + 11pt + 11pt와 줄 간격을 담는다.
     /// 좌우 열에 같은 값을 줘야 이름과 크기가 같은 선에 놓인다.
-    static let rowTextBlockHeight: CGFloat = 34
+    static let rowTextBlockHeight: CGFloat = 48
+    /// 설명 줄의 높이. 설명이 비어도 이만큼은 남겨 **경로가 셋째 줄에 그대로 있게** 한다.
+    static let rowDetailLineHeight: CGFloat = 14
     /// 크기·날짜가 들어가는 우측 열 너비. "2026.05.18 만듦 · 4개월 전 사용"이 들어간다.
     static let rowMetaWidth: CGFloat = 178
     static let rowHeightCompact: CGFloat = 46
