@@ -14,7 +14,22 @@ enum PrivacySettings {
         "x-apple.systempreferences:com.apple.preference.security",
     ]
 
-    static func openFilesAndFolders() {
+    /// 전체 디스크 접근 목록.
+    ///
+    /// **Sweep은 이미 여기 등록돼 있고 스위치가 꺼져 있을 뿐이다**(실측: 시스템 TCC의
+    /// `kTCCServiceSystemPolicyAllFiles`가 0). 사용자는 켜기만 하면 된다.
+    private static let allFilesCandidates = [
+        "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_AllFiles",
+        "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles",
+        "x-apple.systempreferences:com.apple.preference.security",
+    ]
+
+    static func openFilesAndFolders() { open(candidates) }
+
+    /// "다른 앱의 데이터" 물음을 통째로 없애는 스위치가 있는 곳.
+    static func openFullDiskAccess() { open(allFilesCandidates) }
+
+    private static func open(_ candidates: [String]) {
         for string in candidates {
             if let url = URL(string: string), NSWorkspace.shared.open(url) { return }
         }

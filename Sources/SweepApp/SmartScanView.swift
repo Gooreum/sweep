@@ -178,6 +178,13 @@ struct SmartScanView: View {
 
             folderAccessRows
             blockedFooter
+
+            // 전체 디스크 접근은 **한 번 켜면 끝나는 스위치**다. 앱 폴더마다 따로 묻는
+            // "다른 앱의 데이터" 물음을 통째로 없앤다 — 늘 보이는 자리에 둔다.
+            if FullDiskAccessBanner.isNeeded {
+                Divider().overlay(Theme.border)
+                FullDiskAccessBanner()
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: Theme.cardRadius))
