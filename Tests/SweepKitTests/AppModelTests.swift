@@ -479,6 +479,22 @@ struct AppModelTests {
         #expect(!app.canSearchList)
     }
 
+    // TC-3 (Phase 2)
+    @Test("검색으로 타일이 0개가 돼도 검색창은 남는다")
+    func diskMapKeepsSearchWhenFilteredEmpty() {
+        let app = AppModel()
+        app.selected = .diskMap
+        let map = app.diskMap()
+        map.seed(DiskUsageNode(url: URL(filePath: "/private/tmp/root"), size: 10,
+                               children: [DiskUsageNode(
+                                   url: URL(filePath: "/private/tmp/root/big"), size: 10)]))
+        map.query = "없는것zzz"
+
+        #expect(map.tiles.isEmpty)
+        // 창이 사라지면 검색어를 지울 방법이 없어 갇힌다.
+        #expect(app.canSearchList)
+    }
+
     // MARK: - 허락이 바뀌어도 보던 자리는 남는다
 
     /// 진짜 홈과 `.standard`를 건드리지 않는 허락 저장소 하나.

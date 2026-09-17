@@ -205,7 +205,11 @@ public final class AppModel {
     /// 툴바가 검색창을 그리는 조건과 **같은 식**을 쓴다. 두 벌로 두면
     /// 창이 없는데 ⌘F만 켜져 있는 상태가 생긴다.
     public var canSearchList: Bool {
-        if selected == .diskMap { return !diskMap().tiles.isEmpty }
+        // 걸러져 0개가 된 상태에서도 살아 있어야 한다 — 검색어를 지울 길이 막히면 갇힌다.
+        if selected == .diskMap {
+            let map = diskMap()
+            return !map.tiles.isEmpty || map.isFiltered
+        }
         guard let model = currentModel else { return false }
         return !model.items.isEmpty
     }

@@ -25,7 +25,16 @@ struct ContentView: View {
 
             // 목록을 좁히는 검색. 결과가 수십 개일 때 스크롤로 찾는 것보다 빠르다.
             ToolbarItem(placement: .principal) {
-                if let model = app.currentModel, !model.items.isEmpty {
+                // 디스크 맵도 한 층에 수백 개가 뜬다. 같은 창을 쓰되
+                // 무엇을 좁힐지는 바인딩이 정한다.
+                if app.selected == .diskMap {
+                    let map = app.diskMap()
+                    if !map.tiles.isEmpty || map.isFiltered {
+                        SearchField(text: Binding(get: { map.query },
+                                                  set: { map.query = $0 }),
+                                    focusRequest: app.searchFocusRequest)
+                    }
+                } else if let model = app.currentModel, !model.items.isEmpty {
                     SearchField(text: Binding(get: { model.query },
                                               set: { model.query = $0 }),
                                 focusRequest: app.searchFocusRequest)
