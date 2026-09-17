@@ -171,11 +171,7 @@ struct DiskMapView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let current = model.current {
-            // "원래 비었다"와 "검색에 안 걸렸다"는 다른 말이다. 같은 화면으로 묶으면
-            // 검색어를 지워야 한다는 것을 알 수 없다.
-            if model.tiles.isEmpty, model.isFiltered {
-                NoMatchView(query: model.query) { model.query = "" }
-            } else if model.tiles.isEmpty {
+            if model.tiles.isEmpty {
                 placeholder("\(current.name)에는 더 나눌 항목이 없습니다",
                             detail: current.formattedSize)
             } else {
