@@ -307,13 +307,8 @@ struct DiskMapView: View {
                     Button("열기…") { unblock(node) }
                         .font(Theme.caption)
                 }
-                iconButton("folder", "Finder에서 보기") {
-                    NSWorkspace.shared.activateFileViewerSelecting([node.url])
-                }
-                iconButton("doc.on.doc", "경로 복사") {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(node.url.path, forType: .string)
-                }
+                iconButton("folder", "Finder에서 보기") { ItemActions.reveal(node.url) }
+                iconButton("doc.on.doc", "경로 복사") { ItemActions.copyPath(node.url) }
                 // 왜 못 지우는지는 눌러 보고 알 일이 아니다. 사유를 미리 붙인다.
                 iconButton("trash", veto?.message ?? "휴지통으로 이동") {
                     pendingDelete = node
@@ -329,13 +324,8 @@ struct DiskMapView: View {
         .contentShape(Rectangle())
         .onTapGesture { model.drillDown(into: node) }
         .contextMenu {
-            Button("Finder에서 보기") {
-                NSWorkspace.shared.activateFileViewerSelecting([node.url])
-            }
-            Button("경로 복사") {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(node.url.path, forType: .string)
-            }
+            Button("Finder에서 보기") { ItemActions.reveal(node.url) }
+            Button("경로 복사") { ItemActions.copyPath(node.url) }
             Divider()
             // 바로 지우지 않는다. 확인 대화에서 경로와 크기를 다시 보여준다.
             //
