@@ -13,7 +13,8 @@ struct FeatureScreen: View {
     @State private var showsConfirm = false
 
     var body: some View {
-        HStack(spacing: 0) {
+        let _ = RenderProbe.startReporting()
+        return HStack(spacing: 0) {
             stage
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -149,7 +150,8 @@ struct FeatureScreen: View {
     /// 기능 화면은 **판단 기준**으로 묶는다. 스마트 스캔만 카테고리로 나눈다 —
     /// 거기서는 어느 기능이 얼마를 찾았는지가 정보다.
     private var groups: [ScanGroup] {
-        feature == .smartScan ? model.groups : model.safetyGroups
+        RenderProbe.time({ feature == .smartScan ? model.groups : model.safetyGroups },
+                         into: &RenderProbe.groupSeconds, calls: &RenderProbe.groupCalls)
     }
 
     private var resultList: some View {

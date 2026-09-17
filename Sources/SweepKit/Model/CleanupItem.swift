@@ -31,7 +31,11 @@ public struct CleanupItem: Sendable, Hashable, Identifiable {
 
     /// 사람이 읽는 크기 문자열. ("152.1 GB")
     public var formattedSize: String {
-        ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
+        let start = CFAbsoluteTimeGetCurrent()
+        let value = ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
+        SizeProbe.seconds += CFAbsoluteTimeGetCurrent() - start
+        SizeProbe.calls += 1
+        return value
     }
 
     /// 목록에 보여줄 이름. 경로 마지막 구성요소.
@@ -47,4 +51,11 @@ extension Array where Element == CleanupItem {
     public var formattedTotalSize: String {
         ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file)
     }
+}
+
+
+/// **임시 계측기.** 크기 문자열 만드는 비용을 잰다. 원인 확인 후 걷어낸다.
+public enum SizeProbe {
+    nonisolated(unsafe) public static var seconds = 0.0
+    nonisolated(unsafe) public static var calls = 0
 }
