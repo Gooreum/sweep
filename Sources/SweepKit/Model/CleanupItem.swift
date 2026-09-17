@@ -12,6 +12,8 @@ public struct CleanupItem: Sendable, Hashable, Identifiable {
     public let safety: SafetyLevel
     /// 사용자에게 보여줄 부연 설명. 예: "Simulator (PID 81652)가 쓰는 중 · 33MB/분 증가"
     public let detail: String
+    /// 만든 날 / 마지막 사용. 스캐너가 크기를 세는 순회에서 같이 읽어 채운다.
+    public let dates: FileDates
 
     public var id: URL { url }
 
@@ -20,13 +22,15 @@ public struct CleanupItem: Sendable, Hashable, Identifiable {
         size: Int64,
         category: ScanCategory,
         safety: SafetyLevel,
-        detail: String = ""
+        detail: String = "",
+        dates: FileDates = .unknown
     ) {
         self.url = url
         self.size = size
         self.category = category
         self.safety = safety
         self.detail = detail
+        self.dates = dates
     }
 
     /// 사람이 읽는 크기 문자열. ("152.1 GB")

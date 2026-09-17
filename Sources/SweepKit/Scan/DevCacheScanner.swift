@@ -66,11 +66,11 @@ public struct DevCacheScanner: CleanupScanner {
     private func homeCacheItems() -> [CleanupItem] {
         Self.homeCaches.compactMap { known in
             let url = home.appending(path: known.path)
-            let size = DirectorySize.bytes(at: url)
+            let found = DirectorySize.summary(at: url)
             // 크기 0은 해당 도구가 없거나 캐시가 비었다는 뜻이다.
-            guard size > 0 else { return nil }
-            return CleanupItem(url: url, size: size, category: .devCache,
-                               safety: .safe, detail: known.detail)
+            guard found.bytes > 0 else { return nil }
+            return CleanupItem(url: url, size: found.bytes, category: .devCache,
+                               safety: .safe, detail: known.detail, dates: found.dates)
         }
     }
 
@@ -78,11 +78,11 @@ public struct DevCacheScanner: CleanupScanner {
         let caches = home.appending(path: "Library/Caches")
         return Self.knownCaches.compactMap { known in
             let url = caches.appending(path: known.name)
-            let size = DirectorySize.bytes(at: url)
+            let found = DirectorySize.summary(at: url)
             // 크기 0은 해당 도구가 없거나 캐시가 비었다는 뜻이다.
-            guard size > 0 else { return nil }
-            return CleanupItem(url: url, size: size, category: .devCache,
-                               safety: .safe, detail: known.detail)
+            guard found.bytes > 0 else { return nil }
+            return CleanupItem(url: url, size: found.bytes, category: .devCache,
+                               safety: .safe, detail: known.detail, dates: found.dates)
         }
     }
 
@@ -90,10 +90,10 @@ public struct DevCacheScanner: CleanupScanner {
     /// 하위를 그대로 훑되, 앱이 다시 쓰면 재생성되므로 safe로 둔다.
     private func logItems() -> [CleanupItem] {
         children(of: home.appending(path: "Library/Logs")).compactMap { url in
-            let size = DirectorySize.bytes(at: url)
-            guard size > 0 else { return nil }
-            return CleanupItem(url: url, size: size, category: .devCache,
-                               safety: .safe, detail: "로그 파일입니다")
+            let found = DirectorySize.summary(at: url)
+            guard found.bytes > 0 else { return nil }
+            return CleanupItem(url: url, size: found.bytes, category: .devCache,
+                               safety: .safe, detail: "로그 파일입니다", dates: found.dates)
         }
     }
 }

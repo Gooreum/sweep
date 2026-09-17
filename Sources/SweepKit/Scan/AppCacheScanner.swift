@@ -77,12 +77,13 @@ public struct AppCacheScanner: CleanupScanner {
                 continue
             }
 
-            let size = DirectorySize.bytes(at: child)
-            guard size >= Self.minimumSize else { continue }
+            let found = DirectorySize.summary(at: child)
+            guard found.bytes >= Self.minimumSize else { continue }
 
-            items.append(CleanupItem(url: child, size: size, category: .appCache,
+            items.append(CleanupItem(url: child, size: found.bytes, category: .appCache,
                                      safety: Self.safety(of: child),
-                                     detail: Self.detail(for: child)))
+                                     detail: Self.detail(for: child),
+                                     dates: found.dates))
         }
     }
 

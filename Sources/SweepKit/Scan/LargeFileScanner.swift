@@ -31,7 +31,8 @@ public struct LargeFileScanner: CleanupScanner {
                 category: .largeFile,
                 // 사용자가 일부러 받은 파일이다. 자동 선택하지 않는다.
                 safety: .caution,
-                detail: Self.detail(modified: found.modified))
+                detail: Self.detail(modified: found.modified),
+                dates: FileDates(created: found.created, lastUsed: found.modified))
         }
     }
 
@@ -48,10 +49,11 @@ public struct LargeFileScanner: CleanupScanner {
     /// 임계 이상 일반 파일. 심볼릭 링크는 제외한다 —
     /// 링크를 지워도 용량은 회수되지 않고 대상만 고아가 된다.
     private static func largeFiles(under root: URL, minimumSize: Int64)
-        -> [(url: URL, size: Int64, modified: Date)] {
+        -> [(url: URL, size: Int64, modified: Date, created: Date?)] {
         let keys: Set<URLResourceKey> = [
             .isRegularFileKey, .isSymbolicLinkKey,
-            .totalFileAllocatedSizeKey, .fileAllocatedSizeKey, .contentModificationDateKey,
+            .totalFileAllocatedSizeKey, .fileAllocatedSizeKey,
+            .contentModificationDateKey, .creationDateKey,
         ]
         guard let walker = FileManager.default.enumerator(
             at: root,
@@ -60,7 +62,7 @@ public struct LargeFileScanner: CleanupScanner {
             errorHandler: { _, _ in true }
         ) else { return [] }
 
-        var found: [(url: URL, size: Int64, modified: Date)] = []
+        var found: [(url: URL, size: Int64, modified: Date, created: Date?)] = []
         for case let url as URL in walker {
             guard let v = try? url.resourceValues(forKeys: keys),
                   v.isSymbolicLink != true,
@@ -71,7 +73,8 @@ public struct LargeFileScanner: CleanupScanner {
             guard size >= minimumSize else { continue }
 
             found.append((url: url, size: size,
-                          modified: v.contentModificationDate ?? .distantPast))
+                          modified: v.contentModificationDate ?? .distantPast,
+                          created: v.creationDate))
         }
         return found
     }

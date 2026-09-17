@@ -66,11 +66,12 @@ public struct XcodeScanner: CleanupScanner {
             let root = home.appending(path: target.path)
             let urls = target.expandsChildren ? expandedChildren(of: root) : [root]
             return urls.compactMap { url in
-                let size = DirectorySize.bytes(at: url)
+                let found = DirectorySize.summary(at: url)
                 // 크기 0은 대상이 없거나 비어 있다는 뜻이다. 목록에 올릴 이유가 없다.
-                guard size > 0 else { return nil }
-                return CleanupItem(url: url, size: size, category: .xcode,
-                                   safety: target.safety, detail: target.detail)
+                guard found.bytes > 0 else { return nil }
+                return CleanupItem(url: url, size: found.bytes, category: .xcode,
+                                   safety: target.safety, detail: target.detail,
+                                   dates: found.dates)
             }
         }
     }
@@ -98,13 +99,14 @@ public struct XcodeScanner: CleanupScanner {
             guard let device = Self.device(at: url), device.state == Self.shutdownState
             else { return nil }
 
-            let size = DirectorySize.bytes(at: url)
-            guard size > 0 else { return nil }
+            let found = DirectorySize.summary(at: url)
+            guard found.bytes > 0 else { return nil }
 
-            return CleanupItem(url: url, size: size, category: .xcode,
+            return CleanupItem(url: url, size: found.bytes, category: .xcode,
                                safety: .caution,
                                detail: "\(device.name) · \(device.runtime) — "
-                                     + "설치한 앱과 설정이 사라집니다")
+                                     + "설치한 앱과 설정이 사라집니다",
+                               dates: found.dates)
         }
     }
 

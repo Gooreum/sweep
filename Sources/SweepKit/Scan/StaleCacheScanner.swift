@@ -35,51 +35,33 @@ public struct StaleCacheScanner: CleanupScanner {
             // 두 번 세면 합계가 부풀고 같은 항목이 목록에 두 번 나온다.
             guard !known.contains(url.lastPathComponent) else { return nil }
 
-            let size = DirectorySize.bytes(at: url)
-            guard size >= minimumSize else { return nil }
+            // 크기와 날짜를 **한 번의 순회**로 얻는다. 예전에는 같은 트리를
+            // 크기용 한 번, 날짜용 한 번 돌았다.
+            let found = DirectorySize.summary(at: url)
+            guard found.bytes >= minimumSize else { return nil }
 
-            guard let idle = Self.idleInterval(of: url), idle >= staleAfter else { return nil }
+            guard let newest = found.dates.lastUsed else { return nil }
+            let idle = Date().timeIntervalSince(newest)
+            guard idle >= staleAfter else { return nil }
 
             return CleanupItem(
                 url: url,
-                size: size,
+                size: found.bytes,
                 category: .staleCache,
                 // 주인이 살아 있을 수 있다. 기본 선택에서 빼 사용자가 직접 고르게 한다.
                 safety: .caution,
-                detail: "\(Int(idle / 86_400))일 동안 쓰이지 않았습니다")
+                detail: "\(Int(idle / 86_400))일 동안 쓰이지 않았습니다",
+                dates: found.dates)
         }
     }
 
     /// 하위 전체에서 가장 최근 수정 시각과 지금의 차이. 읽을 수 없으면 nil.
-    static func idleInterval(of url: URL, now: Date = Date()) -> TimeInterval? {
-        guard let newest = newestModification(in: url) else { return nil }
-        return now.timeIntervalSince(newest)
-    }
-
-    /// 하위 어느 파일이든 최근에 손댔으면 이 캐시는 살아 있는 것이다.
-    /// 그래서 최댓값을 찾는다.
     ///
-    /// **일반 파일만 본다.** 디렉토리 mtime은 항목이 추가·삭제되거나 다른 프로세스가
-    /// 건드리기만 해도 갱신돼서, 포함하면 331일 묵은 캐시가 "오늘 쓴 것"으로 보인다
-    /// (실측에서 이 때문에 검출이 통째로 실패했다).
-    private static func newestModification(in url: URL) -> Date? {
-        let keys: Set<URLResourceKey> = [.contentModificationDateKey, .isRegularFileKey]
-
-        guard let walker = FileManager.default.enumerator(
-            at: url,
-            includingPropertiesForKeys: Array(keys),
-            options: [],
-            errorHandler: { _, _ in true }
-        ) else { return nil }
-
-        var newest: Date?
-        for case let child as URL in walker {
-            guard let values = try? child.resourceValues(forKeys: keys),
-                  values.isRegularFile == true,
-                  let modified = values.contentModificationDate
-            else { continue }
-            if newest == nil || modified > newest! { newest = modified }
-        }
-        return newest
+    /// "하위 어느 파일이든 최근에 손댔으면 이 캐시는 살아 있다"는 규칙은
+    /// `DirectorySize.summary(at:)`가 크기를 세면서 같이 지킨다 —
+    /// 여기서 트리를 한 번 더 돌지 않는다.
+    static func idleInterval(of url: URL, now: Date = Date()) -> TimeInterval? {
+        guard let newest = DirectorySize.summary(at: url).dates.lastUsed else { return nil }
+        return now.timeIntervalSince(newest)
     }
 }

@@ -11,7 +11,8 @@ import Foundation
 ///
 /// 다른 하나는 **디렉토리 자신의 mtime**이다. 하위가 추가·삭제되기만 해도 갱신돼서,
 /// 이 프로젝트는 이미 한 번 당했다 — 331일 묵은 캐시가 "오늘 쓴 것"으로 보여
-/// 검출이 통째로 실패했다(`StaleCacheScanner.newestModification` 주석 참조).
+/// 묵은 캐시 검출이 통째로 실패했다. 그래서 `DirectorySize.summary(at:)`는
+/// 일반 파일의 mtime만 센다.
 public struct FileDates: Sendable, Hashable {
     /// 만든 날. 앱이라면 설치한 날이 된다.
     public let created: Date?

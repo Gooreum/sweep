@@ -68,16 +68,17 @@ public struct RunawayTempScanner: CleanupScanner {
                 onProgress(afterSleep
                            + Self.passShare * Double(index + 1) / Double(first.count))
             }
-            let now = DirectorySize.bytes(at: sample.url)
-            guard now > 0 else { continue }         // 그새 사라졌다
-            let growth = now - sample.size
+            let second = DirectorySize.summary(at: sample.url)
+            guard second.bytes > 0 else { continue }         // 그새 사라졌다
+            let growth = second.bytes - sample.size
             found.append(CleanupItem(
                 url: sample.url,
-                size: now,
+                size: second.bytes,
                 category: .runawayTemp,
                 // 증가 중이라면 무언가 쓰고 있다는 뜻이다. 함부로 지우게 두지 않는다.
                 safety: growth > 0 ? .caution : .safe,
-                detail: Self.detail(growth: growth, over: samplingInterval)))
+                detail: Self.detail(growth: growth, over: samplingInterval),
+                dates: second.dates))
         }
         onProgress(1)
         return found

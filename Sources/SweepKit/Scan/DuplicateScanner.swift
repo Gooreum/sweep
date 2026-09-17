@@ -21,6 +21,7 @@ public struct DuplicateScanner: CleanupScanner {
         let url: URL
         let size: Int64
         let created: Date
+        let modified: Date?
     }
 
     /// 실측 0.18초. 1초 안에 끝나므로 중간 보고 없이 완료 시점만 알린다.
@@ -52,7 +53,9 @@ public struct DuplicateScanner: CleanupScanner {
                             size: size,
                             category: .duplicate,
                             safety: .safe,
-                            detail: "\(original.url.lastPathComponent)와 내용이 같습니다"))
+                            detail: "\(original.url.lastPathComponent)와 내용이 같습니다",
+                            dates: FileDates(created: duplicate.created,
+                                             lastUsed: duplicate.modified)))
                     }
                 }
             }
@@ -80,7 +83,8 @@ public struct DuplicateScanner: CleanupScanner {
     /// 하위 전체의 일반 파일. 심볼릭 링크와 디렉토리는 제외한다.
     private static func regularFiles(under root: URL) -> [Candidate] {
         let keys: Set<URLResourceKey> = [
-            .isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey, .creationDateKey,
+            .isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey,
+            .creationDateKey, .contentModificationDateKey,
         ]
         guard let walker = FileManager.default.enumerator(
             at: root,
@@ -97,7 +101,8 @@ public struct DuplicateScanner: CleanupScanner {
                   let size = v.fileSize
             else { continue }
             found.append(Candidate(url: url, size: Int64(size),
-                                   created: v.creationDate ?? .distantPast))
+                                   created: v.creationDate ?? .distantPast,
+                                   modified: v.contentModificationDate))
         }
         return found
     }
