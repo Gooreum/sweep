@@ -109,5 +109,6 @@ struct ItemRow: View {
             Button("Finder에서 보기") { ItemActions.reveal(item.url) }
             Button("경로 복사") { ItemActions.copyPath(item.url) }
         }
+        .background(RowLifeProbe(id: item.url))   // ← 측정용. 걷어낸다.
     }
 }
