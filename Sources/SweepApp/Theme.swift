@@ -132,6 +132,11 @@ enum Theme {
 
     /// 목록 행. 기본은 여유롭게, 촘촘하게는 설정으로 고를 수 있다.
     static let rowHeightComfortable: CGFloat = 56
+    /// 행 안에서 글자 두 줄이 차지하는 높이. 13pt + 3 + 11pt 줄높이를 담는다.
+    /// 좌우 열에 같은 값을 줘야 이름과 크기가 같은 선에 놓인다.
+    static let rowTextBlockHeight: CGFloat = 34
+    /// 크기·날짜가 들어가는 우측 열 너비. "2026.05.18 만듦 · 4개월 전 사용"이 들어간다.
+    static let rowMetaWidth: CGFloat = 178
     static let rowHeightCompact: CGFloat = 46
 
     /// 섹션 헤더. 스크롤해도 위에 붙어 있어 지금 어느 묶음인지 잃지 않는다.

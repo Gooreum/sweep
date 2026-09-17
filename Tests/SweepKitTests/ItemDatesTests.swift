@@ -117,4 +117,42 @@ struct ItemDatesTests {
         #expect(abs(used.timeIntervalSince(stamped)) < 2)
         #expect(item.dates.lastUsedLabel() == "6개월 전 사용")
     }
+
+    // TC-2 (Phase 3) — 우측 열 둘째 줄
+    @Test("만든 날과 마지막 사용이 한 줄에 같이 나온다")
+    func datesLineJoinsBoth() {
+        let item = CleanupItem(url: URL(filePath: "/tmp/Anki"), size: 1,
+                               category: .appCache, safety: .safe,
+                               detail: "npm 내려받기 캐시",
+                               dates: FileDates(created: Date(timeIntervalSince1970: 1_747_000_000),
+                                                lastUsed: Date()))
+
+        let line = item.datesLine()
+
+        // 설명이 있어도 만든 날이 사라지면 안 된다 — 실기에서 정크 항목은
+        // 거의 전부 설명이 붙어 있어 만든 날이 한 줄도 안 나왔다.
+        #expect(line?.contains("만듦") == true)
+        #expect(line?.contains("오늘 사용") == true)
+        #expect(line?.contains(" · ") == true)
+    }
+
+    // TC-3 (Phase 3)
+    @Test("한쪽만 읽히면 읽히는 쪽만 나온다")
+    func datesLinePartial() {
+        let item = CleanupItem(url: URL(filePath: "/tmp/x"), size: 1,
+                               category: .appCache, safety: .safe,
+                               dates: FileDates(lastUsed: Date()))
+
+        #expect(item.datesLine() == "오늘 사용")
+    }
+
+    // TC-4 (Phase 3)
+    @Test("날짜를 하나도 못 읽으면 줄이 없다")
+    func datesLineAbsent() {
+        let item = CleanupItem(url: URL(filePath: "/tmp/x"), size: 1,
+                               category: .appCache, safety: .safe)
+
+        // 빈 문자열을 돌려주면 화면에 보이지 않는 빈 줄이 생긴다.
+        #expect(item.datesLine() == nil)
+    }
 }

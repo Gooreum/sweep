@@ -41,6 +41,18 @@ public struct CleanupItem: Sendable, Hashable, Identifiable {
     /// 목록에 보여줄 이름. 경로 마지막 구성요소.
     public var displayName: String { url.lastPathComponent }
 
+    /// 우측 열 둘째 줄. "2026.05.18 만듦 · 4개월 전 사용"
+    ///
+    /// **둘을 한 줄에 같이 둔다.** 처음에는 만든 날을 왼쪽 둘째 줄에 두고 설명이
+    /// 없을 때만 보여줬는데, 실기에서 정크 항목은 거의 전부 설명이 붙어 있어
+    /// **만든 날이 한 줄도 안 나왔다.** 있으나 마나 한 표시였다.
+    ///
+    /// 한쪽만 읽히면 읽히는 쪽만 준다. 둘 다 없으면 nil — 빈 줄을 만들지 않는다.
+    public func datesLine(now: Date = Date()) -> String? {
+        let parts = [dates.createdLabel(), dates.lastUsedLabel(now: now)].compactMap { $0 }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+
     public var isSelectedByDefault: Bool { safety.isSelectedByDefault }
 }
 

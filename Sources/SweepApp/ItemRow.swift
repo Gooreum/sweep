@@ -36,7 +36,6 @@ struct ItemRow: View {
     let item: CleanupItem
     @Binding var isOn: Bool
 
-
     var body: some View {
         HStack(spacing: 14) {
             // 되돌릴 수 없는 항목도 **고를 수는 있다.**
@@ -71,15 +70,28 @@ struct ItemRow: View {
                         .lineLimit(1)
                 }
             }
+            // 두 열의 높이를 맞춰 **이름과 크기가 같은 선에** 놓이게 한다.
+            // 한쪽만 두 줄이면 SwiftUI가 각자 가운데를 맞춰 첫 줄이 어긋난다.
+            .frame(height: Theme.rowTextBlockHeight, alignment: .topLeading)
 
             Spacer(minLength: 12)
 
-            // 우측은 크기 열만 남겨 값끼리 비교할 수 있게 한다.
+            // 우측은 크기와 날짜 두 줄. 값끼리 세로로 비교할 수 있게 오른쪽 정렬한다.
             // 고른 것만 또렷하게 — 훑을 때 무엇을 담았는지가 숫자로 보인다.
-            Text(item.formattedSize)
-                .font(Theme.bodyMono)
-                .foregroundStyle(isOn ? Theme.textPrimary : Theme.textTertiary)
-                .frame(width: 88, alignment: .trailing)
+            VStack(alignment: .trailing, spacing: 3) {
+                Text(item.formattedSize)
+                    .font(Theme.bodyMono)
+                    .foregroundStyle(isOn ? Theme.textPrimary : Theme.textTertiary)
+
+                if let datesLine = item.datesLine() {
+                    Text(datesLine)
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.textTertiary)
+                        .lineLimit(1)
+                }
+            }
+            .frame(width: Theme.rowMetaWidth, height: Theme.rowTextBlockHeight,
+                   alignment: .topTrailing)
         }
         .padding(.horizontal, 24)
         .frame(height: Theme.rowHeightComfortable)
@@ -88,7 +100,14 @@ struct ItemRow: View {
         .background(isOn ? Theme.rowSelected : Color.clear)
         .contentShape(Rectangle())
         .onTapGesture { isOn.toggle() }
-        .help(item.safety == .danger
-              ? "되돌릴 수 없습니다 — \(item.url.path)" : item.url.path)
+        // 목록에는 짧은 말로 쓰고, 정확한 날짜는 마우스를 올린 사람에게만 준다.
+        .help([item.safety == .danger ? "되돌릴 수 없습니다" : nil,
+               item.dates.tooltipLine(),
+               item.url.path].compactMap { $0 }.joined(separator: "\n"))
+        // 지우기 전에 **열어 보는 길**이 있어야 한다. 정리 목록에는 그게 없었다.
+        .contextMenu {
+            Button("Finder에서 보기") { ItemActions.reveal(item.url) }
+            Button("경로 복사") { ItemActions.copyPath(item.url) }
+        }
     }
 }
