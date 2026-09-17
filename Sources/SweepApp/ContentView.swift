@@ -16,21 +16,27 @@ struct ContentView: View {
         }
         // 전역 액션을 타이틀바로 올린다. 별도 툴바 줄을 만들면 사이드바 위에
         // 가로줄이 하나 더 생겨 화면이 그만큼 낮아진다 — 타이틀바는 어차피 비어 있다.
+        // 기능 이름은 **창 제목**으로 둔다. 툴바 항목에 맨 글자를 넣으면 시스템이
+        // 유리 캡슐을 씌우는데, 버튼이 아닌 글자에는 여백이 없어 캡슐이 글자 상자에
+        // 달라붙는다 — 한글은 글자 상자가 높아 위아래가 깎여 보였다.
+        .navigationTitle(app.selected.displayName)
         .toolbar {
-            ToolbarItem(placement: .navigation) {
-                Text(app.selected.displayName)
-                    .font(Theme.bodyText.weight(.medium))
-                    .foregroundStyle(Theme.textPrimary)
-            }
-
             ToolbarItemGroup(placement: .primaryAction) {
                 // 한 번에 고르는 가장 흔한 경우. 메뉴로 접어 두면 두 번 눌러야 한다.
-                Button("안전 항목 선택") { app.currentModel?.apply(.safeOnly) }
-                    .disabled(app.currentModel?.items.isEmpty ?? true)
+                // 라벨에 직접 여백을 준다. 시스템 유리 캡슐은 라벨 크기에 맞춰
+                // 그려지는데, 한글은 글자 상자가 높아 기본 상태로는 캡슐이 글자에
+                // 바짝 붙어 **잘린 것처럼** 보인다. `.controlSize(.large)`로는
+                // 캡슐이 거의 안 커져서(실측) 여백을 직접 넣는다.
+                Button { app.currentModel?.apply(.safeOnly) } label: {
+                    Text("안전 항목 선택").font(.system(size: 12))
+                }
+                .disabled(app.currentModel?.items.isEmpty ?? true)
 
-                Button("다시 검색") {
+                Button {
                     guard let model = app.currentModel else { return }
                     Task { await model.scan() }
+                } label: {
+                    Text("다시 검색").font(.system(size: 12))
                 }
                 .disabled(!app.canScan)
             }
