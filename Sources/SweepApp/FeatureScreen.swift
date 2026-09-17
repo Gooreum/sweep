@@ -172,13 +172,20 @@ struct FeatureScreen: View {
                     Section {
                         // 접었으면 행을 그리지 않는다. 높이 0으로 숨기면
                         // 스크롤 길이가 그대로라 접은 보람이 없다.
-                        if !model.isCollapsed(group) {
-                            ForEach(group.items) { item in
-                                ItemRow(item: item, isOn: binding(for: item))
-                                    .listRowInsets(EdgeInsets())
-                                    .listRowSeparator(.hidden)
-                            }
+                        //
+                        // **`if`로 감싸지 않는다.** 조건부 뷰는 목록의 구조 자체를
+                        // 흔들어 SwiftUI가 view list를 통째로 다시 만든다 —
+                        // 비어 있는 배열을 주면 구조는 그대로고 내용만 없다.
+                        //
+                        // 수식자도 행마다 붙이지 않는다. 63줄에 각각 붙이면
+                        // `ModifiedContent` 껍질이 63개 생기고, 갱신마다 그것을
+                        // 전부 다시 훑는다 — 실측에서 `ModifiedElements.makeElements`가
+                        // 메인 스레드 상위를 차지했다. `ForEach` 하나에 붙이면 한 겹이다.
+                        ForEach(rows(of: group)) { item in
+                            ItemRow(item: item, isOn: binding(for: item))
                         }
+                        .listRowInsets(EdgeInsets())
+                        .listRowSeparator(.hidden)
                     } header: {
                         sectionHeader(group)
                     }
@@ -239,6 +246,11 @@ struct FeatureScreen: View {
     // MARK: - 거들기
 
     /// `selection`(Set<URL>)을 체크박스가 쓰는 Bool 바인딩으로 잇는다.
+    /// 이 묶음에서 그릴 행. 접혀 있으면 비어 있다.
+    private func rows(of group: ScanGroup) -> [CleanupItem] {
+        model.isCollapsed(group) ? [] : group.items
+    }
+
     private func binding(for item: CleanupItem) -> Binding<Bool> {
         Binding(
             get: { model.isSelected(item) },
