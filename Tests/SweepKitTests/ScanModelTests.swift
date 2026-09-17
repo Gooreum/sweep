@@ -683,4 +683,57 @@ struct ScanModelTests {
         let sizes = model.groups.flatMap(\.items).map(\.size)
         #expect(sizes == [900, 100])
     }
+
+    // MARK: - 접힘과 렌더 비용 (scroll-jank 회귀)
+
+    // TC-1
+    @Test("접으면 그릴 행이 비고, 펼치면 돌아온다")
+    @MainActor
+    func visibleRowsFollowCollapse() async {
+        let model = await modelWithItems([
+            item("a.bin", size: 100, category: .devCache),
+            item("b.bin", size: 900, category: .devCache),
+        ])
+        let group = try! #require(model.groups.first)
+
+        #expect(model.visibleRows(of: group).count == 2)
+
+        model.toggleCollapsed(group)
+        // **구조가 아니라 내용만 비워야 한다** — 화면이 조건부 뷰로 감싸면
+        // SwiftUI가 목록을 통째로 다시 만든다(실측).
+        #expect(model.visibleRows(of: group).isEmpty)
+
+        model.toggleCollapsed(group)
+        #expect(model.visibleRows(of: group).count == 2)
+    }
+
+    // TC-2
+    @Test("접힌 묶음만 비고 나머지는 그대로다")
+    @MainActor
+    func collapseIsPerGroup() async {
+        let model = await modelWithItems([
+            item("a.bin", size: 100, category: .devCache),
+            item("big.mov", size: 900, category: .largeFile),
+        ])
+        let groups = model.groups
+        #expect(groups.count == 2)
+
+        model.toggleCollapsed(groups[0])
+
+        #expect(model.visibleRows(of: groups[0]).isEmpty)
+        #expect(!model.visibleRows(of: groups[1]).isEmpty)
+    }
+
+    // TC-3
+    @Test("그릴 행은 묶음 안에서 큰 것부터다")
+    @MainActor
+    func visibleRowsStaySorted() async {
+        let model = await modelWithItems([
+            item("a.bin", size: 100, category: .devCache),
+            item("b.bin", size: 900, category: .devCache),
+        ])
+        let group = try! #require(model.groups.first)
+
+        #expect(model.visibleRows(of: group).map(\.size) == [900, 100])
+    }
 }

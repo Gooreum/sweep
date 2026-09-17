@@ -183,6 +183,16 @@ public final class ScanModel {
         collapsedGroups.contains(group.kind)
     }
 
+    /// 이 묶음에서 화면에 그릴 행. **접혀 있으면 비어 있다.**
+    ///
+    /// 화면이 `if !isCollapsed { ForEach(items) }`로 감싸면 목록의 **구조**가 바뀌어
+    /// SwiftUI가 view list를 통째로 다시 만든다 — 실측에서 스크롤 중 메인 스레드를
+    /// 그 작업이 차지했다. 구조는 그대로 두고 **내용만** 비우는 것이 요점이라
+    /// 판단을 모델에 둔다.
+    public func visibleRows(of group: ScanGroup) -> [CleanupItem] {
+        isCollapsed(group) ? [] : group.items
+    }
+
     public func toggleCollapsed(_ group: ScanGroup) {
         if collapsedGroups.contains(group.kind) {
             collapsedGroups.remove(group.kind)

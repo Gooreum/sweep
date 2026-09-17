@@ -179,7 +179,7 @@ struct FeatureScreen: View {
                         // `ModifiedContent` 껍질이 63개 생기고, 갱신마다 그것을
                         // 전부 다시 훑는다 — 실측에서 `ModifiedElements.makeElements`가
                         // 메인 스레드 상위를 차지했다. `ForEach` 하나에 붙이면 한 겹이다.
-                        ForEach(rows(of: group)) { item in
+                        ForEach(model.visibleRows(of: group)) { item in
                             ItemRow(item: item, isOn: binding(for: item))
                         }
                         .listRowInsets(EdgeInsets())
@@ -244,11 +244,6 @@ struct FeatureScreen: View {
     // MARK: - 거들기
 
     /// `selection`(Set<URL>)을 체크박스가 쓰는 Bool 바인딩으로 잇는다.
-    /// 이 묶음에서 그릴 행. 접혀 있으면 비어 있다.
-    private func rows(of group: ScanGroup) -> [CleanupItem] {
-        model.isCollapsed(group) ? [] : group.items
-    }
-
     private func binding(for item: CleanupItem) -> Binding<Bool> {
         Binding(
             get: { model.isSelected(item) },
