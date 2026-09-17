@@ -434,53 +434,6 @@ struct AppModelTests {
         #expect(badges[.smartScan] == mixed.formattedTotalSize)
     }
 
-    // MARK: - ⌘F (검색창이 떠 있는가)
-
-    // TC-2
-    @Test("결과가 없으면 검색창이 없으니 ⌘F도 꺼진다")
-    func cannotSearchWithoutResults() {
-        let app = AppModel()
-        app.selected = .junk
-
-        #expect(!app.canSearchList)
-    }
-
-    // TC-3
-    @Test("결과가 있으면 검색할 수 있다")
-    func canSearchWithResults() async {
-        let app = app(scanning: .junk, finds: mixed)
-        app.selected = .junk
-        await app.model(for: .junk).scan()
-
-        #expect(app.canSearchList)
-    }
-
-    // TC-4
-    @Test("디스크 맵은 타일이 있어야 검색할 수 있다")
-    func diskMapNeedsTiles() {
-        let app = AppModel()
-        app.selected = .diskMap
-
-        // 아직 아무것도 훑지 않았다 — 좁힐 것이 없으면 창도 없다.
-        #expect(!app.canSearchList)
-    }
-
-    // TC-3 (Phase 2)
-    @Test("검색으로 타일이 0개가 돼도 검색창은 남는다")
-    func diskMapKeepsSearchWhenFilteredEmpty() {
-        let app = AppModel()
-        app.selected = .diskMap
-        let map = app.diskMap()
-        map.seed(DiskUsageNode(url: URL(filePath: "/private/tmp/root"), size: 10,
-                               children: [DiskUsageNode(
-                                   url: URL(filePath: "/private/tmp/root/big"), size: 10)]))
-        map.query = "없는것zzz"
-
-        #expect(map.tiles.isEmpty)
-        // 창이 사라지면 검색어를 지울 방법이 없어 갇힌다.
-        #expect(app.canSearchList)
-    }
-
     // MARK: - 허락이 바뀌어도 보던 자리는 남는다
 
     /// 진짜 홈과 `.standard`를 건드리지 않는 허락 저장소 하나.

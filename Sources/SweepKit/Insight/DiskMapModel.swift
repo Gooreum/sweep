@@ -110,33 +110,7 @@ public final class DiskMapModel {
     public var availableRoots: [DiskMapRoot] { DiskMapRoot.all }
 
     public var current: DiskUsageNode? { path.last }
-    /// 지금 보는 **층**을 좁히는 검색어. 이름과 경로 둘 다 본다.
-    ///
-    /// 트리 전체를 가로지르지 않는다 — 50만 개를 글자마다 훑게 되고, 층 단위로
-    /// 파고드는 이 화면의 구조와도 맞지 않는다.
-    ///
-    /// **층을 옮기면 지운다.** 파고들었는데 위층 검색어가 따라오면 빈 화면이 되고,
-    /// 사용자는 그 층에 아무것도 없다고 읽는다.
-    public var query: String = ""
-
-    /// 검색어로 좁힌 타일. 검색어가 비면 전부다.
-    ///
-    /// `ScanModel.visibleItems`와 같은 규칙이다 — 이름으로도 경로로도 걸린다.
-    public var tiles: [DiskUsageNode] {
-        let all = current?.children ?? []
-        let needle = query.trimmingCharacters(in: .whitespaces).lowercased()
-        guard !needle.isEmpty else { return all }
-        return all.filter {
-            $0.name.lowercased().contains(needle)
-                || $0.url.path.lowercased().contains(needle)
-        }
-    }
-
-    /// 검색어가 걸려 있는가. 화면이 "없음" 안내를 고를 때 쓴다 —
-    /// "원래 비었다"와 "검색에 안 걸렸다"는 다른 말이다.
-    public var isFiltered: Bool {
-        !query.trimmingCharacters(in: .whitespaces).isEmpty
-    }
+    public var tiles: [DiskUsageNode] { current?.children ?? [] }
 
     public var canGoUp: Bool { path.count > 1 }
 
@@ -148,8 +122,6 @@ public final class DiskMapModel {
     public func load(_ root: URL) async {
         // 화면이 무엇을 보고 있는지도 모델이 안다. 뷰와 두 곳에 두면 어긋난다.
         selectedRoot = root
-        // 새로 훑는 곳에 앞선 검색어가 따라오면 빈 화면으로 시작한다.
-        query = ""
         loadPhase = .counting(scanned: 0)
 
         // 볼륨 전체는 몇 분이 걸린다. 시작한 순회를 멈출 수 있어야 한다.
@@ -239,20 +211,17 @@ public final class DiskMapModel {
     /// 빈 화면으로 들어가면 사용자가 길을 잃는다.
     public func drillDown(into node: DiskUsageNode) {
         guard !node.children.isEmpty else { return }
-        query = ""
         path.append(node)
     }
 
     public func goUp() {
         guard canGoUp else { return }
-        query = ""
         path.removeLast()
     }
 
     /// breadcrumb의 N번째를 눌렀을 때 그 지점까지만 남긴다.
     public func jump(to index: Int) {
         guard path.indices.contains(index) else { return }
-        query = ""
         path = Array(path.prefix(index + 1))
     }
 

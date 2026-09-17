@@ -188,20 +188,6 @@ public final class AppModel {
         return !model.isBusy && model.hasSelection
     }
 
-    /// 지금 화면에 검색창이 떠 있는가. ⌘F를 켜고 끄는 데 쓴다.
-    ///
-    /// 툴바가 검색창을 그리는 조건과 **같은 식**을 쓴다. 두 벌로 두면
-    /// 창이 없는데 ⌘F만 켜져 있는 상태가 생긴다.
-    public var canSearchList: Bool {
-        // 걸러져 0개가 된 상태에서도 살아 있어야 한다 — 검색어를 지울 길이 막히면 갇힌다.
-        if selected == .diskMap {
-            let map = diskMap()
-            return !map.tiles.isEmpty || map.isFiltered
-        }
-        guard let model = currentModel else { return false }
-        return !model.items.isEmpty
-    }
-
     /// 사이드바 배지 전체. 아직 훑지 않았거나 0이면 그 기능은 빠진다 —
     /// "0바이트" 배지는 알려줄 것이 아니라 자리만 차지한다.
     ///

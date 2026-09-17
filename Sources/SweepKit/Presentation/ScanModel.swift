@@ -83,13 +83,6 @@ public final class ScanModel {
     public private(set) var report: RemovalReport?
     public var selection: Set<URL> = []
 
-    /// 목록을 좁히는 검색어. 이름과 경로 둘 다 본다.
-    ///
-    /// **선택을 건드리지 않는다.** 검색으로 가려진 항목이 선택에서 빠지면
-    /// 검색어를 지우는 순간 골라 둔 것이 사라진 것처럼 보인다 —
-    /// 실제로는 계속 선택돼 있으므로 독의 합계와 목록이 어긋난다.
-    public var query: String = ""
-
     private let scanStream: @Sendable () -> AsyncStream<ScanCoordinator.Progress>
     private let performRemove: @Sendable (CleanupItem) -> RemovalOutcome
 
@@ -208,24 +201,11 @@ public final class ScanModel {
         }
     }
 
-    /// 검색어로 좁힌 항목. 검색어가 비면 전부다.
-    ///
-    /// 이름과 경로를 함께 본다 — `~/Library/Caches/Google`을 찾을 때
-    /// "Google"로도 "Caches"로도 걸려야 한다.
-    public var visibleItems: [CleanupItem] {
-        let needle = query.trimmingCharacters(in: .whitespaces).lowercased()
-        guard !needle.isEmpty else { return items }
-        return items.filter {
-            $0.displayName.lowercased().contains(needle)
-                || $0.url.path.lowercased().contains(needle)
-        }
-    }
-
     /// 카테고리별 섹션. 위험한 카테고리가 위로 온다.
     ///
     /// 스마트 스캔이 쓴다 — 거기서는 기능별로 갈리는 것이 정보다.
     public var groups: [ScanGroup] {
-        Dictionary(grouping: visibleItems, by: \.category)
+        Dictionary(grouping: items, by: \.category)
             .map { ScanGroup(kind: .category($0.key), items: $0.value.sortedBySize) }
             .sorted { ($0.category?.sortOrder ?? 0) < ($1.category?.sortOrder ?? 0) }
     }
@@ -236,7 +216,7 @@ public final class ScanModel {
     /// `Xcode_26.0.xip`(다시 받으면 된다)와 `제주 여행 원본.mov`(없으면 끝)가
     /// 한 덩어리에 있으면 하나씩 열어 봐야 고를 수 있다.
     public var safetyGroups: [ScanGroup] {
-        Dictionary(grouping: visibleItems, by: \.safety)
+        Dictionary(grouping: items, by: \.safety)
             .map { ScanGroup(kind: .safety($0.key), items: $0.value.sortedBySize) }
             .sorted { lhs, rhs in
                 guard case .safety(let l) = lhs.kind, case .safety(let r) = rhs.kind
