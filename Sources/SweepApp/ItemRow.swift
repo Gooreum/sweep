@@ -43,9 +43,24 @@ struct ItemRow: View {
             // 한때 아예 막아 뒀는데, 그러면 진짜로 지우려는 사람이 앱에서 할 방법이
             // 없어진다 — 심사 제출본을 정리하는 것도 정당한 작업이다.
             // 실수 방지는 기본 미선택 · 자물쇠 아이콘 · 확인 시트가 맡는다.
-            Toggle("", isOn: $isOn)
-                .toggleStyle(.checkbox)
-                .labelsHidden()
+            //
+            // **`Toggle(.checkbox)`를 쓰지 않는다.** 그것은 행마다 AppKit `NSButton`을
+            // 하나씩 만드는데, `List`는 화면 밖으로 나간 행의 뷰를 **재사용하지 않고**
+            // 버렸다가 다시 만든다(실측: 한 번 훑는 동안 만듦 69 · 버림 72, 갱신 69 —
+            // 갱신 수가 만듦 수와 같다는 것이 재사용이 0이라는 뜻이다).
+            // 그래서 빠르게 굴리면 `NSButton`이 초당 수십 개씩 만들어졌다 버려진다.
+            //
+            // 실측(항목 57개, 같은 조건 3회, 떨어진 프레임 수):
+            //   체크박스 없는 최소 행       → 0 / 1 / 2
+            //   거기에 `Toggle(.checkbox)`  → 35 / 24 / 35   ← 버벅임이 전부 여기서 나왔다
+            //   거기에 아래의 그린 체크박스 → 1 / 3 / 0
+            //
+            // 그려서 쓰면 모양은 같고 비용이 없다. 누르는 것은 행 전체 탭이 맡는다.
+            Image(systemName: isOn ? "checkmark.square.fill" : "square")
+                .font(.system(size: Theme.checkboxSize))
+                .foregroundStyle(isOn ? Color.accentColor : Theme.textTertiary)
+                .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
+                .accessibilityLabel(item.displayName)
 
             // 등급마다 도형이 달라도 이름 열이 흔들리지 않게 칸을 고정한다.
             Image(systemName: item.safety.symbolName)
@@ -109,6 +124,5 @@ struct ItemRow: View {
             Button("Finder에서 보기") { ItemActions.reveal(item.url) }
             Button("경로 복사") { ItemActions.copyPath(item.url) }
         }
-        .background(RowLifeProbe(id: item.url))   // ← 측정용. 걷어낸다.
     }
 }

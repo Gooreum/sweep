@@ -192,7 +192,6 @@ struct FeatureScreen: View {
             .listStyle(.plain)
             // 아래에 섹션이 더 있다는 유일한 단서
             .scrollIndicators(.visible)
-            .background(FrameProbeAnchor())   // ← 측정용. 걷어낸다.
         }
     }
 

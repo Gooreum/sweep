@@ -132,6 +132,8 @@ enum Theme {
 
     /// 목록 행. 기본은 여유롭게, 촘촘하게는 설정으로 고를 수 있다.
     static let rowHeightComfortable: CGFloat = 56
+    /// 목록 행의 체크박스 크기. 시스템 체크박스와 비슷하게 보이는 값이다.
+    static let checkboxSize: CGFloat = 14
     /// 행 안에서 글자 두 줄이 차지하는 높이. 13pt + 3 + 11pt 줄높이를 담는다.
     /// 좌우 열에 같은 값을 줘야 이름과 크기가 같은 선에 놓인다.
     static let rowTextBlockHeight: CGFloat = 34
