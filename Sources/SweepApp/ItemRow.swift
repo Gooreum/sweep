@@ -38,7 +38,6 @@ struct ItemRow: View {
 
 
     var body: some View {
-        let _ = { RenderProbe.rowBodies += 1 }()
         HStack(spacing: 14) {
             // 되돌릴 수 없는 항목도 **고를 수는 있다.**
             //
