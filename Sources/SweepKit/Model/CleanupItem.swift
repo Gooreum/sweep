@@ -41,6 +41,31 @@ public struct CleanupItem: Sendable, Hashable, Identifiable {
     /// 목록에 보여줄 이름. 경로 마지막 구성요소.
     public var displayName: String { url.lastPathComponent }
 
+    /// 목록에 보여줄 경로. 홈은 `~`로 줄인다.
+    ///
+    /// 이름만으로는 무엇인지 알 수 없는 항목이 많다 — `Cache`가 어느 앱 것인지,
+    /// UUID 폴더가 어느 기기인지는 경로를 봐야 안다.
+    ///
+    /// **`NSString.abbreviatingWithTildeInPath`를 쓰지 않는다.** 그건 `NSHomeDirectory()`를
+    /// 보는데, 샌드박스에서 그 값은 **컨테이너 경로**(`~/Library/Containers/<id>/Data`)라
+    /// 실제 홈과 다르다. 이 앱은 그래서 `Sandbox.userHome`으로 진짜 홈을 따로 구해 쓴다.
+    public var displayPath: String {
+        Self.abbreviating(url.path, home: Sandbox.userHome.path)
+    }
+
+    /// 홈을 주입받아 테스트할 수 있게 분리한다.
+    ///
+    /// 홈 밖 경로는 **건드리지 않는다.** `/Library/Caches`를 `~`로 줄이면
+    /// 사용자 것으로 잘못 읽힌다.
+    static func abbreviating(_ path: String, home: String) -> String {
+        guard !home.isEmpty else { return path }
+        if path == home { return "~" }
+        // `/` 없이 접두사만 비교하면 `/Users/tester2`가 `/Users/tester`에 걸려
+        // 남의 홈이 내 홈으로 줄어든다.
+        guard path.hasPrefix(home + "/") else { return path }
+        return "~" + path.dropFirst(home.count)
+    }
+
     /// 우측 열 둘째 줄. "2026.05.18 만듦 · 4개월 전 사용"
     ///
     /// **둘을 한 줄에 같이 둔다.** 처음에는 만든 날을 왼쪽 둘째 줄에 두고 설명이
