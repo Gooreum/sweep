@@ -33,7 +33,7 @@ struct AppCacheScannerTests {
         try seed("Notion/Partitions/notion/Cache", in: home)                 // depth 4
         try seed("Google/Chrome/Default/Service Worker/CacheStorage", in: home) // depth 5
 
-        let items = await AppCacheScanner(home: home).scan()
+        let items = await AppCacheScanner(home: home, canReadAppData: true).scan()
 
         #expect(items.count == 3)
         #expect(items.allSatisfy { $0.category == .appCache })
@@ -50,7 +50,7 @@ struct AppCacheScannerTests {
         try seed("Notion/File System", in: home)
         try seed("Google/Chrome/Default/Local Extension Settings", in: home)
 
-        let items = await AppCacheScanner(home: home).scan()
+        let items = await AppCacheScanner(home: home, canReadAppData: true).scan()
         #expect(items.isEmpty)
     }
 
@@ -65,7 +65,7 @@ struct AppCacheScannerTests {
         try seed("Slack/Service Worker/Database", in: home, bytes: 2 * Self.oneMB)
         try seed("Slack/Service Worker/ScriptCache", in: home, bytes: 2 * Self.oneMB)
 
-        let items = await AppCacheScanner(home: home).scan()
+        let items = await AppCacheScanner(home: home, canReadAppData: true).scan()
 
         #expect(items.count == 1)
         #expect(items.first?.url.lastPathComponent == "CacheStorage")
@@ -82,7 +82,7 @@ struct AppCacheScannerTests {
         try seed("Slack/Service Worker/CacheStorage", in: home, bytes: 4 * Self.oneMB)
         try seed("Slack/Cache", in: home, bytes: 4 * Self.oneMB)
 
-        let items = await AppCacheScanner(home: home).scan()
+        let items = await AppCacheScanner(home: home, canReadAppData: true).scan()
         let byName = Dictionary(uniqueKeysWithValues:
             items.map { ($0.url.lastPathComponent, $0) })
 
@@ -102,7 +102,7 @@ struct AppCacheScannerTests {
         // Chromium이 실제로 만드는 구조: Cache/Cache_Data
         try seed("Slack/Cache/Cache_Data", in: home, bytes: 4 * Self.oneMB)
 
-        let items = await AppCacheScanner(home: home).scan()
+        let items = await AppCacheScanner(home: home, canReadAppData: true).scan()
 
         // `Cache`만 한 번 올라와야 한다. 안쪽까지 세면 합계가 두 배가 된다.
         #expect(items.count == 1)
@@ -119,7 +119,7 @@ struct AppCacheScannerTests {
         try seed("Notion/Cache", in: home, bytes: 2 * Self.oneMB)
         try seed("Notion/Partitions/notion/Cache", in: home, bytes: 4 * Self.oneMB)
 
-        let items = await AppCacheScanner(home: home).scan()
+        let items = await AppCacheScanner(home: home, canReadAppData: true).scan()
 
         #expect(items.count == 2)
         #expect(Set(items.map(\.url)).count == 2)
@@ -134,7 +134,7 @@ struct AppCacheScannerTests {
         try seed("Claude/GPUCache", in: home, bytes: 100 * 1024)       // 100KB
         try seed("Claude/Cache", in: home, bytes: 2 * Self.oneMB)
 
-        let items = await AppCacheScanner(home: home).scan()
+        let items = await AppCacheScanner(home: home, canReadAppData: true).scan()
 
         #expect(items.count == 1)
         #expect(items.first?.url.lastPathComponent == "Cache")
@@ -148,7 +148,7 @@ struct AppCacheScannerTests {
 
         try seed("a/b/c/d/e/f/Cache", in: home, bytes: 4 * Self.oneMB)
 
-        let items = await AppCacheScanner(home: home).scan()
+        let items = await AppCacheScanner(home: home, canReadAppData: true).scan()
         #expect(items.isEmpty)
     }
 
@@ -160,7 +160,7 @@ struct AppCacheScannerTests {
 
         try seed("Slack/Cache", in: home, bytes: 2 * Self.oneMB)
 
-        let items = await AppCacheScanner(home: home).scan()
+        let items = await AppCacheScanner(home: home, canReadAppData: true).scan()
         // 경로만 보여주면 어느 앱 것인지 읽히지 않는다.
         #expect(items.first?.detail.contains("Slack") == true)
     }
@@ -177,7 +177,7 @@ struct AppCacheScannerTests {
         try Data(repeating: 0x41, count: 4 * Self.oneMB)
             .write(to: dir.appending(path: "blob.bin"))
 
-        let items = await AppCacheScanner(home: home).scan()
+        let items = await AppCacheScanner(home: home, canReadAppData: true).scan()
 
         #expect(items.count == 1)
         #expect(items.first?.category == .appCache)
@@ -199,7 +199,34 @@ struct AppCacheScannerTests {
         let home = try makeFakeHome()
         defer { try? FileManager.default.removeItem(at: home) }
 
-        let items = await AppCacheScanner(home: home).scan()
+        let items = await AppCacheScanner(home: home, canReadAppData: true).scan()
         #expect(items.isEmpty)
+    }
+
+    // MARK: - 전체 디스크 접근 (Phase 2 / Step 3)
+
+    // TC-2
+    @Test("접근이 없으면 Application Support를 훑지 않는다")
+    func skipsAppSupportWhenDenied() async throws {
+        let home = try makeFakeHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+        try seed("Slack/Cache", in: home)
+
+        let items = await AppCacheScanner(home: home, canReadAppData: false).scan()
+
+        // 여는 순간 그 앱마다 프롬프트가 뜬다. 못 찾는 편이 낫다.
+        #expect(items.isEmpty)
+    }
+
+    // TC-1
+    @Test("접근이 있으면 양쪽 다 훑는다")
+    func scansBothWhenGranted() async throws {
+        let home = try makeFakeHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+        try seed("Slack/Cache", in: home)
+
+        let items = await AppCacheScanner(home: home, canReadAppData: true).scan()
+
+        #expect(items.contains { $0.url.path.contains("Slack/Cache") })
     }
 }

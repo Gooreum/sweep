@@ -21,8 +21,18 @@ public struct AppCacheScanner: CleanupScanner {
 
     private let home: URL
 
-    public init(home: URL = Sandbox.userHome) {
+    /// `Application Support`를 열어도 되는가.
+    ///
+    /// 전체 디스크 접근이 없으면 그 아래 **앱마다** "다른 앱의 데이터에 접근하려고
+    /// 합니다"가 뜬다. 한 번 허용해도 다음 앱에서 또 묻는다 — 끝이 없다.
+    /// 그래서 꺼져 있으면 아예 열지 않는다. 못 찾는 대신 화면의 배너가
+    /// "켜면 앱 캐시까지 찾는다"고 말한다.
+    private let canReadAppData: Bool
+
+    public init(home: URL = Sandbox.userHome,
+                canReadAppData: Bool = FullDiskAccess.isGranted) {
         self.home = home
+        self.canReadAppData = canReadAppData
     }
 
     /// 실측 0.9초.
@@ -34,7 +44,12 @@ public struct AppCacheScanner: CleanupScanner {
 
     public func scan() async -> [CleanupItem] {
         var items: [CleanupItem] = []
-        collect(in: home.appending(path: "Library/Application Support"), depth: 0, into: &items)
+        if canReadAppData {
+            collect(in: home.appending(path: "Library/Application Support"),
+                    depth: 0, into: &items)
+        }
+        // `Library/Caches`는 앱 데이터 보호 대상이 **아니다** — 전체 디스크 접근과
+        // 무관하게 늘 훑는다.
         // 허용 루트 안이지만 어느 스캐너도 보지 않던 곳이다.
         // `DevCacheScanner` 화이트리스트에 없고, 매일 쓰는 브라우저라
         // `StaleCacheScanner`의 90일 조건에도 걸리지 않아 영영 잡히지 않았다.
