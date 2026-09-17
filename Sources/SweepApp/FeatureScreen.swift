@@ -50,7 +50,15 @@ struct FeatureScreen: View {
         case let .scanning(percent, remaining):
             scanning(percent: percent, remaining: remaining)
         case .results:
-            if model.items.isEmpty { emptyResult } else { resultList }
+            // 세 갈래다. "스캔 결과가 없다"와 "검색에 안 걸렸다"는 다른 말이고,
+            // 예전엔 뒤쪽 분기가 없어 목록이 통째로 사라진 빈 화면만 남았다.
+            if model.items.isEmpty {
+                emptyResult
+            } else if model.visibleItems.isEmpty {
+                NoMatchView(query: model.query) { model.query = "" }
+            } else {
+                resultList
+            }
         case let .removing(done, total):
             RingGauge(percent: total > 0 ? done * 100 / total : 0, caption: "정리하는 중")
         case .cleaned:

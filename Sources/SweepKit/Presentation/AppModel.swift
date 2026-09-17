@@ -29,18 +29,6 @@ public final class AppModel {
     /// `needsFolderAccess`로는 부족하다 — 그건 첫 허락에 한 번 false가 되고 끝이라,
     /// 두 번째·세 번째 허락을 화면이 알아챌 수 없다.
     public private(set) var grantedFolderCount: Int = 0
-
-    /// ⌘F가 눌린 횟수. 화면이 이 값의 변화를 보고 검색창에 포커스를 준다.
-    ///
-    /// 메뉴는 뷰가 아니라 `@FocusState`에 손댈 수 없다. 모델을 통해 **신호만** 보내고
-    /// 실제로 잡는 것은 화면의 몫이다 — `grantedFolderCount`로 디스크 맵을 다시 읽게 한
-    /// 것과 같은 수법이다.
-    ///
-    /// Bool로 두면 두 번째 ⌘F가 안 먹는다 — 이미 true라 값이 안 바뀐다.
-    public private(set) var searchFocusRequest = 0
-
-    /// 검색창에 포커스를 달라고 알린다.
-    public func requestSearchFocus() { searchFocusRequest += 1 }
     private let folderAccess: FolderAccess.Registry
 
     /// 이 앱이 폴더 허락을 요구하는 환경인가(= 샌드박스인가).

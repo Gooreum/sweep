@@ -42,7 +42,7 @@ struct SweepCommands: Commands {
         CommandMenu("검색") {
             // 검색창을 마우스로 정확히 눌러야만 칠 수 있었다.
             // 목록을 좁히는 것과 디스크를 훑는 것은 다른 일이라 ⌘F와 ⌘R로 나눈다.
-            Button("목록에서 찾기") { app.requestSearchFocus() }
+            Button("목록에서 찾기") { SearchFocus.apply() }
                 .keyboardShortcut("f", modifiers: .command)
                 .disabled(!app.canSearchList)
 

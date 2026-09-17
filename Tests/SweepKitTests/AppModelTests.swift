@@ -434,21 +434,7 @@ struct AppModelTests {
         #expect(badges[.smartScan] == mixed.formattedTotalSize)
     }
 
-    // MARK: - ⌘F (검색창 포커스)
-
-    // TC-1
-    @Test("포커스 요청은 부를 때마다 올라간다")
-    func focusRequestCounts() {
-        let app = AppModel()
-        #expect(app.searchFocusRequest == 0)
-
-        app.requestSearchFocus()
-        app.requestSearchFocus()
-        app.requestSearchFocus()
-
-        // Bool이면 두 번째부터 값이 안 바뀌어 화면이 알아채지 못한다.
-        #expect(app.searchFocusRequest == 3)
-    }
+    // MARK: - ⌘F (검색창이 떠 있는가)
 
     // TC-2
     @Test("결과가 없으면 검색창이 없으니 ⌘F도 꺼진다")

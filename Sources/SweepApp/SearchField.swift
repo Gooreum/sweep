@@ -1,4 +1,40 @@
 import SwiftUI
+import AppKit
+
+/// 툴바 안의 검색창에 커서를 넣는다.
+///
+/// **SwiftUI의 `@FocusState`로는 안 된다.** 툴바 내용은 창의 타이틀바 쪽 뷰 계층에
+/// 얹히는데, 거기 둔 `@FocusState`는 창의 응답자 사슬에 연결되지 않는다 —
+/// 실측에서 ⌘F를 눌러도, 메뉴 항목을 직접 클릭해도 `focused`가 계속 false였다.
+///
+/// 그래서 창에서 텍스트 필드를 찾아 **직접 첫 응답자로 만든다.** 창에 편집 가능한
+/// 텍스트 필드는 검색창 하나뿐이라 첫 번째를 집으면 된다.
+enum SearchFocus {
+
+    static func apply() {
+        // 메뉴에서 부르면 `keyWindow`가 nil이다 — 메뉴가 열려 있는 동안은
+        // 창이 key가 아니다. 실측에서 여기서 조용히 돌아 나가 아무 일도 안 했다.
+        let candidate = NSApp.keyWindow ?? NSApp.mainWindow
+            ?? NSApp.windows.first { $0.isVisible && $0.canBecomeKey }
+        guard let window = candidate,
+              let field = firstTextField(in: window.contentView?.superview ?? window.contentView)
+        else { return }
+
+        window.makeKeyAndOrderFront(nil)
+        window.makeFirstResponder(field)
+    }
+
+    /// 편집 가능한 첫 텍스트 필드. 툴바 제목(`_NSToolbarTitleField`)이나 라벨은
+    /// `isEditable`이 false라 저절로 걸러진다.
+    private static func firstTextField(in view: NSView?) -> NSTextField? {
+        guard let view else { return nil }
+        if let field = view as? NSTextField, field.isEditable { return field }
+        for child in view.subviews {
+            if let found = firstTextField(in: child) { return found }
+        }
+        return nil
+    }
+}
 
 /// 목록을 좁히는 검색창.
 ///
@@ -8,12 +44,6 @@ import SwiftUI
 struct SearchField: View {
     @Binding var text: String
     var placeholder = "이름·경로로 찾기"
-
-    /// ⌘F가 여기로 들어온다. 필드를 마우스로 정확히 눌러야만 칠 수 있었다.
-    ///
-    /// **숫자인 이유**는 두 번째 ⌘F도 먹어야 하기 때문이다 — Bool이면 이미 true일 때
-    /// 값이 안 바뀌어 `onChange`가 돌지 않는다.
-    let focusRequest: Int
 
     @FocusState private var isFocused: Bool
 
@@ -28,11 +58,13 @@ struct SearchField: View {
                 .font(Theme.bodyText)
                 .focused($isFocused)
 
-            // 지운 뒤에도 커서를 남긴다. 다시 치려고 또 눌러야 하면 지우개가 아니라 장애물이다.
+            // 지운 뒤에도 커서를 남긴다. 다시 치려고 또 눌러야 하면
+            // 지우개가 아니라 장애물이다.
             if !text.isEmpty {
                 Button {
                     text = ""
                     isFocused = true
+                    SearchFocus.apply()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(Theme.textTertiary)
@@ -44,6 +76,5 @@ struct SearchField: View {
         .frame(width: 260, height: 26)
         .background(Color.white.opacity(0.07),
                     in: RoundedRectangle(cornerRadius: Theme.rowCornerRadius))
-        .onChange(of: focusRequest) { isFocused = true }
     }
 }

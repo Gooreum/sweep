@@ -31,13 +31,11 @@ struct ContentView: View {
                     let map = app.diskMap()
                     if !map.tiles.isEmpty || map.isFiltered {
                         SearchField(text: Binding(get: { map.query },
-                                                  set: { map.query = $0 }),
-                                    focusRequest: app.searchFocusRequest)
+                                                  set: { map.query = $0 }))
                     }
                 } else if let model = app.currentModel, !model.items.isEmpty {
                     SearchField(text: Binding(get: { model.query },
-                                              set: { model.query = $0 }),
-                                focusRequest: app.searchFocusRequest)
+                                              set: { model.query = $0 }))
                 }
             }
 
