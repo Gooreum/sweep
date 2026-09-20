@@ -5,6 +5,8 @@ macOS 개발 머신의 디스크를 정리하는 앱.
 Xcode 산출물, 개발 도구 캐시, **폭주 중인 임시 파일**, 중복 내려받기를 찾아
 안전도별로 보여주고 휴지통으로 보낸다.
 
+지우는 것 말고 보기만 하는 화면이 둘 있다 — 디스크 맵과 CPU.
+
 ```
 runawayTemp  safe    3.65 GB   /private/var/folders/mg
 xcode        caution 5.76 GB   ~/Library/Developer/Xcode/iOS DeviceSupport/...
@@ -56,6 +58,28 @@ duplicate    safe    16.2 MB   ~/Downloads/...
 크기를 두 번 재서 증가분을 분당 속도로 환산한다 (`33.0 MB/분 증가 중`).
 증가 중이면 무언가 쓰고 있다는 뜻이라 `caution`으로 둔다.
 
+### CPU 탭은 보기만 한다
+
+끝내는 버튼이 없다. **App Store 빌드에서는 남의 프로세스를 죽일 수 없기 때문이다.**
+서명한 번들로 세 갈래를 모두 재 봤다:
+
+| 시도 | 샌드박스 |
+|---|---|
+| `kill(pid, SIGTERM)` | `EPERM` — `(allow signal (target same-sandbox))`만 열려 있다 |
+| `NSRunningApplication.terminate()` / `forceTerminate()` | 둘 다 `false` |
+| Automation entitlement + Apple Event `quit` | `-600 "Application isn't running"` — 떠 있는데도 |
+
+읽는 쪽은 열려 있지만 **`proc_listpids`는 막힌다**(실측 0개). 목록은
+`sysctl KERN_PROC_ALL`로 얻는다. 누적 CPU 시간은 `proc_pidinfo`로 읽는데,
+그 값은 나노초가 아니라 **Mach 절대시간**이라 환산해야 한다 — 빼먹으면
+코어를 꽉 채운 프로세스가 2.4%로 찍힌다.
+
+`proc_pid_rusage`는 처음부터 나노초를 주지만 쓸 수 없다. 샌드박스가
+`process-info-rusage`를 자기 자신에게만 열어 둔다.
+
+내 계정 소유만 읽힌다(실측 521개 중 322개). `ps`·`top`이 root 프로세스까지
+보여 주는 것은 그 둘이 setuid root이기 때문이다.
+
 ### 중복 탐지
 
 크기 → 앞 64KB SHA256 → 전체 SHA256 3단계.
@@ -67,7 +91,8 @@ duplicate    safe    16.2 MB   ~/Downloads/...
 ```bash
 swift run SweepApp              # GUI
 swift run SweepApp --scan-only  # 창 없이 스캔 결과만 출력 (아무것도 지우지 않음)
-swift test                      # 99개 테스트
+swift run SweepApp --cpu-only   # 창 없이 CPU 상위 프로세스만 출력
+swift test                      # 569개 테스트
 ```
 
 ## 구조
@@ -78,6 +103,7 @@ SweepKit/
   Model/       CleanupItem, SafetyLevel, ScanCategory
   Scan/        CleanupScanner 프로토콜 + 스캐너 4종 + ScanCoordinator
   Remove/      Remover, RemovalReport
+  Insight/     DiskMapModel, CPUModel — 지우지 않고 보기만 하는 화면의 모델
   Presentation/ScanModel           — SwiftUI 비의존 상태 관리
 SweepApp/      SwiftUI 화면
 ```
