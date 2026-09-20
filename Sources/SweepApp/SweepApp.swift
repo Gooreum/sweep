@@ -90,11 +90,15 @@ struct SweepApp: App {
     /// 누적값은 두 번 재야 뜻이 생기므로 구간만큼 멈춘다. 여기서는 `Task.sleep`이
     /// 아니라 `Thread.sleep`이다 — `init()`이 async가 아니라 await할 자리가 없다.
     private static func runCPUSampleAndExit() -> Never {
-        let interval = Duration.seconds(2)
+        // 약속한 구간이 아니라 **실제로 흐른 시간**으로 나눈다. `Thread.sleep`은
+        // 최소 시간만 보장해서, 기계가 바쁘면 더 자고 사용률이 부풀려진다.
+        let clock = ContinuousClock()
         let before = ProcessCPUSampler.tick()
+        let start = clock.now
         Thread.sleep(forTimeInterval: 2)
+        let elapsed = clock.now - start
         let usage = ProcessUsage.compute(
-            from: before, to: ProcessCPUSampler.tick(), over: interval,
+            from: before, to: ProcessCPUSampler.tick(), over: elapsed,
             cores: ProcessCPUSampler.coreCount)
 
         // 화면과 같은 상한으로 자른다. 전체를 찍으면 검증할 때 눈으로 볼 수 없다.

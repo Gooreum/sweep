@@ -95,12 +95,16 @@ struct ProcessCPUSamplerTests {
         // 실제로 돌기 시작할 틈을 준다
         try await Task.sleep(for: .milliseconds(200))
 
-        let interval = Duration.seconds(1)
+        // 약속한 1초가 아니라 실제로 흐른 시간을 분모로 쓴다. 테스트가 병렬로
+        // 돌면 기계가 바빠 잠이 길어지는데, 분모를 1초로 두면 값이 부풀려진다.
+        let clock = ContinuousClock()
         let before = ProcessCPUSampler.tick()
-        try await Task.sleep(for: interval)
+        let start = clock.now
+        try await Task.sleep(for: .seconds(1))
+        let elapsed = clock.now - start
         let cores = ProcessCPUSampler.coreCount
         let usage = ProcessUsage.compute(
-            from: before, to: ProcessCPUSampler.tick(), over: interval, cores: cores)
+            from: before, to: ProcessCPUSampler.tick(), over: elapsed, cores: cores)
 
         let mine = try #require(usage.first { $0.pid == busy.processIdentifier },
                                 "바쁜 프로세스가 목록에 없다")
