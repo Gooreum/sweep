@@ -13,12 +13,12 @@ struct ProcessUsageTests {
     }
 
     // TC-1
-    @Test("1초 동안 1초치를 쓰면 100%다")
+    @Test("코어가 하나뿐인 기계에서 1초 동안 1초치를 쓰면 100%다")
     func fullCoreIsHundredPercent() {
         let usage = ProcessUsage.compute(
             from: [tick(1, 0)],
             to: [tick(1, 1_000_000_000)],
-            over: .seconds(1))
+            over: .seconds(1), cores: 1)
 
         #expect(usage.count == 1)
         #expect(usage[0].percent == 100)
@@ -32,7 +32,7 @@ struct ProcessUsageTests {
         let usage = ProcessUsage.compute(
             from: [tick(1, 0)],
             to: [tick(1, 5_000_000_000)],
-            over: .zero)
+            over: .zero, cores: 1)
 
         #expect(usage.isEmpty)
     }
@@ -44,7 +44,7 @@ struct ProcessUsageTests {
         let usage = ProcessUsage.compute(
             from: [tick(1, 0)],
             to: [tick(1, 500_000_000), tick(99, 30_000_000_000)],
-            over: .seconds(1))
+            over: .seconds(1), cores: 1)
 
         #expect(usage.map(\.pid) == [1])
     }
@@ -56,22 +56,22 @@ struct ProcessUsageTests {
         let usage = ProcessUsage.compute(
             from: [tick(1, 9_000_000_000)],
             to: [tick(1, 100)],
-            over: .seconds(1))
+            over: .seconds(1), cores: 1)
 
         #expect(usage.isEmpty)
     }
 
     // TC-5
-    @Test("코어를 여럿 쓰면 100%를 넘는다")
-    func multiCoreExceedsHundred() {
+    @Test("코어를 여럿 써도 기계 전체를 넘지는 않는다")
+    func multiCoreStaysWithinMachine() {
         // 2초 구간에 4초치를 썼다 = 코어 두 개를 꽉 채웠다.
-        // 100으로 깎으면 한 코어만 쓰는 프로세스와 구분이 안 된다.
+        // 코어가 4개인 기계이므로 절반이다. top·ps라면 200%로 찍힐 값이다.
         let usage = ProcessUsage.compute(
             from: [tick(1, 0)],
             to: [tick(1, 4_000_000_000)],
-            over: .seconds(2))
+            over: .seconds(2), cores: 4)
 
-        #expect(usage[0].percent == 200)
+        #expect(usage[0].percent == 50)
     }
 
     // TC-6
@@ -87,7 +87,7 @@ struct ProcessUsageTests {
             tick(50, 500_000_000),     // 50%
         ]
 
-        let usage = ProcessUsage.compute(from: before, to: after, over: .seconds(1))
+        let usage = ProcessUsage.compute(from: before, to: after, over: .seconds(1), cores: 1)
 
         #expect(usage.map(\.pid) == [20, 30, 10, 40, 50])
     }
@@ -99,7 +99,7 @@ struct ProcessUsageTests {
         let usage = ProcessUsage.compute(
             from: [tick(1, 7_000_000_000)],
             to: [tick(1, 7_000_000_000)],
-            over: .seconds(2))
+            over: .seconds(2), cores: 1)
 
         #expect(usage.isEmpty)
     }
@@ -120,7 +120,7 @@ struct ProcessUsageTests {
         let usage = ProcessUsage.compute(
             from: [tick(1, 0)],
             to: [tick(1, 500_000_000)],
-            over: .milliseconds(500))
+            over: .milliseconds(500), cores: 1)
 
         #expect(usage.count == 1)
         #expect(usage[0].percent == 100)
@@ -132,7 +132,7 @@ struct ProcessUsageTests {
         let before = [ProcessCPUTick(pid: 7, name: "claude", executablePath: "/opt/bin/claude", nanoseconds: 0)]
         let after = [ProcessCPUTick(pid: 7, name: "claude", executablePath: "/opt/bin/claude", nanoseconds: 1_000_000_000)]
 
-        let usage = ProcessUsage.compute(from: before, to: after, over: .seconds(1))
+        let usage = ProcessUsage.compute(from: before, to: after, over: .seconds(1), cores: 1)
 
         #expect(usage[0].name == "claude")
         #expect(usage[0].executablePath == "/opt/bin/claude")
@@ -188,5 +188,77 @@ struct ProcessUsagePIDTests {
 
         #expect(usage.formattedPID == "pid 75800")
         #expect(!usage.formattedPID.contains(","))
+    }
+}
+
+/// 분모가 코어 하나가 아니라 **기계 전체**라는 것.
+///
+/// `top`·`ps`·활성 상태 보기는 코어 하나를 100으로 센다. 여기는 다르다.
+@Suite("ProcessUsage 분모")
+struct ProcessUsageDenominatorTests {
+
+    private func tick(_ pid: pid_t, _ nanoseconds: UInt64) -> ProcessCPUTick {
+        ProcessCPUTick(pid: pid, name: "p\(pid)", nanoseconds: nanoseconds)
+    }
+
+    // TC-2
+    @Test("코어가 8개면 코어 하나를 꽉 채워도 12.5%다")
+    func oneCoreOfEightIsAnEighth() {
+        // 같은 입력이 코어 1개 기계에서는 100%다. 분모가 실제로 먹는지 본다.
+        let usage = ProcessUsage.compute(
+            from: [tick(1, 0)],
+            to: [tick(1, 1_000_000_000)],
+            over: .seconds(1), cores: 8)
+
+        #expect(usage[0].percent == 12.5)
+    }
+
+    // TC-4
+    @Test("코어 수가 0이면 빈 배열이다")
+    func zeroCoresYieldsNothing() {
+        // 구간 0과 같은 이유. 나눌 수 없는 것을 나누지 않는다.
+        let usage = ProcessUsage.compute(
+            from: [tick(1, 0)],
+            to: [tick(1, 1_000_000_000)],
+            over: .seconds(1), cores: 0)
+
+        #expect(usage.isEmpty)
+    }
+
+    // TC-5
+    @Test("코어 수가 음수여도 빈 배열이다")
+    func negativeCoresYieldsNothing() {
+        let usage = ProcessUsage.compute(
+            from: [tick(1, 0)],
+            to: [tick(1, 1_000_000_000)],
+            over: .seconds(1), cores: -4)
+
+        #expect(usage.isEmpty)
+    }
+
+    // TC-6
+    @Test("기계를 꽉 채워도 전부 더해서 100%를 넘지 않는다")
+    func everythingTogetherNeverExceedsMachine() {
+        // 코어 4개짜리 기계에서 프로세스 4개가 코어를 하나씩 꽉 채웠다.
+        // **이것이 이 변경의 핵심 성질이다** — 합이 곧 기계의 부하가 된다.
+        let before = (1...4).map { tick(pid_t($0), 0) }
+        let after = (1...4).map { tick(pid_t($0), 1_000_000_000) }
+
+        let usage = ProcessUsage.compute(from: before, to: after, over: .seconds(1), cores: 4)
+        let total = usage.reduce(0) { $0 + $1.percent }
+
+        #expect(usage.count == 4)
+        #expect(usage.allSatisfy { $0.percent == 25 })
+        #expect(total == 100)
+    }
+
+    // TC-8
+    @Test("코어 수를 기계에서 읽어 온다")
+    func coreCountMatchesMachine() {
+        let cores = ProcessCPUSampler.coreCount
+
+        #expect(cores >= 1)
+        // 성능·효율 코어를 가리지 않고 전부 센다
+        #expect(cores == ProcessInfo.processInfo.activeProcessorCount)
     }
 }

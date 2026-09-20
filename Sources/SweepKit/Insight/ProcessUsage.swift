@@ -30,9 +30,14 @@ public struct ProcessUsage: Sendable, Equatable, Identifiable {
     public let name: String
     public let executablePath: String?
 
-    /// 코어 하나를 꽉 채우면 100. **상한을 두지 않는다** — 코어가 여럿이라 327%가
-    /// 나올 수 있고 그게 사실이다. 100으로 깎으면 여덟 코어를 다 쓰는 프로세스와
-    /// 한 코어만 쓰는 프로세스가 같아 보인다.
+    /// 이 기계의 CPU **전체**를 100으로 봤을 때 이 프로세스가 차지하는 비중.
+    ///
+    /// **`top`·`ps`·활성 상태 보기와 분모가 다르다.** 저쪽은 코어 **하나**를 100으로
+    /// 세기 때문에 스레드를 넷 쓰는 프로세스가 396%로 나온다(실측). 여기서는 코어 수로
+    /// 나누므로 한 프로세스가 100을 넘을 수 없고, **모든 프로세스를 더해도 100을
+    /// 넘지 않는다** — 그 합이 곧 기계의 부하다.
+    ///
+    /// "이 프로세스가 기계를 얼마나 차지하는가"를 곧바로 읽을 수 있는 쪽을 골랐다.
     public let percent: Double
 
     public var id: pid_t { pid }
@@ -71,15 +76,20 @@ extension ProcessUsage {
     /// **순수 함수다.** 실제 프로세스를 띄우지 않고 규칙을 검사할 수 있어야 해서
     /// 수집(`ProcessCPUSampler`)과 환산을 갈라 뒀다 — `RunawayTempScanner`가
     /// 측정과 `detail(growth:over:)`을 가른 것과 같은 이유다.
+    ///
+    /// - Parameter cores: 분모가 되는 논리 코어 수. **기본값을 두지 않는다** —
+    ///   여기서 기계를 읽으면 테스트가 어느 기계에서 도느냐에 따라 기대값이 달라진다.
+    ///   호출부(`CPUModel`)가 `ProcessCPUSampler.coreCount`를 넘긴다.
     public static func compute(
         from before: [ProcessCPUTick],
         to after: [ProcessCPUTick],
-        over interval: Duration
+        over interval: Duration,
+        cores: Int
     ) -> [ProcessUsage] {
         let seconds = interval.asSeconds
-        // 구간이 없으면 사용률도 없다. 0으로 나누면 화면에 "inf%"가 뜬다 —
+        // 구간이 없거나 코어가 없으면 나눌 수 없다. 0으로 나누면 화면에 "inf%"가 뜬다 —
         // `VolumeUsage.usedFraction`이 총량 0에서 0을 주는 것과 같은 태도다.
-        guard seconds > 0 else { return [] }
+        guard seconds > 0, cores > 0 else { return [] }
 
         var baseline: [pid_t: UInt64] = [:]
         baseline.reserveCapacity(before.count)
@@ -99,7 +109,8 @@ extension ProcessUsage {
                 pid: tick.pid,
                 name: tick.name,
                 executablePath: tick.executablePath,
-                percent: used / (seconds * 1_000_000_000) * 100
+                // 분모가 코어 하나가 아니라 **기계 전체**다. 코어 수로 나눈다.
+                percent: used / (seconds * 1_000_000_000 * Double(cores)) * 100
             ))
         }
 

@@ -62,7 +62,7 @@ struct ProcessCPUSamplerTests {
         let before = ProcessCPUSampler.tick()
         try? await Task.sleep(for: .milliseconds(300))
         let usage = ProcessUsage.compute(
-            from: before, to: ProcessCPUSampler.tick(), over: .milliseconds(300))
+            from: before, to: ProcessCPUSampler.tick(), over: .milliseconds(300), cores: 1)
 
         // 실제 값으로도 환산 규칙이 지켜지는지 본다
         #expect(usage.allSatisfy { $0.percent > 0 })
@@ -98,15 +98,19 @@ struct ProcessCPUSamplerTests {
         let interval = Duration.seconds(1)
         let before = ProcessCPUSampler.tick()
         try await Task.sleep(for: interval)
+        let cores = ProcessCPUSampler.coreCount
         let usage = ProcessUsage.compute(
-            from: before, to: ProcessCPUSampler.tick(), over: interval)
+            from: before, to: ProcessCPUSampler.tick(), over: interval, cores: cores)
 
         let mine = try #require(usage.first { $0.pid == busy.processIdentifier },
                                 "바쁜 프로세스가 목록에 없다")
-        // 다른 일이 끼어들 수 있으니 폭을 넉넉히 둔다.
-        // 41배 어긋남은 이 폭을 한참 벗어나므로 그래도 잡힌다.
-        #expect(mine.percent > 80, "\(mine.percent)% — 너무 낮다")
-        #expect(mine.percent < 130, "\(mine.percent)% — 너무 높다")
+        // 코어 하나를 태우므로 **기계 전체의 1/코어수**가 나와야 한다.
+        // 숫자를 박지 않고 코어 수에서 구한다 — 기계마다 다르다.
+        let expected = 100.0 / Double(cores)
+        // 다른 일이 끼어들 수 있으니 폭을 넉넉히 둔다. 41배 어긋남은
+        // 이 폭을 한참 벗어나므로(8코어 기준 12.5% 대신 0.3%) 그래도 잡힌다.
+        #expect(mine.percent > expected * 0.7, "\(mine.percent)% — 너무 낮다 (기대 \(expected)%)")
+        #expect(mine.percent < expected * 1.4, "\(mine.percent)% — 너무 높다 (기대 \(expected)%)")
     }
 
     // TC-8
