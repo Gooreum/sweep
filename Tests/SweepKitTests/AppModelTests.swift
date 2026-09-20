@@ -71,6 +71,42 @@ struct AppModelTests {
         #expect(app.diskMap() === first)
     }
 
+    // TC-3 (CPU)
+    @Test("탭을 옮겼다 CPU로 돌아와도 같은 모델이다")
+    func switchingFeatureKeepsCPUModel() {
+        // 새로 만들면 "측정 중…"을 2초 동안 다시 본다.
+        let app = AppModel(makeCPU: { CPUModel(sample: { [] }) })
+        let first = app.cpu()
+
+        app.selected = .junk
+        app.selected = .cpu
+
+        #expect(app.cpu() === first)
+    }
+
+    // TC-3 (CPU)
+    @Test("CPU를 보고 있으면 걸릴 모델이 없다")
+    func cpuHasNoCurrentModel() {
+        let app = AppModel(makeCPU: { CPUModel(sample: { [] }) })
+        app.selected = .cpu
+
+        // 스캔하지 않는 기능이라 검색·정리 명령이 걸릴 데가 없다
+        #expect(app.currentModel == nil)
+        // 툴바의 "다시 검색"·"안전 항목 선택"이 스스로 꺼진다
+        #expect(app.canScan == false)
+        #expect(app.canClean == false)
+    }
+
+    // TC-6 (CPU)
+    @Test("주입한 CPU 모델을 그대로 돌려준다")
+    func cpuModelIsInjectable() {
+        // 기본 구성은 실제 syscall을 물고 있다.
+        let injected = CPUModel(sample: { [] })
+        let app = AppModel(makeCPU: { injected })
+
+        #expect(app.cpu() === injected)
+    }
+
     // TC-6
     @Test("주입한 디스크 맵 모델을 그대로 돌려준다")
     func diskMapModelIsInjectable() {
@@ -233,6 +269,7 @@ struct AppModelTests {
         #expect(badges[.smartScan] != nil)
         // 스캔하지 않는 기능은 배지가 없다
         #expect(badges[.diskMap] == nil)
+        #expect(badges[.cpu] == nil)
     }
 
     // TC-3 · TC-4
