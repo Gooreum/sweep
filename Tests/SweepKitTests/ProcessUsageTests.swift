@@ -140,3 +140,53 @@ struct ProcessUsageTests {
         #expect(usage[0].id == 7)
     }
 }
+
+/// 목록에 보여줄 경로. 규칙을 `CleanupItem`과 공유하는지 본다.
+@Suite("ProcessUsage 경로")
+struct ProcessUsageDisplayPathTests {
+
+    // TC-11
+    @Test("홈 아래 경로는 물결로 줄어든다")
+    func homeIsAbbreviated() {
+        let home = Sandbox.userHome.path
+        let usage = ProcessUsage(pid: 1, name: "claude",
+                                 executablePath: home + "/bin/claude", percent: 1)
+
+        #expect(usage.displayPath == "~/bin/claude")
+    }
+
+    // TC-12
+    @Test("홈 밖 경로는 건드리지 않는다")
+    func systemPathIsLeftAlone() {
+        // /usr/sbin을 ~로 줄이면 사용자 것으로 잘못 읽힌다.
+        let usage = ProcessUsage(pid: 1, name: "coreaudiod",
+                                 executablePath: "/usr/sbin/coreaudiod", percent: 1)
+
+        #expect(usage.displayPath == "/usr/sbin/coreaudiod")
+    }
+
+    // TC-13
+    @Test("경로를 못 읽었으면 nil이다")
+    func missingPathStaysNil() {
+        // 빈 문자열을 주면 화면이 빈 줄을 그린다. 없는 것은 없다고 한다.
+        let usage = ProcessUsage(pid: 1, name: "pid 1", percent: 1)
+
+        #expect(usage.displayPath == nil)
+    }
+}
+
+/// pid 표기. 화면에서 쉼표가 붙던 문제를 막는다.
+@Suite("ProcessUsage pid 표기")
+struct ProcessUsagePIDTests {
+
+    // TC-14
+    @Test("pid에 천 단위 구분 기호를 넣지 않는다")
+    func pidHasNoGroupingSeparator() {
+        // SwiftUI Text 보간에 그대로 넘기면 "pid 75,800"이 된다.
+        // pid는 수량이 아니라 이름표이고, 쉼표가 붙으면 kill에 넘겨도 듣지 않는다.
+        let usage = ProcessUsage(pid: 75_800, name: "qemu", percent: 3)
+
+        #expect(usage.formattedPID == "pid 75800")
+        #expect(!usage.formattedPID.contains(","))
+    }
+}

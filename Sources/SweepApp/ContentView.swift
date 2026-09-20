@@ -51,6 +51,14 @@ struct ContentView: View {
             // 뷰가 들고 있으면 탭을 옮기는 순간 트리가 사라져 10초를 다시 기다린다.
             DiskMapView(model: app.diskMap(), app: app)
 
+        case .cpu:
+            // 스캔 모델이 없다. 디스크 맵과 같은 이유로 소유는 AppModel이 한다.
+            //
+            // **아래 `case let feature:`보다 위에 있어야 한다.** catch-all이
+            // 먼저 잡으면 스캐너 0개짜리 FeatureScreen으로 떨어져 검색 버튼만
+            // 있는 빈 화면이 되는데, 컴파일은 그대로 통과한다.
+            CPUView(model: app.cpu())
+
         case .smartScan:
             // 첫 화면. 전체를 훑고 기능별로 얼마가 나왔는지 카드로 보여준다.
             SmartScanView(app: app, model: app.model(for: .smartScan))

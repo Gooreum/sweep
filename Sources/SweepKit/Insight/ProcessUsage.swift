@@ -46,6 +46,22 @@ public struct ProcessUsage: Sendable, Equatable, Identifiable {
 
     /// "327.1%". 소수 한 자리 — 초 단위 샘플에서 그 아래는 흔들리는 잡음이다.
     public var formattedPercent: String { String(format: "%.1f%%", percent) }
+
+    /// "pid 75800". **천 단위 구분 기호를 넣지 않는다** — pid는 수량이 아니라 이름표다.
+    ///
+    /// 뷰에서 `Text("pid \(usage.pid)")`로 쓰면 SwiftUI가 숫자로 보고 지역화해
+    /// `pid 75,800`으로 찍는다. 그 쉼표를 붙여 `kill`에 넘기면 듣지 않는다.
+    /// 문자열로 먼저 만들어 넘기면 그 경로를 타지 않는다.
+    public var formattedPID: String { "pid \(pid)" }
+
+    /// 목록에 보여줄 경로. 홈은 `~`로 줄인다.
+    ///
+    /// 줄이는 규칙을 `CleanupItem`과 **같은 함수로** 쓴다. 따로 적으면 한쪽만
+    /// 고쳐져 같은 창의 두 목록이 다른 모양의 경로를 보여준다.
+    /// 경로를 못 읽은 프로세스는 nil이다 — 빈 문자열을 지어내지 않는다.
+    public var displayPath: String? {
+        executablePath.map { CleanupItem.abbreviating($0, home: Sandbox.userHome.path) }
+    }
 }
 
 extension ProcessUsage {
