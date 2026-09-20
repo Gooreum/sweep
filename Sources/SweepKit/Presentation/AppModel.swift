@@ -17,6 +17,9 @@ public final class AppModel {
     private var diskMapModel: DiskMapModel?
     private let makeDiskMap: @MainActor () -> DiskMapModel
 
+    private var cpuModel: CPUModel?
+    private let makeCPU: @MainActor () -> CPUModel
+
     /// 샌드박스에서 정크 파일은 폴더를 하나라도 열어 줘야 동작한다.
     /// 허락하면 false가 되고, 정크 탭이 허락 화면에서 검색 화면으로 바뀐다.
     ///
@@ -49,10 +52,13 @@ public final class AppModel {
                     = { ScanModel(feature: $0) },
                 makeDiskMap: @escaping @MainActor () -> DiskMapModel
                     = { DiskMapModel() },
+                makeCPU: @escaping @MainActor () -> CPUModel
+                    = { CPUModel() },
                 folderAccess: FolderAccess.Registry = FolderAccess.shared,
                 needsFolderAccess: Bool? = nil) {
         self.makeModel = makeModel
         self.makeDiskMap = makeDiskMap
+        self.makeCPU = makeCPU
         self.folderAccess = folderAccess
         // 주입값이 있으면 그것이 "허락을 요구하는 환경인가"를 대신한다 — 테스트·데모용.
         self.requiresFolderAccess = needsFolderAccess ?? Sandbox.isActive
@@ -166,9 +172,20 @@ public final class AppModel {
         return created
     }
 
+    /// CPU 모델. 디스크 맵과 **같은 이유로** 여기서 소유한다.
+    ///
+    /// 저쪽이 10초짜리 순회라면 이쪽은 2초짜리 준비다. 뷰가 들고 있으면
+    /// 탭을 옮겼다 돌아올 때마다 "측정 중…"을 다시 본다.
+    public func cpu() -> CPUModel {
+        if let existing = cpuModel { return existing }
+        let created = makeCPU()
+        cpuModel = created
+        return created
+    }
+
     // MARK: - 메뉴가 물어보는 것
 
-    /// 지금 보고 있는 기능의 모델. 디스크 맵은 스캔하지 않으므로 nil이다.
+    /// 지금 보고 있는 기능의 모델. 디스크 맵·CPU는 스캔하지 않으므로 nil이다.
     public var currentModel: ScanModel? {
         // 허락 여부를 먼저 읽는다. 스캐너 목록은 관찰되지 않는 저장소를 봐서,
         // 이 값을 읽지 않으면 허락한 뒤에도 메뉴(⌘R)가 잠긴 채로 남는다 — 실측.
