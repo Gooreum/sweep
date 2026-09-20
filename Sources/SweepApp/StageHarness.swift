@@ -21,6 +21,8 @@ struct StageHarness: View {
     /// `body`에서 만들면 렌더마다 새 모델이 되어 트리가 매번 초기화된다.
     @State private var diskMap: DiskMapModel?
     @State private var app = AppModel()
+    /// `body`에서 만들면 렌더마다 새 모델이 되어 측정이 처음부터 다시 시작된다.
+    @State private var cpu = CPUModel()
     /// `store-*` 단계는 사이드바까지 있는 실제 창을 그린다. 스토어 스크린샷용이다.
     @State private var storeApp: AppModel?
 
@@ -32,6 +34,10 @@ struct StageHarness: View {
                 } else {
                     Text("준비 중").font(Theme.bodyText)
                 }
+            } else if stage == "cpu" {
+                // 가짜 데이터를 넣지 않는다. 실제 수집이 2초면 끝나므로
+                // 진짜 프로세스로 확인하는 편이 화면을 더 정확히 보여준다.
+                CPUView(model: cpu)
             } else if stage == "diskmap" {
                 if let diskMap {
                     DiskMapView(model: diskMap, app: app)
