@@ -69,6 +69,16 @@ duplicate    safe    16.2 MB   ~/Downloads/...
 | `NSRunningApplication.terminate()` / `forceTerminate()` | 둘 다 `false` |
 | Automation entitlement + Apple Event `quit` | `-600 "Application isn't running"` — 떠 있는데도 |
 
+사용률의 분모는 **코어 하나가 아니라 기계 전체**다. `top`·`ps`·활성 상태 보기는
+코어 하나를 100%로 세서 스레드를 넷 쓰는 프로세스가 396%로 나오는데(실측),
+여기서는 코어 수로 나눈다. 그래서 한 프로세스가 100%를 넘지 않고 **전부 더해도
+100%를 넘지 않는다** — 그 합이 곧 기계의 부하다. 실측(8코어): 코어 하나를 태우는
+프로세스가 12.4%, 넷을 태우면 47.7%.
+
+분모는 약속한 측정 구간이 아니라 **실제로 흐른 시간**이다. `Task.sleep`은 최소
+시간만 보장해서, 기계가 바쁘면 더 자고 그 초과분이 사용률로 둔갑한다 — 하필
+이 화면을 볼 이유가 있는 순간에 틀린다.
+
 읽는 쪽은 열려 있지만 **`proc_listpids`는 막힌다**(실측 0개). 목록은
 `sysctl KERN_PROC_ALL`로 얻는다. 누적 CPU 시간은 `proc_pidinfo`로 읽는데,
 그 값은 나노초가 아니라 **Mach 절대시간**이라 환산해야 한다 — 빼먹으면
