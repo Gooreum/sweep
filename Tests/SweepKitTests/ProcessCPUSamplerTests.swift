@@ -79,6 +79,36 @@ struct ProcessCPUSamplerTests {
         #expect(ProcessCPUSampler.tick().allSatisfy { $0.pid > 0 })
     }
 
+    // TC-9
+    @Test("코어를 꽉 채운 프로세스가 100%로 잡힌다")
+    func busyProcessReadsAsFullCore() async throws {
+        // **이 TC가 이 파일에서 제일 중요하다.** `proc_pidinfo`가 주는 누적 시간은
+        // 나노초가 아니라 Mach 절대시간이라, 환산을 빼먹으면 41배 작게 나온다 —
+        // 실제로 코어를 꽉 채운 프로세스가 2.4%로 찍혔고 나머지 TC는 전부 통과했다.
+        // 값이 "그럴듯한지"는 묻지 않으면 알 수 없다.
+        let busy = Process()
+        busy.executableURL = URL(filePath: "/bin/sh")
+        busy.arguments = ["-c", "while :; do :; done"]
+        try busy.run()
+        defer { busy.terminate() }
+
+        // 실제로 돌기 시작할 틈을 준다
+        try await Task.sleep(for: .milliseconds(200))
+
+        let interval = Duration.seconds(1)
+        let before = ProcessCPUSampler.tick()
+        try await Task.sleep(for: interval)
+        let usage = ProcessUsage.compute(
+            from: before, to: ProcessCPUSampler.tick(), over: interval)
+
+        let mine = try #require(usage.first { $0.pid == busy.processIdentifier },
+                                "바쁜 프로세스가 목록에 없다")
+        // 다른 일이 끼어들 수 있으니 폭을 넉넉히 둔다.
+        // 41배 어긋남은 이 폭을 한참 벗어나므로 그래도 잡힌다.
+        #expect(mine.percent > 80, "\(mine.percent)% — 너무 낮다")
+        #expect(mine.percent < 130, "\(mine.percent)% — 너무 높다")
+    }
+
     // TC-8
     @Test("경로를 읽은 프로세스는 이름이 경로의 마지막 조각이다")
     func namedByExecutablePath() throws {
