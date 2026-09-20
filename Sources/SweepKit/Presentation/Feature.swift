@@ -10,6 +10,8 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
     case largeFile
     case duplicate
     case diskMap
+    /// 유일하게 디스크와 무관한 기능. 읽기 전용이라 `.diskMap`과 같은 자리에 산다.
+    case cpu
 
     public var id: Self { self }
 
@@ -20,6 +22,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         case .largeFile: "큰 파일"
         case .duplicate: "중복 파일"
         case .diskMap: "디스크 맵"
+        case .cpu: "CPU"
         }
     }
 
@@ -30,6 +33,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         case .largeFile: "arrow.down.doc"
         case .duplicate: "doc.on.doc"
         case .diskMap: "chart.pie"
+        case .cpu: "speedometer"
         }
     }
 
@@ -44,6 +48,9 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         case .largeFile: "허용된 범위 안에서 유난히 큰 파일을 찾습니다."
         case .duplicate: "내용이 같은 파일을 찾아 한 벌만 남깁니다."
         case .diskMap: "어디가 용량을 차지하는지 크기순으로 훑어봅니다."
+        // 내 계정 소유만 읽힌다는 것을 여기서 미리 말한다. 화면에 들어가서야
+        // 알면 "왜 활성 상태 보기와 목록이 다르지"로 읽힌다.
+        case .cpu: "지금 어떤 프로세스가 CPU를 쓰고 있는지 보여줍니다."
         }
     }
 
@@ -63,6 +70,8 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         case .smartScan:
             "기능별로 나눠 두었습니다. 잠긴 항목은 되돌릴 수 없어 선택할 수 없습니다."
         case .diskMap:
+            ""
+        case .cpu:
             ""
         }
     }
@@ -124,6 +133,10 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
             return [DuplicateScanner()]
         case .diskMap:
             return []
+        // 지울 것을 찾지 않는다. 비워 두면 `isScannable`이 false가 되어
+        // 요약 카드·사이드바 배지·⌘R·툴바에서 알아서 빠진다.
+        case .cpu:
+            return []
         }
     }
 
@@ -156,6 +169,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         case .largeFile: (0xB69BFF, 0x5B33C4)
         case .duplicate: (0x5FD3C4, 0x0C6558)
         case .diskMap:   (0x7ED88F, 0x186628)
+        case .cpu:       (0xFFB86B, 0x9A4200)
         }
     }
 
