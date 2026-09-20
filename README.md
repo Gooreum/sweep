@@ -35,6 +35,7 @@ Xcode 산출물, 개발 도구·앱 캐시, **폭주 중인 임시 파일**, 잊
 | 큰 파일 | `~/Downloads`의 독립 파일 중 100MB 이상. 받은 지 며칠 됐는지 함께 |
 | 중복 파일 | `~/Downloads`에서 내용까지 같은 파일 |
 | 디스크 맵 | 폴더 크기를 막대로 비교. 그 자리에서 Finder로 열기·경로 복사·휴지통 |
+| CPU | 지금 CPU를 쓰는 프로세스를 점유율 순으로. 보기만 하고 끝내지는 않는다 |
 
 정크 파일의 갈래:
 
@@ -97,6 +98,28 @@ Xcode 산출물, 개발 도구·앱 캐시, **폭주 중인 임시 파일**, 잊
 크기를 두 번 재서 증가분을 분당 속도로 환산한다 (`33.0 MB/분 증가 중`).
 증가 중이면 무언가 쓰고 있다는 뜻이라 `caution`으로 둔다.
 
+### CPU 탭은 보기만 한다
+
+끝내는 버튼이 없다. **App Store 빌드에서는 남의 프로세스를 죽일 수 없기 때문이다.**
+서명한 번들로 세 갈래를 모두 재 봤다:
+
+| 시도 | 샌드박스 |
+|---|---|
+| `kill(pid, SIGTERM)` | `EPERM` — `(allow signal (target same-sandbox))`만 열려 있다 |
+| `NSRunningApplication.terminate()` / `forceTerminate()` | 둘 다 `false` |
+| Automation entitlement + Apple Event `quit` | `-600 "Application isn't running"` — 떠 있는데도 |
+
+읽는 쪽은 열려 있지만 **`proc_listpids`는 막힌다**(실측 0개). 목록은
+`sysctl KERN_PROC_ALL`로 얻는다. 누적 CPU 시간은 `proc_pidinfo`로 읽는데,
+그 값은 나노초가 아니라 **Mach 절대시간**이라 환산해야 한다 — 빼먹으면
+코어를 꽉 채운 프로세스가 2.4%로 찍힌다.
+
+`proc_pid_rusage`는 처음부터 나노초를 주지만 쓸 수 없다. 샌드박스가
+`process-info-rusage`를 자기 자신에게만 열어 둔다.
+
+내 계정 소유만 읽힌다(실측 521개 중 322개). `ps`·`top`이 root 프로세스까지
+보여 주는 것은 그 둘이 setuid root이기 때문이다.
+
 ### 중복 탐지
 
 크기 → 앞 64KB SHA256 → 전체 SHA256 3단계.
@@ -130,6 +153,7 @@ Xcode 산출물, 개발 도구·앱 캐시, **폭주 중인 임시 파일**, 잊
 ```bash
 swift run SweepApp              # GUI
 swift run SweepApp --scan-only  # 창 없이 스캔 결과만 출력 (아무것도 지우지 않음)
+swift run SweepApp --cpu-only   # 창 없이 CPU 상위 프로세스만 출력
 swift test                      # 603개 테스트
 ```
 
@@ -150,6 +174,7 @@ SweepKit/
   Scan/         CleanupScanner 프로토콜 + 스캐너 7종 + ScanCoordinator
   Remove/       Remover, Restorer, CleanupHistory, RemovalReport
   Insight/      DiskUsageTree, DiskMapModel, VolumeUsage — 디스크 맵
+                CPUModel, ProcessCPUSampler — CPU
   Presentation/ AppModel, ScanModel, Feature — SwiftUI 비의존 상태 관리
 SweepApp/       SwiftUI 화면
   Retro95/      Win95 스타일 컴포넌트
