@@ -94,7 +94,8 @@ struct SweepApp: App {
         let before = ProcessCPUSampler.tick()
         Thread.sleep(forTimeInterval: 2)
         let usage = ProcessUsage.compute(
-            from: before, to: ProcessCPUSampler.tick(), over: interval)
+            from: before, to: ProcessCPUSampler.tick(), over: interval,
+            cores: ProcessCPUSampler.coreCount)
 
         // 화면과 같은 상한으로 자른다. 전체를 찍으면 검증할 때 눈으로 볼 수 없다.
         for item in usage.prefix(20) {

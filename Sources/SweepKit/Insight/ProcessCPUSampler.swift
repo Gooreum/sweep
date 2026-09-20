@@ -16,6 +16,12 @@ import Foundation
 /// setuid root이기 때문이고, 일반 앱은 그 자리에 못 간다.
 public enum ProcessCPUSampler {
 
+    /// 이 기계의 논리 코어 수. 사용률의 **분모**다.
+    ///
+    /// 성능 코어와 효율 코어를 가리지 않고 센다 — 실측 8개(성능 4 + 효율 4).
+    /// 효율 코어는 느리지만 일을 하고 있고, 분모에서 빼면 합이 100을 넘는다.
+    public static var coreCount: Int { ProcessInfo.processInfo.activeProcessorCount }
+
     /// 읽을 수 있는 프로세스 전부의 누적 CPU 시간.
     ///
     /// 이 값만으로는 사용률을 알 수 없다. 두 번 불러

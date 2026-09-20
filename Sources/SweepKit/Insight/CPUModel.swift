@@ -19,6 +19,13 @@ public final class CPUModel {
     /// 앱이 거짓말을 한다.
     public private(set) var isWarmingUp = true
 
+    /// 사용률의 분모가 되는 논리 코어 수.
+    ///
+    /// `public`인 이유는 화면이 "코어 N개 전체 기준"이라고 밝혀야 하기 때문이다.
+    /// 뷰가 `ProcessCPUSampler.coreCount`를 따로 읽으면 주입으로 코어 수를 바꾼
+    /// 테스트·데모에서 화면 문구와 실제 분모가 어긋난다.
+    public let cores: Int
+
     private let interval: Duration
     private let limit: Int
     private let sample: @Sendable () -> [ProcessCPUTick]
@@ -29,10 +36,12 @@ public final class CPUModel {
     public init(
         interval: Duration = .seconds(2),
         limit: Int = 20,
+        cores: Int = ProcessCPUSampler.coreCount,
         sample: @escaping @Sendable () -> [ProcessCPUTick] = ProcessCPUSampler.tick
     ) {
         self.interval = interval
         self.limit = limit
+        self.cores = cores
         self.sample = sample
     }
 
@@ -52,7 +61,8 @@ public final class CPUModel {
 
             let current = await measure()
             usage = Array(
-                ProcessUsage.compute(from: previous, to: current, over: interval).prefix(limit))
+                ProcessUsage.compute(from: previous, to: current, over: interval, cores: cores)
+                    .prefix(limit))
             isWarmingUp = false
             previous = current
         }
