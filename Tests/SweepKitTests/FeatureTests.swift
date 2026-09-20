@@ -33,16 +33,34 @@ struct FeatureTests {
     }
 
     // TC-3
-    @Test("디스크 맵은 읽기 전용이라 스캐너가 없다")
-    func diskMapHasNoScanners() {
-        #expect(Feature.diskMap.scanners.isEmpty)
-        #expect(Feature.diskMap.categories.isEmpty)
-        #expect(Feature.diskMap.isScannable == false)
+    @Test("읽기 전용 기능은 스캐너가 없다")
+    func readOnlyFeaturesHaveNoScanners() {
+        // 디스크 맵과 CPU. 둘 다 지울 것을 찾지 않는다.
+        for feature in [Feature.diskMap, .cpu] {
+            #expect(feature.scanners.isEmpty, "\(feature)에 스캐너가 붙어 있다")
+            #expect(feature.categories.isEmpty)
+            #expect(feature.isScannable == false)
+        }
 
-        // 나머지는 전부 스캔 가능해야 한다
-        for feature in Feature.allCases where feature != .diskMap {
+        // 나머지는 전부 스캔 가능해야 한다. 이름을 나열하지 않는다 —
+        // 읽기 전용 기능이 또 늘면 여기가 아니라 위 배열만 고치면 된다.
+        for feature in Feature.allCases where ![.diskMap, .cpu].contains(feature) {
             #expect(feature.isScannable, "\(feature)가 스캔 불가로 나온다")
         }
+    }
+
+    // TC-3b
+    @Test("CPU는 스캔하지 않으므로 요약·배지 경로에서 빠진다")
+    func cpuStaysOutOfScanMachinery() {
+        // `scanners`가 비면 나머지는 공짜로 따라온다 — 손으로 예외를 적지 않는다.
+        #expect(!Feature.summaryCards.contains(.cpu))
+        #expect(Feature.cpu.items(from: []).isEmpty)
+        // 검토 목록이 아니라 관찰 화면이라 고를 기준을 말할 것이 없다
+        #expect(Feature.cpu.reviewHint.isEmpty)
+        // 사이드바·⌘6에 나와야 하므로 표시값은 있어야 한다
+        #expect(Feature.cpu.displayName == "CPU")
+        #expect(!Feature.cpu.systemImageName.isEmpty)
+        #expect(Feature.cpu.tintHex != nil)
     }
 
     // TC-4
