@@ -16,6 +16,11 @@ struct SweepApp: App {
         if CommandLine.arguments.contains("--scan-only") {
             Self.runScanAndExit()
         }
+        // 같은 취지의 입구. CPU 쪽은 **샌드박스에서도 되는지**를 확인하는 수단이기도
+        // 하다 — 서명한 번들 안에서 이 명령을 돌려 목록이 비지 않는지 본다.
+        if CommandLine.arguments.contains("--cpu-only") {
+            Self.runCPUSampleAndExit()
+        }
         _app = State(initialValue: AppModel())
         // SPM 실행 파일은 앱 번들이 아니라서 기본이 백그라운드 프로세스다.
         // .regular로 올려야 창이 앞으로 나오고 메뉴 막대가 붙는다.
@@ -77,6 +82,32 @@ struct SweepApp: App {
             ].joined(separator: "\t"))
         }
         print("총 \(items.count)개 · \(items.formattedTotalSize)")
+        exit(0)
+    }
+
+    /// 지금 CPU를 쓰는 프로세스를 탭 구분 텍스트로 찍고 종료한다.
+    ///
+    /// 누적값은 두 번 재야 뜻이 생기므로 구간만큼 멈춘다. 여기서는 `Task.sleep`이
+    /// 아니라 `Thread.sleep`이다 — `init()`이 async가 아니라 await할 자리가 없다.
+    private static func runCPUSampleAndExit() -> Never {
+        let interval = Duration.seconds(2)
+        let before = ProcessCPUSampler.tick()
+        Thread.sleep(forTimeInterval: 2)
+        let usage = ProcessUsage.compute(
+            from: before, to: ProcessCPUSampler.tick(), over: interval)
+
+        // 화면과 같은 상한으로 자른다. 전체를 찍으면 검증할 때 눈으로 볼 수 없다.
+        for item in usage.prefix(20) {
+            print([
+                item.formattedPercent,
+                String(item.pid),
+                item.name,
+                item.executablePath ?? "-",
+            ].joined(separator: "\t"))
+        }
+        // 읽은 수와 **그중 쓰고 있는 수**를 따로 적는다. 앞의 것이 0이면 수집이
+        // 막힌 것이고, 뒤의 것만 0이면 정말 아무도 안 쓴 것이다.
+        print("측정 \(before.count)개 · 사용 중 \(usage.count)개")
         exit(0)
     }
 

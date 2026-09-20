@@ -62,9 +62,30 @@ public enum ProcessCPUSampler {
             pid: pid,
             name: displayName(of: pid, path: path),
             executablePath: path,
-            nanoseconds: info.pti_total_user + info.pti_total_system
+            nanoseconds: nanoseconds(fromAbsolute: info.pti_total_user + info.pti_total_system)
         )
     }
+
+    /// Mach 절대시간 → 나노초.
+    ///
+    /// **`proc_pidinfo`가 주는 누적 시간은 나노초가 아니다.** Mach 절대시간 단위이고,
+    /// Apple Silicon에서 1틱은 41.666ns다(timebase 125/3). 환산하지 않으면 사용률이
+    /// 41배 작게 나온다 — 실측으로 코어를 꽉 채운 `yes`가 **2.4%**로 찍혔다(`ps`는 99%).
+    ///
+    /// `proc_pid_rusage`는 처음부터 나노초를 주지만 쓸 수 없다. 샌드박스가
+    /// `process-info-rusage`를 자기 자신에게만 열어 둬서 남의 프로세스는 못 읽는다.
+    private static func nanoseconds(fromAbsolute ticks: UInt64) -> UInt64 {
+        ticks * timebase.numer / timebase.denom
+    }
+
+    /// 기계마다 다르고 실행 중에 바뀌지 않는다. 한 번만 묻는다 —
+    /// 샘플마다 물으면 프로세스 수만큼 syscall이 는다.
+    private static let timebase: (numer: UInt64, denom: UInt64) = {
+        var info = mach_timebase_info_data_t()
+        // 못 읽으면 1:1로 둔다. 인텔에서는 실제로 1:1이라 그쪽에서는 이것이 정답이다.
+        guard mach_timebase_info(&info) == KERN_SUCCESS, info.denom != 0 else { return (1, 1) }
+        return (UInt64(info.numer), UInt64(info.denom))
+    }()
 
     /// 이름은 세 단계로 물러선다. 어느 경우에도 빈 줄을 그리지 않는다.
     ///
