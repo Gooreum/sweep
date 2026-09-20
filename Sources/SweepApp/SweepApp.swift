@@ -93,13 +93,13 @@ struct SweepApp: App {
         // 약속한 구간이 아니라 **실제로 흐른 시간**으로 나눈다. `Thread.sleep`은
         // 최소 시간만 보장해서, 기계가 바쁘면 더 자고 사용률이 부풀려진다.
         let clock = ContinuousClock()
+        let cores = ProcessCPUSampler.coreCount
         let before = ProcessCPUSampler.tick()
         let start = clock.now
         Thread.sleep(forTimeInterval: 2)
         let elapsed = clock.now - start
         let usage = ProcessUsage.compute(
-            from: before, to: ProcessCPUSampler.tick(), over: elapsed,
-            cores: ProcessCPUSampler.coreCount)
+            from: before, to: ProcessCPUSampler.tick(), over: elapsed, cores: cores)
 
         // 화면과 같은 상한으로 자른다. 전체를 찍으면 검증할 때 눈으로 볼 수 없다.
         for item in usage.prefix(20) {
@@ -112,7 +112,12 @@ struct SweepApp: App {
         }
         // 읽은 수와 **그중 쓰고 있는 수**를 따로 적는다. 앞의 것이 0이면 수집이
         // 막힌 것이고, 뒤의 것만 0이면 정말 아무도 안 쓴 것이다.
-        print("측정 \(before.count)개 · 사용 중 \(usage.count)개")
+        //
+        // 합계는 위에서 자른 20개가 아니라 **전부** 더한다. 분모가 기계 전체라
+        // 이 합이 곧 기계의 부하이고, 100을 넘지 않는다는 것이 새 성질이다.
+        let total = usage.reduce(0) { $0 + $1.percent }
+        print(String(format: "측정 %d개 · 사용 중 %d개 · 합계 %.1f%% (코어 %d개)",
+                     before.count, usage.count, total, cores))
         exit(0)
     }
 

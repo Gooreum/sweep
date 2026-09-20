@@ -32,12 +32,21 @@ struct CPUView: View {
 
     private var header: some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
-            // 무엇을 보고 있는지가 아니라 **무엇이 빠져 있는지**를 말한다.
-            // 활성 상태 보기와 목록이 다른 이유를 화면에서 바로 알 수 있어야 한다.
-            Text("내 계정으로 실행된 프로세스만 보입니다. 시스템 프로세스는 활성 상태 보기에서 확인하세요.")
-                .font(Theme.bodyText)
-                .foregroundStyle(Theme.textSecondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .leading, spacing: 3) {
+                // **분모를 먼저 말한다.** 이 화면의 숫자가 뜻하는 바가 그것이다.
+                // 무엇이 빠져 있는지도 같이 말한다 — 활성 상태 보기와 목록이
+                // 다른 이유를 화면에서 바로 알 수 있어야 한다.
+                Text("코어 \(model.cores)개 전체를 100%로 본 비중입니다. 내 계정으로 실행된 프로세스만 보입니다.")
+                    .font(Theme.bodyText)
+                    .foregroundStyle(Theme.textSecondary)
+
+                // 활성 상태 보기를 같이 켜 두면 같은 프로세스가 코어 수만큼 차이 난다.
+                // 이유를 안 적으면 둘 중 하나가 틀린 것으로 읽힌다.
+                Text("활성 상태 보기는 코어 하나를 100%로 세므로 같은 프로세스도 숫자가 다릅니다.")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.textTertiary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             // 행이 아니라 여기에 하나만 둔다. 활성 상태 보기는 특정 프로세스를
             // 지정해 열 수 없어서, 행마다 두면 "이 프로세스로 데려다준다"는
