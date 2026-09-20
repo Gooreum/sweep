@@ -51,7 +51,9 @@ public final class CPUModel {
     /// 한 바퀴에 한 번만 잰다. 직전 샘플을 들고 있어서, 주기마다 두 번씩
     /// 재는 낭비를 하지 않는다.
     public func run() async {
+        let clock = ContinuousClock()
         var previous = await measure()
+        var previousAt = clock.now
 
         while !Task.isCancelled {
             try? await Task.sleep(for: interval)
@@ -60,11 +62,20 @@ public final class CPUModel {
             guard !Task.isCancelled else { return }
 
             let current = await measure()
+            let now = clock.now
+
+            // **`interval`이 아니라 실제로 흐른 시간으로 나눈다.**
+            // `Task.sleep`은 최소 시간만 보장한다 — 기계가 바쁘면 더 오래 잔다.
+            // 그때 분모를 약속한 값으로 두면 사용률이 그만큼 부풀려진다.
+            // 실측: 테스트를 병렬로 돌려 기계가 바쁠 때 12.5%짜리가 68.7%로 찍혔다.
+            // 하필 CPU가 바쁠 때 틀리는 값이라, 이 화면을 볼 이유가 있는 순간에 틀린다.
             usage = Array(
-                ProcessUsage.compute(from: previous, to: current, over: interval, cores: cores)
+                ProcessUsage.compute(from: previous, to: current, over: now - previousAt,
+                                     cores: cores)
                     .prefix(limit))
             isWarmingUp = false
             previous = current
+            previousAt = now
         }
     }
 
