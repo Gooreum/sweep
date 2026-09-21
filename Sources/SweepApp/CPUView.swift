@@ -21,7 +21,18 @@ struct CPUView: View {
 
             Divider().overlay(Theme.border)
 
-            content
+            HStack(spacing: 0) {
+                // 왼쪽은 **고정**이다. 목록이 길어져도 도넛은 자리를 지킨다 —
+                // 비중을 보려고 위로 스크롤해 올라가야 하면 나란히 둔 뜻이 없다.
+                chart
+                    .frame(width: 260)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 18)
+
+                Divider().overlay(Theme.border)
+
+                content
+            }
         }
         // 화면이 살아 있는 동안만 잰다. 탭을 떠나면 SwiftUI가 이 작업을 취소한다 —
         // CPU를 보는 화면이 안 보이는 동안 CPU를 쓰면 안 된다.
@@ -57,6 +68,47 @@ struct CPUView: View {
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 14)
+    }
+
+    // MARK: - 원형 그래프
+
+    /// 도넛 + 범례. 조각 계산은 SweepKit이 하고 여기서는 **색만 입힌다.**
+    @ViewBuilder
+    private var chart: some View {
+        if model.isWarmingUp {
+            // 목록과 같은 이유로 빈 원을 그리지 않는다. 0%짜리 도넛은 거짓말이다.
+            Color.clear
+        } else {
+            let shares = CPUShare.slices(from: model.usage)
+            ShareDonut(
+                slices: shares.enumerated().map { index, share in
+                    .init(id: share.id, label: share.name, value: share.percent,
+                          detail: share.formattedPercent, color: color(share, at: index))
+                },
+                centerValue: String(format: "%.0f%%", model.usage.reduce(0) { $0 + $1.percent }),
+                centerCaption: "사용 중",
+                diameter: 150,
+                stacked: true)
+            // 조각이 적을 때 도넛이 칸 가운데로 떠오르지 않게 위로 붙인다
+            .frame(maxHeight: .infinity, alignment: .top)
+        }
+    }
+
+    /// 조각 색. **새 팔레트를 만들지 않는다** — 기능색 하나의 농도만 바꾼다.
+    ///
+    /// 팔레트를 새로 두면 `FeatureTests`의 대비·색상각 규칙을 또 지켜야 하고,
+    /// 사이드바의 CPU 색과 따로 놀게 된다.
+    private func color(_ share: CPUShare, at index: Int) -> Color {
+        switch share.kind {
+        case .process:
+            // 큰 조각일수록 진하다. 범례를 안 봐도 순서가 읽힌다.
+            Theme.tint(.cpu).opacity(1.0 - Double(index) * 0.13)
+        case .other:
+            Theme.textTertiary
+        case .idle:
+            // 남는 몫은 "없음"이지 "작은 값"이 아니다. 테두리색으로 물러나 있는다.
+            Theme.border
+        }
     }
 
     // MARK: - 본문
