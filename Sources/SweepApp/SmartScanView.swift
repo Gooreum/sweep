@@ -104,9 +104,9 @@ struct SmartScanView: View {
                     ReclaimLegend(rows: breakdown)
                 } else {
                     // 스캔 전에는 조각이 둘(사용/사용가능)뿐이라 링이 제 몫을 한다.
-                    DiskDonut(slices: diskSlices(usage),
-                              centerValue: "\(Int(usage.usedFraction * 100))%",
-                              centerCaption: "사용됨")
+                    ShareDonut(slices: diskSlices(usage),
+                               centerValue: "\(Int(usage.usedFraction * 100))%",
+                               centerCaption: "사용됨")
                 }
             }
             .padding(24)
@@ -116,9 +116,13 @@ struct SmartScanView: View {
     }
 
     /// 스캔 전 — 디스크 전체. 회색 두 개로 끝나지 않게 사용됨에 톤을 준다.
-    private func diskSlices(_ usage: VolumeUsage) -> [DiskDonut.Slice] {
-        [.init(id: "used", label: "사용됨", bytes: usage.used, color: Theme.usedSlice),
-         .init(id: "free", label: "사용 가능", bytes: usage.available, color: Theme.freeSlice)]
+    private func diskSlices(_ usage: VolumeUsage) -> [ShareDonut.Slice] {
+        // 도넛은 단위를 모른다. 바이트 서식은 여기서 붙인다 —
+        // `VolumeUsage`가 이미 같은 서식을 들고 있으므로 그것을 쓴다.
+        [.init(id: "used", label: "사용됨", value: Double(usage.used),
+               detail: usage.formattedUsed, color: Theme.usedSlice),
+         .init(id: "free", label: "사용 가능", value: Double(usage.available),
+               detail: usage.formattedAvailable, color: Theme.freeSlice)]
     }
 
     /// Sweep이 들여다보는 곳. 목록은 안전 게이트의 허용 루트에서 유도된다.
