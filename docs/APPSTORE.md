@@ -126,7 +126,7 @@ Organizer가 조용히 올려서 업로드한다. 실제로 소스 빌드 1이 �
 | 1.0.0 (1) | 2026-09-08 | **쓰지 않는다** — 샌드박스에서 다운로드 폴더를 못 읽어 결과가 0개 |
 | 1.0.0 (2) | 2026-09-10 | `8bff69a`. 다운로드 폴더만 — 정크 파일 탭이 없다 |
 | 1.0.0 (3) | 2026-09-14 | `40ce256`. 개발 폴더 허락으로 Xcode 정리 |
-| 1.0.0 (4) | 업로드 전 | `58f76e6`. 정리 목록 행에 경로 표시(세 줄), 툴팁 제거, 행 재생성 비용 감소 |
+| 1.0.0 (4) | 2026-09-21 반려 | `58f76e6`. 정리 목록 행에 경로 표시(세 줄), 툴팁 제거, 행 재생성 비용 감소. 이름 `SweepMac` → 5.2.5 반려, 이름만 바꿔 같은 빌드로 재제출 |
 
 ---
 
@@ -146,6 +146,9 @@ Xcode Organizer가 열린다 → **Distribute App** → **App Store Connect** �
 
 1. **App Store Connect에 앱 레코드** — https://appstoreconnect.apple.com → 앱 → **+**
    - 플랫폼 **macOS**, 번들 ID `com.gooreum.sweep`, SKU 아무 값
+   - 스토어 이름: **`Sweep: Disk Cleaner`**. 이름에 `Mac`·`macOS`·`iMac` 같은 Apple 상표를
+     넣지 않는다 — `SweepMac`은 Guideline 5.2.5로 반려됐다(빌드 4, 2026-09-21).
+     설명문 안의 "Mac용 앱"처럼 대상을 밝히는 표현은 된다
    - 번들 ID가 목록에 없으면
      https://developer.apple.com/account/resources/identifiers 에서 먼저 등록
 2. **심사용 메타데이터** — 스크린샷(1280×800 이상), 설명, 키워드, 지원 URL,
