@@ -12,6 +12,9 @@ struct FeatureScreen: View {
     /// 되돌릴 수 없는 항목이 몇 개 빠졌는지 한 번 더 보여줘야 한다.
     @State private var showsConfirm = false
 
+    /// 옮기지 못한 항목 시트를 띄울지.
+    @State private var showsFailures = false
+
     var body: some View {
         HStack(spacing: 0) {
             stage
@@ -129,17 +132,32 @@ struct FeatureScreen: View {
                     .font(Theme.title)
                     .monospacedDigit()
 
-                // 실패 사유는 길어서 한 줄에 안 들어간다. 개수만 보이고 전체는 툴팁에.
+                // 실패 사유는 길어서 한 줄에 안 들어간다. 예전에는 툴팁에 합쳐 넣었는데,
+                // 호버해야 보이고 어느 파일이 왜 실패했는지 구분되지 않았다.
+                // 누르면 항목별 사유와 다음 행동을 보여주는 시트를 연다.
                 if !report.failed.isEmpty {
-                    Text("\(report.failed.count)개는 옮기지 못했습니다")
-                        .font(Theme.bodyText)
-                        .foregroundStyle(.red)
-                        .help(report.failed.compactMap(\.failureReason).joined(separator: "\n"))
+                    Button {
+                        showsFailures = true
+                    } label: {
+                        Label("\(report.failed.count)개는 옮기지 못했습니다 — 자세히 보기",
+                              systemImage: "exclamationmark.triangle")
+                            .font(Theme.bodyText)
+                            .foregroundStyle(Theme.dangerText)
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 Button("완료") { model.dismissReport() }
                     .buttonStyle(PrimaryButtonStyle())
                     .padding(.top, 6)
+            }
+            .sheet(isPresented: $showsFailures) {
+                RemovalFailuresSheet(failed: report.failed) {
+                    showsFailures = false
+                } onRetry: {
+                    showsFailures = false
+                    Task { await model.retryFailed() }
+                }
             }
         }
     }

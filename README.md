@@ -71,7 +71,7 @@ duplicate    safe    16.2 MB   ~/Downloads/...
 ```bash
 swift run SweepApp              # GUI
 swift run SweepApp --scan-only  # 창 없이 스캔 결과만 출력 (아무것도 지우지 않음)
-swift test                      # 99개 테스트
+swift test                      # 561개 테스트
 ```
 
 ## 구조
