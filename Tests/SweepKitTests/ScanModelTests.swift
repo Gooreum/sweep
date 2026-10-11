@@ -424,7 +424,7 @@ struct ScanModelTests {
             RemovalOutcome(item: item("c", size: 3_000), failureReason: "다른 사용자 소유입니다"),
         ])
         #expect(mixed.failed.count == 2)
-        // 툴팁에 넣을 전체 사유가 모두 남아 있어야 한다
+        // 실패 시트에 보여줄 사유가 항목마다 남아 있어야 한다
         let reasons = mixed.failed.compactMap(\.failureReason)
         #expect(reasons.count == 2)
         #expect(reasons.joined(separator: "\n").contains("\n"))
@@ -461,6 +461,73 @@ struct ScanModelTests {
         await model.removeSelected()
 
         // 지운 것이 없는 회차를 "정리했다"고 기록하면 거짓이다
+        #expect(calls == 0)
+    }
+
+    // MARK: - 실패한 것만 다시 시도 (pm #2)
+
+    /// 이름이 `blocked`에 있으면 실패하는 삭제기. 집합을 바꾸면 재시도 결과가 달라진다.
+    private final class Gate: @unchecked Sendable {
+        var blocked: Set<String>
+        init(_ blocked: Set<String>) { self.blocked = blocked }
+        var remover: @Sendable (CleanupItem) -> RemovalOutcome {
+            { [self] item in
+                self.blocked.contains(item.displayName)
+                    ? RemovalOutcome(item: item, failureReason: "실행 중인 앱입니다")
+                    : RemovalOutcome(item: item, failureReason: nil)
+            }
+        }
+    }
+
+    @Test("재시도로 지워진 용량이 앞 회차 성공분에 더해진다")
+    func retryAddsToReclaimed() async {
+        let gate = Gate(["b"])
+        let model = ScanModel(scan: stream([[item("a"), item("b")]]), removeOne: gate.remover)
+        var rounds: [RemovalReport] = []
+        model.onReport = { rounds.append($0) }
+
+        await model.scan()
+        await model.removeSelected()
+        #expect(model.report?.reclaimedBytes == 1_000)
+
+        // 사용자가 앱을 끄고 다시 시도한 상황
+        gate.blocked = []
+        await model.retryFailed()
+
+        #expect(model.report?.reclaimedBytes == 2_000)
+        #expect(model.report?.failed.isEmpty == true)
+        #expect(model.items.isEmpty)
+        #expect(model.phase == .cleaned)
+        // 기록에는 회차마다 그 회차 몫만 간다 — a를 두 번 세지 않는다
+        #expect(rounds.map(\.outcomes.count) == [2, 1])
+        #expect(rounds.last?.reclaimedBytes == 1_000)
+    }
+
+    @Test("재시도에서도 실패하면 실패 목록과 항목이 그대로 남는다")
+    func retryThatFailsAgain() async {
+        let gate = Gate(["b"])
+        let model = ScanModel(scan: stream([[item("a"), item("b")]]), removeOne: gate.remover)
+
+        await model.scan()
+        await model.removeSelected()
+        await model.retryFailed()
+
+        #expect(model.report?.failed.map(\.item.displayName) == ["b"])
+        #expect(model.report?.reclaimedBytes == 1_000)
+        #expect(model.items.map(\.displayName) == ["b"])
+    }
+
+    @Test("삭제한 적이 없으면 재시도는 아무것도 하지 않는다")
+    func retryWithoutReportIsNoOp() async {
+        let model = ScanModel(scan: stream([[item("a")]]), removeOne: alwaysSucceeds())
+        var calls = 0
+        model.onReport = { _ in calls += 1 }
+
+        await model.scan()
+        await model.retryFailed()
+
+        #expect(model.phase == .results)
+        #expect(model.items.count == 1)
         #expect(calls == 0)
     }
 
