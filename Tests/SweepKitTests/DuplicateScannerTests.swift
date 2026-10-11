@@ -186,10 +186,11 @@ struct DuplicateScannerTests {
     }
 
     // TC-10
-    @Test("읽을 수 없는 경로의 해시는 빈 문자열이다")
-    func hashOfMissingFileIsEmpty() {
+    @Test("읽을 수 없는 경로의 해시는 nil이다")
+    func hashOfMissingFileIsNil() {
         let ghost = URL(filePath: "/private/tmp/sweep-no-such-\(UUID().uuidString)")
-        #expect(DuplicateScanner.hash(of: ghost, limit: nil).isEmpty)
+        // 빈 문자열이면 읽기 불가 파일들이 전부 같은 키로 묶인다 — 그게 버그였다.
+        #expect(DuplicateScanner.hash(of: ghost, limit: nil) == nil)
     }
 
     // TC-11
@@ -212,5 +213,72 @@ struct DuplicateScannerTests {
 
         #expect(items.count == 3)                       // A에서 1개, B에서 2개
         #expect(names == ["a2.bin", "b2.bin", "b3.bin"])
+    }
+
+    // MARK: - 읽기 실패 격리
+
+    /// 파일을 읽을 수 없게 막는다. 권한을 되돌리는 클로저를 함께 준다 —
+    /// 되돌리지 않으면 임시 폴더 삭제가 실패해 쓰레기가 남는다.
+    private func lock(_ urls: [URL]) throws -> () -> Void {
+        for url in urls {
+            try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: url.path)
+        }
+        return {
+            for url in urls {
+                try? FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: url.path)
+            }
+        }
+    }
+
+    // TC-12
+    @Test("열리지만 읽는 도중 오류가 나는 경로(디렉토리)도 nil이다")
+    func hashOfUnreadableHandleIsNil() throws {
+        let home = try makeFakeHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+
+        // 디렉토리는 open()은 되지만 read()가 EISDIR로 실패한다.
+        // 예전 코드는 여기서 루프가 조용히 끝나 "빈 내용의 해시"를 돌려줬다.
+        #expect(DuplicateScanner.hash(of: home, limit: nil) == nil)
+    }
+
+    // TC-13
+    @Test("크기가 같은 읽기 불가 파일 둘은 중복으로 묶이지 않는다")
+    func unreadableSameSizeFilesAreNotDuplicates() async throws {
+        let home = try makeFakeHome()
+        let a = try place("a.bin", bytes: payload(0x41, 2 * Self.oneMB), in: home)
+        let b = try place("b.bin", bytes: payload(0x42, 2 * Self.oneMB), in: home)
+        let unlock = try lock([a, b])
+        defer {
+            unlock()
+            try? FileManager.default.removeItem(at: home)
+        }
+
+        let items = await DuplicateScanner(home: home).scan()
+
+        // 내용이 다른 두 파일인데, 둘 다 못 읽는다는 이유로 "같다"고 하면
+        // 한쪽이 `.safe` 중복으로 기본 선택되어 휴지통으로 간다.
+        #expect(items.isEmpty, "읽을 수 없는 파일 둘이 중복으로 잡혔다")
+    }
+
+    // TC-14
+    @Test("읽기 불가 파일이 섞여 있어도 읽히는 중복은 그대로 찾는다")
+    func unreadableFilesDoNotHideRealDuplicates() async throws {
+        let home = try makeFakeHome()
+        let same = payload(0x41, 2 * Self.oneMB)
+        try place("a.bin", bytes: same, in: home, created: Date(timeIntervalSince1970: 1_000))
+        try place("b.bin", bytes: same, in: home, created: Date(timeIntervalSince1970: 2_000))
+        let c = try place("c.bin", bytes: payload(0x43, 2 * Self.oneMB), in: home)
+        let d = try place("d.bin", bytes: payload(0x44, 2 * Self.oneMB), in: home)
+        let unlock = try lock([c, d])
+        defer {
+            unlock()
+            try? FileManager.default.removeItem(at: home)
+        }
+
+        let items = await DuplicateScanner(home: home).scan()
+
+        // 같은 크기 넷 중 읽히는 a·b만 묶이고, 나중에 받은 b만 후보다
+        #expect(items.count == 1)
+        #expect(items.first?.displayName == "b.bin")
     }
 }

@@ -37,12 +37,10 @@ public struct DuplicateScanner: CleanupScanner {
         for (size, sameSize) in Dictionary(grouping: files, by: \.size) where sameSize.count > 1 {
 
             // 2단계: 앞 64KB만 해시. 대부분의 오탐이 여기서 걸러진다.
-            let byHead = Dictionary(grouping: sameSize) { Self.hash(of: $0.url, limit: 64 * 1024) }
-            for (_, sameHead) in byHead where sameHead.count > 1 {
+            for sameHead in Self.groupedByHash(sameSize, limit: 64 * 1024) {
 
                 // 3단계: 전체 해시로 확정.
-                let byFull = Dictionary(grouping: sameHead) { Self.hash(of: $0.url, limit: nil) }
-                for (_, identical) in byFull where identical.count > 1 {
+                for identical in Self.groupedByHash(sameHead, limit: nil) {
 
                     // 가장 먼저 받은 것을 원본으로 남기고 나머지만 후보로 올린다.
                     let ordered = identical.sorted { $0.created < $1.created }
@@ -63,17 +61,37 @@ public struct DuplicateScanner: CleanupScanner {
         return items
     }
 
+    /// 해시가 같은 것끼리 묶는다. 둘 이상 모인 묶음만 돌려준다.
+    ///
+    /// **읽지 못한 파일은 어느 묶음에도 넣지 않는다.** 권한이 없거나 iCloud에서
+    /// 아직 안 내려온 파일 둘을 "내용이 같다"고 할 근거는 없다 — 예전에는 둘 다
+    /// 빈 문자열 키로 묶여 `.safe` 중복이 되고, 한쪽이 휴지통으로 갔다.
+    private static func groupedByHash(_ candidates: [Candidate], limit: Int?) -> [[Candidate]] {
+        var groups: [String: [Candidate]] = [:]
+        for candidate in candidates {
+            guard let key = hash(of: candidate.url, limit: limit) else { continue }
+            groups[key, default: []].append(candidate)
+        }
+        return groups.values.filter { $0.count > 1 }
+    }
+
     /// 파일 전체를 메모리에 올리지 않도록 1MB씩 끊어 읽는다.
     /// `limit`이 있으면 앞부분만 읽는다.
-    static func hash(of url: URL, limit: Int?) -> String {
-        guard let handle = try? FileHandle(forReadingFrom: url) else { return "" }
+    ///
+    /// 열지 못하거나 **읽는 도중 오류가 나면 nil**이다. 오류와 EOF를 구분한다 —
+    /// 구분하지 않으면 도중에 끊긴 일부분의 해시가 완전한 해시처럼 돌아간다.
+    static func hash(of url: URL, limit: Int?) -> String? {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? handle.close() }
 
         var hasher = SHA256()
         var remaining = limit ?? Int.max
-        while remaining > 0,
-              let chunk = try? handle.read(upToCount: min(remaining, 1 << 20)),
-              !chunk.isEmpty {
+        while remaining > 0 {
+            // `read(upToCount:)`는 EOF에서 nil을 준다. `try?`로 감싸면 오류도 nil이 되어
+            // 둘이 구분되지 않는다 — 예전 코드가 부분 해시를 돌려준 이유다.
+            let chunk: Data?
+            do { chunk = try handle.read(upToCount: min(remaining, 1 << 20)) } catch { return nil }
+            guard let chunk, !chunk.isEmpty else { break }
             hasher.update(data: chunk)
             remaining -= chunk.count
         }

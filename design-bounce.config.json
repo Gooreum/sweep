@@ -98,6 +98,11 @@
       "deeplink": "--stage store-cleaned",
       "route": "Sources/SweepApp/StoreDemo.swift",
       "settleMs": 1500
+    },
+    "failures-sheet": {
+      "deeplink": "--stage failures-sheet",
+      "route": "Sources/SweepApp/RemovalFailuresSheet.swift",
+      "settleMs": 1500
     }
   }
 }

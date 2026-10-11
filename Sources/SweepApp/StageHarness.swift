@@ -38,6 +38,13 @@ struct StageHarness: View {
                 } else {
                     Text("준비 중").font(Theme.bodyText)
                 }
+            } else if stage == "failures-sheet" {
+                // 시트는 창 위에 떠서 창 캡처에 잡히지 않는다. 시트 뷰를 그대로 그린다.
+                if let failed = model?.report?.failed {
+                    RemovalFailuresSheet(failed: failed, onClose: {}, onRetry: {})
+                } else {
+                    Text("준비 중").font(Theme.bodyText)
+                }
             } else if let model {
                 if stage.hasPrefix("smart-") {
                     SmartScanView(app: app, model: model)
@@ -90,13 +97,21 @@ struct StageHarness: View {
             await created.scan()
             await created.removeSelected()
 
-        case "cleaned-failed":
+        case "cleaned-failed", "failures-sheet":
+            // 실패 종류를 섞는다 — 시트가 종류마다 다른 조치 문구를 그리는지 본다.
             let created = ScanModel(scan: { Self.finishing(items) },
-                                    removeOne: {
-                                        RemovalOutcome(item: $0, failureReason: "보호된 경로입니다")
+                                    removeOne: { item in
+                                        let failure = item.safety == .danger
+                                            ? RemovalFailure(reason: "보호된 경로입니다: \(item.url.path)",
+                                                             kind: .protected)
+                                            : RemovalFailure(reason: "실행 중인 앱입니다. 종료한 뒤 다시 시도해 주세요: \(item.url.path)",
+                                                             kind: .applicationRunning)
+                                        return RemovalOutcome(item: item, failure: failure)
                                     })
             model = created
             await created.scan()
+            // 위험 항목은 기본 선택이 아니다. 두 종류가 모두 나오도록 전부 고른다.
+            created.selection = Set(items.map(\.url))
             await created.removeSelected()
 
         case "danger-only":

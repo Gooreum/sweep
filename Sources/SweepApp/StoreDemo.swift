@@ -27,6 +27,8 @@ enum StoreDemo {
                           removeOne: { RemovalOutcome(item: $0, failureReason: nil) })
             },
             makeDiskMap: { diskMap() },
+            // 스크린샷용 가짜 삭제가 실제 정리 기록에 쌓이면 안 된다
+            history: CleanupHistory(defaults: UserDefaults(suiteName: "sweep-store-demo")!),
             // 허락한 뒤의 화면을 보여준다
             needsFolderAccess: false)
         await app.model(for: .smartScan).scan()

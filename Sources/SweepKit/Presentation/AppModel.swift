@@ -38,6 +38,13 @@ public final class AppModel {
     /// 거둔 직후 "허락이 필요 없다"고 답한다.
     private let requiresFolderAccess: Bool
 
+    /// 지금까지 얼마를 비웠고 마지막이 언제였는지.
+    ///
+    /// 저장소(`CleanupHistory`)는 관찰되지 않으므로 화면이 따라오려면
+    /// 여기 관찰되는 값이 하나 있어야 한다 — `needsFolderAccess`와 같은 이유다.
+    public private(set) var cleanupSummary: CleanupSummary
+    private let history: CleanupHistory
+
     /// 기능 모델을 만드는 방법을 주입할 수 있게 열어 둔다.
     ///
     /// `ScanModel(scan:removeOne:)`과 같은 이유다 — 기본 구성은 실제 스캐너를
@@ -45,15 +52,19 @@ public final class AppModel {
     /// 두지 않는다**: 이 프로젝트에서 그런 훅(`additionalRootsForTesting`)이
     /// 병렬 스위트끼리 서로를 덮어써 한 번 제거된 적이 있다.
     /// 허락 저장소도 같은 이유로 주입한다 — 테스트가 `.shared`를 건드리지 않게.
+    /// 정리 기록 저장소도 마찬가지다 — 테스트의 가짜 삭제가 실제 기록에 쌓이면 안 된다.
     public init(makeModel: @escaping @MainActor (Feature) -> ScanModel
                     = { ScanModel(feature: $0) },
                 makeDiskMap: @escaping @MainActor () -> DiskMapModel
                     = { DiskMapModel() },
                 folderAccess: FolderAccess.Registry = FolderAccess.shared,
+                history: CleanupHistory = .shared,
                 needsFolderAccess: Bool? = nil) {
         self.makeModel = makeModel
         self.makeDiskMap = makeDiskMap
         self.folderAccess = folderAccess
+        self.history = history
+        self.cleanupSummary = history.summary
         // 주입값이 있으면 그것이 "허락을 요구하는 환경인가"를 대신한다 — 테스트·데모용.
         self.requiresFolderAccess = needsFolderAccess ?? Sandbox.isActive
         self.needsFolderAccess = self.requiresFolderAccess && !folderAccess.hasAny
@@ -124,6 +135,18 @@ public final class AppModel {
         model.onRemoved = { [weak self] urls in
             self?.forget(urls, except: feature)
         }
+        model.onReport = { [weak self] report in
+            self?.record(report)
+        }
+    }
+
+    /// 회차 결과를 기록하고 관찰 값을 갱신한다.
+    ///
+    /// 어느 기능 모델에서 지웠든 한 곳에 쌓인다. 모델 안에 두면 폴더 허락이
+    /// 바뀔 때 `forgetScans()`가 모델과 함께 기록도 버린다.
+    private func record(_ report: RemovalReport) {
+        history.record(report)
+        cleanupSummary = history.summary
     }
 
     /// 스마트 스캔 결과를 기능 탭에 나눠 준다.

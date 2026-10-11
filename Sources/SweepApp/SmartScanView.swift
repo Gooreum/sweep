@@ -58,6 +58,16 @@ struct SmartScanView: View {
                 // 요약을 한 번만 만들어 넘긴다. 화면 안에서 두 번 부르면
                 // 그때마다 전체 항목을 기능 수만큼 필터링한다.
                 diskCard(model.summary)
+
+                // 지금까지 얼마를 비웠는지. 기록이 없으면 줄 자체가 없다 —
+                // "0 B 확보"는 알려줄 것이 아니라 자리만 차지한다.
+                if let line = app.cleanupSummary.statusLine() {
+                    Text(line)
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                        .monospacedDigit()
+                }
+
                 scopeCard
 
                 Button("전체 검색") { Task { await model.scan() } }
@@ -335,6 +345,14 @@ struct SmartScanView: View {
                     }
                 }
                 .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+
+                // 오래 정리하지 않았고 지금 지워도 되는 것이 있을 때만 권한다.
+                if let nudge = app.cleanupSummary.nudgeLine(
+                    safeBytes: model.items.filter(\.isSelectedByDefault).totalSize) {
+                    Text(nudge)
+                        .font(Theme.bodyText)
+                        .foregroundStyle(Theme.accentText)
+                }
 
                 Button("다시 검색") { Task { await model.scan() } }
                     .buttonStyle(SecondaryButtonStyle())

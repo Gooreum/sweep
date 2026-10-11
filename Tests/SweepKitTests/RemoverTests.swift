@@ -79,6 +79,41 @@ struct RemoverTests {
         #expect(fm.fileExists(atPath: home.path))
     }
 
+    // MARK: - 실패 종류 (pm #2)
+
+    @Test("관문이 막은 실패는 protected 종류로 기록된다")
+    func vetoIsProtectedKind() throws {
+        let file = try makeForbiddenFile()
+        defer { try? fm.removeItem(at: file.deletingLastPathComponent()) }
+
+        let outcome = Remover(movesToTrash: false).removeOne(item(file))
+
+        #expect(outcome.failure?.kind == .protected)
+        #expect(outcome.failureReason?.contains("정리 대상 범위 밖입니다") == true)
+    }
+
+    @Test("실행 중인 앱 거부는 applicationRunning 종류다")
+    func runningAppKind() {
+        let app = URL(filePath: "/Applications/sweep-ghost.app")
+        #expect(Remover.kind(of: RemovalVeto.applicationRunning(app)) == .applicationRunning)
+        #expect(Remover.kind(of: RemovalVeto.systemProtected(app)) == .protected)
+    }
+
+    @Test("권한 거부 오류는 permissionDenied, 그 밖은 other다")
+    func fileSystemErrorKinds() {
+        let cocoa = NSError(domain: NSCocoaErrorDomain, code: NSFileWriteNoPermissionError)
+        #expect(Remover.kind(of: cocoa) == .permissionDenied)
+
+        // Cocoa 오류가 POSIX EACCES를 감싸 오는 경우
+        let wrapped = NSError(domain: NSCocoaErrorDomain, code: NSFileWriteUnknownError, userInfo: [
+            NSUnderlyingErrorKey: NSError(domain: NSPOSIXErrorDomain, code: Int(EACCES)),
+        ])
+        #expect(Remover.kind(of: wrapped) == .permissionDenied)
+
+        let missing = NSError(domain: NSCocoaErrorDomain, code: NSFileNoSuchFileError)
+        #expect(Remover.kind(of: missing) == .other)
+    }
+
     // TC-5
     @Test("존재하지 않는 파일은 크래시 없이 실패로 기록된다")
     func missingFileIsRecordedAsFailure() {

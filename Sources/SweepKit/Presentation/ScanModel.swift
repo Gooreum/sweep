@@ -92,6 +92,11 @@ public final class ScanModel {
     /// 삭제가 끝나면 지워진 경로를 알린다. 같은 파일을 다른 화면도 목록에 들고 있다.
     public var onRemoved: (@MainActor ([URL]) -> Void)?
 
+    /// 삭제 한 회차의 결과를 알린다. 기록은 모델이 아니라 앱이 남긴다 —
+    /// 모델은 폴더 허락이 바뀌면 버려지고, 삭제는 어느 기능 모델에서든 일어난다.
+    /// **이번 회차 몫만** 넘긴다(재시도 때 이전 성공분을 다시 세지 않게).
+    public var onReport: (@MainActor (RemovalReport) -> Void)?
+
     /// 스캔·삭제 동작을 주입할 수 있게 열어 둔다.
     /// 실제 스캔은 17초 이상 걸리고 실제 삭제는 되돌릴 수 없어 테스트에 쓸 수 없다.
     public init(
@@ -265,7 +270,20 @@ public final class ScanModel {
     }
 
     public func removeSelected() async {
-        let targets = selectedItems
+        await remove(selectedItems, keeping: [])
+    }
+
+    /// 직전 회차에서 실패한 것만 다시 지운다.
+    ///
+    /// 성공분은 그대로 두고 결과를 합친다 — 재시도로 지워진 용량이 완료 화면의
+    /// "확보" 합계에 더해져야 한다. 앞 회차 성공분을 버리면 재시도 후 숫자가 줄어든다.
+    public func retryFailed() async {
+        guard let previous = report else { return }
+        await remove(previous.failed.map(\.item), keeping: previous.succeeded)
+    }
+
+    /// `earlier`는 같은 완료 화면에 이어 붙일 앞 회차의 성공분이다.
+    private func remove(_ targets: [CleanupItem], keeping earlier: [RemovalOutcome]) async {
         guard !targets.isEmpty else { return }
 
         let remove = performRemove
@@ -276,14 +294,16 @@ public final class ScanModel {
             outcomes.append(await Task.detached { remove(item) }.value)
         }
 
-        let result = RemovalReport(outcomes: outcomes)
+        let round = RemovalReport(outcomes: outcomes)
         // 지워진 것만 목록에서 뺀다. 실패한 항목은 남겨야 사용자가 사유를 보고 다시 시도한다.
-        let removed = Set(result.succeeded.map(\.item.url))
+        let removed = Set(round.succeeded.map(\.item.url))
         items.removeAll { removed.contains($0.url) }
         selection.subtract(removed)
 
-        report = result
+        report = RemovalReport(outcomes: earlier + outcomes)
         phase = .cleaned
+        // 기록에는 이번 회차 몫만 넘긴다. 합친 결과를 넘기면 앞 회차 성공분이 두 번 세어진다.
+        onReport?(round)
         // **성공한 것만** 알린다. 실패한 항목까지 넘기면 다른 화면에서
         // 멀쩡히 남아 있는 파일이 목록에서 사라진다.
         onRemoved?(Array(removed))
