@@ -105,6 +105,14 @@ struct MenuBarPanel: View {
                     .font(Theme.bodyText)
                     .foregroundStyle(.secondary)
             }
+
+            // 지금까지 비운 양. 기록이 없으면 줄이 없다.
+            if let line = app.cleanupSummary.statusLine() {
+                Text(line)
+                    .font(Theme.caption)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+            }
         }
         .padding(Theme.panelPadding)
     }
