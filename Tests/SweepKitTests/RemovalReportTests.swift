@@ -86,4 +86,26 @@ struct RemovalReportTests {
         let bytes = await Task.detached { report.reclaimedBytes }.value
         #expect(bytes == 42)
     }
+
+    // MARK: - 실패 종류 (pm #2)
+
+    @Test("문장만 주는 생성자는 종류를 other로 둔다")
+    func reasonOnlyInitIsOtherKind() {
+        let outcome = RemovalOutcome(item: item("x", size: 1), failureReason: "x")
+        #expect(outcome.failure?.kind == .other)
+        #expect(outcome.failureReason == "x")
+        #expect(!outcome.succeeded)
+
+        let ok = RemovalOutcome(item: item("y", size: 1), failureReason: nil)
+        #expect(ok.failure == nil)
+        #expect(ok.succeeded)
+    }
+
+    @Test("조치 문구는 할 수 있는 일이 있는 종류에만 있다")
+    func adviceOnlyWhereActionable() {
+        #expect(RemovalFailureKind.applicationRunning.advice != nil)
+        #expect(RemovalFailureKind.permissionDenied.advice != nil)
+        #expect(RemovalFailureKind.protected.advice != nil)
+        #expect(RemovalFailureKind.other.advice == nil)
+    }
 }
