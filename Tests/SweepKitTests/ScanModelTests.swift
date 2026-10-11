@@ -434,6 +434,36 @@ struct ScanModelTests {
 
     // MARK: - 정리 완료 단계 (Phase 1 / Step 1)
 
+    // MARK: - 회차 결과 알림 (pm #1)
+
+    @Test("삭제가 끝나면 그 회차의 결과를 onReport로 한 번 알린다")
+    func reportsEachRemovalRound() async {
+        let model = ScanModel(scan: stream([[item("a"), item("b")]]), removeOne: alwaysSucceeds())
+        var received: [RemovalReport] = []
+        model.onReport = { received.append($0) }
+
+        await model.scan()
+        await model.removeSelected()
+
+        #expect(received.count == 1)
+        #expect(received.first == model.report)
+        #expect(received.first?.reclaimedBytes == 2_000)
+    }
+
+    @Test("고른 것이 없으면 onReport도 불리지 않는다")
+    func noReportWithoutTargets() async {
+        let model = ScanModel(scan: stream([[item("a")]]), removeOne: alwaysSucceeds())
+        var calls = 0
+        model.onReport = { _ in calls += 1 }
+
+        await model.scan()
+        model.selection = []
+        await model.removeSelected()
+
+        // 지운 것이 없는 회차를 "정리했다"고 기록하면 거짓이다
+        #expect(calls == 0)
+    }
+
     // TC-7
     @Test("정리가 끝나면 완료 단계로 간다")
     func removalEndsInCleanedPhase() async {

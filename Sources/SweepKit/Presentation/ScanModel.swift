@@ -92,6 +92,11 @@ public final class ScanModel {
     /// 삭제가 끝나면 지워진 경로를 알린다. 같은 파일을 다른 화면도 목록에 들고 있다.
     public var onRemoved: (@MainActor ([URL]) -> Void)?
 
+    /// 삭제 한 회차의 결과를 알린다. 기록은 모델이 아니라 앱이 남긴다 —
+    /// 모델은 폴더 허락이 바뀌면 버려지고, 삭제는 어느 기능 모델에서든 일어난다.
+    /// **이번 회차 몫만** 넘긴다(재시도 때 이전 성공분을 다시 세지 않게).
+    public var onReport: (@MainActor (RemovalReport) -> Void)?
+
     /// 스캔·삭제 동작을 주입할 수 있게 열어 둔다.
     /// 실제 스캔은 17초 이상 걸리고 실제 삭제는 되돌릴 수 없어 테스트에 쓸 수 없다.
     public init(
@@ -284,6 +289,7 @@ public final class ScanModel {
 
         report = result
         phase = .cleaned
+        onReport?(result)
         // **성공한 것만** 알린다. 실패한 항목까지 넘기면 다른 화면에서
         // 멀쩡히 남아 있는 파일이 목록에서 사라진다.
         onRemoved?(Array(removed))

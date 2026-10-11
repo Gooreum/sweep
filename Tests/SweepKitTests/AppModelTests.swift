@@ -296,12 +296,27 @@ struct AppModelTests {
          categorized("사본.zip", .duplicate)]
     }
 
+    /// 지우지 않는 테스트용 기록 저장소. 한 번도 쓰지 않으므로 디스크에 남는 것이 없다.
+    /// 지우는 테스트는 `isolatedHistory()`를 따로 만들어 정리까지 한다.
+    private static let unwrittenHistory = CleanupHistory(
+        defaults: UserDefaults(suiteName: "sweep-test-appmodel-unwritten")!)
+
+    /// 격리된 기록 저장소와 그 정리 클로저. 실제 `.standard`에 쓰지 않는다.
+    private func isolatedHistory() throws -> (CleanupHistory, () -> Void) {
+        let suite = "sweep-test-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        return (CleanupHistory(defaults: defaults), { defaults.removePersistentDomain(forName: suite) })
+    }
+
     /// 지정한 기능만 결과를 내고 나머지는 빈 스캔인 앱.
-    private func app(scanning feature: Feature, finds found: [CleanupItem]) -> AppModel {
+    private func app(scanning feature: Feature, finds found: [CleanupItem],
+                     history: CleanupHistory = AppModelTests.unwrittenHistory,
+                     removeOne: @escaping @Sendable (CleanupItem) -> RemovalOutcome
+                        = { RemovalOutcome(item: $0, failureReason: nil) }) -> AppModel {
         AppModel(makeModel: { f in
             ScanModel(scan: f == feature ? self.finishing(found) : self.finishing([]),
-                      removeOne: { RemovalOutcome(item: $0, failureReason: nil) })
-        })
+                      removeOne: removeOne)
+        }, history: history)
     }
 
     /// 끝나지 않는 스캔 — 그 탭을 `.scanning`에 붙잡아 둔다.
@@ -388,7 +403,9 @@ struct AppModelTests {
     // TC-6
     @Test("기능 탭에서 지우면 스마트 스캔 목록에서도 빠진다")
     func removalInFeatureTabPropagatesToSmartScan() async throws {
-        let app = app(scanning: .smartScan, finds: mixed)
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let app = app(scanning: .smartScan, finds: mixed, history: history)
         await app.model(for: .smartScan).scan()
 
         let junk = app.model(for: .junk)
@@ -405,7 +422,9 @@ struct AppModelTests {
     // TC-7
     @Test("스마트 스캔에서 지우면 기능 탭 목록에서도 빠진다")
     func removalInSmartScanPropagatesToFeatureTabs() async throws {
-        let app = app(scanning: .smartScan, finds: mixed)
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let app = app(scanning: .smartScan, finds: mixed, history: history)
         let smart = app.model(for: .smartScan)
         await smart.scan()
 
@@ -415,6 +434,60 @@ struct AppModelTests {
         await smart.removeSelected()
 
         #expect(!junk.items.contains { $0.url == target.url })
+    }
+
+    // MARK: - 정리 기록 (pm #1)
+
+    @Test("기능 탭에서 지우면 앱이 기록을 남기고 요약이 갱신된다")
+    func removalIsRecordedInHistory() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let app = app(scanning: .smartScan, finds: mixed, history: history)
+        await app.model(for: .smartScan).scan()
+        #expect(app.cleanupSummary == .empty)
+
+        let junk = app.model(for: .junk)
+        let target = try #require(junk.items.first, "정크 탭이 비어 배분이 끊겼다")
+        junk.selection = [target.url]
+        await junk.removeSelected()
+
+        // 어느 기능 모델에서 지웠든 한 곳에 쌓이고, 화면이 보는 관찰 값이 따라온다
+        #expect(app.cleanupSummary.totalReclaimedBytes == 1_000)
+        #expect(app.cleanupSummary.lastCleanup != nil)
+        #expect(history.records.count == 1)
+    }
+
+    @Test("기록이 있는 저장소로 만들면 요약이 복원돼 있다")
+    func summaryIsRestoredOnLaunch() throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let earlier = RemovalReport(outcomes: [
+            RemovalOutcome(item: categorized("예전.bin", .devCache), failureReason: nil),
+        ])
+        history.record(earlier, at: Date(timeIntervalSince1970: 1_000))
+
+        // 앱을 다시 켠 상황
+        let app = app(scanning: .smartScan, finds: mixed, history: history)
+
+        #expect(app.cleanupSummary == history.summary)
+        #expect(app.cleanupSummary.totalReclaimedBytes == 1_000)
+    }
+
+    @Test("전부 실패한 회차는 요약을 바꾸지 않는다")
+    func failedRoundLeavesSummaryEmpty() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let app = app(scanning: .smartScan, finds: mixed, history: history,
+                      removeOne: { RemovalOutcome(item: $0, failureReason: "보호된 경로입니다") })
+        await app.model(for: .smartScan).scan()
+
+        let junk = app.model(for: .junk)
+        let target = try #require(junk.items.first, "정크 탭이 비어 배분이 끊겼다")
+        junk.selection = [target.url]
+        await junk.removeSelected()
+
+        #expect(app.cleanupSummary == .empty)
+        #expect(history.records.isEmpty)
     }
 
     // TC-8
