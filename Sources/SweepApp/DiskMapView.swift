@@ -411,7 +411,15 @@ struct DiskMapView: View {
             Retro95StatusChip(title: "보호됨", icon: .lock, level: .danger)
                 .help(veto.message)
         } else {
-            Retro95StatusChip(title: "정리 가능", icon: .check, level: .safe)
+            // 막는 조건이 없다는 뜻이지 지워도 된다는 뜻이 아니다. SAFE와 같은 녹색을 쓰면
+            // 여행 원본 영상까지 안전한 것으로 읽힌다 — 색 없는 회색으로 둔다.
+            Text("이동 가능")
+                .font(R95.ui(10, bold: true))
+                .foregroundStyle(R95.black)
+                .padding(.horizontal, 6)
+                .frame(height: 20)
+                .background(R95.gray)
+                .retroBevel(.field)
         }
     }
 
