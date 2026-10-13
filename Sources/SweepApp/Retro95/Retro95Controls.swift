@@ -194,7 +194,7 @@ struct SafetyChip: View {
     var body: some View {
         HStack(spacing: 2) {
             if level == .danger, let art = level.pixelArt {
-                PixelIcon(art: art, size: 12)
+                PixelIcon(art: art, size: 16)
             }
             Text(label).font(R95.ui(compact ? 9 : 11, bold: true))
         }
@@ -244,7 +244,7 @@ struct Retro95StatusChip: View {
 
     var body: some View {
         HStack(spacing: 2) {
-            PixelIcon(art: icon, size: 12)
+            PixelIcon(art: icon, size: 16)
             Text(title).font(R95.ui(10, bold: true))
         }
         .padding(.horizontal, 4)

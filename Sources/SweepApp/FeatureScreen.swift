@@ -215,7 +215,7 @@ struct FeatureScreen: View {
 
     private func sectionHeader(_ group: ScanGroup) -> some View {
         HStack(spacing: 0) {
-            PixelIcon(art: model.isCollapsed(group) ? .triangleRight : .triangleDown, size: 12)
+            PixelIcon(art: model.isCollapsed(group) ? .triangleRight : .triangleDown, size: 16)
                 .frame(width: ItemTableColumns.icon)
 
             // 부분 선택을 네이티브 Toggle 없이 표현해 긴 목록의 생성 비용을 줄인다.

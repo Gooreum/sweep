@@ -9,6 +9,7 @@ struct PixelArt {
 
 struct PixelIcon: View {
     let art: PixelArt
+    /// 그림 칸 수의 정수배여야 한다. 아니면 안티앨리어싱 없이 칸이 들쭉날쭉해진다.
     var size: CGFloat = 16
 
     var body: some View {
