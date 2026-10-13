@@ -23,7 +23,9 @@ struct Retro95ButtonStyle: ButtonStyle {
                 .foregroundStyle(isEnabled ? R95.black : R95.shadow)
                 .background(alignment: .topLeading) {
                     if !isEnabled {
+                        // 글꼴을 같이 줘야 한다. 빠지면 시스템 글꼴로 그려져 음각 그림자가 어긋나 겹친다.
                         configuration.label
+                            .font(R95.ui(12, bold: isDefault))
                             .foregroundStyle(R95.white)
                             .offset(x: 1, y: 1)
                             .accessibilityHidden(true)

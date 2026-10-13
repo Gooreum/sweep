@@ -76,9 +76,6 @@ struct SmartScanView: View {
                 }
 
                 scopeCard
-
-                Button("전체 검색") { Task { await model.scan() } }
-                    .buttonStyle(Retro95ButtonStyle(isDefault: true))
             }
             .frame(maxWidth: 640, alignment: .leading)
             .padding(10)
@@ -339,8 +336,6 @@ struct SmartScanView: View {
                     safeBytes: model.items.filter(\.isSelectedByDefault).totalSize) {
                     Text(nudge).font(R95.ui()).foregroundStyle(R95.navy)
                 }
-                Button("다시 검색") { Task { await model.scan() } }
-                    .buttonStyle(Retro95ButtonStyle())
             }
             .frame(maxWidth: 640, alignment: .leading)
             .padding(10)
