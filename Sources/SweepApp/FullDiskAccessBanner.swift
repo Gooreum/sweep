@@ -17,10 +17,7 @@ struct FullDiskAccessBanner: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: "lock.open")
-                .font(.system(size: Theme.Icon.small))
-                .foregroundStyle(SafetyLevel.caution.tint)
-                .frame(width: Theme.Icon.medium)
+            PixelIcon(art: .warning, size: 24)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("전체 디스크 접근이 꺼져 있습니다")
@@ -35,7 +32,10 @@ struct FullDiskAccessBanner: View {
 
             Button("시스템 설정 열기") { PrivacySettings.openFullDiskAccess() }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 8)
+        .background(R95.gray)
+        .retroRaised()
+        .buttonStyle(Retro95ButtonStyle())
     }
 }

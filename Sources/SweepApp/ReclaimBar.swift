@@ -19,13 +19,14 @@ struct ReclaimBar: View {
         GeometryReader { geo in
             HStack(spacing: 2) {
                 ForEach(rows) { row in
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Theme.tint(row.feature))
+                    Rectangle()
+                        .fill(R95.reclaimColor(row.feature))
                         .frame(width: width(for: row, in: geo.size.width))
                 }
             }
         }
-        .frame(height: 8)
+        .frame(height: 16)
+        .border(R95.black, width: 1)
     }
 
     private func width(for row: MenuBarSummary.Row, in total: CGFloat) -> CGFloat {
@@ -33,8 +34,10 @@ struct ReclaimBar: View {
         guard sum > 0 else { return 0 }
         let gaps = CGFloat(max(0, rows.count - 1)) * 2
         let usable = max(0, total - gaps)
+        // 하한을 적용한 뒤 정규화해 작은 조각 때문에 전체 폭을 넘지 않게 한다.
+        let weights = rows.map { max(minimumFraction, Double($0.bytes) / Double(sum)) }
         let fraction = max(minimumFraction, Double(row.bytes) / Double(sum))
-        return usable * fraction
+        return usable * fraction / weights.reduce(0, +)
     }
 }
 
@@ -43,18 +46,38 @@ struct ReclaimLegend: View {
     let rows: [MenuBarSummary.Row]
 
     var body: some View {
-        HStack(spacing: 16) {
+        ViewThatFits(in: .horizontal) {
+            legend
+            legendRows
+        }
+    }
+
+    private var legend: some View {
+        HStack(spacing: 12) {
             ForEach(rows) { row in
                 HStack(spacing: 6) {
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Theme.tint(row.feature))
-                        .frame(width: 7, height: 7)
+                    Rectangle()
+                        .fill(R95.reclaimColor(row.feature))
+                        .frame(width: 8, height: 8)
+                        .border(R95.black, width: 1)
                     Text("\(row.feature.displayName) \(row.formattedSize)")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.textSecondary)
                 }
             }
             Spacer(minLength: 0)
+        }
+    }
+    private var legendRows: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(rows) { row in
+                HStack(spacing: 6) {
+                    Rectangle().fill(R95.reclaimColor(row.feature))
+                        .frame(width: 8, height: 8).border(R95.black, width: 1)
+                    Text("\(row.feature.displayName) \(row.formattedSize)")
+                        .font(R95.ui(11)).foregroundStyle(R95.deep)
+                }
+            }
         }
     }
 }

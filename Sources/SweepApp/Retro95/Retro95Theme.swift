@@ -1,4 +1,5 @@
 import SwiftUI
+import SweepKit
 
 /// 고정 팔레트를 공유해 모드와 화면에 따라 레트로 색이 달라지지 않게 한다.
 enum R95 {
@@ -66,4 +67,32 @@ enum ItemTableColumns {
         .init(title: "크기", width: size, alignment: .trailing),
         .init(title: "안전도", width: safety, alignment: .center)
     ]
+}
+
+/// 스마트 요약의 헤더와 행이 같은 열 폭과 팔레트를 쓴다.
+enum SmartSummaryColumns {
+    static let count: CGFloat = 64
+    static let size: CGFloat = 96
+    static let bar: CGFloat = 120
+    static let headers: [Retro95TableHeader.Column] = [
+        .init(title: "기능"),
+        .init(title: "항목", width: count, alignment: .trailing),
+        .init(title: "크기", width: size, alignment: .trailing),
+        .init(title: "비율 막대", width: bar)
+    ]
+}
+
+extension R95 {
+    static let olive = Color(hex: 0x808000)
+    static let purple = Color(hex: 0x800080)
+
+    static func reclaimColor(_ feature: Feature) -> Color {
+        switch feature {
+        case .smartScan: navy
+        case .junk: teal
+        case .largeFile: olive
+        case .duplicate: purple
+        case .diskMap: navy
+        }
+    }
 }
