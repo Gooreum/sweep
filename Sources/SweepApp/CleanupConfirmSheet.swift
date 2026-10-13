@@ -43,17 +43,17 @@ struct CleanupConfirmSheet: View {
     /// 위험한 것이 섞였을 때만 그것을 먼저 말한다. 없으면 군더더기가 된다.
     private var bodyText: String {
         riskyCount > 0
-            ? "이 중 \(riskyCount)개는 되돌릴 수 없습니다 — 다시 만들려면 처음부터 받아야 합니다. "
-                + "나머지는 휴지통에서 30일간 복구할 수 있습니다."
-            : "휴지통에서 30일간 복구할 수 있습니다."
+            ? "이 중 \(riskyCount)개는 다시 만들 수 없습니다 — 휴지통을 비우면 처음부터 받아야 합니다. "
+                + "휴지통을 비우기 전까지는 모두 복원할 수 있습니다."
+            : "휴지통을 비우기 전까지 복원할 수 있습니다."
     }
 
     private var summaryBlock: some View {
         VStack(spacing: 0) {
             row("옮길 항목", "\(model.selectedItems.count)개", tint: R95.black)
-            row("확보 용량", model.formattedSelectedSize, tint: R95.navy)
+            row("옮길 용량", model.formattedSelectedSize, tint: R95.navy)
             if riskyCount > 0 {
-                row("되돌릴 수 없음", "\(riskyCount)개", tint: R95.danger, isRisky: true)
+                row("다시 만들 수 없음", "\(riskyCount)개", tint: R95.danger, isRisky: true)
             }
         }
         .padding(.horizontal, 14)

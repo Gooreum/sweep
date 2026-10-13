@@ -14,7 +14,7 @@ struct SelectionDock: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("선택: \(model.selectedItems.count)개 · 전체 \(model.items.count)개 중")
                     .font(R95.ui(12))
-                Text("전체 크기: " + model.formattedSelectedSize)
+                Text("선택 크기: " + model.formattedSelectedSize)
                     .font(R95.ui(20, bold: true))
                     .monospacedDigit()
                     .lineLimit(1)
@@ -27,7 +27,8 @@ struct SelectionDock: View {
                     }
                 }
                 // 되돌릴 수 있다는 것을 버튼 앞에 말한다. 누른 뒤에 알려주면 늦다.
-                Text("휴지통으로 옮기며 30일간 되돌릴 수 있습니다.")
+                // 휴지통을 언제 비우는지는 사용자 설정에 달려 있다. 기간을 약속하지 않는다.
+                Text("휴지통을 비우기 전까지 복원할 수 있습니다.")
                     .font(R95.ui(11))
                     .foregroundStyle(R95.deep)
             }
