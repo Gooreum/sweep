@@ -317,7 +317,7 @@ struct DiskMapView: View {
         let isFocused = focusedNode == node.id
         return HStack(spacing: 0) {
             HStack(spacing: 6) {
-                PixelIcon(art: directoryFlags[node.url] == true ? .folder : .documents, size: 16)
+                PixelIcon(art: isFolder(node) ? .folder : .documents, size: 16)
                 Text(node.name)
                     .font(R95.ui(12, bold: true))
                     .lineLimit(1)
@@ -383,6 +383,12 @@ struct DiskMapView: View {
                 .disabled(veto != nil)
         }
         .help(node.url.path)
+    }
+
+    /// 하위 항목이 있거나 못 읽는 것은 트리가 이미 폴더로 알고 있다.
+    /// 디스크를 다시 묻는 것은 빈 폴더처럼 트리만으로 모를 때뿐이다.
+    private func isFolder(_ node: DiskUsageNode) -> Bool {
+        !node.children.isEmpty || !node.isReadable || directoryFlags[node.url] == true
     }
 
     /// 못 읽는 상태를 먼저 표시해 보호 여부만 보고 정리 가능으로 오해하지 않게 한다.
