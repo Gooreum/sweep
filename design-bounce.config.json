@@ -103,6 +103,26 @@
       "deeplink": "--stage failures-sheet",
       "route": "Sources/SweepApp/RemovalFailuresSheet.swift",
       "settleMs": 1500
+    },
+    "cleaned-trash": {
+      "deeplink": "--stage cleaned-trash",
+      "route": "Sources/SweepApp/FeatureScreen.swift",
+      "settleMs": 1500
+    },
+    "restored": {
+      "deeplink": "--stage restored",
+      "route": "Sources/SweepApp/FeatureScreen.swift",
+      "settleMs": 1500
+    },
+    "restored-failed": {
+      "deeplink": "--stage restored-failed",
+      "route": "Sources/SweepApp/FeatureScreen.swift",
+      "settleMs": 1500
+    },
+    "restore-failures-sheet": {
+      "deeplink": "--stage restore-failures-sheet",
+      "route": "Sources/SweepApp/RemovalFailuresSheet.swift",
+      "settleMs": 1500
     }
   }
 }
