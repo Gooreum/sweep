@@ -26,9 +26,12 @@ struct Retro95Dialog<Content: View, Buttons: View>: View {
                         .foregroundStyle(R95.black)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                HStack(spacing: 6) {
-                    Spacer(minLength: 0)
-                    buttons
+                // 버튼이 없는 대화상자에 빈 줄을 남기면 아래 여백만 12pt 넘게 커진다.
+                if Buttons.self != EmptyView.self {
+                    HStack(spacing: 6) {
+                        Spacer(minLength: 0)
+                        buttons
+                    }
                 }
             }
             .padding(12)
@@ -36,5 +39,12 @@ struct Retro95Dialog<Content: View, Buttons: View>: View {
         .padding(3)
         .background(R95.gray)
         .retroRaised()
+    }
+}
+
+extension Retro95Dialog where Buttons == EmptyView {
+    /// 안내만 하고 닫을 일이 없는 대화상자.
+    init(title: String, icon: PixelArt, @ViewBuilder content: () -> Content) {
+        self.init(title: title, icon: icon, content: content, buttons: { EmptyView() })
     }
 }

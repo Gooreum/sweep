@@ -26,7 +26,7 @@ struct FolderAccessView: View {
                 .foregroundStyle(R95.deep)
                 .multilineTextAlignment(.leading)
 
-                Retro95GroupBox(title: "정리할 폴더 열기") {
+                Retro95GroupBox(title: "허락할 폴더") {
                     VStack(spacing: 0) {
                         ForEach(FolderAccess.grantables) { grantable in
                             row(for: grantable)
@@ -36,7 +36,7 @@ struct FolderAccessView: View {
                     .retroSunken()
                 }
             }
-        } buttons: {}
+        }
         .frame(maxWidth: R95.dialogWidth)
         .alert("다른 폴더를 골랐습니다",
                isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) {

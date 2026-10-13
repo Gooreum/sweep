@@ -430,7 +430,7 @@ struct DiskMapView: View {
     private func placeholder(_ title: String, detail: String) -> some View {
         Retro95Dialog(title: title, icon: .pieChart) {
             Text(detail)
-        } buttons: {}
+        }
         .frame(maxWidth: R95.dialogWidth)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
