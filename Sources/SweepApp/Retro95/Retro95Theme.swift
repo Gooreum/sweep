@@ -26,7 +26,8 @@ enum R95 {
 
     static let dialogWidth: CGFloat = 460
 
-    static let sidebarWidth: CGFloat = 172
+    /// 184. 172에서는 "스마트 스캔" 옆에 "52.88 GB" 배지가 붙으면 이름이 잘렸다.
+    static let sidebarWidth: CGFloat = 184
     static let sidebarRowHeight: CGFloat = 36
     static let tableRowHeight: CGFloat = 40
     static let tableHeaderHeight: CGFloat = 24
