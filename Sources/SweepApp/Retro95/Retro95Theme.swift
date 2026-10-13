@@ -96,3 +96,22 @@ extension R95 {
         }
     }
 }
+
+/// 작은 창에서도 동작 열을 유지하도록 비율 막대 열이 남은 폭을 채운다.
+enum DiskMapColumns {
+    static let name: CGFloat = 180
+    static let size: CGFloat = 90
+    static let location: CGFloat = 168
+    static let status: CGFloat = 92
+    static let open: CGFloat = 60
+    static let iconButton: CGFloat = 40
+    static let disclosure: CGFloat = 16
+    static let actionSpacing: CGFloat = 4
+    static let actions = status + open + iconButton * 3 + disclosure + actionSpacing * 5
+    static let headers: [Retro95TableHeader.Column] = [
+        .init(title: "이름", width: name),
+        .init(title: "크기", width: size, alignment: .trailing),
+        .init(title: "비율 막대"),
+        .init(title: "상태/동작", width: actions)
+    ]
+}

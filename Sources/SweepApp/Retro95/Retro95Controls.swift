@@ -235,3 +235,24 @@ struct Retro95Separator: View {
         }.accessibilityHidden(true)
     }
 }
+
+/// 한국어 상태를 유지하면서 안전도 칩과 같은 팔레트로 의미를 구분한다.
+struct Retro95StatusChip: View {
+    let title: String
+    let icon: PixelArt
+    let level: SafetyLevel
+
+    var body: some View {
+        HStack(spacing: 2) {
+            PixelIcon(art: icon, size: 12)
+            Text(title).font(R95.ui(10, bold: true))
+        }
+        .padding(.horizontal, 4)
+        .frame(height: 20)
+        .foregroundStyle(level == .caution ? R95.black : R95.white)
+        .background(level == .safe ? R95.safe : level == .caution ? R95.review : R95.danger)
+        .retroBevel(.field)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+    }
+}

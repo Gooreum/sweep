@@ -22,12 +22,15 @@ struct MenuBarPanel: View {
 
         return VStack(alignment: .leading, spacing: 0) {
             diskSection
-            Divider()
+            Retro95Separator()
             scanSection(summary)
-            Divider()
+            Retro95Separator()
             actions(isScanning: summary.isScanning)
         }
         .frame(width: Theme.panelWidth)
+        .foregroundStyle(R95.black)
+        .background(R95.gray)
+        .retroRaised()
     }
 
     /// 디스크 사용량. 스캔하지 않아도 늘 보여줄 수 있는 유일한 값이다.
@@ -46,17 +49,7 @@ struct MenuBarPanel: View {
                         .monospacedDigit()
                 }
 
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        // Capsule은 높이 8에서 양 끝이 과하게 둥글어 막대가 알약이 된다.
-                        // 창 안의 다른 막대(디스크 맵·개요)와 같은 radius를 쓴다.
-                        RoundedRectangle(cornerRadius: 4).fill(Theme.border)
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Theme.accent)
-                            .frame(width: geometry.size.width * usage.usedFraction)
-                    }
-                }
-                .frame(height: 8)
+                Retro95ProgressBar(fraction: usage.usedFraction)
 
                 Text("사용 가능: \(usage.formattedAvailable)  전체: \(usage.formattedTotal)")
                     .font(Theme.caption)
@@ -77,6 +70,7 @@ struct MenuBarPanel: View {
                         .font(Theme.bodyText.monospacedDigit())
                         .foregroundStyle(Theme.accentText)
                 }
+                Retro95ProgressBar(fraction: Double(percent) / 100)
             } else if let reclaimable = summary.reclaimable {
                 HStack {
                     Text("회수 가능").font(Theme.bodyText.weight(.medium))

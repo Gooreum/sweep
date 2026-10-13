@@ -42,6 +42,45 @@ extension PixelArt {
         "R": Color(hex: 0xFF0000), "G": R95.safe, "e": Color(hex: 0xE0D8B0),
     ]
 
+    static let arrowUp = PixelArt(rows: [
+        "................",
+        ".......kk.......",
+        "......knnk......",
+        ".....knnnnk.....",
+        "....knnnnnnk....",
+        "...knnnnnnnnk...",
+        "..kkkkknnkkkkk..",
+        "......knnk......",
+        "......knnk......",
+        "......knnk......",
+        "......knnk......",
+        "......knnk......",
+        "......kkkk......",
+        "................",
+        "................",
+        "................",
+    ], palette: retroPalette)
+
+    /// 두 화살표와 가운데 여백으로 작은 크기에서도 새로고침을 알아보게 한다.
+    static let refresh = PixelArt(rows: [
+        "................",
+        ".....nnnn.......",
+        "...nnnnnnnn.....",
+        "..nnn....nnn.n..",
+        "..nn......nnnn..",
+        ".nn.......nnnn..",
+        ".nn......nnnnn..",
+        ".nn.............",
+        ".............nn.",
+        "..nnnnn......nn.",
+        "..nnnn.......nn.",
+        "..nnnn......nn..",
+        "..n.nnn....nnn..",
+        ".....nnnnnnnn...",
+        ".......nnnn.....",
+        "................",
+    ], palette: retroPalette)
+
     static let computer = PixelArt(rows: [
         "..kkkkkkkkkkkk..",
         "..kweeeeeeeeek..",
