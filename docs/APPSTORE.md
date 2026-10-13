@@ -163,6 +163,57 @@ Xcode Organizer가 열린다 → **Distribute App** → **App Store Connect** �
 업로드 후 App Store Connect에서 빌드가 "처리 중"을 지나면 심사에 제출할 수 있다.
 수출 규정 질문은 `Info.plist`의 `ITSAppUsesNonExemptEncryption=false`로 이미 답해 뒀다.
 
+### 영어(미국) 등록 정보
+
+해외 스토어용. 앱 화면 용어(`Resources/Localizable.xcstrings`)와 같은 이름을 쓴다 —
+스크린샷과 설명의 기능 이름이 다르면 심사에서 "설명과 앱이 다르다"는 지적을 받는다.
+App Store 판은 샌드박스라 **폴더를 허락받아야 찾는다**. 그 전제를 설명에서 숨기지 않는다.
+키워드에는 이름에 이미 있는 낱말(developer·disk·cleaner)을 다시 넣지 않는다 — 이름도 검색에 잡혀서 칸만 버린다.
+
+| 항목 | 제한 | 값 |
+|---|---:|---|
+| 이름 | 30 | `Sweep — Developer Disk Cleaner` |
+| 부제 | 30 | `Clear Xcode & dev caches` |
+| 키워드 | 100 | `xcode,deriveddata,simulator,cache,storage,space,npm,expo,cocoapods,duplicate,junk,free up,ssd` |
+
+**프로모션 문구** (170자)
+
+```
+Reclaim gigabytes from Xcode DerivedData, simulators and developer caches. Every item is labeled by safety and goes to the Trash first, so you can undo.
+```
+
+**설명**
+
+```
+Sweep finds the space that development quietly eats up on your Mac — and shows you exactly what is safe to remove.
+
+WHAT IT FINDS
+• Junk Files — Xcode DerivedData, simulator caches, device support files, and developer tool caches such as npm, Expo, Swift Package Manager, CocoaPods, Homebrew, Yarn and pnpm
+• Large Files — unusually large files in the folders you allow
+• Duplicates — files with identical content; the original is always kept
+• Disk Map — see what takes up space, sorted by size
+• Smart Scan — check everything at once and see how much you can reclaim
+
+SAFE BY DESIGN
+• Every item is labeled Safe, Caution or Danger, with a short reason
+• Items that can't be recreated, like App Store submission archives, are locked
+• Sweep only works inside a fixed set of cleanup locations and never touches anything outside them
+• Everything goes to the Trash first. Undo puts the last cleanup back where it was
+
+HOW ACCESS WORKS
+The App Store version runs in the macOS sandbox. Sweep can only look inside folders you allow once with the Open dialog — for example ~/Library for Xcode and app caches, or ~/.npm for npm. You can revoke access at any time.
+
+Space is freed when you empty the Trash. Sweep tells you how much that will be.
+```
+
+**이번 버전의 새로운 기능**
+
+```
+• English localization
+• Undo your last cleanup straight from the result screen
+• Clearer guidance on emptying the Trash to actually free up space
+```
+
 ---
 
 ## 확인
