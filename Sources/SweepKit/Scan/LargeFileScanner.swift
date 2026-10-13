@@ -40,9 +40,9 @@ public struct LargeFileScanner: CleanupScanner {
     static func detail(modified: Date, now: Date = Date()) -> String {
         let days = Int(now.timeIntervalSince(modified) / 86_400)
         switch days {
-        case ..<1: return "오늘 받았습니다"
-        case ..<30: return "\(days)일 전에 받았습니다"
-        default: return "\(days / 30)개월 전에 받았습니다"
+        case ..<1: return String(localized: "오늘 받았습니다")
+        case ..<30: return String(localized: "\(days)일 전에 받았습니다")
+        default: return String(localized: "\(days / 30)개월 전에 받았습니다")
         }
     }
 

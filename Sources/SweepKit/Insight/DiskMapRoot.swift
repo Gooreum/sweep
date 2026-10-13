@@ -16,6 +16,16 @@ public struct DiskMapRoot: Identifiable, Sendable, Hashable {
         case home = "홈 안"
         case apps = "응용 프로그램"
         case cleanup = "정리 대상"
+
+        /// 화면에 보이는 이름. rawValue는 리터럴이라 현지화할 수 없다.
+        public var title: String {
+            switch self {
+            case .whole: String(localized: "전체")
+            case .home: String(localized: "홈 안")
+            case .apps: String(localized: "응용 프로그램")
+            case .cleanup: String(localized: "정리 대상")
+            }
+        }
     }
 
     public let url: URL
@@ -89,14 +99,14 @@ extension DiskMapRoot {
             return result
         }
 
-        add(home, "홈", .whole)
-        add(URL(filePath: "/"), "이 Mac", .whole)
+        add(home, String(localized: "홈"), .whole)
+        add(URL(filePath: "/"), String(localized: "이 Mac"), .whole)
 
         for name in homeFolders {
             add(home.appending(path: name), "~/\(name)", .home)
         }
 
-        add(URL(filePath: "/Applications"), "응용 프로그램", .apps)
+        add(URL(filePath: "/Applications"), String(localized: "응용 프로그램"), .apps)
         // 이 사용자만 쓰는 앱이 여기 놓인다. 관문은 이 아래의 `.app`도 여는데
         // 시작점이 없으면 화면에서 도달할 길이 없었다. 없으면 `add`가 알아서 거른다.
         add(home.appending(path: "Applications"), "~/Applications", .apps)
@@ -126,7 +136,7 @@ extension DiskMapRoot {
     private static func cleanupLabel(for url: URL, home: URL) -> String {
         let path = url.path
         if path.hasPrefix("/var/folders/") || path.hasPrefix("/private/var/folders/") {
-            return "앱 임시 폴더"
+            return String(localized: "앱 임시 폴더")
         }
         return path.hasPrefix(home.path)
             ? "~" + path.dropFirst(home.path.count)

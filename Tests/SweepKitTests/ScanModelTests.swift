@@ -408,6 +408,13 @@ struct ScanModelTests {
         #expect(presets.allSatisfy { !$0.rawValue.isEmpty })
     }
 
+    @Test("프리셋 표시명은 현지화 키를 거치고 번역이 없으면 rawValue와 같다")
+    func presetTitlesMatchRawValuesWithoutTranslation() {
+        // 테스트 번들에는 카탈로그가 없다 — 키(한국어) 그대로 나와야 한다
+        #expect(ScanModel.SelectionPreset.allCases.map(\.title)
+                == ScanModel.SelectionPreset.allCases.map(\.rawValue))
+    }
+
     // TC-4 · TC-5 (Phase 2 Step 2)
     @Test("삭제 요약이 성공만일 때와 실패가 섞일 때 다르게 구성된다")
     func removalSummaryDistinguishesFailures() {
