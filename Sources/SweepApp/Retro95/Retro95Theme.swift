@@ -40,3 +40,28 @@ extension Color {
                   blue: Double(hex & 0xFF) / 255, opacity: 1)
     }
 }
+
+/// 행과 헤더가 같은 폭을 사용해야 크기·안전도를 세로로 비교할 수 있다.
+enum ItemTableColumns {
+    static let check: CGFloat = 28
+    static let icon: CGFloat = 24
+    static let detail: CGFloat = 200
+    static let dates: CGFloat = 150
+    static let size: CGFloat = 80
+    static let safety: CGFloat = 80
+    static let padding: CGFloat = 6
+    static let sectionHeight: CGFloat = 26
+    static let actionHeight: CGFloat = 76
+    static let actionButtonWidth: CGFloat = 220
+    static let actionButtonHeight: CGFloat = 44
+
+    static let headers: [Retro95TableHeader.Column] = [
+        .init(title: "", width: check),
+        .init(title: "", width: icon),
+        .init(title: "이름"),
+        .init(title: "설명", width: detail),
+        .init(title: "날짜", width: dates),
+        .init(title: "크기", width: size, alignment: .trailing),
+        .init(title: "안전도", width: safety, alignment: .center)
+    ]
+}

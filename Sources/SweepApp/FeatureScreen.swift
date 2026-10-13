@@ -16,16 +16,14 @@ struct FeatureScreen: View {
     @State private var showsFailures = false
 
     var body: some View {
-        HStack(spacing: 0) {
+        VStack(spacing: 8) {
             stage
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // 결과 목록일 때만 독이 붙는다. 시작·검색 중에는 고를 것이 없고,
             // 완료 화면에서는 같은 항목을 다시 정리할 수 있게 되므로 내린다.
             if showsDock {
-                Divider()
                 SelectionDock(model: model) { showsConfirm = true }
-                    .sidebarMaterial()
             }
         }
         .background(R95.gray)
@@ -181,92 +179,109 @@ struct FeatureScreen: View {
 
     private var resultList: some View {
         VStack(spacing: 0) {
-            // 이 화면이 무엇을 보여주는지 한 문장. 목록만 던지면
-            // 무엇을 기준으로 고르라는 것인지가 없다.
-            Text(feature.reviewHint)
-                .font(Theme.bodyText)
-                .foregroundStyle(Theme.textSecondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 14)
+            Retro95GroupBox(title: "정리 항목") {
+                VStack(spacing: 6) {
+                    Text(feature.reviewHint)
+                        .font(R95.ui(12))
+                        .foregroundStyle(R95.deep)
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-            Divider().overlay(Theme.border)
-
-            List {
-                ForEach(groups) { group in
-                    Section {
-                        // 접었으면 행을 그리지 않는다. 높이 0으로 숨기면
-                        // 스크롤 길이가 그대로라 접은 보람이 없다.
-                        //
-                        // **`if`로 감싸지 않는다.** 조건부 뷰는 목록의 구조 자체를
-                        // 흔들어 SwiftUI가 view list를 통째로 다시 만든다 —
-                        // 비어 있는 배열을 주면 구조는 그대로고 내용만 없다.
-                        //
-                        // 수식자도 행마다 붙이지 않는다. 63줄에 각각 붙이면
-                        // `ModifiedContent` 껍질이 63개 생기고, 갱신마다 그것을
-                        // 전부 다시 훑는다 — 실측에서 `ModifiedElements.makeElements`가
-                        // 메인 스레드 상위를 차지했다. `ForEach` 하나에 붙이면 한 겹이다.
-                        ForEach(model.visibleRows(of: group)) { item in
-                            ItemRow(item: item, isOn: binding(for: item))
+                    VStack(spacing: 0) {
+                        Retro95TableHeader(columns: ItemTableColumns.headers)
+                        List {
+                            ForEach(groups) { group in
+                                Section {
+                                    // 접었으면 행을 그리지 않는다. 높이 0으로 숨기면
+                                    // 스크롤 길이가 그대로라 접은 보람이 없다.
+                                    //
+                                    // **`if`로 감싸지 않는다.** 조건부 뷰는 목록의 구조 자체를
+                                    // 흔들어 SwiftUI가 view list를 통째로 다시 만든다 —
+                                    // 비어 있는 배열을 주면 구조는 그대로고 내용만 없다.
+                                    //
+                                    // 수식자도 행마다 붙이지 않는다. 63줄에 각각 붙이면
+                                    // `ModifiedContent` 껍질이 63개 생기고, 갱신마다 그것을
+                                    // 전부 다시 훑는다 — 실측에서 `ModifiedElements.makeElements`가
+                                    // 메인 스레드 상위를 차지했다. `ForEach` 하나에 붙이면 한 겹이다.
+                                    ForEach(model.visibleRows(of: group)) { item in
+                                        ItemRow(item: item, isOn: binding(for: item))
+                                    }
+                                    .listRowInsets(EdgeInsets())
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(R95.white)
+                                } header: {
+                                    sectionHeader(group)
+                                        .listRowInsets(EdgeInsets())
+                                }
+                            }
                         }
-                        .listRowInsets(EdgeInsets())
-                        .listRowSeparator(.hidden)
-                    } header: {
-                        sectionHeader(group)
+                        .listStyle(.plain)
+                        .scrollContentBackground(.hidden)
+                        .background(R95.white)
+                        .environment(\.defaultMinListRowHeight, R95.tableRowHeight)
+                        // 아래에 섹션이 더 있다는 유일한 단서
+                        .scrollIndicators(.visible)
                     }
+                    .background(R95.white)
+                    .retroSunken()
                 }
             }
-            .listStyle(.plain)
-            // 아래에 섹션이 더 있다는 유일한 단서
-            .scrollIndicators(.visible)
         }
     }
 
     private func sectionHeader(_ group: ScanGroup) -> some View {
-        HStack(spacing: 8) {
-            // 접힘 표시는 caret 하나로 충분하다. 헤더 어디를 눌러도 접힌다.
-            Image(systemName: model.isCollapsed(group) ? "chevron.right" : "chevron.down")
-                .font(.system(size: 9, weight: .semibold))
-                .foregroundStyle(Theme.textTertiary)
-                .frame(width: 10)
+        HStack(spacing: 0) {
+            PixelIcon(art: model.isCollapsed(group) ? .triangleRight : .triangleDown, size: 12)
+                .frame(width: ItemTableColumns.icon)
 
-            // SwiftUI Toggle은 부분 선택을 표현하지 못해 버튼으로 그린다
+            // 부분 선택을 네이티브 Toggle 없이 표현해 긴 목록의 생성 비용을 줄인다.
             Button { model.toggleAll(in: group) } label: {
-                let state = model.selectionState(of: group)
-                Image(systemName: state.symbolName)
-                    .foregroundStyle(state.isEmphasized ? Theme.accentText : Theme.textSecondary)
+                Retro95Checkbox(state: checkState(of: group))
+                    .frame(width: ItemTableColumns.check, height: ItemTableColumns.sectionHeight)
             }
             .buttonStyle(.plain)
             .help("이 묶음 전체 선택 / 해제")
 
-            // 묶음 이름은 본문보다 작게. 헤더가 행보다 커 보이면 목록이 헤더에 눌린다.
             Text(group.displayName)
-                .font(Theme.caption.weight(.semibold))
-                .kerning(0.4)
-                .foregroundStyle(Theme.textSecondary)
-            Text("\(group.items.count)")
-                .font(Theme.captionMono)
-                .foregroundStyle(Theme.textTertiary)
+                .font(R95.ui(12, bold: true))
+                .padding(.trailing, 8)
+            Text("\(group.items.count)개")
+                .font(R95.ui(12))
+                .foregroundStyle(R95.deep)
 
             Spacer()
 
             Text(group.formattedTotalSize)
-                .font(Theme.captionMono)
-                .foregroundStyle(Theme.textTertiary)
+                .font(R95.mono(12))
+                .padding(.trailing, ItemTableColumns.padding)
         }
-        .padding(.horizontal, 24)
-        .frame(height: Theme.sectionHeaderHeight)
+        .foregroundStyle(R95.black)
+        .frame(height: ItemTableColumns.sectionHeight)
         .frame(maxWidth: .infinity)
-        .background(Theme.surfaceSunken)
+        .background(R95.gray)
+        .overlay(alignment: .bottom) {
+            Canvas { context, size in
+                var line = Path()
+                line.move(to: CGPoint(x: 0, y: 0.5))
+                line.addLine(to: CGPoint(x: size.width, y: 0.5))
+                context.stroke(line, with: .color(R95.shadow),
+                               style: StrokeStyle(lineWidth: 1, dash: [2, 2]))
+            }
+            .frame(height: 1)
+            .allowsHitTesting(false)
+        }
         .contentShape(Rectangle())
         .onTapGesture { model.toggleCollapsed(group) }
     }
 
-    // 하단 액션 바는 `SelectionDock`이 대신한다.
-    //
-    // 바는 가로로 길어서 "얼마를 골랐나"(요약)와 "무엇을 할 수 있나"(버튼)가
-    // 한 줄에 눌려 들어갔다. 세로 독은 그 둘을 위아래로 벌려 놓는다.
-    // `선택` 프리셋과 `다시 검색`은 툴바로 올라간다(핸드오프 1절).
+    /// 모델의 세 상태를 그림 체크박스에 그대로 옮겨 부분 선택을 잃지 않는다.
+    private func checkState(of group: ScanGroup) -> Retro95CheckState {
+        switch model.selectionState(of: group) {
+        case .none: .off
+        case .partial: .mixed
+        case .all: .on
+        }
+    }
 
     // MARK: - 거들기
 

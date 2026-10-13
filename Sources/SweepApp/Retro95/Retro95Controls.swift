@@ -184,6 +184,7 @@ struct Retro95TitleStrip: View {
 
 struct SafetyChip: View {
     let level: SafetyLevel
+    var compact = false
     private var label: String {
         switch level { case .safe: "SAFE"; case .caution: "REVIEW"; case .danger: "DANGER" }
     }
@@ -191,10 +192,17 @@ struct SafetyChip: View {
         switch level { case .safe: R95.safe; case .caution: R95.review; case .danger: R95.danger }
     }
     var body: some View {
-        Text(label).font(R95.ui(11, bold: true))
-            .foregroundStyle(level == .caution ? R95.black : R95.white)
-            .frame(width: 64, height: 20).background(fill).retroBevel(.field)
-            .accessibilityLabel(level.displayName)
+        HStack(spacing: 2) {
+            if level == .danger, let art = level.pixelArt {
+                PixelIcon(art: art, size: 12)
+            }
+            Text(label).font(R95.ui(compact ? 9 : 11, bold: true))
+        }
+        .foregroundStyle(level == .caution ? R95.black : R95.white)
+        .frame(width: compact ? (level == .danger ? 62 : 50) : (level == .danger ? 76 : 64), height: 20)
+        .background(fill).retroBevel(.field)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(level.displayName)
     }
 }
 

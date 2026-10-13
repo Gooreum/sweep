@@ -1,84 +1,68 @@
 import SwiftUI
 import SweepKit
 
-/// 검토 목록 우측에 붙는 선택 요약 패널.
-///
-/// 하단 액션 바를 대신한다. 바는 가로로 길어서 "얼마를 골랐나"와 "무엇을 고를 수 있나"가
-/// 한 줄에 눌려 들어갔다. 세로 패널은 그 둘을 위아래로 벌려 놓을 수 있다.
-///
-/// **완료 화면에서는 내린다** — 같은 항목을 다시 정리할 수 있게 되므로.
+/// 결과 아래에 선택량과 동작을 나란히 두어 확인 시트 전에 판단할 수 있게 한다.
 struct SelectionDock: View {
     @Bindable var model: ScanModel
 
-    /// 주 동작. 목록에서 바로 지우지 않고 확인 시트를 거친다.
+    /// 주 동작은 확인 시트를 열어 목록에서 바로 지우지 않게 한다.
     let onClean: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("선택")
-                .font(Theme.caption)
-                .foregroundStyle(Theme.textTertiary)
-
-            Text(model.formattedSelectedSize)
-                .font(.system(size: 30, weight: .medium).monospacedDigit())
-                .foregroundStyle(Theme.textPrimary)
-                .padding(.top, 6)
-
-            Text("\(model.selectedItems.count)개 · 전체 \(model.items.count)개 중")
-                .font(Theme.captionMono)
-                .foregroundStyle(Theme.textSecondary)
-                .padding(.top, 4)
-
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(SafetyLevel.allCases, id: \.self) { level in
-                    distributionRow(level)
+        HStack(spacing: 12) {
+            PixelIcon(art: .computerLarge, size: 48)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("선택: \(model.selectedItems.count)개 · 전체 \(model.items.count)개 중")
+                    .font(R95.ui(12))
+                Text("전체 크기: " + model.formattedSelectedSize)
+                    .font(R95.ui(20, bold: true))
+                    .monospacedDigit()
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 0)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    ForEach(SafetyLevel.allCases, id: \.self) { level in
+                        distributionRow(level)
+                    }
                 }
+                // 되돌릴 수 있다는 것을 버튼 앞에 말한다. 누른 뒤에 알려주면 늦다.
+                Text("휴지통으로 옮기며 30일간 되돌릴 수 있습니다.")
+                    .font(R95.ui(11))
+                    .foregroundStyle(R95.deep)
             }
-            .padding(.top, 24)
-
-            Spacer(minLength: 16)
-
-            // 되돌릴 수 있다는 것을 버튼 **앞에** 말한다. 누른 뒤에 알려주면 늦다.
-            Text("휴지통으로 옮기며 30일간 되돌릴 수 있습니다.")
-                .font(Theme.caption)
-                .foregroundStyle(Theme.textTertiary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.bottom, 10)
-
-            // 레이블에 폭을 준다. 버튼 바깥에 주면 스타일의 padding이 먼저 잡혀
-            // 내용 크기로 줄어든 뒤 오른쪽으로 치우친다 — 실측으로 그렇게 나왔다.
+            Spacer(minLength: 0)
+            // 스타일의 padding까지 포함한 버튼 높이가 일정하도록 레이블에 높이를 준다.
             Button { onClean() } label: {
-                Text(model.hasSelection
-                     ? "\(model.formattedSelectedSize) 정리" : "선택한 항목 없음")
-                    .frame(maxWidth: .infinity)
+                HStack(spacing: 8) {
+                    PixelIcon(art: .trash, size: 24)
+                    Text(model.hasSelection ? "선택 항목 정리" : "선택한 항목 없음")
+                        .font(R95.ui(14, bold: true))
+                }
+                .frame(minWidth: ItemTableColumns.actionButtonWidth - 26,
+                       minHeight: ItemTableColumns.actionButtonHeight - 10)
             }
-            .buttonStyle(PrimaryButtonStyle())
+            .buttonStyle(Retro95ButtonStyle(isDefault: true))
             .disabled(!model.hasSelection)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 22)
-        .frame(width: Theme.dockWidth, alignment: .leading)
+        .foregroundStyle(R95.black)
+        .padding(12)
+        .frame(maxWidth: .infinity)
+        .frame(minHeight: ItemTableColumns.actionHeight)
+        .background(R95.gray)
+        .retroRaised()
     }
 
-    /// 안전도별 개수. 무엇을 담았는지보다 **무엇이 남았는지**가 여기서 읽힌다.
+    /// 남은 항목의 안전도 분포를 보여 기본 미선택인 위험 항목도 놓치지 않게 한다.
     private func distributionRow(_ level: SafetyLevel) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: level.symbolName)
-                .font(.system(size: Theme.safetyIconSlot))
-                .foregroundStyle(level.tint)
-                .frame(width: Theme.safetyIconSlot + 4)
-
-            Text(level.dockLabel)
-                .font(Theme.caption)
-                .foregroundStyle(Theme.textSecondary)
-
-            Spacer(minLength: 8)
-
-            Text("\(model.items.filter { $0.safety == level }.count)개")
-                .font(Theme.captionMono)
-                .foregroundStyle(Theme.textSecondary)
+        let count = model.items.filter { $0.safety == level }.count
+        return HStack(spacing: 4) {
+            SafetyChip(level: level, compact: true)
+            Text("\(count)개")
+                .font(R95.mono(11))
         }
-        .frame(height: 22)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(level.dockLabel) \(count)개")
     }
 }
 
