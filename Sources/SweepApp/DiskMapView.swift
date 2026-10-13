@@ -37,12 +37,22 @@ struct DiskMapView: View {
         }
         .background(R95.gray)
         .foregroundStyle(R95.black)
-        .onChange(of: model.tiles, initial: true) { _, nodes in
-            directoryFlags = Dictionary(uniqueKeysWithValues: nodes.map { node in
-                let values = try? node.url.resourceValues(forKeys: [.isDirectoryKey])
-                return (node.url, values?.isDirectory ?? node.url.hasDirectoryPath)
-            })
+        // 키는 URL만 본다. 노드 전체를 비교하면 다시 그릴 때마다 하위 트리까지 훑는다.
+        .task(id: model.tiles.map(\.url)) {
+            // 하위 항목이 있거나 못 읽는 것은 isFolder가 트리만으로 안다.
+            // 나머지만 디스크에 묻고, 느린 볼륨에서 화면이 멈추지 않게 메인 스레드 밖에서 묻는다.
+            let leaves = model.tiles.filter { $0.children.isEmpty && $0.isReadable }.map(\.url)
+            let flags = await Task.detached(priority: .utility) {
+                Dictionary(uniqueKeysWithValues: leaves.map { url in
+                    let values = try? url.resourceValues(forKeys: [.isDirectoryKey])
+                    return (url, values?.isDirectory ?? url.hasDirectoryPath)
+                })
+            }.value
+            guard !Task.isCancelled else { return }
+            directoryFlags = flags
         }
+        // 보던 폴더가 바뀌면(내려가기·위로·이동·새로고침·루트 변경) 이전 행의 강조는 가리킬 곳이 없다.
+        .onChange(of: model.current?.url) { focusedNode = nil }
         .task {
             // 열자마자 뭔가 보여준다. 빈 화면에서 시작하면 뭘 해야 할지 모른다.
             //
