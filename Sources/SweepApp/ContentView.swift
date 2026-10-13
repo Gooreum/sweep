@@ -19,7 +19,7 @@ struct ContentView: View {
                 }
                 .background(R95.gray)
             }
-            Retro95StatusBar(segments: statusSegments)
+            AppStatusBar(app: app)
         }
         .background(R95.gray)
         // 전역 액션을 타이틀바로 올린다. 별도 툴바 줄을 만들면 사이드바 위에
@@ -51,25 +51,6 @@ struct ContentView: View {
         }
     }
 
-    /// 화면과 같은 모델을 읽어 상태바의 숫자와 단계가 결과 목록과 어긋나지 않게 한다.
-    private var statusSegments: [Retro95StatusBar.Segment] {
-        let model = app.currentModel
-        let status: String
-        switch model?.phase {
-        case .idle, .none: status = "준비됨"
-        case let .scanning(percent, _): status = "검색 중… \(percent)%"
-        case .results: status = "검색 완료"
-        case .removing: status = "정리하는 중…"
-        case .cleaned: status = "정리 완료"
-        }
-        return [
-            .init(text: status),
-            .init(text: model.map { "항목 \($0.items.count)개" } ?? "—", width: 170),
-            .init(text: model.flatMap { $0.items.isEmpty ? nil : "회수 가능 \($0.formattedTotalSize)" } ?? "—",
-                  width: 190),
-        ]
-    }
-
     @ViewBuilder
     private var detail: some View {
         switch app.selected {
@@ -93,5 +74,20 @@ struct ContentView: View {
                 // 스크롤 위치와 애니메이션 상태가 그대로 따라온다.
                 .id(feature)
         }
+    }
+}
+
+/// 진행률을 읽는 곳을 이 줄로 가둔다. ContentView가 읽으면 진행 tick마다
+/// 사이드바·타이틀·화면까지 창 전체가 다시 평가된다.
+private struct AppStatusBar: View {
+    let app: AppModel
+
+    var body: some View {
+        let line = app.statusLine
+        Retro95StatusBar(segments: [
+            .init(text: line.status),
+            .init(text: line.count, width: 170),
+            .init(text: line.size, width: 190),
+        ])
     }
 }
