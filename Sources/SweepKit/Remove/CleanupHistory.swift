@@ -36,12 +36,19 @@ public struct CleanupSummary: Sendable, Hashable {
         self.lastCleanup = lastCleanup
     }
 
-    /// "지금까지 12.4 GB 확보 · 마지막 정리 3일 전". 기록이 없으면 nil — 빈 줄을 만들지 않는다.
+    /// "지금까지 12.4 GB를 휴지통으로 옮김 · 마지막 정리 3일 전". 기록이 없으면 nil — 빈 줄을 만들지 않는다.
+    /// "확보"라고 쓰지 않는다. 휴지통을 비우기 전에는 디스크 공간이 늘지 않아 게이지와 숫자가 어긋난다.
     /// "0 B 확보"는 알려줄 것이 아니라 자리만 차지한다.
     public func statusLine(now: Date = Date()) -> String? {
         guard let lastCleanup else { return nil }
         let bytes = ByteCountFormatter.string(fromByteCount: totalReclaimedBytes, countStyle: .file)
-        return "지금까지 \(bytes) 확보 · 마지막 정리 \(Self.relative(lastCleanup, now: now))"
+        return "지금까지 \(bytes)를 휴지통으로 옮김 · 마지막 정리 \(Self.relative(lastCleanup, now: now))"
+    }
+
+    /// 메뉴바에 붙는 안내. 앱은 휴지통이 비워졌는지 알 수 없어(샌드박스에서 `~/.Trash`를
+    /// 못 읽는다) 기록이 하나라도 있으면 늘 보인다.
+    public var trashHint: String? {
+        lastCleanup == nil ? nil : "휴지통을 비워야 디스크 공간이 늘어납니다"
     }
 
     /// 오래 안 했고 지울 만한 safe 항목이 있을 때만. 재방문 유도 문구.

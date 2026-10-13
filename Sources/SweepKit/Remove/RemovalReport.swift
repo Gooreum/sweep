@@ -79,4 +79,11 @@ public struct RemovalReport: Sendable, Hashable {
     public var formattedReclaimed: String {
         ByteCountFormatter.string(fromByteCount: reclaimedBytes, countStyle: .file)
     }
+
+    /// 정리 직후 한 줄. 휴지통으로 **옮겼을 뿐** 공간은 비워야 생긴다 —
+    /// 이걸 말하지 않으면 "정리했는데 왜 디스크가 그대로지?"가 된다.
+    /// 옮긴 것이 없으면 nil. "0 바이트가 확보됩니다"는 알려줄 것이 아니다.
+    public var trashNotice: String? {
+        reclaimedBytes > 0 ? "휴지통을 비우면 \(formattedReclaimed)가 실제로 확보됩니다" : nil
+    }
 }
