@@ -166,9 +166,17 @@ struct Retro95StatusBar: View {
 
 struct Retro95TitleStrip: View {
     let title: String
+    var icon: PixelArt? = nil
+
     var body: some View {
-        Text(title).font(R95.ui(13, bold: true)).foregroundStyle(R95.white)
-            .lineLimit(1).padding(.horizontal, 6)
+        HStack(spacing: 4) {
+            if let icon {
+                PixelIcon(art: icon)
+            }
+            Text(title).font(R95.ui(13, bold: true)).foregroundStyle(R95.white)
+                .lineLimit(1)
+        }
+            .padding(.horizontal, 6)
             .frame(maxWidth: .infinity, alignment: .leading)
             .frame(height: R95.titleStripHeight).background(R95.navy)
     }
