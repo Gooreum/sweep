@@ -9,7 +9,8 @@ struct BevelBorder: ViewModifier {
     func body(content: Content) -> some View {
         content.overlay {
             Canvas { context, size in
-                let pixel = 1 / displayScale
+                // Win95의 1px 한 단을 1pt로 그린다. 물리 1px이면 2x 화면에서 0.5pt라 입체감이 사라진다.
+                let pixel: CGFloat = 1
                 let width = floor(size.width * displayScale) / displayScale
                 let height = floor(size.height * displayScale) / displayScale
                 func edge(_ inset: CGFloat, _ top: Color, _ bottom: Color) {

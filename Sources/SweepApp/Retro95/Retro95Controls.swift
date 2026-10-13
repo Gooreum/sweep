@@ -232,8 +232,8 @@ struct Retro95Separator: View {
     @Environment(\.displayScale) private var displayScale
     var body: some View {
         VStack(spacing: 0) {
-            R95.shadow.frame(height: 1 / displayScale)
-            R95.white.frame(height: 1 / displayScale)
+            R95.shadow.frame(height: 1)
+            R95.white.frame(height: 1)
         }.accessibilityHidden(true)
     }
 }
