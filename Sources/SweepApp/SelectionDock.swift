@@ -18,8 +18,9 @@ struct SelectionDock: View {
                     .font(R95.ui(20, bold: true))
                     .monospacedDigit()
                     .lineLimit(1)
-                    // 이 줄이 독의 요점이다. 폭이 모자라면 옆의 안내문이 줄을 바꾼다.
-                    .fixedSize()
+                    // 이 줄이 독의 요점이라 말줄임 대신 글자를 줄인다.
+                    // fixedSize로 고정하면 독이 창보다 넓어져 화면 전체가 잘렸다.
+                    .minimumScaleFactor(0.7)
             }
             .layoutPriority(1)
             Spacer(minLength: 0)
@@ -34,6 +35,7 @@ struct SelectionDock: View {
                 Text("휴지통을 비우기 전까지 복원할 수 있습니다.")
                     .font(R95.ui(11))
                     .foregroundStyle(R95.deep)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
             // 스타일의 padding까지 포함한 버튼 높이가 일정하도록 레이블에 높이를 준다.
