@@ -138,6 +138,15 @@ public final class AppModel {
         model.onReport = { [weak self] report in
             self?.record(report)
         }
+        model.onRestored = { [weak self] report in
+            self?.recordRestore(report)
+        }
+    }
+
+    /// 되돌린 만큼 누적 용량에서 뺀다.
+    private func recordRestore(_ report: RemovalReport) {
+        history.recordRestore(report)
+        cleanupSummary = history.summary
     }
 
     /// 회차 결과를 기록하고 관찰 값을 갱신한다.
@@ -335,6 +344,8 @@ public struct StatusLine: Equatable, Sendable {
         case .results: status = "검색 완료"
         case .removing: status = "정리하는 중…"
         case .cleaned: status = "정리 완료"
+        case .restoring: status = "되돌리는 중…"
+        case .restored: status = "되돌리기 완료"
         }
         return StatusLine(
             status: status,

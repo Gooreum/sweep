@@ -583,4 +583,28 @@ struct AppModelTests {
 
         #expect(app.diskMap() === before)
     }
+
+    @Test("정리한 것을 되돌리면 누적 용량이 그만큼 줄어든다")
+    func undoSubtractsFromSummary() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let app = AppModel(makeModel: { f in
+            ScanModel(scan: f == .smartScan ? self.finishing(self.mixed) : self.finishing([]),
+                      removeOne: { RemovalOutcome(item: $0, failureReason: nil,
+                                                  trashedURL: URL(filePath: "/Users/x/.Trash/\($0.displayName)")) },
+                      restoreOne: { RemovalOutcome(item: $0.item, failure: nil) })
+        }, history: history)
+        await app.model(for: .smartScan).scan()
+
+        let junk = app.model(for: .junk)
+        let target = try #require(junk.items.first)
+        junk.selection = [target.url]
+        await junk.removeSelected()
+        #expect(app.cleanupSummary.totalReclaimedBytes == target.size)
+
+        await junk.undoLastCleanup()
+
+        #expect(app.cleanupSummary.totalReclaimedBytes == 0)
+        #expect(history.records.map(\.kind) == [.cleanup, .restore])
+    }
 }

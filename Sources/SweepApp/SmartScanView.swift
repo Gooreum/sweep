@@ -44,7 +44,14 @@ struct SmartScanView: View {
                     percentText: total > 0 ? "\(done * 100 / total)%" : nil,
                     leftFooter: "\(done) / \(total)", rightFooter: nil)
                     .padding(10)
-            case .results, .cleaned:
+            case let .restoring(done, total):
+                Retro95ScanPanel(
+                    title: "되돌리는 중", headline: "원래 자리로 되돌리는 중", detail: nil,
+                    fraction: total > 0 ? Double(done) / Double(total) : nil,
+                    percentText: total > 0 ? "\(done * 100 / total)%" : nil,
+                    leftFooter: "\(done) / \(total)", rightFooter: nil)
+                    .padding(10)
+            case .results, .cleaned, .restored:
                 summary
             }
         }

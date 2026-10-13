@@ -75,16 +75,23 @@ public final class ScanModel {
         case removing(done: Int, total: Int)
         /// 정리가 끝난 직후. 목록이 아니라 "얼마를 비웠다"만 보여준다.
         case cleaned
+        /// 방금 정리한 것을 휴지통에서 원래 자리로 되돌리는 중.
+        case restoring(done: Int, total: Int)
+        /// 되돌리기가 끝난 직후. 무엇을 되돌렸고 무엇을 못 했는지 보여준다.
+        case restored
     }
 
     public private(set) var phase: Phase = .idle
     public private(set) var items: [CleanupItem] = []
     /// 직전 삭제 회차의 결과. 아직 삭제한 적이 없으면 nil이다.
     public private(set) var report: RemovalReport?
+    /// 직전 되돌리기의 결과. `succeeded`는 "되돌림 성공"이다.
+    public private(set) var restoreReport: RemovalReport?
     public var selection: Set<URL> = []
 
     private let scanStream: @Sendable () -> AsyncStream<ScanCoordinator.Progress>
     private let performRemove: @Sendable (CleanupItem) -> RemovalOutcome
+    private let performRestore: @Sendable (RemovalOutcome) -> RemovalOutcome
 
     /// 스캔이 끝나면 결과를 알린다. 같은 결과를 다른 화면이 그대로 쓸 수 있다.
     public var onScanFinished: (@MainActor ([CleanupItem]) -> Void)?
@@ -97,16 +104,22 @@ public final class ScanModel {
     /// **이번 회차 몫만** 넘긴다(재시도 때 이전 성공분을 다시 세지 않게).
     public var onReport: (@MainActor (RemovalReport) -> Void)?
 
+    /// 되돌린 회차를 알린다. 누적 용량에서 빼는 일은 앱이 한다 — `onReport`와 같은 이유다.
+    public var onRestored: (@MainActor (RemovalReport) -> Void)?
+
     /// 스캔·삭제 동작을 주입할 수 있게 열어 둔다.
     /// 실제 스캔은 17초 이상 걸리고 실제 삭제는 되돌릴 수 없어 테스트에 쓸 수 없다.
     public init(
         scan: @escaping @Sendable () -> AsyncStream<ScanCoordinator.Progress>
             = { ScanCoordinator.standard().stream() },
         removeOne: @escaping @Sendable (CleanupItem) -> RemovalOutcome
-            = { Remover().removeOne($0) }
+            = { Remover().removeOne($0) },
+        restoreOne: @escaping @Sendable (RemovalOutcome) -> RemovalOutcome
+            = { Restorer().restoreOne($0) }
     ) {
         self.scanStream = scan
         self.performRemove = removeOne
+        self.performRestore = restoreOne
     }
 
     /// 기능 하나에 묶인 모델. 그 기능의 스캐너만 돌린다.
@@ -126,9 +139,15 @@ public final class ScanModel {
     /// 잠겨야 한다 — 각자 판단하면 한쪽만 눌리는 상태가 생긴다.
     public var isBusy: Bool {
         switch phase {
-        case .scanning, .removing: true
-        case .idle, .results, .cleaned: false
+        case .scanning, .removing, .restoring: true
+        case .idle, .results, .cleaned, .restored: false
         }
+    }
+
+    /// 완료 화면에서 되돌릴 수 있는가. 휴지통 위치를 아는 성공분이 있어야 한다.
+    /// 한 번 되돌리면 `report`가 비어 다시 되돌릴 수 없다.
+    public var canUndo: Bool {
+        phase == .cleaned && !(report?.restorable.isEmpty ?? true)
     }
 
     /// 찾아낸 전체 용량. 이게 안 보이면 사용자는 자기가 뭘 얻을 수 있는지 모른 채
@@ -251,6 +270,7 @@ public final class ScanModel {
     public func scan() async {
         phase = .scanning(percent: 0, remainingSeconds: nil)
         report = nil
+        restoreReport = nil
         items = []
         selection = []
 
@@ -309,6 +329,32 @@ public final class ScanModel {
         onRemoved?(Array(removed))
     }
 
+    /// 방금 정리한 회차를 원래 자리로 되돌린다.
+    ///
+    /// 재시도로 합쳐진 회차면 합쳐진 성공분 전체가 대상이다. 확인을 묻지 않는다 —
+    /// 파일을 지우지 않고 원래 자리로 옮기기만 하는 동작이라, 이것 자체가 되돌릴 수 있다.
+    public func undoLastCleanup() async {
+        guard canUndo, let targets = report?.restorable else { return }
+
+        let restore = performRestore
+        var outcomes: [RemovalOutcome] = []
+        for (index, outcome) in targets.enumerated() {
+            phase = .restoring(done: index, total: targets.count)
+            outcomes.append(await Task.detached { restore(outcome) }.value)
+        }
+
+        let round = RemovalReport(outcomes: outcomes)
+        // 되돌린 것은 다시 목록에 넣되 **고르지 않는다.** 방금 되돌린 것이 선택된 채로
+        // 있으면 다음 정리에 그대로 다시 휩쓸린다.
+        items.append(contentsOf: round.succeeded.map(\.item))
+
+        restoreReport = round
+        // 같은 회차를 두 번 되돌리지 못하게 비운다.
+        report = nil
+        phase = .restored
+        onRestored?(round)
+    }
+
     /// 다른 화면이 이미 찾아낸 결과를 그대로 받는다.
     ///
     /// 스마트 스캔이 전부 훑었으면 기능 탭이 같은 43초를 다시 돌 이유가 없다.
@@ -321,6 +367,7 @@ public final class ScanModel {
         items = found
         selection = Set(found.filter(\.isSelectedByDefault).map(\.url))
         report = nil
+        restoreReport = nil
         phase = .results
     }
 
@@ -340,6 +387,7 @@ public final class ScanModel {
     ///
     /// 남은 항목이 없으면 결과 목록을 띄울 이유가 없어 시작 화면으로 돌아간다.
     public func dismissReport() {
+        restoreReport = nil
         phase = items.isEmpty ? .idle : .results
     }
 }

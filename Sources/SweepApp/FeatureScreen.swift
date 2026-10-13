@@ -59,6 +59,10 @@ struct FeatureScreen: View {
             removing(done: done, total: total)
         case .cleaned:
             cleanDone
+        case let .restoring(done, total):
+            restoring(done: done, total: total)
+        case .restored:
+            restoreDone
         }
     }
 
@@ -99,6 +103,40 @@ struct FeatureScreen: View {
                 leftFooter: "\(done) / \(total)",
                 rightFooter: nil)
             Spacer()
+        }
+    }
+
+    private func restoring(done: Int, total: Int) -> some View {
+        VStack(spacing: 0) {
+            Retro95ScanPanel(
+                title: "되돌리는 중",
+                headline: "원래 자리로 되돌리는 중…",
+                detail: nil,
+                fraction: total > 0 ? Double(done) / Double(total) : nil,
+                percentText: total > 0 ? "\(done * 100 / total)%" : nil,
+                leftFooter: "\(done) / \(total)",
+                rightFooter: nil)
+            Spacer()
+        }
+    }
+
+    /// 되돌리기 결과. 실패 목록 시트는 다음 단계에서 붙인다.
+    @ViewBuilder
+    private var restoreDone: some View {
+        if let report = model.restoreReport {
+            let restored = report.succeeded.count
+            Retro95Dialog(title: report.failed.isEmpty ? "되돌리기 완료" : "일부만 되돌렸습니다",
+                          icon: report.failed.isEmpty ? .check : .warning) {
+                Text(restored == 0
+                     ? "\(report.failed.count)개를 되돌리지 못했습니다"
+                     : "\(restored)개 · \(report.formattedReclaimed)를 원래 자리로 되돌렸습니다")
+                    .font(R95.ui(13, bold: true))
+                    .monospacedDigit()
+            } buttons: {
+                Button("완료") { model.dismissReport() }
+                    .buttonStyle(Retro95ButtonStyle(isDefault: true))
+            }
+            .frame(maxWidth: R95.dialogWidth)
         }
     }
 
