@@ -7,13 +7,21 @@ struct ContentView: View {
     @Bindable var app: AppModel
 
     var body: some View {
-        HStack(spacing: 0) {
-            Sidebar(app: app)
-
-            detail
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Theme.surface)
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                Sidebar(app: app)
+                VStack(spacing: 0) {
+                    Retro95TitleStrip(title: "Sweep - \(app.selected.displayName)",
+                                      icon: app.selected.pixelArt)
+                    detail
+                        .padding(8)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .background(R95.gray)
+            }
+            Retro95StatusBar(segments: statusSegments)
         }
+        .background(R95.gray)
         // 전역 액션을 타이틀바로 올린다. 별도 툴바 줄을 만들면 사이드바 위에
         // 가로줄이 하나 더 생겨 화면이 그만큼 낮아진다 — 타이틀바는 어차피 비어 있다.
         // 기능 이름은 **창 제목**으로 둔다. 툴바 항목에 맨 글자를 넣으면 시스템이
@@ -41,6 +49,25 @@ struct ContentView: View {
                 .disabled(!app.canScan)
             }
         }
+    }
+
+    /// 화면과 같은 모델을 읽어 상태바의 숫자와 단계가 결과 목록과 어긋나지 않게 한다.
+    private var statusSegments: [Retro95StatusBar.Segment] {
+        let model = app.currentModel
+        let status: String
+        switch model?.phase {
+        case .idle, .none: status = "준비됨"
+        case let .scanning(percent, _): status = "검색 중… \(percent)%"
+        case .results: status = "검색 완료"
+        case .removing: status = "정리하는 중…"
+        case .cleaned: status = "정리 완료"
+        }
+        return [
+            .init(text: status),
+            .init(text: model.map { "항목 \($0.items.count)개" } ?? "—", width: 170),
+            .init(text: model.flatMap { $0.items.isEmpty ? nil : "회수 가능 \($0.formattedTotalSize)" } ?? "—",
+                  width: 190),
+        ]
     }
 
     @ViewBuilder

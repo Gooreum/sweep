@@ -50,3 +50,17 @@ extension View {
     func retroRaised() -> some View { retroBevel(.raised) }
     func retroSunken() -> some View { retroBevel(.sunken) }
 }
+
+/// 사이드바 끝에만 홈을 두어 탐색 영역과 본문 사이의 경계를 표시한다.
+struct Retro95SidebarEdge: View {
+    @Environment(\.displayScale) private var displayScale
+
+    var body: some View {
+        HStack(spacing: 0) {
+            R95.shadow.frame(width: 1 / displayScale)
+            R95.white.frame(width: 1 / displayScale)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
