@@ -114,9 +114,19 @@ struct FeatureScreen: View {
     @ViewBuilder
     private var cleanDone: some View {
         if let report = model.report {
-            Retro95Dialog(title: "정리 완료", icon: .check) {
+            // 하나도 못 옮겼는데 녹색 체크를 띄우면 성공으로 읽힌다. 결과에 따라 아이콘부터 다르게 한다.
+            let moved = report.succeeded.count
+            let failed = report.failed.count
+            let (title, icon): (String, PixelArt) =
+                moved == 0 ? ("정리하지 못했습니다", .warning)
+                : failed > 0 ? ("일부만 정리했습니다", .warning)
+                : ("정리 완료", .check)
+            Retro95Dialog(title: title, icon: icon) {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("\(report.formattedReclaimed)의 파일이 삭제됨")
+                    // 지운 것이 아니라 휴지통으로 옮긴 것이다.
+                    Text(moved == 0
+                         ? "\(failed)개를 휴지통으로 옮기지 못했습니다"
+                         : "\(moved)개 · \(report.formattedReclaimed)를 휴지통으로 옮겼습니다")
                         .font(R95.ui(13, bold: true))
                         .monospacedDigit()
 
@@ -129,7 +139,9 @@ struct FeatureScreen: View {
                         } label: {
                             HStack(alignment: .top, spacing: 6) {
                                 PixelIcon(art: .warning, size: 16)
-                                Text("\(report.failed.count)개는 옮기지 못했습니다 — 자세히 보기")
+                                // 전부 실패면 윗줄이 이미 개수를 말했다. 같은 말을 두 번 하지 않는다.
+                                Text(moved == 0 ? "사유 자세히 보기"
+                                     : "\(failed)개는 옮기지 못했습니다 — 자세히 보기")
                                     .underline()
                             }
                             .foregroundStyle(R95.danger)
