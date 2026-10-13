@@ -14,6 +14,8 @@ struct FeatureScreen: View {
 
     /// 옮기지 못한 항목 시트를 띄울지.
     @State private var showsFailures = false
+    /// 휴지통을 열지 못했다(샌드박스가 막는 경우). 조용히 넘어가지 않고 대신 할 일을 말한다.
+    @State private var trashOpenFailed = false
 
     var body: some View {
         VStack(spacing: 8) {
@@ -130,6 +132,14 @@ struct FeatureScreen: View {
                         .font(R95.ui(13, bold: true))
                         .monospacedDigit()
 
+                    // 옮겼을 뿐 공간은 아직이다. 이걸 안 말하면 디스크 게이지가 그대로라 앱을 의심한다.
+                    if let notice = report.trashNotice {
+                        Text(notice)
+                            .font(R95.ui(12))
+                            .foregroundStyle(R95.deep)
+                            .monospacedDigit()
+                    }
+
                     // 실패 사유는 길어서 한 줄에 안 들어간다. 예전에는 툴팁에 합쳐 넣었는데,
                     // 호버해야 보이고 어느 파일이 왜 실패했는지 구분되지 않았다.
                     // 누르면 항목별 사유와 다음 행동을 보여주는 시트를 연다.
@@ -150,10 +160,20 @@ struct FeatureScreen: View {
                     }
                 }
             } buttons: {
+                if moved > 0 {
+                    // 열어 주기만 한다. 비우는 것은 영구 삭제라 사용자가 Finder에서 직접 한다.
+                    Button("휴지통 열기") { trashOpenFailed = !ItemActions.openTrash() }
+                        .buttonStyle(Retro95ButtonStyle())
+                }
                 Button("완료") { model.dismissReport() }
                     .buttonStyle(Retro95ButtonStyle(isDefault: true))
             }
             .frame(maxWidth: R95.dialogWidth)
+            .alert("휴지통을 열지 못했습니다", isPresented: $trashOpenFailed) {
+                Button("확인") {}
+            } message: {
+                Text("Dock의 휴지통을 열어 비워 주세요.")
+            }
             .sheet(isPresented: $showsFailures) {
                 RemovalFailuresSheet(failed: report.failed) {
                     showsFailures = false
