@@ -17,6 +17,23 @@ enum StoreDemo {
     /// 실재하지 않는 폴더. 목록에는 이름만 보이고, 눌러도 지워질 것이 없다.
     private static let preview = downloads.appending(path: "sweep-harness-preview")
 
+    /// 화면이 한국어로 떴는가. `-AppleLanguages`로 고른 언어가 그대로 들어온다.
+    ///
+    /// 파일 이름은 번역할 UI 문구가 아니라 가짜 데이터라 카탈로그에 넣지 않는다.
+    /// 다만 영어 스크린샷에 "제주 여행 원본.mov"가 보이면 쓸 수 없어서 언어별로 고른다.
+    private static let isKorean = Bundle.main.preferredLocalizations.first == "ko"
+    private static func name(_ ko: String, _ en: String) -> String { isKorean ? ko : en }
+
+    // 큰 파일 목록과 디스크 맵이 같은 이름을 보여야 한다.
+    private static let tripVideo = name("제주 여행 원본.mov", "Iceland Trip Raw.mov")
+    private static let projectBackup = name("FinalCut 프로젝트 백업.zip", "FinalCut Project Backup.zip")
+    private static let meetingVideo = name("회의 녹화 0612.mp4", "Team Meeting 0612.mp4")
+
+    /// 스캐너와 같은 키 — 카탈로그에 번역이 이미 있고, 영어에서는 복수형까지 맞는다.
+    private static func monthsAgo(_ months: Int) -> String {
+        String(localized: "\(months)개월 전에 받았습니다")
+    }
+
     /// 실앱과 같은 흐름으로 채운 `AppModel`.
     /// 스마트 스캔을 한 번 돌리면 `AppModel`이 결과를 기능 탭에 나눠 준다.
     static func app(for stage: String) async -> AppModel {
@@ -65,7 +82,7 @@ enum StoreDemo {
         func dup(_ name: String, _ size: Int64, of original: String) -> CleanupItem {
             CleanupItem(url: preview.appending(path: name), size: size,
                         category: .duplicate, safety: .safe,
-                        detail: "\(original)와 내용이 같습니다")
+                        detail: String(localized: "\(original)와 내용이 같습니다"))
         }
         // `XcodeScanner`와 같은 안전도·설명. 목록에는 마지막 경로 이름만 보인다.
         func xcode(_ path: String, _ size: Int64, _ safety: SafetyLevel, _ detail: String)
@@ -75,30 +92,34 @@ enum StoreDemo {
         }
         return [
             xcode("Xcode/iOS DeviceSupport/iPhone17,1 26.0 (23A341)", 7_900_000_000,
-                  .caution, "기기를 다시 연결하면 내려받습니다"),
+                  .caution, String(localized: "기기를 다시 연결하면 내려받습니다")),
             xcode("Xcode/DerivedData/Budgetly-fhbqxkwzpnmxdgaclrviosbtuey", 6_400_000_000,
-                  .safe, "빌드하면 다시 생성됩니다"),
+                  .safe, String(localized: "빌드하면 다시 생성됩니다")),
             xcode("Xcode/iOS DeviceSupport/iPhone15,2 18.6 (22G86)", 5_800_000_000,
-                  .caution, "기기를 다시 연결하면 내려받습니다"),
+                  .caution, String(localized: "기기를 다시 연결하면 내려받습니다")),
             xcode("Xcode/DerivedData/PhotoMemo-cgkwzhxeqvnbdjlrtyaoupmsif", 3_100_000_000,
-                  .safe, "빌드하면 다시 생성됩니다"),
-            xcode("CoreSimulator/Caches", 2_300_000_000, .safe, "시뮬레이터 캐시입니다"),
+                  .safe, String(localized: "빌드하면 다시 생성됩니다")),
+            xcode("CoreSimulator/Caches", 2_300_000_000, .safe, String(localized: "시뮬레이터 캐시입니다")),
             xcode("Xcode/DerivedData/ModuleCache.noindex", 1_200_000_000,
-                  .safe, "빌드하면 다시 생성됩니다"),
+                  .safe, String(localized: "빌드하면 다시 생성됩니다")),
             xcode("Xcode/Archives/2026-08-21", 184_000_000,
-                  .danger, "앱 심사 제출본 — 지우면 복구할 수 없습니다"),
-            large("Xcode_26.0.xip", 9_800_000_000, "4개월 전에 받았습니다"),
-            large("Windows11_ARM64.iso", 6_120_000_000, "7개월 전에 받았습니다"),
-            large("제주 여행 원본.mov", 4_210_000_000, "2개월 전에 받았습니다"),
-            large("FinalCut 프로젝트 백업.zip", 3_380_000_000, "5개월 전에 받았습니다"),
-            large("회의 녹화 0612.mp4", 1_270_000_000, "3개월 전에 받았습니다"),
-            large("Docker.dmg", 524_000_000, "1개월 전에 받았습니다"),
-            large("Blender-4.2-macos-arm64.dmg", 412_000_000, "12일 전에 받았습니다"),
+                  .danger, String(localized: "앱 심사 제출본 — 지우면 복구할 수 없습니다")),
+            large("Xcode_26.0.xip", 9_800_000_000, monthsAgo(4)),
+            large("Windows11_ARM64.iso", 6_120_000_000, monthsAgo(7)),
+            large(tripVideo, 4_210_000_000, monthsAgo(2)),
+            large(projectBackup, 3_380_000_000, monthsAgo(5)),
+            large(meetingVideo, 1_270_000_000, monthsAgo(3)),
+            large("Docker.dmg", 524_000_000, monthsAgo(1)),
+            large("Blender-4.2-macos-arm64.dmg", 412_000_000, String(localized: "\(12)일 전에 받았습니다")),
             dup("Zoom (1).pkg", 91_800_000, of: "Zoom.pkg"),
-            dup("KakaoTalk (1).dmg", 74_600_000, of: "KakaoTalk.dmg"),
-            dup("발표자료_최종 (1).key", 57_300_000, of: "발표자료_최종.key"),
-            dup("2026 사업계획서 (1).pdf", 24_600_000, of: "2026 사업계획서.pdf"),
-            dup("2026 사업계획서 (2).pdf", 24_600_000, of: "2026 사업계획서.pdf"),
+            dup(name("KakaoTalk (1).dmg", "Slack (1).dmg"), 74_600_000,
+                of: name("KakaoTalk.dmg", "Slack.dmg")),
+            dup(name("발표자료_최종 (1).key", "Pitch Deck Final (1).key"), 57_300_000,
+                of: name("발표자료_최종.key", "Pitch Deck Final.key")),
+            dup(name("2026 사업계획서 (1).pdf", "2026 Business Plan (1).pdf"), 24_600_000,
+                of: name("2026 사업계획서.pdf", "2026 Business Plan.pdf")),
+            dup(name("2026 사업계획서 (2).pdf", "2026 Business Plan (2).pdf"), 24_600_000,
+                of: name("2026 사업계획서.pdf", "2026 Business Plan.pdf")),
             dup("IMG_4821 (1).HEIC", 3_100_000, of: "IMG_4821.HEIC"),
         ]
     }
@@ -108,7 +129,7 @@ enum StoreDemo {
         func node(_ name: String, _ size: Int64, _ kids: [DiskUsageNode] = []) -> DiskUsageNode {
             DiskUsageNode(url: preview.appending(path: name), size: size, children: kids)
         }
-        let shoot = preview.appending(path: "촬영본 0612")
+        let shoot = preview.appending(path: name("촬영본 0612", "Footage 0612"))
         let model = DiskMapModel()
         // seed보다 먼저 넣는다. DiskMapView의 .task가 selectedRoot가 비었을 때만 자동 순회를 건다.
         // Picker 목록의 Downloads와 같은 URL이어야 "선택하세요"로 빠지지 않는다.
@@ -118,17 +139,17 @@ enum StoreDemo {
         model.seed(DiskUsageNode(url: root, size: 29_100_000_000, children: [
             node("Xcode_26.0.xip", 9_800_000_000),
             node("Windows11_ARM64.iso", 6_120_000_000),
-            node("제주 여행 원본.mov", 4_210_000_000),
-            node("FinalCut 프로젝트 백업.zip", 3_380_000_000),
-            node("촬영본 0612", 2_740_000_000, [
+            node(tripVideo, 4_210_000_000),
+            node(projectBackup, 3_380_000_000),
+            node(shoot.lastPathComponent, 2_740_000_000, [
                 DiskUsageNode(url: shoot.appending(path: "A001.mov"), size: 1_600_000_000),
                 DiskUsageNode(url: shoot.appending(path: "A002.mov"), size: 1_140_000_000),
             ]),
-            node("회의 녹화 0612.mp4", 1_270_000_000),
+            node(meetingVideo, 1_270_000_000),
             node("Docker.dmg", 524_000_000),
             node("Blender-4.2-macos-arm64.dmg", 412_000_000),
-            node("스크린샷", 326_000_000),
-            node("강의자료", 318_000_000),
+            node(name("스크린샷", "Screenshots"), 326_000_000),
+            node(name("강의자료", "Course Notes"), 318_000_000),
         ]))
         return model
     }
