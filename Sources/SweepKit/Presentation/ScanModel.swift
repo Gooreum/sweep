@@ -167,7 +167,7 @@ public final class ScanModel {
             switch self {
             case .safeOnly: String(localized: "안전만")
             case .recommended: String(localized: "권장")
-            case .all: String(localized: "전체")
+            case .all: String(localized: "selection.all", defaultValue: "전체")
             case .none: String(localized: "해제")
             }
         }

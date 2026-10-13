@@ -79,7 +79,7 @@ enum SmartSummaryColumns {
     static let size: CGFloat = 96
     static let bar: CGFloat = 120
     static let headers: [Retro95TableHeader.Column] = [
-        .init(title: String(localized: "기능")),
+        .init(title: String(localized: "column.feature", defaultValue: "기능")),
         .init(title: String(localized: "항목"), width: count, alignment: .trailing),
         .init(title: String(localized: "크기"), width: size, alignment: .trailing),
         .init(title: String(localized: "비율 막대"), width: bar)

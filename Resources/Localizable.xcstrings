@@ -3,9 +3,15 @@
   "strings": {
     "%@ %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@"
+          }
+        },
         "ko": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "%1$@ %2$@"
           }
         }
@@ -13,9 +19,37 @@
     },
     "%@ %lld개": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@: %#@items@"
+          },
+          "substitutions": {
+            "items": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg item"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg items"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "%1$@ %2$lld개"
           }
         }
@@ -23,9 +57,15 @@
     },
     "%@ · %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@"
+          }
+        },
         "ko": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "%1$@ · %2$@"
           }
         }
@@ -33,9 +73,15 @@
     },
     "%@ · %@ — 설치한 앱과 설정이 사라집니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@ — installed apps and settings will be removed"
+          }
+        },
         "ko": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "%1$@ · %2$@ — 설치한 앱과 설정이 사라집니다"
           }
         }
@@ -43,9 +89,37 @@
     },
     "%@ · %lld개": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %#@items@"
+          },
+          "substitutions": {
+            "items": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg item"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg items"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "%1$@ · %2$lld개"
           }
         }
@@ -53,6 +127,12 @@
     },
     "%@ 만듦": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created %@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -63,9 +143,15 @@
     },
     "%@ 사용됨 · 전체 %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ used · %2$@ total"
+          }
+        },
         "ko": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "%1$@ 사용됨 · 전체 %2$@"
           }
         }
@@ -73,6 +159,12 @@
     },
     "%@ 오프라인 자산 — 다시 내려받습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ offline assets — downloaded again"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -83,9 +175,15 @@
     },
     "%@ 폴더를 골라 주세요. (고른 곳: %@)": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please choose the %1$@ folder. (You chose: %2$@)"
+          }
+        },
         "ko": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "%1$@ 폴더를 골라 주세요. (고른 곳: %2$@)"
           }
         }
@@ -93,6 +191,12 @@
     },
     "%@ 훑는 중…": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanning %@…"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -103,6 +207,12 @@
     },
     "%@/분 증가 중": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Growing %@/min"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -113,6 +223,12 @@
     },
     "%@개 세는 중…": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Counting %@ items…"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -123,6 +239,12 @@
     },
     "%@에는 더 나눌 항목이 없습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ has nothing more to break down"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -133,6 +255,12 @@
     },
     "%@와 내용이 같습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Same content as %@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -143,6 +271,12 @@
     },
     "%@이(가) 다시 만듭니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ will recreate it"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -153,6 +287,12 @@
     },
     "%lld%%": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld%%"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -163,6 +303,12 @@
     },
     "%lld%% 사용됨": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld%% used"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -173,6 +319,24 @@
     },
     "%lld개": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -183,9 +347,37 @@
     },
     "%lld개 · %@ 발견": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Found %#@items@ · %2$@"
+          },
+          "substitutions": {
+            "items": {
+              "argNum": 1,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg item"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg items"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "%1$lld개 · %2$@ 발견"
           }
         }
@@ -193,9 +385,37 @@
     },
     "%lld개 · %@를 원래 자리로 되돌렸습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put back %#@items@ · %2$@ to their original location"
+          },
+          "substitutions": {
+            "items": {
+              "argNum": 1,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg item"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg items"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "%1$lld개 · %2$@를 원래 자리로 되돌렸습니다"
           }
         }
@@ -203,9 +423,37 @@
     },
     "%lld개 · %@를 휴지통으로 옮겼습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moved %#@items@ · %2$@ to the Trash"
+          },
+          "substitutions": {
+            "items": {
+              "argNum": 1,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg item"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg items"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "%1$lld개 · %2$@를 휴지통으로 옮겼습니다"
           }
         }
@@ -213,6 +461,24 @@
     },
     "%lld개 항목": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -223,6 +489,24 @@
     },
     "%lld개 항목을 옮기지 못했습니다": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Couldn't move %lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Couldn't move %lld items"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -233,6 +517,24 @@
     },
     "%lld개 항목을 휴지통으로 옮깁니다": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Move %lld item to the Trash"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Move %lld items to the Trash"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -243,6 +545,24 @@
     },
     "%lld개는 되돌리지 못했습니다 — 자세히 보기": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item couldn't be restored — see details"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items couldn't be restored — see details"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -253,6 +573,24 @@
     },
     "%lld개는 옮기지 못했습니다 — 자세히 보기": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item couldn't be moved — see details"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items couldn't be moved — see details"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -263,6 +601,24 @@
     },
     "%lld개를 되돌리지 못했습니다": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Couldn't restore %lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Couldn't restore %lld items"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -273,6 +629,24 @@
     },
     "%lld개를 휴지통으로 옮기지 못했습니다": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Couldn't move %lld item to the Trash"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Couldn't move %lld items to the Trash"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -283,6 +657,24 @@
     },
     "%lld개월 전": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld month ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld months ago"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -293,6 +685,24 @@
     },
     "%lld개월 전 사용": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Used %lld month ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Used %lld months ago"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -303,6 +713,24 @@
     },
     "%lld개월 전에 받았습니다": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Downloaded %lld month ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Downloaded %lld months ago"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -313,6 +741,24 @@
     },
     "%lld년 전": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld year ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld years ago"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -323,6 +769,24 @@
     },
     "%lld년 전 사용": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Used %lld year ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Used %lld years ago"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -333,9 +797,15 @@
     },
     "%lld분 %lld초": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lldm %2$llds"
+          }
+        },
         "ko": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "%1$lld분 %2$lld초"
           }
         }
@@ -343,6 +813,24 @@
     },
     "%lld일 동안 쓰이지 않았습니다": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Unused for %lld day"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Unused for %lld days"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -353,6 +841,24 @@
     },
     "%lld일 전": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld day ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld days ago"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -363,6 +869,24 @@
     },
     "%lld일 전 사용": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Used %lld day ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Used %lld days ago"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -373,6 +897,24 @@
     },
     "%lld일 전에 받았습니다": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Downloaded %lld day ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Downloaded %lld days ago"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -383,6 +925,12 @@
     },
     "%lld초": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%llds"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -393,6 +941,12 @@
     },
     "App Store 버전은 macOS 샌드박스 안에서 동작해서, 폴더를 열려면 한 번 허락이 필요해요.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The App Store version runs inside the macOS sandbox, so it needs your permission once to open a folder."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -403,6 +957,12 @@
     },
     "Bazelisk 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bazelisk cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -413,6 +973,12 @@
     },
     "Carthage 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carthage cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -423,6 +989,12 @@
     },
     "CocoaPods 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CocoaPods cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -433,6 +1005,12 @@
     },
     "Cypress 바이너리 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cypress binary cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -443,6 +1021,12 @@
     },
     "Deno 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deno cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -453,6 +1037,12 @@
     },
     "Developer Disk Cleaner": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Developer Disk Cleaner"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -463,6 +1053,12 @@
     },
     "Dock의 휴지통을 열어 '되돌려 놓기'를 쓰세요.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the Trash in the Dock and use “Put Back”."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -473,6 +1069,12 @@
     },
     "Dock의 휴지통을 열어 비워 주세요.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the Trash in the Dock and empty it."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -483,6 +1085,12 @@
     },
     "Electron 내려받기 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Electron download cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -493,6 +1101,12 @@
     },
     "Expo Go 내려받기 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expo Go download cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -503,6 +1117,12 @@
     },
     "Expo 네이티브 모듈 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expo native modules cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -513,6 +1133,12 @@
     },
     "Expo 버전 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expo versions cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -523,6 +1149,12 @@
     },
     "Expo 스키마 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expo schema cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -533,6 +1165,12 @@
     },
     "Expo 시뮬레이터 앱 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expo simulator app cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -543,6 +1181,12 @@
     },
     "Expo 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expo cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -553,6 +1197,12 @@
     },
     "Finder에서 보기": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in Finder"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -563,6 +1213,12 @@
     },
     "Go 빌드 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Go build cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -573,6 +1229,12 @@
     },
     "Homebrew 내려받기 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Homebrew download cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -583,6 +1245,12 @@
     },
     "JetBrains IDE 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "JetBrains IDE cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -593,6 +1261,12 @@
     },
     "Mac 전체를 훑는 중…": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanning the whole Mac…"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -603,6 +1277,12 @@
     },
     "Playwright 브라우저 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Playwright browser cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -613,6 +1293,12 @@
     },
     "Sweep": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweep"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -623,6 +1309,12 @@
     },
     "Sweep 열기": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Sweep"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -633,9 +1325,15 @@
     },
     "Sweep이 %@을(를) 찾을 수 있게 %@ 폴더를 허용하세요.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow the %2$@ folder so Sweep can look for: %1$@."
+          }
+        },
         "ko": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "Sweep이 %1$@을(를) 찾을 수 있게 %2$@ 폴더를 허용하세요."
           }
         }
@@ -643,6 +1341,12 @@
     },
     "Sweep이 보는 곳": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where Sweep Looks"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -653,6 +1357,12 @@
     },
     "Swift Package Manager 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swift Package Manager cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -663,6 +1373,12 @@
     },
     "TypeScript 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TypeScript cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -673,6 +1389,12 @@
     },
     "Xcode · 시뮬레이터": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xcode · Simulators"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -683,6 +1405,12 @@
     },
     "Xcode 빌드 산출물·시뮬레이터 파일을 찾아 디스크 공간을 확보합니다.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finds Xcode build products and simulator files to free up disk space."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -693,6 +1421,12 @@
     },
     "Xcode 산출물 · 시뮬레이터": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xcode build products · Simulators"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -703,6 +1437,12 @@
     },
     "Xcode 산출물 · 시뮬레이터 · DerivedData": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xcode build products · Simulators · DerivedData"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -713,6 +1453,12 @@
     },
     "Xcode 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xcode cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -723,6 +1469,12 @@
     },
     "Xcode가 내려받은 구성요소입니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Component downloaded by Xcode"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -733,6 +1485,12 @@
     },
     "Yarn 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yarn cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -741,8 +1499,46 @@
         }
       }
     },
+    "column.feature": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feature"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기능"
+          }
+        }
+      }
+    },
+    "diskMap.group.whole": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole Disk"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체"
+          }
+        }
+      }
+    },
     "electron-builder 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "electron-builder cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -751,8 +1547,30 @@
         }
       }
     },
+    "folderAccess.revoke": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revoke"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "해제"
+          }
+        }
+      }
+    },
     "node-gyp 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "node-gyp cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -763,6 +1581,12 @@
     },
     "npm 내려받기 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "npm download cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -773,6 +1597,12 @@
     },
     "npx 실행 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "npx cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -783,6 +1613,12 @@
     },
     "pip 내려받기 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pip download cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -793,6 +1629,12 @@
     },
     "pnpm 스토어 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pnpm store cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -801,8 +1643,30 @@
         }
       }
     },
+    "selection.all": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체"
+          }
+        }
+      }
+    },
     "uv 패키지 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "uv package cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -813,6 +1677,12 @@
     },
     "개발 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Developer Caches"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -839,6 +1709,12 @@
     },
     "검색 완료": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan complete"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -849,6 +1725,12 @@
     },
     "검색 중": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanning"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -859,6 +1741,12 @@
     },
     "검색 중… %lld%%": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanning… %lld%%"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -869,6 +1757,12 @@
     },
     "경로 복사": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy Path"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -879,6 +1773,12 @@
     },
     "권장": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recommended"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -889,6 +1789,12 @@
     },
     "권한 없음": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No access"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -899,6 +1805,12 @@
     },
     "권한이 막혀 못 읽는 폴더가 있어요": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some folders can't be read because of permissions"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -909,6 +1821,12 @@
     },
     "권한이 막혀 안을 볼 수 없습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't look inside because of permissions"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -919,6 +1837,12 @@
     },
     "권한이 막혀 읽을 수 없습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't read because of permissions"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -929,6 +1853,12 @@
     },
     "권한이 막힌 폴더가 있어요": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some folders are blocked by permissions"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -939,6 +1869,12 @@
     },
     "기기를 다시 연결하면 내려받습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaded again when you reconnect the device"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -949,6 +1885,12 @@
     },
     "기능": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Features"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -959,6 +1901,12 @@
     },
     "기능별로 나눠 두었습니다. 잠긴 항목은 되돌릴 수 없어 선택할 수 없습니다.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grouped by feature. Locked items can't be recovered, so they can't be selected."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -969,6 +1917,12 @@
     },
     "날짜": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -979,6 +1933,12 @@
     },
     "내려받은 파일 · 중복본": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloads · Duplicates"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -989,6 +1949,12 @@
     },
     "내용이 같은 파일을 찾아 한 벌만 남깁니다.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finds files with identical content and keeps just one copy."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -999,6 +1965,12 @@
     },
     "다른 사용자·시스템 소유라 정리할 수 없습니다: %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Owned by another user or the system, so it can't be cleaned up: %@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1009,6 +1981,12 @@
     },
     "다른 폴더를 골랐습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A different folder was chosen"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1019,6 +1997,12 @@
     },
     "다시 검색": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan Again"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1027,8 +2011,30 @@
         }
       }
     },
+    "다시 만들 수 없음": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't be recreated"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 만들 수 없음"
+          }
+        }
+      }
+    },
     "다시 만들 수 있음": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can be recreated"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1039,6 +2045,12 @@
     },
     "다시 읽기": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reload"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1049,6 +2061,12 @@
     },
     "다시 훑기": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan Again"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1059,6 +2077,12 @@
     },
     "다시 훑으면 이어서가 아니라 처음부터 셉니다.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanning again starts over from the beginning instead of resuming."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1069,6 +2093,12 @@
     },
     "닫기": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1079,6 +2109,12 @@
     },
     "대부분 빌드하면 다시 생깁니다. 되돌릴 수 없는 심사 제출본은 잠가 두었습니다.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Most of these come back when you build. App Store submission archives can't be recovered, so they're locked."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1089,6 +2125,12 @@
     },
     "대용량 파일": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large Files"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1099,6 +2141,12 @@
     },
     "되돌리기": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1109,6 +2157,12 @@
     },
     "되돌리기 완료": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore complete"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1119,6 +2173,12 @@
     },
     "되돌리는 중": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restoring"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1129,6 +2189,12 @@
     },
     "되돌리는 중…": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restoring…"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1139,6 +2205,12 @@
     },
     "되돌리지 못했습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't restore"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1149,6 +2221,12 @@
     },
     "되돌릴 수 없음": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't be undone"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1159,6 +2237,12 @@
     },
     "디스크": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disk"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1169,6 +2253,12 @@
     },
     "디스크 맵": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disk Map"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1179,6 +2269,12 @@
     },
     "디스크 사용량": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disk Usage"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1189,6 +2285,12 @@
     },
     "디스크 정보": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disk Information"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1199,6 +2301,12 @@
     },
     "로그 파일입니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log file"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1209,6 +2317,12 @@
     },
     "루트 또는 홈 디렉토리는 삭제할 수 없습니다: %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't delete the root or home directory: %@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1219,6 +2333,12 @@
     },
     "마지막 사용 %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last used %@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1229,9 +2349,37 @@
     },
     "마지막 정리 후 %lld일이 지났습니다. 다시 만들 수 있는 %@를 정리해 보세요": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It's been %#@days@ since your last cleanup. Try cleaning up %2$@ that can be recreated"
+          },
+          "substitutions": {
+            "days": {
+              "argNum": 1,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg day"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg days"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "마지막 정리 후 %1$lld일이 지났습니다. 다시 만들 수 있는 %2$@를 정리해 보세요"
           }
         }
@@ -1239,6 +2387,12 @@
     },
     "만든 날 %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Created %@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1249,6 +2403,12 @@
     },
     "맨 위 하나만 허용해도 대부분 찾을 수 있어요.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allowing just the top one finds most of it."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1259,6 +2419,12 @@
     },
     "묵은 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stale Caches"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1269,6 +2435,12 @@
     },
     "방금": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "just now"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1279,6 +2451,12 @@
     },
     "방금 사용": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used just now"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1289,6 +2467,12 @@
     },
     "보호된 경로입니다: %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected path: %@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1299,6 +2483,12 @@
     },
     "보호된 항목이라 이 앱으로는 지울 수 없습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This item is protected and can't be removed by this app"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1309,6 +2499,12 @@
     },
     "보호됨": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1319,6 +2515,12 @@
     },
     "부분 선택됨": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partially selected"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1329,6 +2531,12 @@
     },
     "비율 막대": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1339,6 +2547,12 @@
     },
     "빌드하면 다시 생성됩니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recreated when you build"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1349,6 +2563,12 @@
     },
     "사용 가능": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1359,9 +2579,15 @@
     },
     "사용 가능: %@  전체: %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available: %1$@  Total: %2$@"
+          }
+        },
         "ko": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "사용 가능: %1$@  전체: %2$@"
           }
         }
@@ -1369,6 +2595,12 @@
     },
     "사용됨": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1379,6 +2611,12 @@
     },
     "사용량을 재는 중…": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measuring usage…"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1389,6 +2627,12 @@
     },
     "사용량을 재는 중… %lld%%": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measuring usage… %lld%%"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1399,6 +2643,12 @@
     },
     "사유 자세히 보기": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See Details"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1409,6 +2659,12 @@
     },
     "사유를 확인하고 조치한 뒤 실패한 것만 다시 시도할 수 있습니다.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check each reason, fix it, then retry just the failed items."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1419,6 +2675,12 @@
     },
     "상태/동작": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status/Actions"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1429,6 +2691,12 @@
     },
     "선택 안 됨": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not selected"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1439,6 +2707,12 @@
     },
     "선택 크기: %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected size: %@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1449,6 +2723,12 @@
     },
     "선택 항목 정리": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clean Up Selected"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1459,9 +2739,15 @@
     },
     "선택: %lld개 · 전체 %lld개 중": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected: %1$lld of %2$lld"
+          }
+        },
         "ko": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "선택: %1$lld개 · 전체 %2$lld개 중"
           }
         }
@@ -1469,6 +2755,12 @@
     },
     "선택됨": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1479,6 +2771,12 @@
     },
     "선택하세요": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1489,6 +2787,12 @@
     },
     "선택한 항목 없음": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing selected"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1499,6 +2803,12 @@
     },
     "설명": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Description"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1509,6 +2819,12 @@
     },
     "설치 파일은 다시 받을 수 있습니다. 촬영 원본과 백업은 내용을 확인한 뒤 고르세요.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installers can be downloaded again. Check original photos, videos and backups before selecting them."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1519,6 +2835,12 @@
     },
     "스마트 스캔": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Scan"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1529,6 +2851,12 @@
     },
     "시뮬레이터 · 앱 웹 캐시 · 브라우저 캐시 · 로그": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simulators · App web caches · Browser caches · Logs"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1539,6 +2867,12 @@
     },
     "시뮬레이터 임시 파일입니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simulator temporary files"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1549,6 +2883,12 @@
     },
     "시뮬레이터 캐시입니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simulator cache"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1559,6 +2899,12 @@
     },
     "시스템 설정 열기": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open System Settings"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1569,6 +2915,12 @@
     },
     "시스템 임시 파일": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System temporary files"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1579,6 +2931,12 @@
     },
     "시스템이 보호 중이라 삭제할 수 없습니다: %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected by the system, so it can't be deleted: %@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1589,6 +2947,12 @@
     },
     "시작 지점": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starting point"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1599,6 +2963,12 @@
     },
     "시작 지점을 고르세요": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a starting point"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1609,6 +2979,12 @@
     },
     "실패한 것만 다시 시도": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry Failed Items"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1619,6 +2995,12 @@
     },
     "실행 중인 앱입니다. 종료한 뒤 다시 시도해 주세요: %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This app is running. Quit it and try again: %@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1629,6 +3011,12 @@
     },
     "심볼릭 링크가 허용 범위 밖을 가리킵니다: %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symbolic link points outside the allowed scope: %@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1639,6 +3027,12 @@
     },
     "쓰지 않는 앱 지우기": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unused apps"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1649,6 +3043,12 @@
     },
     "아직 훑어보지 않았습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not scanned yet"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1659,6 +3059,12 @@
     },
     "안전": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safe"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1669,6 +3075,12 @@
     },
     "안전 항목 선택": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select Safe Items"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1679,6 +3091,12 @@
     },
     "안전도": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safety"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1689,6 +3107,12 @@
     },
     "안전만": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Safe Only"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1699,6 +3123,12 @@
     },
     "알 수 없는 런타임": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown runtime"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1709,6 +3139,12 @@
     },
     "앱": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1719,6 +3155,12 @@
     },
     "앱 로그": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App logs"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1729,6 +3171,12 @@
     },
     "앱 심사 제출본 — 지우면 복구할 수 없습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Store submission archive — can't be recovered once deleted"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1739,6 +3187,12 @@
     },
     "앱 웹 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Web Caches"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1749,6 +3203,12 @@
     },
     "앱 임시 폴더": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App temporary folder"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1759,6 +3219,12 @@
     },
     "앱을 종료한 뒤 다시 시도하세요": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit the app and try again"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1769,6 +3235,12 @@
     },
     "앱이 다시 만들 수 있는 캐시": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caches apps can recreate"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1779,6 +3251,12 @@
     },
     "앱이 쓰다 남긴 임시 파일": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temporary files left behind by apps"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1789,6 +3267,12 @@
     },
     "약 %@ 남음": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %@ left"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1799,6 +3283,12 @@
     },
     "어디가 용량을 차지하는지 크기순으로 훑어봅니다.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows what takes up space, sorted by size."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1809,6 +3299,12 @@
     },
     "열기…": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open…"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1819,6 +3315,12 @@
     },
     "오늘": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "today"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1829,6 +3331,12 @@
     },
     "오늘 받았습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaded today"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1839,6 +3347,12 @@
     },
     "오늘 사용": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used today"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1849,6 +3363,12 @@
     },
     "옮기지 못했습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't move"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1859,6 +3379,12 @@
     },
     "옮길 용량": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Size to move"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1867,8 +3393,30 @@
         }
       }
     },
+    "옮길 항목": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Items to move"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "옮길 항목"
+          }
+        }
+      }
+    },
     "완료": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1879,6 +3427,12 @@
     },
     "용량 확인": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "disk usage"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1889,6 +3443,12 @@
     },
     "원래 자리로 되돌리는 중": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Putting items back"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1899,6 +3459,12 @@
     },
     "원래 자리로 되돌리는 중…": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Putting items back…"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1909,6 +3475,12 @@
     },
     "원래 자리에 같은 이름이 있습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An item with the same name is already at the original location"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1919,6 +3491,12 @@
     },
     "원래 자리의 항목을 치운 뒤 Finder 휴지통에서 되돌려 놓으세요": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move the item at the original location out of the way, then use “Put Back” in the Finder Trash"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1929,6 +3507,12 @@
     },
     "원래 폴더가 사라졌습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The original folder no longer exists"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1939,6 +3523,12 @@
     },
     "원본은 항상 남깁니다. 아래는 지워도 같은 파일이 그대로 남아 있는 사본입니다.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The original is always kept. The items below are copies — the same file remains after you delete them."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1949,6 +3539,12 @@
     },
     "위로": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1959,6 +3555,12 @@
     },
     "위험": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Danger"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1969,6 +3571,12 @@
     },
     "응용 프로그램": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Applications"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1979,6 +3587,12 @@
     },
     "이 Mac": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Mac"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1989,6 +3603,12 @@
     },
     "이 묶음 전체 선택 / 해제": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select / deselect this group"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -1999,6 +3619,12 @@
     },
     "이 밖은 건드리지 않습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing outside these is touched"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2009,6 +3635,24 @@
     },
     "이 중 %lld개는 다시 만들 수 없습니다 — 휴지통을 비우면 처음부터 받아야 합니다. 휴지통을 비우기 전까지는 모두 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다.": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld of these can't be recreated — once you empty the Trash, it has to be downloaded again from scratch. Everything can be restored until you empty the Trash. Space is freed only when you empty the Trash."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld of these can't be recreated — once you empty the Trash, they have to be downloaded again from scratch. Everything can be restored until you empty the Trash. Space is freed only when you empty the Trash."
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2019,6 +3663,12 @@
     },
     "이동 가능": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Movable"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2029,6 +3679,12 @@
     },
     "이름": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2039,6 +3695,12 @@
     },
     "일부만 되돌렸습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partially restored"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2049,6 +3711,12 @@
     },
     "일부만 정리했습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partially cleaned up"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2059,6 +3727,12 @@
     },
     "임시 파일·빌드 산출물·개발 캐시를 찾아 디스크 공간을 확보합니다.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finds temporary files, build products and developer caches to free up disk space."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2069,6 +3743,12 @@
     },
     "재는 중": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measuring"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2079,6 +3759,12 @@
     },
     "전체": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2089,6 +3775,12 @@
     },
     "전체 디스크 접근 설정 열기": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Full Disk Access Settings"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2099,6 +3791,12 @@
     },
     "전체 디스크 접근을 켜면 옮길 수 있습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on Full Disk Access to move it"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2109,6 +3807,12 @@
     },
     "전체 디스크 접근이 꺼져 있습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full Disk Access is off"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2119,6 +3823,12 @@
     },
     "정리": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clean Up"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2129,6 +3839,12 @@
     },
     "정리 대상": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cleanup Targets"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2139,6 +3855,12 @@
     },
     "정리 대상 범위 밖입니다: %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outside the cleanup scope: %@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2149,6 +3871,12 @@
     },
     "정리 루트 자체는 삭제할 수 없습니다: %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't delete a cleanup root itself: %@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2159,6 +3887,12 @@
     },
     "정리 완료": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cleanup complete"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2169,6 +3903,12 @@
     },
     "정리 요약": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cleanup Summary"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2179,6 +3919,12 @@
     },
     "정리 중": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cleaning Up"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2189,6 +3935,12 @@
     },
     "정리 항목": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cleanup Items"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2199,6 +3951,12 @@
     },
     "정리하는 중": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cleaning up"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2209,6 +3967,12 @@
     },
     "정리하는 중…": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cleaning up…"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2219,6 +3983,12 @@
     },
     "정리하지 못했습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't clean up"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2229,6 +3999,12 @@
     },
     "정리할 폴더 열기": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Folders to Clean"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2239,6 +4015,12 @@
     },
     "정리할 항목이 없음": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to Clean Up"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2249,6 +4031,12 @@
     },
     "정크 파일": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Junk Files"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2259,6 +4047,12 @@
     },
     "주의": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caution"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2269,6 +4063,12 @@
     },
     "준비됨": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2279,6 +4079,12 @@
     },
     "중단": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2289,6 +4095,12 @@
     },
     "중복 파일": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duplicates"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2299,6 +4111,12 @@
     },
     "증가 없음 — 남겨진 임시 파일": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not growing — leftover temporary files"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2309,6 +4127,12 @@
     },
     "증가 중": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Growing"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2319,9 +4143,15 @@
     },
     "지금까지 %@를 휴지통으로 옮김 · 마지막 정리 %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ moved to the Trash so far · Last cleanup %2$@"
+          }
+        },
         "ko": {
           "stringUnit": {
-            "state": "new",
+            "state": "translated",
             "value": "지금까지 %1$@를 휴지통으로 옮김 · 마지막 정리 %2$@"
           }
         }
@@ -2329,6 +4159,12 @@
     },
     "진행 중": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In progress"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2339,6 +4175,12 @@
     },
     "진행률": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progress"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2349,6 +4191,12 @@
     },
     "취소": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2359,6 +4207,12 @@
     },
     "켜면 앱 캐시까지 찾고, ‘다른 앱의 데이터’ 물음이 더 뜨지 않습니다.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn it on to find app caches too and stop the “data from other apps” prompts."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2369,6 +4223,12 @@
     },
     "크기": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Size"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2379,6 +4239,12 @@
     },
     "크기 %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Size %@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2389,6 +4255,12 @@
     },
     "큰 파일": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large Files"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2399,6 +4271,12 @@
     },
     "테스트용 시뮬레이터 기기입니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simulator device for testing"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2409,6 +4287,12 @@
     },
     "폭주 임시 파일": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Runaway Temp Files"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2419,6 +4303,12 @@
     },
     "폴더 접근 권한을 저장하지 못했습니다: %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't save folder access: %@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2429,6 +4319,12 @@
     },
     "폴더 허락 필요": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder access needed"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2439,6 +4335,12 @@
     },
     "표시 완료": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2449,6 +4351,12 @@
     },
     "한 번에 전체를 점검하고 회수할 수 있는 용량을 알려줍니다.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checks everything at once and shows how much space you can reclaim."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2459,6 +4367,12 @@
     },
     "항목": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Items"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2469,6 +4383,24 @@
     },
     "항목 %lld개": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items"
+                }
+              }
+            }
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2479,6 +4411,12 @@
     },
     "해제": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2489,6 +4427,12 @@
     },
     "허락할 폴더": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folders to Allow"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2499,6 +4443,12 @@
     },
     "허용": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2509,6 +4459,12 @@
     },
     "허용된 범위 안에서 유난히 큰 파일을 찾습니다.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finds unusually large files within the allowed locations."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2519,6 +4475,12 @@
     },
     "허용됨": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allowed"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2529,6 +4491,12 @@
     },
     "홈": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2539,6 +4507,12 @@
     },
     "홈 안": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inside Home"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2549,6 +4523,12 @@
     },
     "홈·볼륨 전체·응용 프로그램까지 살펴봅니다.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explore your home folder, the whole volume, or Applications."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2559,6 +4539,12 @@
     },
     "확인": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2569,6 +4555,12 @@
     },
     "확인 필요": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs review"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2579,6 +4571,12 @@
     },
     "회수 가능": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reclaimable"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2589,6 +4587,12 @@
     },
     "회수 가능 %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ reclaimable"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2599,6 +4603,12 @@
     },
     "회수할 만한 크기의 항목을 찾지 못했습니다.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No items large enough to be worth reclaiming were found."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2609,6 +4619,12 @@
     },
     "훑기를 멈췄습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan stopped"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2619,6 +4635,12 @@
     },
     "훑는 중": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanning"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2629,6 +4651,12 @@
     },
     "휴지통 열기": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Trash"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2639,6 +4667,12 @@
     },
     "휴지통에 남아 있습니다. Finder 휴지통에서 직접 '되돌려 놓기'를 할 수 있습니다.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They're still in the Trash. You can use “Put Back” in the Finder Trash yourself."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2649,6 +4683,12 @@
     },
     "휴지통에서 찾을 수 없습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not found in the Trash"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2659,6 +4699,12 @@
     },
     "휴지통으로 옮기기": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to Trash"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2669,6 +4715,12 @@
     },
     "휴지통으로 옮기는 중…": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moving to Trash…"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2679,6 +4731,12 @@
     },
     "휴지통으로 이동": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to Trash"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2689,6 +4747,12 @@
     },
     "휴지통으로 이동할까요?": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move to Trash?"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2699,6 +4763,12 @@
     },
     "휴지통을 비우기 전까지 복원할 수 있습니다.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can restore items until you empty the Trash."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2709,6 +4779,12 @@
     },
     "휴지통을 비우기 전까지 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다.": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can restore items until you empty the Trash. Space is freed only when you empty the Trash."
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2719,6 +4795,12 @@
     },
     "휴지통을 비우면 %@가 실제로 확보됩니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empty the Trash to actually free up %@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2729,6 +4811,12 @@
     },
     "휴지통을 비워야 디스크 공간이 늘어납니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empty the Trash to free up disk space"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2739,6 +4827,12 @@
     },
     "휴지통을 비웠거나 이미 옮겨져 되돌릴 수 없습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Trash was emptied or the item was already moved, so it can't be restored"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -2749,6 +4843,12 @@
     },
     "휴지통을 열지 못했습니다": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't open the Trash"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",

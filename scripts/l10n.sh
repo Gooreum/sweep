@@ -45,13 +45,16 @@ PY
   # 한국어 항목을 키 그대로 적어 둔다. 소스 언어라고 비워 두면 ko.lproj에
   # Localizable.strings가 생기지 않고, 그러면 한국어 사용자도 개발 지역(en)의
   # 번역을 받는다 — 실제로 한국어 화면에 "Scan"이 떴다.
+  # 같은 낱말이 영어로는 다른 말이 되는 곳은 영문 키 + defaultValue(한국어)로 둔다.
+  # 그때 sync가 적어 둔 ko 값(state "new")을 키로 덮지 않는다.
   python3 - "$CATALOG" <<'PY'
 import json, sys
 path = sys.argv[1]
 catalog = json.load(open(path))
 for key, entry in catalog["strings"].items():
-    entry.setdefault("localizations", {}).setdefault(
+    ko = entry.setdefault("localizations", {}).setdefault(
         "ko", {"stringUnit": {"state": "translated", "value": key}})
+    ko["stringUnit"]["state"] = "translated"
 with open(path, "w") as f:
     json.dump(catalog, f, ensure_ascii=False, indent=2, sort_keys=True)
     f.write("\n")

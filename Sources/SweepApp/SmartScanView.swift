@@ -225,7 +225,8 @@ struct SmartScanView: View {
                     Spacer(minLength: 12)
 
                     if granted {
-                        Button("해제") { app.revokeFolderAccess(grantable) }
+                        // "해제"는 선택 프리셋에도 있다. 영어로는 다른 말이라 키를 나눈다.
+                        Button(String(localized: "folderAccess.revoke", defaultValue: "해제")) { app.revokeFolderAccess(grantable) }
                     } else {
                         Button("열기…") { grant(grantable) }
                     }

@@ -20,7 +20,7 @@ public struct DiskMapRoot: Identifiable, Sendable, Hashable {
         /// 화면에 보이는 이름. rawValue는 리터럴이라 현지화할 수 없다.
         public var title: String {
             switch self {
-            case .whole: String(localized: "전체")
+            case .whole: String(localized: "diskMap.group.whole", defaultValue: "전체")
             case .home: String(localized: "홈 안")
             case .apps: String(localized: "응용 프로그램")
             case .cleanup: String(localized: "정리 대상")
