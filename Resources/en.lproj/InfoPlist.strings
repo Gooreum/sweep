@@ -1,0 +1,4 @@
+/* 권한 요청 대화상자 문구. 키는 Info.plist와 같다. */
+"NSDesktopFolderUsageDescription" = "Sweep reads your Desktop to find items that take up space.";
+"NSDocumentsFolderUsageDescription" = "Sweep reads your Documents folder to find items that take up space.";
+"NSDownloadsFolderUsageDescription" = "Sweep reads your Downloads folder to check what can be cleaned up and how much space it uses.";

@@ -21,11 +21,11 @@ public enum RemovalFailureKind: Sendable, Hashable {
     /// 앱을 대신 끄지 않는다. App Store 빌드에서는 남의 프로세스를 끝낼 수 없다(README CPU 절).
     public var advice: String? {
         switch self {
-        case .applicationRunning: "앱을 종료한 뒤 다시 시도하세요"
-        case .permissionDenied: "전체 디스크 접근을 켜면 옮길 수 있습니다"
-        case .protected: "보호된 항목이라 이 앱으로는 지울 수 없습니다"
-        case .destinationOccupied: "원래 자리의 항목을 치운 뒤 Finder 휴지통에서 되돌려 놓으세요"
-        case .missingFromTrash: "휴지통을 비웠거나 이미 옮겨져 되돌릴 수 없습니다"
+        case .applicationRunning: String(localized: "앱을 종료한 뒤 다시 시도하세요")
+        case .permissionDenied: String(localized: "전체 디스크 접근을 켜면 옮길 수 있습니다")
+        case .protected: String(localized: "보호된 항목이라 이 앱으로는 지울 수 없습니다")
+        case .destinationOccupied: String(localized: "원래 자리의 항목을 치운 뒤 Finder 휴지통에서 되돌려 놓으세요")
+        case .missingFromTrash: String(localized: "휴지통을 비웠거나 이미 옮겨져 되돌릴 수 없습니다")
         case .other: nil
         }
     }
@@ -99,6 +99,6 @@ public struct RemovalReport: Sendable, Hashable {
     /// 이걸 말하지 않으면 "정리했는데 왜 디스크가 그대로지?"가 된다.
     /// 옮긴 것이 없으면 nil. "0 바이트가 확보됩니다"는 알려줄 것이 아니다.
     public var trashNotice: String? {
-        reclaimedBytes > 0 ? "휴지통을 비우면 \(formattedReclaimed)가 실제로 확보됩니다" : nil
+        reclaimedBytes > 0 ? String(localized: "휴지통을 비우면 \(formattedReclaimed)가 실제로 확보됩니다") : nil
     }
 }

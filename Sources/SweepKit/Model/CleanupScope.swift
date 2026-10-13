@@ -38,8 +38,8 @@ extension CleanupScope {
             if path.hasPrefix("/var/folders/") || path.hasPrefix("/private/var/folders/") {
                 guard !sawTemporary else { return nil }
                 sawTemporary = true
-                return CleanupScope(url: url, label: "앱 임시 폴더",
-                                    detail: "앱이 쓰다 남긴 임시 파일")
+                return CleanupScope(url: url, label: String(localized: "앱 임시 폴더"),
+                                    detail: String(localized: "앱이 쓰다 남긴 임시 파일"))
             }
 
             let label = path.hasPrefix(home)
@@ -52,14 +52,14 @@ extension CleanupScope {
 
     private static func detail(for label: String) -> String {
         switch label {
-        case "~/Library/Developer": "Xcode 산출물 · 시뮬레이터 · DerivedData"
-        case "~/Library/Caches": "앱이 다시 만들 수 있는 캐시"
-        case "~/Library/Logs": "앱 로그"
-        case "~/Downloads": "내려받은 파일 · 중복본"
-        case "/private/tmp": "시스템 임시 파일"
+        case "~/Library/Developer": String(localized: "Xcode 산출물 · 시뮬레이터 · DerivedData")
+        case "~/Library/Caches": String(localized: "앱이 다시 만들 수 있는 캐시")
+        case "~/Library/Logs": String(localized: "앱 로그")
+        case "~/Downloads": String(localized: "내려받은 파일 · 중복본")
+        case "/private/tmp": String(localized: "시스템 임시 파일")
         // 폴더 전체가 아니라 안의 캐시만 본다. 설정과 인증 정보는 건드리지 않는다.
-        case "~/.npm": "npm 내려받기 캐시"
-        case "~/.expo": "Expo 캐시"
+        case "~/.npm": String(localized: "npm 내려받기 캐시")
+        case "~/.expo": String(localized: "Expo 캐시")
         default: ""
         }
     }

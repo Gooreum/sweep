@@ -20,7 +20,7 @@ struct CleanupConfirmSheet: View {
     }
 
     var body: some View {
-        Retro95Dialog(title: "\(model.selectedItems.count)개 항목을 휴지통으로 옮깁니다",
+        Retro95Dialog(title: String(localized: "\(model.selectedItems.count)개 항목을 휴지통으로 옮깁니다"),
                       icon: .warning) {
             VStack(alignment: .leading, spacing: 12) {
                 Text(bodyText)
@@ -43,17 +43,16 @@ struct CleanupConfirmSheet: View {
     /// 위험한 것이 섞였을 때만 그것을 먼저 말한다. 없으면 군더더기가 된다.
     private var bodyText: String {
         riskyCount > 0
-            ? "이 중 \(riskyCount)개는 다시 만들 수 없습니다 — 휴지통을 비우면 처음부터 받아야 합니다. "
-                + "휴지통을 비우기 전까지는 모두 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다."
-            : "휴지통을 비우기 전까지 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다."
+            ? String(localized: "이 중 \(riskyCount)개는 다시 만들 수 없습니다 — 휴지통을 비우면 처음부터 받아야 합니다. 휴지통을 비우기 전까지는 모두 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다.")
+            : String(localized: "휴지통을 비우기 전까지 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다.")
     }
 
     private var summaryBlock: some View {
         VStack(spacing: 0) {
-            row("옮길 항목", "\(model.selectedItems.count)개", tint: R95.black)
-            row("옮길 용량", model.formattedSelectedSize, tint: R95.navy)
+            row(String(localized: "옮길 항목"), String(localized: "\(model.selectedItems.count)개"), tint: R95.black)
+            row(String(localized: "옮길 용량"), model.formattedSelectedSize, tint: R95.navy)
             if riskyCount > 0 {
-                row("다시 만들 수 없음", "\(riskyCount)개", tint: R95.danger, isRisky: true)
+                row(String(localized: "다시 만들 수 없음"), String(localized: "\(riskyCount)개"), tint: R95.danger, isRisky: true)
             }
         }
         .padding(.horizontal, 14)

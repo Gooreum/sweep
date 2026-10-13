@@ -51,10 +51,6 @@ extension Color {
 enum ItemTableColumns {
     static let check: CGFloat = 28
     static let icon: CGFloat = 24
-    static let detail: CGFloat = 200
-    static let dates: CGFloat = 150
-    static let size: CGFloat = 80
-    static let safety: CGFloat = 80
     static let padding: CGFloat = 6
     static let sectionHeight: CGFloat = 26
     static let actionHeight: CGFloat = 76
@@ -62,14 +58,26 @@ enum ItemTableColumns {
     static let actionButtonHeight: CGFloat = 44
 
     /// 날짜가 하나도 없는 결과에서 빈 날짜 열을 두면 그 폭만큼 위험 설명이 잘린다.
-    static func headers(showsDates: Bool) -> [Retro95TableHeader.Column] {
-        [.init(title: "", width: check),
-         .init(title: "", width: icon),
-         .init(title: "이름"),
-         .init(title: "설명", width: detail)]
-        + (showsDates ? [.init(title: "날짜", width: dates)] : [])
-        + [.init(title: "크기", width: size, alignment: .trailing),
-           .init(title: "안전도", width: safety, alignment: .center)]
+    static func visible(showsDates: Bool) -> [ItemColumnLayout.Column] {
+        showsDates ? [.detail, .dates, .size, .safety] : [.detail, .size, .safety]
+    }
+
+    /// 폭은 `layout`에서 받는다. 경계를 끌면 `onDrag`가 어느 열의 왼쪽 경계인지와 거리를 받는다.
+    static func headers(layout: ItemColumnLayout, showsDates: Bool,
+                        onDrag: @escaping @MainActor (ItemColumnLayout.Column, CGFloat) -> Void)
+        -> [Retro95TableHeader.Column] {
+        func width(_ column: ItemColumnLayout.Column) -> CGFloat { CGFloat(layout.width(column)) }
+        return [.init(title: "", width: check),
+                .init(title: "", width: icon),
+                .init(title: String(localized: "이름")),
+                .init(title: String(localized: "설명"), width: width(.detail),
+                      onResizeLeadingEdge: { onDrag(.detail, $0) })]
+        + (showsDates ? [.init(title: String(localized: "날짜"), width: width(.dates),
+                               onResizeLeadingEdge: { onDrag(.dates, $0) })] : [])
+        + [.init(title: String(localized: "크기"), width: width(.size), alignment: .trailing,
+                 onResizeLeadingEdge: { onDrag(.size, $0) }),
+           .init(title: String(localized: "안전도"), width: width(.safety), alignment: .center,
+                 onResizeLeadingEdge: { onDrag(.safety, $0) })]
     }
 }
 
@@ -79,10 +87,10 @@ enum SmartSummaryColumns {
     static let size: CGFloat = 96
     static let bar: CGFloat = 120
     static let headers: [Retro95TableHeader.Column] = [
-        .init(title: "기능"),
-        .init(title: "항목", width: count, alignment: .trailing),
-        .init(title: "크기", width: size, alignment: .trailing),
-        .init(title: "비율 막대", width: bar)
+        .init(title: String(localized: "column.feature", defaultValue: "기능")),
+        .init(title: String(localized: "항목"), width: count, alignment: .trailing),
+        .init(title: String(localized: "크기"), width: size, alignment: .trailing),
+        .init(title: String(localized: "비율 막대"), width: bar)
     ]
 }
 
@@ -107,15 +115,16 @@ enum DiskMapColumns {
     static let size: CGFloat = 90
     static let location: CGFloat = 168
     static let status: CGFloat = 92
-    static let open: CGFloat = 60
+    // 영어 "Open…"이 60pt에서 두 줄로 꺾였다.
+    static let open: CGFloat = 72
     static let iconButton: CGFloat = 40
     static let disclosure: CGFloat = 16
     static let actionSpacing: CGFloat = 4
     static let actions = status + open + iconButton * 3 + disclosure + actionSpacing * 5
     static let headers: [Retro95TableHeader.Column] = [
-        .init(title: "이름", width: name),
-        .init(title: "크기", width: size, alignment: .trailing),
-        .init(title: "비율 막대"),
-        .init(title: "상태/동작", width: actions)
+        .init(title: String(localized: "이름"), width: name),
+        .init(title: String(localized: "크기"), width: size, alignment: .trailing),
+        .init(title: String(localized: "비율 막대")),
+        .init(title: String(localized: "상태/동작"), width: actions)
     ]
 }

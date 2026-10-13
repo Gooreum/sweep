@@ -18,6 +18,9 @@ import ProjectDescription
 
 let project = Project(
     name: "Sweep",
+    // Info.plist의 CFBundleDevelopmentRegion과 맞춘다. 카탈로그의 소스 언어는 ko지만
+    // 한국어도 영어도 아닌 사용자에게는 영어를 보여준다.
+    options: .options(developmentRegion: "en"),
     targets: [
         .target(
             name: "SweepKit",
@@ -38,11 +41,17 @@ let project = Project(
             // 버전 출처를 하나로 유지한다. 여기서 다시 적으면 직접 배포본과
             // App Store 빌드의 버전이 조용히 갈린다.
             infoPlist: .file(path: "Sources/SweepApp/Info.plist"),
-            // `**`가 아니라 `*.swift`다. 같은 디렉토리의 Info.plist·entitlements가
-            // 리소스로 딸려 들어가면 번들에 중복으로 박힌다.
-            sources: ["Sources/SweepApp/*.swift"],
+            // `**`가 아니라 `**/*.swift`다. 같은 디렉토리의 Info.plist·entitlements가
+            // 리소스로 딸려 들어가면 번들에 중복으로 박힌다. 하위 폴더(`Retro95/`)는
+            // 들어가야 한다 — `*.swift`로 두면 거기 정의된 타입을 못 찾아 아카이브가 깨진다.
+            sources: ["Sources/SweepApp/**/*.swift"],
             // `scripts/make-icon.swift --appiconset`이 만든다. 저장소에는 없다.
-            resources: ["Resources/Assets.xcassets"],
+            // 카탈로그는 Xcode가 직접 컴파일한다. 키를 맞추는 일은 `scripts/l10n.sh extract`.
+            resources: [
+                "Resources/Assets.xcassets",
+                "Resources/Localizable.xcstrings",
+                "Resources/*.lproj/**",
+            ],
             entitlements: .file(path: "Sources/SweepApp/Sweep.entitlements"),
             dependencies: [.target(name: "SweepKit")],
             // 아카이브는 **개발 서명**으로 만든다. 배포 인증서를 여기 적으면

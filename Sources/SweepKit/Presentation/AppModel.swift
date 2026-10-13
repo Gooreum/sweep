@@ -339,34 +339,34 @@ public struct StatusLine: Equatable, Sendable {
     static func scan(_ model: ScanModel?) -> StatusLine {
         let status: String
         switch model?.phase {
-        case .idle, .none: status = "준비됨"
-        case let .scanning(percent, _): status = "검색 중… \(percent)%"
-        case .results: status = "검색 완료"
-        case .removing: status = "정리하는 중…"
-        case .cleaned: status = "정리 완료"
-        case .restoring: status = "되돌리는 중…"
-        case .restored: status = "되돌리기 완료"
+        case .idle, .none: status = String(localized: "준비됨")
+        case let .scanning(percent, _): status = String(localized: "검색 중… \(percent)%")
+        case .results: status = String(localized: "검색 완료")
+        case .removing: status = String(localized: "정리하는 중…")
+        case .cleaned: status = String(localized: "정리 완료")
+        case .restoring: status = String(localized: "되돌리는 중…")
+        case .restored: status = String(localized: "되돌리기 완료")
         }
         return StatusLine(
             status: status,
-            count: model.map { "항목 \($0.items.count)개" } ?? empty,
-            size: model.flatMap { $0.items.isEmpty ? nil : "회수 가능 \($0.formattedTotalSize)" } ?? empty)
+            count: model.map { String(localized: "항목 \($0.items.count)개") } ?? empty,
+            size: model.flatMap { $0.items.isEmpty ? nil : String(localized: "회수 가능 \($0.formattedTotalSize)") } ?? empty)
     }
 
     static func diskMap(loadPhase: DiskMapModel.LoadPhase?, current: DiskUsageNode?) -> StatusLine {
         let status: String
         switch loadPhase {
-        case let .counting(scanned): status = "\(scanned.formatted())개 세는 중…"
-        case let .measuring(percent): status = "사용량을 재는 중… \(percent)%"
-        case .none: status = current == nil ? "준비됨" : "표시 완료"
+        case let .counting(scanned): status = String(localized: "\(scanned.formatted())개 세는 중…")
+        case let .measuring(percent): status = String(localized: "사용량을 재는 중… \(percent)%")
+        case .none: status = current == nil ? String(localized: "준비됨") : String(localized: "표시 완료")
         }
         // 재는 중에는 이전 트리 숫자를 보여주지 않는다 — 곧 바뀔 값이다.
         guard loadPhase == nil, let current else {
             return StatusLine(status: status, count: empty, size: empty)
         }
         return StatusLine(status: status,
-                          count: "항목 \(current.children.count)개",
-                          size: "크기 \(current.formattedSize)")
+                          count: String(localized: "항목 \(current.children.count)개"),
+                          size: String(localized: "크기 \(current.formattedSize)"))
     }
 }
 
@@ -378,7 +378,7 @@ extension AppModel {
         case .diskMap:
             StatusLine.diskMap(loadPhase: diskMapModel?.loadPhase, current: diskMapModel?.current)
         case .junk where needsFolderAccess:
-            StatusLine(status: "폴더 허락 필요", count: StatusLine.empty, size: StatusLine.empty)
+            StatusLine(status: String(localized: "폴더 허락 필요"), count: StatusLine.empty, size: StatusLine.empty)
         default:
             StatusLine.scan(currentModel)
         }

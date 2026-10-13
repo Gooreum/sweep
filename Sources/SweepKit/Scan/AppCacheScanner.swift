@@ -96,8 +96,8 @@ public struct AppCacheScanner: CleanupScanner {
     private static func detail(for url: URL) -> String {
         let app = appName(of: url)
         return url.lastPathComponent == "CacheStorage"
-            ? "\(app) 오프라인 자산 — 다시 내려받습니다"
-            : "\(app)이(가) 다시 만듭니다"
+            ? String(localized: "\(app) 오프라인 자산 — 다시 내려받습니다")
+            : String(localized: "\(app)이(가) 다시 만듭니다")
     }
 
     /// `.../Application Support/Slack/Cache` → `Slack`.
@@ -106,7 +106,7 @@ public struct AppCacheScanner: CleanupScanner {
         let parts = url.pathComponents
         guard let anchor = parts.lastIndex(where: {
             $0 == "Application Support" || $0 == "Caches"
-        }), anchor + 1 < parts.count else { return "앱" }
+        }), anchor + 1 < parts.count else { return String(localized: "앱") }
         return parts[anchor + 1]
     }
 }

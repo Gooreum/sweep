@@ -1,0 +1,4 @@
+/* 권한 요청 대화상자 문구. 키는 Info.plist와 같다. */
+"NSDesktopFolderUsageDescription" = "데스크탑에서 용량을 차지하는 항목을 찾기 위해 읽습니다.";
+"NSDocumentsFolderUsageDescription" = "문서 폴더에서 용량을 차지하는 항목을 찾기 위해 읽습니다.";
+"NSDownloadsFolderUsageDescription" = "다운로드 폴더의 정리 대상과 용량을 확인하기 위해 읽습니다.";

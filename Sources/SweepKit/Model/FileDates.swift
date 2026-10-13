@@ -32,7 +32,7 @@ public struct FileDates: Sendable, Hashable {
     /// 만든 날은 "언제부터 쌓였나"라 상대 표현("1년 전")보다 실제 날짜가 쓸모 있다.
     public func createdLabel(calendar: Calendar = .current) -> String? {
         guard let created else { return nil }
-        return Self.dateText(created, calendar: calendar).map { "\($0) 만듦" }
+        return Self.dateText(created, calendar: calendar).map { String(localized: "\($0) 만듦") }
     }
 
     /// "6개월 전 사용". 모르면 nil.
@@ -45,11 +45,11 @@ public struct FileDates: Sendable, Hashable {
         let days = Int(now.timeIntervalSince(lastUsed) / 86_400)
         switch days {
         // 시계가 어긋났거나 스캔 도중에 쓰인 경우다. "-3일 전"이라고 쓰지 않는다.
-        case ..<0: return "방금 사용"
-        case 0: return "오늘 사용"
-        case ..<30: return "\(days)일 전 사용"
-        case ..<365: return "\(days / 30)개월 전 사용"
-        default: return "\(days / 365)년 전 사용"
+        case ..<0: return String(localized: "방금 사용")
+        case 0: return String(localized: "오늘 사용")
+        case ..<30: return String(localized: "\(days)일 전 사용")
+        case ..<365: return String(localized: "\(days / 30)개월 전 사용")
+        default: return String(localized: "\(days / 365)년 전 사용")
         }
     }
 
@@ -58,9 +58,9 @@ public struct FileDates: Sendable, Hashable {
     /// 목록에는 짧은 말로 쓰고, 정확한 날짜는 마우스를 올린 사람에게만 준다.
     public func tooltipLine(calendar: Calendar = .current) -> String? {
         let parts = [
-            created.flatMap { Self.dateText($0, calendar: calendar) }.map { "만든 날 \($0)" },
+            created.flatMap { Self.dateText($0, calendar: calendar) }.map { String(localized: "만든 날 \($0)") },
             lastUsed.flatMap { Self.dateText($0, calendar: calendar) }
-                .map { "마지막 사용 \($0)" },
+                .map { String(localized: "마지막 사용 \($0)") },
         ].compactMap { $0 }
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }

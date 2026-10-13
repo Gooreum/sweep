@@ -51,7 +51,7 @@ public struct DuplicateScanner: CleanupScanner {
                             size: size,
                             category: .duplicate,
                             safety: .safe,
-                            detail: "\(original.url.lastPathComponent)와 내용이 같습니다",
+                            detail: String(localized: "\(original.url.lastPathComponent)와 내용이 같습니다"),
                             dates: FileDates(created: duplicate.created,
                                              lastUsed: duplicate.modified)))
                     }

@@ -39,14 +39,14 @@ struct SmartScanView: View {
                 scanning(percent: percent, remaining: remaining)
             case let .removing(done, total):
                 Retro95ScanPanel(
-                    title: "정리 중", headline: "정리하는 중", detail: nil,
+                    title: String(localized: "정리 중"), headline: String(localized: "정리하는 중"), detail: nil,
                     fraction: total > 0 ? Double(done) / Double(total) : nil,
                     percentText: total > 0 ? "\(done * 100 / total)%" : nil,
                     leftFooter: "\(done) / \(total)", rightFooter: nil)
                     .padding(10)
             case let .restoring(done, total):
                 Retro95ScanPanel(
-                    title: "되돌리는 중", headline: "원래 자리로 되돌리는 중", detail: nil,
+                    title: String(localized: "되돌리는 중"), headline: String(localized: "원래 자리로 되돌리는 중"), detail: nil,
                     fraction: total > 0 ? Double(done) / Double(total) : nil,
                     percentText: total > 0 ? "\(done * 100 / total)%" : nil,
                     leftFooter: "\(done) / \(total)", rightFooter: nil)
@@ -93,14 +93,14 @@ struct SmartScanView: View {
     @ViewBuilder
     private var diskCard: some View {
         if let usage {
-            Retro95GroupBox(title: "디스크 정보") {
+            Retro95GroupBox(title: String(localized: "디스크 정보")) {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 16) {
                         PixelIcon(art: .hardDrive, size: 48)
                         Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 6) {
-                            diskValue("사용 가능", usage.formattedAvailable)
-                            diskValue("사용됨", usage.formattedUsed)
-                            diskValue("전체", usage.formattedTotal)
+                            diskValue(String(localized: "사용 가능"), usage.formattedAvailable)
+                            diskValue(String(localized: "사용됨"), usage.formattedUsed)
+                            diskValue(String(localized: "전체"), usage.formattedTotal)
                         }
                         Spacer(minLength: 0)
                     }
@@ -123,7 +123,7 @@ struct SmartScanView: View {
 
     /// Sweep이 들여다보는 곳. 목록은 안전 게이트의 허용 루트에서 유도된다.
     private var scopeCard: some View {
-        Retro95GroupBox(title: "Sweep이 보는 곳") {
+        Retro95GroupBox(title: String(localized: "Sweep이 보는 곳")) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Text("이 밖은 건드리지 않습니다")
@@ -225,7 +225,8 @@ struct SmartScanView: View {
                     Spacer(minLength: 12)
 
                     if granted {
-                        Button("해제") { app.revokeFolderAccess(grantable) }
+                        // "해제"는 선택 프리셋에도 있다. 영어로는 다른 말이라 키를 나눈다.
+                        Button(String(localized: "folderAccess.revoke", defaultValue: "해제")) { app.revokeFolderAccess(grantable) }
                     } else {
                         Button("열기…") { grant(grantable) }
                     }
@@ -275,7 +276,7 @@ struct SmartScanView: View {
         let grantable = FolderAccess.Grantable(folder: scope.url,
                                                label: scope.label,
                                                purpose: scope.detail.isEmpty
-                                                   ? "정리 대상" : scope.detail)
+                                                   ? String(localized: "정리 대상") : scope.detail)
         guard let picked = FolderPicker.ask(for: grantable) else { return }
         do {
             try app.grantFolderAccess(picked, as: grantable)
@@ -297,10 +298,10 @@ struct SmartScanView: View {
     private func scanning(percent: Int, remaining: Int?) -> some View {
         VStack(spacing: 0) {
             Retro95ScanPanel(
-                title: "검색 중", headline: "Mac 전체를 훑는 중…", detail: nil,
+                title: String(localized: "검색 중"), headline: String(localized: "Mac 전체를 훑는 중…"), detail: nil,
                 fraction: Double(percent) / 100, percentText: "\(percent)%",
-                leftFooter: model.items.isEmpty ? nil : "\(model.items.count)개 · \(model.formattedTotalSize) 발견",
-                rightFooter: remaining.map { "약 \(ProgressDisplay.readable(seconds: $0)) 남음" })
+                leftFooter: model.items.isEmpty ? nil : String(localized: "\(model.items.count)개 · \(model.formattedTotalSize) 발견"),
+                rightFooter: remaining.map { String(localized: "약 \(ProgressDisplay.readable(seconds: $0)) 남음") })
             Spacer()
         }
         .padding(10)
@@ -316,7 +317,7 @@ struct SmartScanView: View {
                 if let line = app.cleanupSummary.statusLine() {
                     Text(line).font(R95.ui(11)).monospacedDigit()
                 }
-                Retro95GroupBox(title: "정리 요약") {
+                Retro95GroupBox(title: String(localized: "정리 요약")) {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack(alignment: .firstTextBaseline) {
                             Text(model.formattedTotalSize).font(R95.ui(20, bold: true)).monospacedDigit()

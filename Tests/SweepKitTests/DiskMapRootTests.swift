@@ -184,4 +184,10 @@ struct DiskMapRootTests {
                     "라벨에 홈 경로가 그대로 있다: \(root.label)")
         }
     }
+
+    @Test("그룹 표시명은 현지화 키를 거치고 번역이 없으면 rawValue와 같다")
+    func groupTitlesMatchRawValuesWithoutTranslation() {
+        #expect(DiskMapRoot.Group.allCases.map(\.title)
+                == ["전체", "홈 안", "응용 프로그램", "정리 대상"])
+    }
 }

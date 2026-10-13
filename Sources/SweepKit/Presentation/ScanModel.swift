@@ -51,9 +51,9 @@ extension SafetyLevel {
     /// 묶음 머리에 쓰는 이름. 등급 이름("안전")이 아니라 **무엇을 뜻하는지**를 적는다.
     public var groupLabel: String {
         switch self {
-        case .safe: "다시 만들 수 있음"
-        case .caution: "확인 필요"
-        case .danger: "되돌릴 수 없음"
+        case .safe: String(localized: "다시 만들 수 있음")
+        case .caution: String(localized: "확인 필요")
+        case .danger: String(localized: "되돌릴 수 없음")
         }
     }
 }
@@ -161,6 +161,16 @@ public final class ScanModel {
         case recommended = "권장"
         case all = "전체"
         case none = "해제"
+
+        /// 화면에 보이는 이름. rawValue는 리터럴이라 현지화할 수 없다.
+        public var title: String {
+            switch self {
+            case .safeOnly: String(localized: "안전만")
+            case .recommended: String(localized: "권장")
+            case .all: String(localized: "selection.all", defaultValue: "전체")
+            case .none: String(localized: "해제")
+            }
+        }
     }
 
     public func apply(_ preset: SelectionPreset) {

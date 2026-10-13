@@ -18,6 +18,10 @@ struct FeatureScreen: View {
     @State private var trashOpenFailed = false
     /// 되돌리기 실패 목록 시트.
     @State private var showsRestoreFailures = false
+    /// 열 머리 경계를 끌어 바꾼 폭. 다음 실행에도 남긴다.
+    @AppStorage("itemTable.columns") private var columns = ItemColumnLayout()
+    /// 이름 열의 실제 폭을 구하려고 표 전체 폭을 잰다.
+    @State private var tableWidth: CGFloat = 0
 
     var body: some View {
         VStack(spacing: 8) {
@@ -83,13 +87,13 @@ struct FeatureScreen: View {
         VStack(spacing: 0) {
             // 다 끝나기 전에도 성과가 보여야 기다릴 만하다
             Retro95ScanPanel(
-                title: "검색 중",
-                headline: "\(feature.displayName) 훑는 중…",
+                title: String(localized: "검색 중"),
+                headline: String(localized: "\(feature.displayName) 훑는 중…"),
                 detail: feature.summary,
                 fraction: Double(percent) / 100,
                 percentText: "\(percent)%",
-                leftFooter: model.items.isEmpty ? nil : "\(model.items.count)개 · \(model.formattedTotalSize) 발견",
-                rightFooter: remaining.map { "약 \(ProgressDisplay.readable(seconds: $0)) 남음" })
+                leftFooter: model.items.isEmpty ? nil : String(localized: "\(model.items.count)개 · \(model.formattedTotalSize) 발견"),
+                rightFooter: remaining.map { String(localized: "약 \(ProgressDisplay.readable(seconds: $0)) 남음") })
             Spacer()
         }
     }
@@ -97,8 +101,8 @@ struct FeatureScreen: View {
     private func removing(done: Int, total: Int) -> some View {
         VStack(spacing: 0) {
             Retro95ScanPanel(
-                title: "정리 중",
-                headline: "휴지통으로 옮기는 중…",
+                title: String(localized: "정리 중"),
+                headline: String(localized: "휴지통으로 옮기는 중…"),
                 detail: nil,
                 fraction: total > 0 ? Double(done) / Double(total) : nil,
                 percentText: total > 0 ? "\(done * 100 / total)%" : nil,
@@ -111,8 +115,8 @@ struct FeatureScreen: View {
     private func restoring(done: Int, total: Int) -> some View {
         VStack(spacing: 0) {
             Retro95ScanPanel(
-                title: "되돌리는 중",
-                headline: "원래 자리로 되돌리는 중…",
+                title: String(localized: "되돌리는 중"),
+                headline: String(localized: "원래 자리로 되돌리는 중…"),
                 detail: nil,
                 fraction: total > 0 ? Double(done) / Double(total) : nil,
                 percentText: total > 0 ? "\(done * 100 / total)%" : nil,
@@ -129,9 +133,9 @@ struct FeatureScreen: View {
             let restored = report.succeeded.count
             let failed = report.failed.count
             let (title, icon): (String, PixelArt) =
-                restored == 0 ? ("되돌리지 못했습니다", .warning)
-                : failed > 0 ? ("일부만 되돌렸습니다", .warning)
-                : ("되돌리기 완료", .check)
+                restored == 0 ? (String(localized: "되돌리지 못했습니다"), .warning)
+                : failed > 0 ? (String(localized: "일부만 되돌렸습니다"), .warning)
+                : (String(localized: "되돌리기 완료"), .check)
             Retro95Dialog(title: title, icon: icon) {
                 VStack(alignment: .leading, spacing: 10) {
                     Text(restored == 0
@@ -167,7 +171,7 @@ struct FeatureScreen: View {
     }
 
     private var emptyResult: some View {
-        Retro95Dialog(title: "정리할 항목이 없음", icon: .check) {
+        Retro95Dialog(title: String(localized: "정리할 항목이 없음"), icon: .check) {
             Text("회수할 만한 크기의 항목을 찾지 못했습니다.")
         } buttons: {
             Button("다시 검색") { Task { await model.scan() } }
@@ -184,9 +188,9 @@ struct FeatureScreen: View {
             let moved = report.succeeded.count
             let failed = report.failed.count
             let (title, icon): (String, PixelArt) =
-                moved == 0 ? ("정리하지 못했습니다", .warning)
-                : failed > 0 ? ("일부만 정리했습니다", .warning)
-                : ("정리 완료", .check)
+                moved == 0 ? (String(localized: "정리하지 못했습니다"), .warning)
+                : failed > 0 ? (String(localized: "일부만 정리했습니다"), .warning)
+                : (String(localized: "정리 완료"), .check)
             Retro95Dialog(title: title, icon: icon) {
                 VStack(alignment: .leading, spacing: 10) {
                     // 지운 것이 아니라 휴지통으로 옮긴 것이다.
@@ -271,7 +275,7 @@ struct FeatureScreen: View {
         // 한 번만 센다. 행 클로저 안에서 프로퍼티를 읽으면 행마다 전체 항목을 다시 훑는다.
         let showsDates = showsDates
         return VStack(spacing: 0) {
-            Retro95GroupBox(title: "정리 항목") {
+            Retro95GroupBox(title: String(localized: "정리 항목")) {
                 VStack(spacing: 6) {
                     Text(feature.reviewHint)
                         .font(R95.ui(12))
@@ -280,7 +284,17 @@ struct FeatureScreen: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     VStack(spacing: 0) {
-                        Retro95TableHeader(columns: ItemTableColumns.headers(showsDates: showsDates))
+                        Retro95TableHeader(columns: ItemTableColumns.headers(
+                            layout: columns, showsDates: showsDates, onDrag: { column, delta in
+                                let visible = ItemTableColumns.visible(showsDates: showsDates)
+                                let fixed = visible.reduce(ItemTableColumns.check + ItemTableColumns.icon) {
+                                    $0 + CGFloat(columns.width($1))
+                                }
+                                columns.dragLeadingEdge(of: column, by: Double(delta), visible: visible,
+                                                        nameWidth: Double(tableWidth - fixed))
+                            }))
+                        // 이름 열은 남는 폭이라 표 전체 폭에서 다른 열을 빼서 구한다.
+                        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { tableWidth = $0 }
                         List {
                             ForEach(groups) { group in
                                 Section {
@@ -296,7 +310,7 @@ struct FeatureScreen: View {
                                     // 전부 다시 훑는다 — 실측에서 `ModifiedElements.makeElements`가
                                     // 메인 스레드 상위를 차지했다. `ForEach` 하나에 붙이면 한 겹이다.
                                     ForEach(model.visibleRows(of: group)) { item in
-                                        ItemRow(item: item, isOn: binding(for: item), showsDates: showsDates)
+                                        ItemRow(item: item, isOn: binding(for: item), showsDates: showsDates, columns: columns)
                                     }
                                     .listRowInsets(EdgeInsets())
                                     .listRowSeparator(.hidden)

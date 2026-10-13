@@ -21,14 +21,14 @@ public enum RemovalVeto: Error, Equatable, Sendable {
 
     public var message: String {
         switch self {
-        case .outsideAllowedRoots(let u): "정리 대상 범위 밖입니다: \(u.path)"
-        case .protectedPath(let u): "보호된 경로입니다: \(u.path)"
-        case .symlinkEscape(let u): "심볼릭 링크가 허용 범위 밖을 가리킵니다: \(u.path)"
-        case .rootOrHome(let u): "루트 또는 홈 디렉토리는 삭제할 수 없습니다: \(u.path)"
-        case .allowedRootItself(let u): "정리 루트 자체는 삭제할 수 없습니다: \(u.path)"
-        case .notOwnedByCurrentUser(let u): "다른 사용자·시스템 소유라 정리할 수 없습니다: \(u.path)"
-        case .systemProtected(let u): "시스템이 보호 중이라 삭제할 수 없습니다: \(u.path)"
-        case .applicationRunning(let u): "실행 중인 앱입니다. 종료한 뒤 다시 시도해 주세요: \(u.path)"
+        case .outsideAllowedRoots(let u): String(localized: "정리 대상 범위 밖입니다: \(u.path)")
+        case .protectedPath(let u): String(localized: "보호된 경로입니다: \(u.path)")
+        case .symlinkEscape(let u): String(localized: "심볼릭 링크가 허용 범위 밖을 가리킵니다: \(u.path)")
+        case .rootOrHome(let u): String(localized: "루트 또는 홈 디렉토리는 삭제할 수 없습니다: \(u.path)")
+        case .allowedRootItself(let u): String(localized: "정리 루트 자체는 삭제할 수 없습니다: \(u.path)")
+        case .notOwnedByCurrentUser(let u): String(localized: "다른 사용자·시스템 소유라 정리할 수 없습니다: \(u.path)")
+        case .systemProtected(let u): String(localized: "시스템이 보호 중이라 삭제할 수 없습니다: \(u.path)")
+        case .applicationRunning(let u): String(localized: "실행 중인 앱입니다. 종료한 뒤 다시 시도해 주세요: \(u.path)")
         }
     }
 }

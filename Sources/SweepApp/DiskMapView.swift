@@ -116,7 +116,7 @@ struct DiskMapView: View {
                 ForEach(DiskMapRoot.Group.allCases, id: \.self) { group in
                     let roots = model.availableRoots.filter { $0.group == group }
                     if !roots.isEmpty {
-                        Section(group.rawValue) {
+                        Section(group.title) {
                             ForEach(roots) { root in
                                 Button(root.label) { model.selectedRoot = root.url }
                             }
@@ -125,7 +125,7 @@ struct DiskMapView: View {
                 }
             } label: {
                 Text(model.availableRoots.first(where: { $0.url == model.selectedRoot })?.label
-                     ?? "선택하세요")
+                     ?? String(localized: "선택하세요"))
                     .lineLimit(1)
                     .truncationMode(.middle)
                     .font(R95.ui())
@@ -205,11 +205,11 @@ struct DiskMapView: View {
                 switch phase {
                 case .counting(let scanned):
                     // 분모를 만드는 중이라 아직 퍼센트가 없다. 숫자를 지어내지 않는다.
-                    Retro95ScanPanel(title: "재는 중", headline: "\(scanned.formatted())개 세는 중…",
+                    Retro95ScanPanel(title: String(localized: "재는 중"), headline: String(localized: "\(scanned.formatted())개 세는 중…"),
                                      detail: nil, fraction: nil, percentText: nil,
                                      leftFooter: nil, rightFooter: nil)
                 case .measuring(let percent):
-                    Retro95ScanPanel(title: "재는 중", headline: "사용량을 재는 중…",
+                    Retro95ScanPanel(title: String(localized: "재는 중"), headline: String(localized: "사용량을 재는 중…"),
                                      detail: nil, fraction: Double(percent) / 100,
                                      percentText: "\(percent)%", leftFooter: nil, rightFooter: nil)
                 }
@@ -221,14 +221,14 @@ struct DiskMapView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let current = model.current {
             if model.tiles.isEmpty {
-                placeholder("\(current.name)에는 더 나눌 항목이 없습니다",
+                placeholder(String(localized: "\(current.name)에는 더 나눌 항목이 없습니다"),
                             detail: current.formattedSize)
             } else {
                 usageList
             }
         } else if model.selectedRoot != nil {
             // 중단했거나 아직 못 읽은 상태. 고른 곳은 있으니 다시 훑을 길을 준다.
-            Retro95Dialog(title: "훑기를 멈췄습니다", icon: .pieChart) {
+            Retro95Dialog(title: String(localized: "훑기를 멈췄습니다"), icon: .pieChart) {
                 Text("다시 훑으면 이어서가 아니라 처음부터 셉니다.")
             } buttons: {
                 Button("다시 훑기") { Task { await model.reload() } }
@@ -237,8 +237,8 @@ struct DiskMapView: View {
             .frame(maxWidth: R95.dialogWidth)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            placeholder("시작 지점을 고르세요",
-                        detail: "홈·볼륨 전체·응용 프로그램까지 살펴봅니다.")
+            placeholder(String(localized: "시작 지점을 고르세요"),
+                        detail: String(localized: "홈·볼륨 전체·응용 프로그램까지 살펴봅니다."))
         }
     }
 
@@ -246,7 +246,7 @@ struct DiskMapView: View {
     /// 5.76GB짜리 하나가 나머지를 눌러 면적 비교가 성립하지 않는다.
     private var usageList: some View {
         VStack(spacing: 0) {
-            Retro95GroupBox(title: "디스크 사용량") {
+            Retro95GroupBox(title: String(localized: "디스크 사용량")) {
                 VStack(spacing: 0) {
                     Retro95TableHeader(columns: DiskMapColumns.headers)
                     List(model.tiles) { node in
@@ -308,7 +308,7 @@ struct DiskMapView: View {
     private func unblock(_ node: DiskUsageNode) {
         let grantable = FolderAccess.Grantable(folder: node.url,
                                                label: node.name,
-                                               purpose: "용량 확인")
+                                               purpose: String(localized: "용량 확인"))
         guard let picked = FolderPicker.ask(for: grantable) else { return }
         do {
             try app.grantFolderAccess(picked, as: grantable)
@@ -337,7 +337,7 @@ struct DiskMapView: View {
             .frame(width: DiskMapColumns.name, alignment: .leading)
 
             // 못 읽은 폴더는 크기를 지어내지 않는다. 0 KB라고 쓰면 거짓말이다.
-            Text(node.isReadable ? node.formattedSize : "권한 없음")
+            Text(node.isReadable ? node.formattedSize : String(localized: "권한 없음"))
                 .font(R95.mono(11))
                 .padding(.horizontal, 6)
                 .frame(width: DiskMapColumns.size, alignment: .trailing)
@@ -354,15 +354,16 @@ struct DiskMapView: View {
                     if !node.isReadable {
                         Button("열기…") { unblock(node) }
                             .buttonStyle(Retro95ButtonStyle())
+                            .lineLimit(1)
                     } else {
                         Color.clear.frame(height: R95.buttonHeight)
                     }
                 }
                 .frame(width: DiskMapColumns.open)
-                iconButton(.folder, "Finder에서 보기") { ItemActions.reveal(node.url) }
-                iconButton(.documents, "경로 복사") { ItemActions.copyPath(node.url) }
+                iconButton(.folder, String(localized: "Finder에서 보기")) { ItemActions.reveal(node.url) }
+                iconButton(.documents, String(localized: "경로 복사")) { ItemActions.copyPath(node.url) }
                 // 왜 못 지우는지는 눌러 보고 알 일이 아니다. 사유를 미리 붙인다.
-                iconButton(.trash, veto?.message ?? "휴지통으로 이동") {
+                iconButton(.trash, veto?.message ?? String(localized: "휴지통으로 이동")) {
                     pendingDelete = node
                 }
                 .disabled(veto != nil)
@@ -405,10 +406,10 @@ struct DiskMapView: View {
     @ViewBuilder
     private func statusBadge(_ node: DiskUsageNode, veto: RemovalVeto?) -> some View {
         if !node.isReadable {
-            Retro95StatusChip(title: "권한 없음", icon: .warning, level: .caution)
+            Retro95StatusChip(title: String(localized: "권한 없음"), icon: .warning, level: .caution)
                 .help("권한이 막혀 안을 볼 수 없습니다")
         } else if let veto {
-            Retro95StatusChip(title: "보호됨", icon: .lock, level: .danger)
+            Retro95StatusChip(title: String(localized: "보호됨"), icon: .lock, level: .danger)
                 .help(veto.message)
         } else {
             // 막는 조건이 없다는 뜻이지 지워도 된다는 뜻이 아니다. SAFE와 같은 녹색을 쓰면

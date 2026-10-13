@@ -13,8 +13,8 @@ public enum ProgressDisplay {
     public static func readable(seconds: Int) -> String {
         let clamped = max(0, seconds)
         return clamped < 60
-            ? "\(clamped)초"
-            : "\(clamped / 60)분 \(clamped % 60)초"
+            ? String(localized: "\(clamped)초")
+            : String(localized: "\(clamped / 60)분 \(clamped % 60)초")
     }
 
     /// 링 게이지가 그릴 호의 끝점. 0~1.

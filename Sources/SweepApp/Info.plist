@@ -2,6 +2,15 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- 한국어도 영어도 아닌 사용자에게는 영어를 보여준다. 개발 지역이
+	     ko면 일본어·독일어 사용자에게 한국어 화면이 뜬다. -->
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>ko</string>
+	</array>
 	<key>CFBundleName</key>
 	<string>Sweep</string>
 	<key>CFBundleDisplayName</key>
@@ -36,12 +45,13 @@
 	<false/>
 
 	<!-- 디스크 맵이 홈 전체를 훑는다. 이 문자열이 없으면 macOS가
-	     권한 대화를 띄우지 않고 조용히 빈 결과를 준다. -->
+	     권한 대화를 띄우지 않고 조용히 빈 결과를 준다.
+	     여기는 기본값(영어)이다. 한국어는 Resources/ko.lproj/InfoPlist.strings. -->
 	<key>NSDesktopFolderUsageDescription</key>
-	<string>데스크탑에서 용량을 차지하는 항목을 찾기 위해 읽습니다.</string>
+	<string>Sweep reads your Desktop to find items that take up space.</string>
 	<key>NSDocumentsFolderUsageDescription</key>
-	<string>문서 폴더에서 용량을 차지하는 항목을 찾기 위해 읽습니다.</string>
+	<string>Sweep reads your Documents folder to find items that take up space.</string>
 	<key>NSDownloadsFolderUsageDescription</key>
-	<string>다운로드 폴더의 정리 대상과 용량을 확인하기 위해 읽습니다.</string>
+	<string>Sweep reads your Downloads folder to check what can be cleaned up and how much space it uses.</string>
 </dict>
 </plist>
