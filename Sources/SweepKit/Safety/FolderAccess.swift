@@ -22,9 +22,9 @@ public enum FolderAccess {
         public var message: String {
             switch self {
             case .wrongFolder(let expected, let picked):
-                "\(expected) 폴더를 골라 주세요. (고른 곳: \(picked.path))"
+                String(localized: "\(expected) 폴더를 골라 주세요. (고른 곳: \(picked.path))")
             case .bookmark(let reason):
-                "폴더 접근 권한을 저장하지 못했습니다: \(reason)"
+                String(localized: "폴더 접근 권한을 저장하지 못했습니다: \(reason)")
             }
         }
     }
@@ -61,15 +61,15 @@ public enum FolderAccess {
     /// 그 폴더가 선택된 채로 열려서, 사용자는 "허용"만 누르면 된다.
     public static let grantables: [Grantable] = [
         .init(folder: inHome("Library"), label: "~/Library",
-              purpose: "시뮬레이터 · 앱 웹 캐시 · 브라우저 캐시 · 로그"),
+              purpose: String(localized: "시뮬레이터 · 앱 웹 캐시 · 브라우저 캐시 · 로그")),
         .init(folder: inHome(".npm"), label: "~/.npm",
-              purpose: "npm 내려받기 캐시"),
+              purpose: String(localized: "npm 내려받기 캐시")),
         .init(folder: inHome(".expo"), label: "~/.expo",
-              purpose: "Expo 캐시"),
+              purpose: String(localized: "Expo 캐시")),
         // 홈 밖이지만 같은 방식으로 열린다 — 열기 대화상자로 고른 폴더는 위치를 가리지 않는다.
         // 이것을 열어도 지울 수 있는 것은 **바로 아래 `.app` 하나씩**뿐이다(`ProtectedPaths`).
-        .init(folder: URL(filePath: "/Applications"), label: "응용 프로그램",
-              purpose: "쓰지 않는 앱 지우기"),
+        .init(folder: URL(filePath: "/Applications"), label: String(localized: "응용 프로그램"),
+              purpose: String(localized: "쓰지 않는 앱 지우기")),
     ]
 
     /// 앱 전체가 공유하는 허락 상태.
@@ -219,7 +219,7 @@ public enum FolderAccess {
     static let legacyGrantable = Grantable(
         folder: inHome("Library/Developer"),
         label: "~/Library/Developer",
-        purpose: "Xcode 산출물 · 시뮬레이터")
+        purpose: String(localized: "Xcode 산출물 · 시뮬레이터"))
 
     /// 고른 곳이 열어야 할 폴더인가. 링크·`..`·끝의 `/`를 풀어 비교한다.
     /// 하위나 상위 폴더는 아니다 — 하위를 받으면 나머지가 막히고, 상위는 필요 이상으로 넓다.

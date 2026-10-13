@@ -41,12 +41,32 @@
         }
       }
     },
+    "%@ 만듦": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 만듦"
+          }
+        }
+      }
+    },
     "%@ 사용됨 · 전체 %@": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "new",
             "value": "%1$@ 사용됨 · 전체 %2$@"
+          }
+        }
+      }
+    },
+    "%@ 폴더를 골라 주세요. (고른 곳: %@)": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ 폴더를 골라 주세요. (고른 곳: %2$@)"
           }
         }
       }
@@ -151,6 +171,66 @@
         }
       }
     },
+    "%lld개월 전": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개월 전"
+          }
+        }
+      }
+    },
+    "%lld개월 전 사용": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개월 전 사용"
+          }
+        }
+      }
+    },
+    "%lld년 전": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld년 전"
+          }
+        }
+      }
+    },
+    "%lld년 전 사용": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld년 전 사용"
+          }
+        }
+      }
+    },
+    "%lld일 전": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld일 전"
+          }
+        }
+      }
+    },
+    "%lld일 전 사용": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld일 전 사용"
+          }
+        }
+      }
+    },
     "App Store 버전은 macOS 샌드박스 안에서 동작해서, 폴더를 열려면 한 번 허락이 필요해요.": {
       "localizations": {
         "ko": {
@@ -191,6 +271,16 @@
         }
       }
     },
+    "Expo 캐시": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expo 캐시"
+          }
+        }
+      }
+    },
     "Finder에서 보기": {
       "localizations": {
         "ko": {
@@ -227,6 +317,66 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sweep이 보는 곳"
+          }
+        }
+      }
+    },
+    "Xcode · 시뮬레이터": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xcode · 시뮬레이터"
+          }
+        }
+      }
+    },
+    "Xcode 빌드 산출물·시뮬레이터 파일을 찾아 디스크 공간을 확보합니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xcode 빌드 산출물·시뮬레이터 파일을 찾아 디스크 공간을 확보합니다."
+          }
+        }
+      }
+    },
+    "Xcode 산출물 · 시뮬레이터": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xcode 산출물 · 시뮬레이터"
+          }
+        }
+      }
+    },
+    "Xcode 산출물 · 시뮬레이터 · DerivedData": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xcode 산출물 · 시뮬레이터 · DerivedData"
+          }
+        }
+      }
+    },
+    "npm 내려받기 캐시": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "npm 내려받기 캐시"
+          }
+        }
+      }
+    },
+    "개발 캐시": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개발 캐시"
           }
         }
       }
@@ -307,6 +457,46 @@
         }
       }
     },
+    "기능별로 나눠 두었습니다. 잠긴 항목은 되돌릴 수 없어 선택할 수 없습니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기능별로 나눠 두었습니다. 잠긴 항목은 되돌릴 수 없어 선택할 수 없습니다."
+          }
+        }
+      }
+    },
+    "내려받은 파일 · 중복본": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내려받은 파일 · 중복본"
+          }
+        }
+      }
+    },
+    "내용이 같은 파일을 찾아 한 벌만 남깁니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내용이 같은 파일을 찾아 한 벌만 남깁니다."
+          }
+        }
+      }
+    },
+    "다른 사용자·시스템 소유라 정리할 수 없습니다: %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다른 사용자·시스템 소유라 정리할 수 없습니다: %@"
+          }
+        }
+      }
+    },
     "다른 폴더를 골랐습니다": {
       "localizations": {
         "ko": {
@@ -367,6 +557,26 @@
         }
       }
     },
+    "대부분 빌드하면 다시 생깁니다. 되돌릴 수 없는 심사 제출본은 잠가 두었습니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "대부분 빌드하면 다시 생깁니다. 되돌릴 수 없는 심사 제출본은 잠가 두었습니다."
+          }
+        }
+      }
+    },
+    "대용량 파일": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "대용량 파일"
+          }
+        }
+      }
+    },
     "되돌리기": {
       "localizations": {
         "ko": {
@@ -387,12 +597,112 @@
         }
       }
     },
+    "디스크 맵": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스크 맵"
+          }
+        }
+      }
+    },
+    "루트 또는 홈 디렉토리는 삭제할 수 없습니다: %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "루트 또는 홈 디렉토리는 삭제할 수 없습니다: %@"
+          }
+        }
+      }
+    },
+    "마지막 사용 %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "마지막 사용 %@"
+          }
+        }
+      }
+    },
+    "마지막 정리 후 %lld일이 지났습니다. 다시 만들 수 있는 %@를 정리해 보세요": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "new",
+            "value": "마지막 정리 후 %1$lld일이 지났습니다. 다시 만들 수 있는 %2$@를 정리해 보세요"
+          }
+        }
+      }
+    },
+    "만든 날 %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "만든 날 %@"
+          }
+        }
+      }
+    },
     "맨 위 하나만 허용해도 대부분 찾을 수 있어요.": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "맨 위 하나만 허용해도 대부분 찾을 수 있어요."
+          }
+        }
+      }
+    },
+    "묵은 캐시": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "묵은 캐시"
+          }
+        }
+      }
+    },
+    "방금": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "방금"
+          }
+        }
+      }
+    },
+    "방금 사용": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "방금 사용"
+          }
+        }
+      }
+    },
+    "보호된 경로입니다: %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보호된 경로입니다: %@"
+          }
+        }
+      }
+    },
+    "보호된 항목이라 이 앱으로는 지울 수 없습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보호된 항목이라 이 앱으로는 지울 수 없습니다"
           }
         }
       }
@@ -497,12 +807,62 @@
         }
       }
     },
+    "설치 파일은 다시 받을 수 있습니다. 촬영 원본과 백업은 내용을 확인한 뒤 고르세요.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설치 파일은 다시 받을 수 있습니다. 촬영 원본과 백업은 내용을 확인한 뒤 고르세요."
+          }
+        }
+      }
+    },
+    "스마트 스캔": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스마트 스캔"
+          }
+        }
+      }
+    },
+    "시뮬레이터 · 앱 웹 캐시 · 브라우저 캐시 · 로그": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시뮬레이터 · 앱 웹 캐시 · 브라우저 캐시 · 로그"
+          }
+        }
+      }
+    },
     "시스템 설정 열기": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "시스템 설정 열기"
+          }
+        }
+      }
+    },
+    "시스템 임시 파일": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템 임시 파일"
+          }
+        }
+      }
+    },
+    "시스템이 보호 중이라 삭제할 수 없습니다: %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템이 보호 중이라 삭제할 수 없습니다: %@"
           }
         }
       }
@@ -527,12 +887,52 @@
         }
       }
     },
+    "실행 중인 앱입니다. 종료한 뒤 다시 시도해 주세요: %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실행 중인 앱입니다. 종료한 뒤 다시 시도해 주세요: %@"
+          }
+        }
+      }
+    },
+    "심볼릭 링크가 허용 범위 밖을 가리킵니다: %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "심볼릭 링크가 허용 범위 밖을 가리킵니다: %@"
+          }
+        }
+      }
+    },
+    "쓰지 않는 앱 지우기": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "쓰지 않는 앱 지우기"
+          }
+        }
+      }
+    },
     "아직 훑어보지 않았습니다": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "아직 훑어보지 않았습니다"
+          }
+        }
+      }
+    },
+    "안전": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "안전"
           }
         }
       }
@@ -547,12 +947,102 @@
         }
       }
     },
+    "앱 로그": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱 로그"
+          }
+        }
+      }
+    },
+    "앱 웹 캐시": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱 웹 캐시"
+          }
+        }
+      }
+    },
+    "앱 임시 폴더": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱 임시 폴더"
+          }
+        }
+      }
+    },
+    "앱을 종료한 뒤 다시 시도하세요": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱을 종료한 뒤 다시 시도하세요"
+          }
+        }
+      }
+    },
+    "앱이 다시 만들 수 있는 캐시": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱이 다시 만들 수 있는 캐시"
+          }
+        }
+      }
+    },
+    "앱이 쓰다 남긴 임시 파일": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱이 쓰다 남긴 임시 파일"
+          }
+        }
+      }
+    },
+    "어디가 용량을 차지하는지 크기순으로 훑어봅니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어디가 용량을 차지하는지 크기순으로 훑어봅니다."
+          }
+        }
+      }
+    },
     "열기…": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "열기…"
+          }
+        }
+      }
+    },
+    "오늘": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘"
+          }
+        }
+      }
+    },
+    "오늘 사용": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘 사용"
           }
         }
       }
@@ -577,12 +1067,72 @@
         }
       }
     },
+    "원래 자리에 같은 이름이 있습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "원래 자리에 같은 이름이 있습니다"
+          }
+        }
+      }
+    },
+    "원래 자리의 항목을 치운 뒤 Finder 휴지통에서 되돌려 놓으세요": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "원래 자리의 항목을 치운 뒤 Finder 휴지통에서 되돌려 놓으세요"
+          }
+        }
+      }
+    },
+    "원래 폴더가 사라졌습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "원래 폴더가 사라졌습니다"
+          }
+        }
+      }
+    },
+    "원본은 항상 남깁니다. 아래는 지워도 같은 파일이 그대로 남아 있는 사본입니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "원본은 항상 남깁니다. 아래는 지워도 같은 파일이 그대로 남아 있는 사본입니다."
+          }
+        }
+      }
+    },
     "위로": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "위로"
+          }
+        }
+      }
+    },
+    "위험": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "위험"
+          }
+        }
+      }
+    },
+    "응용 프로그램": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "응용 프로그램"
           }
         }
       }
@@ -617,12 +1167,32 @@
         }
       }
     },
+    "임시 파일·빌드 산출물·개발 캐시를 찾아 디스크 공간을 확보합니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "임시 파일·빌드 산출물·개발 캐시를 찾아 디스크 공간을 확보합니다."
+          }
+        }
+      }
+    },
     "전체 디스크 접근 설정 열기": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "전체 디스크 접근 설정 열기"
+          }
+        }
+      }
+    },
+    "전체 디스크 접근을 켜면 옮길 수 있습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 디스크 접근을 켜면 옮길 수 있습니다"
           }
         }
       }
@@ -647,12 +1217,72 @@
         }
       }
     },
+    "정리 대상 범위 밖입니다: %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정리 대상 범위 밖입니다: %@"
+          }
+        }
+      }
+    },
+    "정리 루트 자체는 삭제할 수 없습니다: %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정리 루트 자체는 삭제할 수 없습니다: %@"
+          }
+        }
+      }
+    },
+    "정크 파일": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정크 파일"
+          }
+        }
+      }
+    },
+    "주의": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "주의"
+          }
+        }
+      }
+    },
     "중단": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "중단"
+          }
+        }
+      }
+    },
+    "중복 파일": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "중복 파일"
+          }
+        }
+      }
+    },
+    "지금까지 %@를 휴지통으로 옮김 · 마지막 정리 %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "new",
+            "value": "지금까지 %1$@를 휴지통으로 옮김 · 마지막 정리 %2$@"
           }
         }
       }
@@ -697,12 +1327,62 @@
         }
       }
     },
+    "큰 파일": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "큰 파일"
+          }
+        }
+      }
+    },
+    "폭주 임시 파일": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "폭주 임시 파일"
+          }
+        }
+      }
+    },
+    "폴더 접근 권한을 저장하지 못했습니다: %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "폴더 접근 권한을 저장하지 못했습니다: %@"
+          }
+        }
+      }
+    },
+    "한 번에 전체를 점검하고 회수할 수 있는 용량을 알려줍니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "한 번에 전체를 점검하고 회수할 수 있는 용량을 알려줍니다."
+          }
+        }
+      }
+    },
     "해제": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "해제"
+          }
+        }
+      }
+    },
+    "허용된 범위 안에서 유난히 큰 파일을 찾습니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "허용된 범위 안에서 유난히 큰 파일을 찾습니다."
           }
         }
       }
@@ -767,6 +1447,16 @@
         }
       }
     },
+    "휴지통에서 찾을 수 없습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통에서 찾을 수 없습니다"
+          }
+        }
+      }
+    },
     "휴지통으로 옮기기": {
       "localizations": {
         "ko": {
@@ -803,6 +1493,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "휴지통을 비우기 전까지 복원할 수 있습니다."
+          }
+        }
+      }
+    },
+    "휴지통을 비우면 %@가 실제로 확보됩니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통을 비우면 %@가 실제로 확보됩니다"
+          }
+        }
+      }
+    },
+    "휴지통을 비워야 디스크 공간이 늘어납니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통을 비워야 디스크 공간이 늘어납니다"
+          }
+        }
+      }
+    },
+    "휴지통을 비웠거나 이미 옮겨져 되돌릴 수 없습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통을 비웠거나 이미 옮겨져 되돌릴 수 없습니다"
           }
         }
       }

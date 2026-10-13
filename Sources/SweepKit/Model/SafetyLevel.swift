@@ -17,9 +17,9 @@ public enum SafetyLevel: String, CaseIterable, Sendable, Hashable, Comparable {
 
     public var displayName: String {
         switch self {
-        case .safe: "안전"
-        case .caution: "주의"
-        case .danger: "위험"
+        case .safe: String(localized: "안전")
+        case .caution: String(localized: "주의")
+        case .danger: String(localized: "위험")
         }
     }
 

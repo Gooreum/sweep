@@ -20,13 +20,13 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
 
     public var displayName: String {
         switch self {
-        case .runawayTemp: "폭주 임시 파일"
-        case .xcode: "Xcode · 시뮬레이터"
-        case .devCache: "개발 캐시"
-        case .appCache: "앱 웹 캐시"
-        case .staleCache: "묵은 캐시"
-        case .largeFile: "대용량 파일"
-        case .duplicate: "중복 파일"
+        case .runawayTemp: String(localized: "폭주 임시 파일")
+        case .xcode: String(localized: "Xcode · 시뮬레이터")
+        case .devCache: String(localized: "개발 캐시")
+        case .appCache: String(localized: "앱 웹 캐시")
+        case .staleCache: String(localized: "묵은 캐시")
+        case .largeFile: String(localized: "대용량 파일")
+        case .duplicate: String(localized: "중복 파일")
         }
     }
 
