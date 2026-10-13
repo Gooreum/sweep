@@ -28,6 +28,7 @@ struct FeatureScreen: View {
                     .sidebarMaterial()
             }
         }
+        .background(R95.gray)
         .sheet(isPresented: $showsConfirm) {
             CleanupConfirmSheet(model: model) {
                 showsConfirm = false
@@ -55,7 +56,7 @@ struct FeatureScreen: View {
         case .results:
             if model.items.isEmpty { emptyResult } else { resultList }
         case let .removing(done, total):
-            RingGauge(percent: total > 0 ? done * 100 / total : 0, caption: "정리하는 중")
+            removing(done: done, total: total)
         case .cleaned:
             cleanDone
         }
@@ -84,23 +85,31 @@ struct FeatureScreen: View {
     }
 
     private func scanning(percent: Int, remaining: Int?) -> some View {
-        VStack(spacing: 14) {
-            RingGauge(percent: percent, caption: "훑는 중")
-
-            if let remaining {
-                Text("약 \(ProgressDisplay.readable(seconds: remaining)) 남음")
-                    .font(Theme.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-            }
-
+        VStack(spacing: 0) {
             // 다 끝나기 전에도 성과가 보여야 기다릴 만하다
-            if !model.items.isEmpty {
-                Text("\(model.items.count)개 · \(model.formattedTotalSize) 발견")
-                    .font(Theme.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-            }
+            Retro95ScanPanel(
+                title: "검색 중",
+                headline: "\(feature.displayName) 훑는 중…",
+                detail: feature.summary,
+                fraction: Double(percent) / 100,
+                percentText: "\(percent)%",
+                leftFooter: model.items.isEmpty ? nil : "\(model.items.count)개 · \(model.formattedTotalSize) 발견",
+                rightFooter: remaining.map { "약 \(ProgressDisplay.readable(seconds: $0)) 남음" })
+            Spacer()
+        }
+    }
+
+    private func removing(done: Int, total: Int) -> some View {
+        VStack(spacing: 0) {
+            Retro95ScanPanel(
+                title: "정리 중",
+                headline: "휴지통으로 옮기는 중…",
+                detail: nil,
+                fraction: total > 0 ? Double(done) / Double(total) : nil,
+                percentText: total > 0 ? "\(done * 100 / total)%" : nil,
+                leftFooter: "\(done) / \(total)",
+                rightFooter: nil)
+            Spacer()
         }
     }
 
