@@ -59,15 +59,16 @@ enum ItemTableColumns {
     static let actionButtonWidth: CGFloat = 220
     static let actionButtonHeight: CGFloat = 44
 
-    static let headers: [Retro95TableHeader.Column] = [
-        .init(title: "", width: check),
-        .init(title: "", width: icon),
-        .init(title: "이름"),
-        .init(title: "설명", width: detail),
-        .init(title: "날짜", width: dates),
-        .init(title: "크기", width: size, alignment: .trailing),
-        .init(title: "안전도", width: safety, alignment: .center)
-    ]
+    /// 날짜가 하나도 없는 결과에서 빈 날짜 열을 두면 그 폭만큼 위험 설명이 잘린다.
+    static func headers(showsDates: Bool) -> [Retro95TableHeader.Column] {
+        [.init(title: "", width: check),
+         .init(title: "", width: icon),
+         .init(title: "이름"),
+         .init(title: "설명", width: detail)]
+        + (showsDates ? [.init(title: "날짜", width: dates)] : [])
+        + [.init(title: "크기", width: size, alignment: .trailing),
+           .init(title: "안전도", width: safety, alignment: .center)]
+    }
 }
 
 /// 스마트 요약의 헤더와 행이 같은 열 폭과 팔레트를 쓴다.

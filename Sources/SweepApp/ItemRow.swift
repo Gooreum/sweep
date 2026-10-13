@@ -32,6 +32,8 @@ extension SafetyLevel {
 struct ItemRow: View {
     let item: CleanupItem
     @Binding var isOn: Bool
+    /// 헤더와 같은 값을 받아야 열이 어긋나지 않는다.
+    var showsDates = true
     @State private var isHovering = false
 
     var body: some View {
@@ -84,16 +86,20 @@ struct ItemRow: View {
             Text(item.detail)
                 .font(R95.ui(12))
                 .foregroundStyle(item.safety == .safe ? R95.deep : item.safety.tint)
-                .lineLimit(1)
+                // 위험·확인 항목의 설명은 왜 조심해야 하는지다. 잘리면 판단 근거가 사라진다.
+                .lineLimit(item.safety == .safe ? 1 : 2)
+                .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, ItemTableColumns.padding)
                 .frame(width: ItemTableColumns.detail, alignment: .leading)
 
-            Text(item.datesLine() ?? "")
-                .font(R95.ui(11))
-                .foregroundStyle(R95.deep)
-                .lineLimit(1)
-                .padding(.horizontal, ItemTableColumns.padding)
-                .frame(width: ItemTableColumns.dates, alignment: .leading)
+            if showsDates {
+                Text(item.datesLine() ?? "")
+                    .font(R95.ui(11))
+                    .foregroundStyle(R95.deep)
+                    .lineLimit(1)
+                    .padding(.horizontal, ItemTableColumns.padding)
+                    .frame(width: ItemTableColumns.dates, alignment: .leading)
+            }
 
             // 고른 것만 또렷하게 보여 훑을 때 담은 크기를 비교할 수 있다.
             Text(item.formattedSize)

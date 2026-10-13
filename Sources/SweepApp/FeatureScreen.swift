@@ -173,8 +173,15 @@ struct FeatureScreen: View {
         feature == .smartScan ? model.groups : model.safetyGroups
     }
 
+    /// 결과 전체에 날짜가 하나라도 있을 때만 날짜 열을 둔다. 헤더와 행이 같은 값을 쓴다.
+    private var showsDates: Bool {
+        model.items.contains { $0.datesLine() != nil }
+    }
+
     private var resultList: some View {
-        VStack(spacing: 0) {
+        // 한 번만 센다. 행 클로저 안에서 프로퍼티를 읽으면 행마다 전체 항목을 다시 훑는다.
+        let showsDates = showsDates
+        return VStack(spacing: 0) {
             Retro95GroupBox(title: "정리 항목") {
                 VStack(spacing: 6) {
                     Text(feature.reviewHint)
@@ -184,7 +191,7 @@ struct FeatureScreen: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     VStack(spacing: 0) {
-                        Retro95TableHeader(columns: ItemTableColumns.headers)
+                        Retro95TableHeader(columns: ItemTableColumns.headers(showsDates: showsDates))
                         List {
                             ForEach(groups) { group in
                                 Section {
@@ -200,7 +207,7 @@ struct FeatureScreen: View {
                                     // 전부 다시 훑는다 — 실측에서 `ModifiedElements.makeElements`가
                                     // 메인 스레드 상위를 차지했다. `ForEach` 하나에 붙이면 한 겹이다.
                                     ForEach(model.visibleRows(of: group)) { item in
-                                        ItemRow(item: item, isOn: binding(for: item))
+                                        ItemRow(item: item, isOn: binding(for: item), showsDates: showsDates)
                                     }
                                     .listRowInsets(EdgeInsets())
                                     .listRowSeparator(.hidden)
