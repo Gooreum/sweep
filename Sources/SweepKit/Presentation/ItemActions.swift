@@ -27,6 +27,22 @@ public enum ItemActions {
     /// 스캔 직후 사라진 항목을 우리가 조용히 삼키면 아무 일도 안 일어난 것처럼 보인다.
     public static func reveal(_ url: URL) { revealInFinder([url]) }
 
+    /// 폴더를 Finder 창으로 연다. 열었으면 true — 샌드박스가 막으면 false가 오고,
+    /// 그때 화면은 조용히 넘어가지 않고 대신 할 일을 알려야 한다.
+    nonisolated(unsafe) public static var openFolder: @Sendable (URL) -> Bool = {
+        NSWorkspace.shared.open($0)
+    }
+
+    /// 사용자의 휴지통. 샌드박스에서 `homeDirectoryForCurrentUser`는 컨테이너를 가리켜
+    /// 엉뚱한 곳을 열게 된다 — 실제 홈을 쓴다.
+    public static var trashURL: URL {
+        Sandbox.userHome.appending(path: ".Trash", directoryHint: .isDirectory)
+    }
+
+    /// Finder에서 휴지통을 연다. **비우지는 않는다** — 영구 삭제는 사용자가 직접 한다.
+    @discardableResult
+    public static func openTrash() -> Bool { openFolder(trashURL) }
+
     /// 경로를 붙임판에 넣는다. 사람이 터미널에 붙여 넣을 값이므로
     /// 퍼센트 인코딩이 아니라 파일 시스템 경로 원문을 준다.
     public static func copyPath(_ url: URL) { writeToPasteboard(url.path) }
