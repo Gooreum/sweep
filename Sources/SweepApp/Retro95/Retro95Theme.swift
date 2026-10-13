@@ -23,6 +23,8 @@ enum R95 {
         .custom("Monaco", size: size).monospacedDigit()
     }
 
+    static let dialogWidth: CGFloat = 460
+
     static let sidebarWidth: CGFloat = 172
     static let sidebarRowHeight: CGFloat = 36
     static let tableRowHeight: CGFloat = 40

@@ -62,24 +62,13 @@ struct FeatureScreen: View {
 
     /// 시작 화면. 무엇을 하는 화면인지 먼저 말하고 버튼 하나만 준다.
     private var welcome: some View {
-        VStack(spacing: 16) {
-            Image(systemName: feature.systemImageName)
-                .font(.system(size: Theme.Icon.large))
-                .foregroundStyle(Theme.accentText)
-
-            Text(feature.displayName)
-                .font(Theme.title)
-
+        Retro95Dialog(title: feature.displayName, icon: feature.pixelArt) {
             Text(feature.summary)
-                .font(Theme.bodyText)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: 420)
-
+        } buttons: {
             Button("검색") { Task { await model.scan() } }
-                .buttonStyle(PrimaryButtonStyle())
-                .padding(.top, 8)
+                .buttonStyle(Retro95ButtonStyle(isDefault: true))
         }
+        .frame(maxWidth: R95.dialogWidth)
     }
 
     private func scanning(percent: Int, remaining: Int?) -> some View {
@@ -112,52 +101,47 @@ struct FeatureScreen: View {
     }
 
     private var emptyResult: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "checkmark.circle")
-                .font(.system(size: Theme.Icon.large))
-                .foregroundStyle(.secondary)
-            Text("정리할 항목이 없음").font(Theme.title)
+        Retro95Dialog(title: "정리할 항목이 없음", icon: .check) {
             Text("회수할 만한 크기의 항목을 찾지 못했습니다.")
-                .font(Theme.bodyText)
-                .foregroundStyle(.secondary)
+        } buttons: {
             Button("다시 검색") { Task { await model.scan() } }
-                .buttonStyle(PrimaryButtonStyle())
-                .padding(.top, 6)
+                .buttonStyle(Retro95ButtonStyle(isDefault: true))
         }
+        .frame(maxWidth: R95.dialogWidth)
     }
 
     /// 정리 완료. 목록으로 바로 돌아가면 얼마를 비웠는지 볼 틈이 없다.
     @ViewBuilder
     private var cleanDone: some View {
         if let report = model.report {
-            VStack(spacing: 14) {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: Theme.Icon.large))
-                    .foregroundStyle(Theme.accentText)
+            Retro95Dialog(title: "정리 완료", icon: .check) {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("\(report.formattedReclaimed)의 파일이 삭제됨")
+                        .font(R95.ui(13, bold: true))
+                        .monospacedDigit()
 
-                Text("\(report.formattedReclaimed)의 파일이 삭제됨")
-                    .font(Theme.title)
-                    .monospacedDigit()
-
-                // 실패 사유는 길어서 한 줄에 안 들어간다. 예전에는 툴팁에 합쳐 넣었는데,
-                // 호버해야 보이고 어느 파일이 왜 실패했는지 구분되지 않았다.
-                // 누르면 항목별 사유와 다음 행동을 보여주는 시트를 연다.
-                if !report.failed.isEmpty {
-                    Button {
-                        showsFailures = true
-                    } label: {
-                        Label("\(report.failed.count)개는 옮기지 못했습니다 — 자세히 보기",
-                              systemImage: "exclamationmark.triangle")
-                            .font(Theme.bodyText)
-                            .foregroundStyle(Theme.dangerText)
+                    // 실패 사유는 길어서 한 줄에 안 들어간다. 예전에는 툴팁에 합쳐 넣었는데,
+                    // 호버해야 보이고 어느 파일이 왜 실패했는지 구분되지 않았다.
+                    // 누르면 항목별 사유와 다음 행동을 보여주는 시트를 연다.
+                    if !report.failed.isEmpty {
+                        Button {
+                            showsFailures = true
+                        } label: {
+                            HStack(alignment: .top, spacing: 6) {
+                                PixelIcon(art: .warning, size: 16)
+                                Text("\(report.failed.count)개는 옮기지 못했습니다 — 자세히 보기")
+                                    .underline()
+                            }
+                            .foregroundStyle(R95.danger)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
-
+            } buttons: {
                 Button("완료") { model.dismissReport() }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .padding(.top, 6)
+                    .buttonStyle(Retro95ButtonStyle(isDefault: true))
             }
+            .frame(maxWidth: R95.dialogWidth)
             .sheet(isPresented: $showsFailures) {
                 RemovalFailuresSheet(failed: report.failed) {
                     showsFailures = false

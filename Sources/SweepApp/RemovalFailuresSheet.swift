@@ -17,74 +17,69 @@ struct RemovalFailuresSheet: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("\(failed.count)개 항목을 옮기지 못했습니다")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Theme.textPrimary)
-            Text("사유를 확인하고 조치한 뒤 실패한 것만 다시 시도할 수 있습니다.")
-                .font(Theme.bodyText)
-                .foregroundStyle(Theme.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 8)
+        Retro95Dialog(title: "\(failed.count)개 항목을 옮기지 못했습니다", icon: .warning) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("사유를 확인하고 조치한 뒤 실패한 것만 다시 시도할 수 있습니다.")
+                    .foregroundStyle(R95.deep)
+                    .fixedSize(horizontal: false, vertical: true)
 
-            ScrollView {
-                VStack(spacing: 0) {
-                    ForEach(failed, id: \.item.url) { outcome in
-                        row(outcome)
-                        Divider().overlay(Theme.border)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        ForEach(failed, id: \.item.url) { outcome in
+                            row(outcome)
+                            Retro95Separator()
+                        }
                     }
+                    .padding(.horizontal, 8)
                 }
+                .frame(maxHeight: 320)
+                .fixedSize(horizontal: false, vertical: true)
+                .background(R95.white)
+                .retroSunken()
             }
-            .frame(maxHeight: 320)
-            .fixedSize(horizontal: false, vertical: true)
-            .padding(.top, 16)
-
-            HStack(spacing: 10) {
-                if offersFullDiskAccess {
-                    Button("전체 디스크 접근 설정 열기") { PrivacySettings.openFullDiskAccess() }
-                        .buttonStyle(SecondaryButtonStyle())
-                }
-                Spacer()
-                Button("닫기", action: onClose)
-                    .buttonStyle(SecondaryButtonStyle())
-                    .keyboardShortcut(.cancelAction)
-                Button("실패한 것만 다시 시도", action: onRetry)
-                    .buttonStyle(PrimaryButtonStyle())
-                    .keyboardShortcut(.defaultAction)
+        } buttons: {
+            if offersFullDiskAccess {
+                Button("전체 디스크 접근 설정 열기") { PrivacySettings.openFullDiskAccess() }
+                    .buttonStyle(Retro95ButtonStyle())
             }
-            .padding(.top, 22)
+            Button("닫기", action: onClose)
+                .buttonStyle(Retro95ButtonStyle())
+                .keyboardShortcut(.cancelAction)
+            Button("실패한 것만 다시 시도", action: onRetry)
+                .buttonStyle(Retro95ButtonStyle(isDefault: true))
+                .keyboardShortcut(.defaultAction)
         }
-        .padding(26)
         .frame(width: 560)
-        .background(Theme.surfaceRaised)
+        .background(R95.gray)
     }
 
     private func row(_ outcome: RemovalOutcome) -> some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(outcome.item.displayName)
-                    .font(Theme.bodyText)
-                    .foregroundStyle(Theme.textPrimary)
+                    .font(R95.ui())
+                    .foregroundStyle(R95.black)
                 // 경로는 가운데를 줄인다. 앞(어느 폴더 아래)과 끝(무슨 파일)이 둘 다 정보다.
                 Text(outcome.item.displayPath)
-                    .font(Theme.captionMono)
-                    .foregroundStyle(Theme.textTertiary)
+                    .font(R95.mono(11))
+                    .foregroundStyle(R95.deep)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 if let reason = outcome.failureReason {
                     Text(reason)
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.dangerText)
+                        .font(R95.ui(11))
+                        .foregroundStyle(R95.danger)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if let advice = outcome.failure?.kind.advice {
                     Text(advice)
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.textSecondary)
+                        .font(R95.ui(11))
+                        .foregroundStyle(R95.deep)
                 }
             }
             Spacer(minLength: 12)
             Button("Finder에서 보기") { ItemActions.reveal(outcome.item.url) }
+                .buttonStyle(Retro95ButtonStyle())
         }
         .padding(.vertical, 10)
     }
