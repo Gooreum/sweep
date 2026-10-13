@@ -253,4 +253,32 @@ struct RemoverTests {
         let failure = Remover().removeFile(at: missing)
         #expect(failure != nil)
     }
+
+    @Test("휴지통으로 옮기면 휴지통 안의 새 위치를 돌려준다")
+    func trashingReturnsTrashedLocation() throws {
+        let file = try makeAllowedFile()
+        defer { try? fm.removeItem(at: file.deletingLastPathComponent()) }
+
+        let outcome = Remover(movesToTrash: true).removeOne(item(file))
+        // 실제 휴지통에 남지 않게 치운다.
+        defer { if let trashed = outcome.trashedURL { try? fm.removeItem(at: trashed) } }
+
+        #expect(outcome.succeeded)
+        let trashed = try #require(outcome.trashedURL)
+        #expect(fm.fileExists(atPath: trashed.path))
+        #expect(!fm.fileExists(atPath: file.path))
+    }
+
+    @Test("영구 삭제와 실패에는 휴지통 위치가 없다")
+    func noTrashedLocationWithoutTrash() throws {
+        let file = try makeAllowedFile()
+        defer { try? fm.removeItem(at: file.deletingLastPathComponent()) }
+        #expect(Remover(movesToTrash: false).removeOne(item(file)).trashedURL == nil)
+
+        let forbidden = try makeForbiddenFile()
+        defer { try? fm.removeItem(at: forbidden.deletingLastPathComponent()) }
+        let blocked = Remover(movesToTrash: true).removeOne(item(forbidden))
+        #expect(!blocked.succeeded)
+        #expect(blocked.trashedURL == nil)
+    }
 }

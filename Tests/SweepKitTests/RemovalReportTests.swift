@@ -126,4 +126,21 @@ struct RemovalReportTests {
         ])
         #expect(report.trashNotice == nil)
     }
+
+    @Test("되돌릴 수 있는 것은 휴지통 위치를 아는 성공분뿐이다")
+    func restorableNeedsTrashedLocation() {
+        let report = RemovalReport(outcomes: [
+            RemovalOutcome(item: item("trashed", size: 1), failureReason: nil,
+                           trashedURL: URL(filePath: "/Users/x/.Trash/trashed")),
+            RemovalOutcome(item: item("deleted", size: 1), failureReason: nil),
+            RemovalOutcome(item: item("failed", size: 1), failureReason: "권한 없음"),
+        ])
+        #expect(report.restorable.map(\.item.displayName) == ["trashed"])
+    }
+
+    @Test("되돌리기 실패 종류마다 다음 행동이 있다")
+    func restoreFailureKindsHaveAdvice() {
+        #expect(RemovalFailureKind.destinationOccupied.advice != nil)
+        #expect(RemovalFailureKind.missingFromTrash.advice != nil)
+    }
 }

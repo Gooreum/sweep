@@ -17,7 +17,8 @@ public struct Remover: Sendable {
 
     /// 한 항목만 처리한다. UI가 항목 단위 진행률을 그리려면 이 입구가 필요하다.
     public func removeOne(_ item: CleanupItem) -> RemovalOutcome {
-        RemovalOutcome(item: item, failure: attempt(at: item.url))
+        let (trashed, failure) = perform(at: item.url)
+        return RemovalOutcome(item: item, failure: failure, trashedURL: trashed)
     }
 
     /// 경로 하나를 검증하고 지운다. 성공이면 nil, 실패면 사유를 돌려준다.
@@ -33,21 +34,29 @@ public struct Remover: Sendable {
     /// `removeFile(at:)`과 같은 관문·같은 삭제. 실패하면 문장과 함께 **종류**를 돌려준다 —
     /// 화면이 사유마다 다른 다음 행동을 보여주려면 종류가 필요하다.
     public func attempt(at url: URL) -> RemovalFailure? {
+        perform(at: url).failure
+    }
+
+    /// 관문 → 삭제. 휴지통으로 옮겼으면 **휴지통 안의 새 위치**도 돌려준다 —
+    /// 예전엔 버렸는데, 그러면 앱이 되돌릴 길이 없어 사용자가 Finder 휴지통을 뒤져야 했다.
+    private func perform(at url: URL) -> (trashed: URL?, failure: RemovalFailure?) {
         do {
             // 관문이 먼저다. 예외 없음.
             try ProtectedPaths.validate(url)
 
             if movesToTrash {
-                try FileManager.default.trashItem(at: url, resultingItemURL: nil)
+                var resulting: NSURL?
+                try FileManager.default.trashItem(at: url, resultingItemURL: &resulting)
+                return (resulting as URL?, nil)
             } else {
                 try FileManager.default.removeItem(at: url)
+                return (nil, nil)
             }
-            return nil
 
         } catch let veto as RemovalVeto {
-            return RemovalFailure(reason: veto.message, kind: Self.kind(of: veto))
+            return (nil, RemovalFailure(reason: veto.message, kind: Self.kind(of: veto)))
         } catch {
-            return RemovalFailure(reason: error.localizedDescription, kind: Self.kind(of: error))
+            return (nil, RemovalFailure(reason: error.localizedDescription, kind: Self.kind(of: error)))
         }
     }
 

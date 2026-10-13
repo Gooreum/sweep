@@ -10,6 +10,10 @@ public enum RemovalFailureKind: Sendable, Hashable {
     case permissionDenied
     /// 관문(`ProtectedPaths`)이 막았다. 다시 시도해도 같다.
     case protected
+    /// 되돌리려는데 원래 자리가 이미 차 있거나 원래 폴더가 사라졌다.
+    case destinationOccupied
+    /// 되돌리려는데 휴지통에 없다. 비웠거나 누가 옮겼다.
+    case missingFromTrash
     case other
 
     /// 사유 아래에 붙일 다음 행동. 할 말이 없으면 nil — 빈 줄을 만들지 않는다.
@@ -20,6 +24,8 @@ public enum RemovalFailureKind: Sendable, Hashable {
         case .applicationRunning: "앱을 종료한 뒤 다시 시도하세요"
         case .permissionDenied: "전체 디스크 접근을 켜면 옮길 수 있습니다"
         case .protected: "보호된 항목이라 이 앱으로는 지울 수 없습니다"
+        case .destinationOccupied: "원래 자리의 항목을 치운 뒤 Finder 휴지통에서 되돌려 놓으세요"
+        case .missingFromTrash: "휴지통을 비웠거나 이미 옮겨져 되돌릴 수 없습니다"
         case .other: nil
         }
     }
@@ -51,15 +57,21 @@ public struct RemovalOutcome: Sendable, Hashable {
 
     public var succeeded: Bool { failure == nil }
 
-    public init(item: CleanupItem, failure: RemovalFailure?) {
+    /// 휴지통 안의 새 위치. 휴지통으로 옮긴 성공 항목에만 있다 — 되돌리기가 여기서 꺼낸다.
+    /// **메모리에만 둔다.** 기록(`CleanupRecord`)에는 경로를 남기지 않는다.
+    public let trashedURL: URL?
+
+    public init(item: CleanupItem, failure: RemovalFailure?, trashedURL: URL? = nil) {
         self.item = item
         self.failure = failure
+        self.trashedURL = trashedURL
     }
 
     /// 종류를 모르는 호출부(테스트·하니스)용. 종류는 `.other`로 둔다.
-    public init(item: CleanupItem, failureReason: String?) {
+    public init(item: CleanupItem, failureReason: String?, trashedURL: URL? = nil) {
         self.init(item: item,
-                  failure: failureReason.map { RemovalFailure(reason: $0, kind: .other) })
+                  failure: failureReason.map { RemovalFailure(reason: $0, kind: .other) },
+                  trashedURL: trashedURL)
     }
 }
 
@@ -71,6 +83,9 @@ public struct RemovalReport: Sendable, Hashable {
 
     public var succeeded: [RemovalOutcome] { outcomes.filter(\.succeeded) }
     public var failed: [RemovalOutcome] { outcomes.filter { !$0.succeeded } }
+
+    /// 앱 안에서 되돌릴 수 있는 것. 휴지통 위치를 아는 성공분뿐이다.
+    public var restorable: [RemovalOutcome] { succeeded.filter { $0.trashedURL != nil } }
 
     /// 실제로 회수된 바이트. 실패한 항목은 세지 않는다 —
     /// 실패 용량까지 합치면 "50GB 확보"라고 표시해 놓고 아무것도 안 지워질 수 있다.
