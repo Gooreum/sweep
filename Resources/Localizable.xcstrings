@@ -51,9 +51,36 @@
         }
       }
     },
-    "%lld%%": {},
-    "%lld%% 사용됨": {},
-    "%lld개": {},
+    "%lld%%": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld%%"
+          }
+        }
+      }
+    },
+    "%lld%% 사용됨": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld%% 사용됨"
+          }
+        }
+      }
+    },
+    "%lld개": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개"
+          }
+        }
+      }
+    },
     "%lld개 · %@를 원래 자리로 되돌렸습니다": {
       "localizations": {
         "ko": {
@@ -74,19 +101,136 @@
         }
       }
     },
-    "%lld개 항목": {},
-    "%lld개는 되돌리지 못했습니다 — 자세히 보기": {},
-    "%lld개는 옮기지 못했습니다 — 자세히 보기": {},
-    "%lld개를 되돌리지 못했습니다": {},
-    "%lld개를 휴지통으로 옮기지 못했습니다": {},
-    "App Store 버전은 macOS 샌드박스 안에서 동작해서, 폴더를 열려면 한 번 허락이 필요해요.": {},
-    "Developer Disk Cleaner": {},
-    "Dock의 휴지통을 열어 '되돌려 놓기'를 쓰세요.": {},
-    "Dock의 휴지통을 열어 비워 주세요.": {},
-    "Finder에서 보기": {},
-    "Sweep": {},
-    "Sweep 열기": {},
-    "Sweep이 보는 곳": {},
+    "%lld개 항목": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 항목"
+          }
+        }
+      }
+    },
+    "%lld개는 되돌리지 못했습니다 — 자세히 보기": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개는 되돌리지 못했습니다 — 자세히 보기"
+          }
+        }
+      }
+    },
+    "%lld개는 옮기지 못했습니다 — 자세히 보기": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개는 옮기지 못했습니다 — 자세히 보기"
+          }
+        }
+      }
+    },
+    "%lld개를 되돌리지 못했습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개를 되돌리지 못했습니다"
+          }
+        }
+      }
+    },
+    "%lld개를 휴지통으로 옮기지 못했습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개를 휴지통으로 옮기지 못했습니다"
+          }
+        }
+      }
+    },
+    "App Store 버전은 macOS 샌드박스 안에서 동작해서, 폴더를 열려면 한 번 허락이 필요해요.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Store 버전은 macOS 샌드박스 안에서 동작해서, 폴더를 열려면 한 번 허락이 필요해요."
+          }
+        }
+      }
+    },
+    "Developer Disk Cleaner": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Developer Disk Cleaner"
+          }
+        }
+      }
+    },
+    "Dock의 휴지통을 열어 '되돌려 놓기'를 쓰세요.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock의 휴지통을 열어 '되돌려 놓기'를 쓰세요."
+          }
+        }
+      }
+    },
+    "Dock의 휴지통을 열어 비워 주세요.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock의 휴지통을 열어 비워 주세요."
+          }
+        }
+      }
+    },
+    "Finder에서 보기": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finder에서 보기"
+          }
+        }
+      }
+    },
+    "Sweep": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweep"
+          }
+        }
+      }
+    },
+    "Sweep 열기": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweep 열기"
+          }
+        }
+      }
+    },
+    "Sweep이 보는 곳": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweep이 보는 곳"
+          }
+        }
+      }
+    },
     "검색": {
       "localizations": {
         "en": {
@@ -94,26 +238,185 @@
             "state": "translated",
             "value": "Scan"
           }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "검색"
+          }
         }
       }
     },
-    "경로 복사": {},
-    "권한이 막혀 못 읽는 폴더가 있어요": {},
-    "권한이 막혀 안을 볼 수 없습니다": {},
-    "권한이 막혀 읽을 수 없습니다": {},
-    "권한이 막힌 폴더가 있어요": {},
-    "기능": {},
-    "다른 폴더를 골랐습니다": {},
-    "다시 검색": {},
-    "다시 읽기": {},
-    "다시 훑기": {},
-    "다시 훑으면 이어서가 아니라 처음부터 셉니다.": {},
-    "닫기": {},
-    "되돌리기": {},
-    "디스크": {},
-    "맨 위 하나만 허용해도 대부분 찾을 수 있어요.": {},
-    "부분 선택됨": {},
-    "사용 가능": {},
+    "경로 복사": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "경로 복사"
+          }
+        }
+      }
+    },
+    "권한이 막혀 못 읽는 폴더가 있어요": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한이 막혀 못 읽는 폴더가 있어요"
+          }
+        }
+      }
+    },
+    "권한이 막혀 안을 볼 수 없습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한이 막혀 안을 볼 수 없습니다"
+          }
+        }
+      }
+    },
+    "권한이 막혀 읽을 수 없습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한이 막혀 읽을 수 없습니다"
+          }
+        }
+      }
+    },
+    "권한이 막힌 폴더가 있어요": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한이 막힌 폴더가 있어요"
+          }
+        }
+      }
+    },
+    "기능": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기능"
+          }
+        }
+      }
+    },
+    "다른 폴더를 골랐습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다른 폴더를 골랐습니다"
+          }
+        }
+      }
+    },
+    "다시 검색": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 검색"
+          }
+        }
+      }
+    },
+    "다시 읽기": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 읽기"
+          }
+        }
+      }
+    },
+    "다시 훑기": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 훑기"
+          }
+        }
+      }
+    },
+    "다시 훑으면 이어서가 아니라 처음부터 셉니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 훑으면 이어서가 아니라 처음부터 셉니다."
+          }
+        }
+      }
+    },
+    "닫기": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "닫기"
+          }
+        }
+      }
+    },
+    "되돌리기": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "되돌리기"
+          }
+        }
+      }
+    },
+    "디스크": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스크"
+          }
+        }
+      }
+    },
+    "맨 위 하나만 허용해도 대부분 찾을 수 있어요.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "맨 위 하나만 허용해도 대부분 찾을 수 있어요."
+          }
+        }
+      }
+    },
+    "부분 선택됨": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "부분 선택됨"
+          }
+        }
+      }
+    },
+    "사용 가능": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사용 가능"
+          }
+        }
+      }
+    },
     "사용 가능: %@  전체: %@": {
       "localizations": {
         "ko": {
@@ -124,9 +427,36 @@
         }
       }
     },
-    "사유 자세히 보기": {},
-    "선택 안 됨": {},
-    "선택 항목 정리": {},
+    "사유 자세히 보기": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사유 자세히 보기"
+          }
+        }
+      }
+    },
+    "선택 안 됨": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택 안 됨"
+          }
+        }
+      }
+    },
+    "선택 항목 정리": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택 항목 정리"
+          }
+        }
+      }
+    },
     "선택: %lld개 · 전체 %lld개 중": {
       "localizations": {
         "ko": {
@@ -137,41 +467,356 @@
         }
       }
     },
-    "선택됨": {},
-    "선택하세요": {},
-    "선택한 항목 없음": {},
-    "시스템 설정 열기": {},
-    "시작 지점": {},
-    "실패한 것만 다시 시도": {},
-    "아직 훑어보지 않았습니다": {},
-    "안전 항목 선택": {},
-    "열기…": {},
-    "옮기지 못했습니다": {},
-    "완료": {},
-    "위로": {},
-    "이 묶음 전체 선택 / 해제": {},
-    "이 밖은 건드리지 않습니다": {},
-    "이동 가능": {},
-    "전체 디스크 접근 설정 열기": {},
-    "전체 디스크 접근이 꺼져 있습니다": {},
-    "정리": {},
-    "중단": {},
-    "진행 중": {},
-    "진행률": {},
-    "취소": {},
-    "켜면 앱 캐시까지 찾고, ‘다른 앱의 데이터’ 물음이 더 뜨지 않습니다.": {},
-    "해제": {},
-    "허용됨": {},
-    "확인": {},
-    "회수 가능": {},
-    "회수할 만한 크기의 항목을 찾지 못했습니다.": {},
-    "훑는 중": {},
-    "휴지통 열기": {},
-    "휴지통으로 옮기기": {},
-    "휴지통으로 이동": {},
-    "휴지통으로 이동할까요?": {},
-    "휴지통을 비우기 전까지 복원할 수 있습니다.": {},
-    "휴지통을 열지 못했습니다": {}
+    "선택됨": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택됨"
+          }
+        }
+      }
+    },
+    "선택하세요": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택하세요"
+          }
+        }
+      }
+    },
+    "선택한 항목 없음": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택한 항목 없음"
+          }
+        }
+      }
+    },
+    "시스템 설정 열기": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템 설정 열기"
+          }
+        }
+      }
+    },
+    "시작 지점": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시작 지점"
+          }
+        }
+      }
+    },
+    "실패한 것만 다시 시도": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실패한 것만 다시 시도"
+          }
+        }
+      }
+    },
+    "아직 훑어보지 않았습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아직 훑어보지 않았습니다"
+          }
+        }
+      }
+    },
+    "안전 항목 선택": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "안전 항목 선택"
+          }
+        }
+      }
+    },
+    "열기…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "열기…"
+          }
+        }
+      }
+    },
+    "옮기지 못했습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "옮기지 못했습니다"
+          }
+        }
+      }
+    },
+    "완료": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "완료"
+          }
+        }
+      }
+    },
+    "위로": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "위로"
+          }
+        }
+      }
+    },
+    "이 묶음 전체 선택 / 해제": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 묶음 전체 선택 / 해제"
+          }
+        }
+      }
+    },
+    "이 밖은 건드리지 않습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 밖은 건드리지 않습니다"
+          }
+        }
+      }
+    },
+    "이동 가능": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이동 가능"
+          }
+        }
+      }
+    },
+    "전체 디스크 접근 설정 열기": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 디스크 접근 설정 열기"
+          }
+        }
+      }
+    },
+    "전체 디스크 접근이 꺼져 있습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 디스크 접근이 꺼져 있습니다"
+          }
+        }
+      }
+    },
+    "정리": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정리"
+          }
+        }
+      }
+    },
+    "중단": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "중단"
+          }
+        }
+      }
+    },
+    "진행 중": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "진행 중"
+          }
+        }
+      }
+    },
+    "진행률": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "진행률"
+          }
+        }
+      }
+    },
+    "취소": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "취소"
+          }
+        }
+      }
+    },
+    "켜면 앱 캐시까지 찾고, ‘다른 앱의 데이터’ 물음이 더 뜨지 않습니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "켜면 앱 캐시까지 찾고, ‘다른 앱의 데이터’ 물음이 더 뜨지 않습니다."
+          }
+        }
+      }
+    },
+    "해제": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "해제"
+          }
+        }
+      }
+    },
+    "허용됨": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "허용됨"
+          }
+        }
+      }
+    },
+    "확인": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "확인"
+          }
+        }
+      }
+    },
+    "회수 가능": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "회수 가능"
+          }
+        }
+      }
+    },
+    "회수할 만한 크기의 항목을 찾지 못했습니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "회수할 만한 크기의 항목을 찾지 못했습니다."
+          }
+        }
+      }
+    },
+    "훑는 중": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "훑는 중"
+          }
+        }
+      }
+    },
+    "휴지통 열기": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통 열기"
+          }
+        }
+      }
+    },
+    "휴지통으로 옮기기": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통으로 옮기기"
+          }
+        }
+      }
+    },
+    "휴지통으로 이동": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통으로 이동"
+          }
+        }
+      }
+    },
+    "휴지통으로 이동할까요?": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통으로 이동할까요?"
+          }
+        }
+      }
+    },
+    "휴지통을 비우기 전까지 복원할 수 있습니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통을 비우기 전까지 복원할 수 있습니다."
+          }
+        }
+      }
+    },
+    "휴지통을 열지 못했습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통을 열지 못했습니다"
+          }
+        }
+      }
+    }
   },
   "version": "1.0"
 }

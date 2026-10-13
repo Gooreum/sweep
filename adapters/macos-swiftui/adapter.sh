@@ -8,10 +8,18 @@ set -uo pipefail
 CFG="${DESIGN_BOUNCE_CONFIG:-design-bounce.config.json}"
 BIN=".build/debug/SweepApp"
 PROC_PATTERN='\.build/debug/SweepApp'
+# `SWEEP_LANG=en adapter.sh navigate <id>`처럼 화면 언어를 고른다. 비우면 시스템 언어.
+# 캡처도 언어별 하위 폴더에 따로 둔다 — 한국어 기준 캡처를 덮어쓰지 않게.
+SWEEP_LANG="${SWEEP_LANG:-}"
+LANG_ARGS=()
+[ -n "$SWEEP_LANG" ] && LANG_ARGS=(-AppleLanguages "($SWEEP_LANG)")
 
 cfg() { python3 -c "import json,sys; print(json.load(open('$CFG'))$1)" 2>/dev/null; }
 
-capture_dir() { cfg "['captureDir']" || echo ".design-bounce/shots"; }
+capture_dir() {
+  local dir; dir=$(cfg "['captureDir']" || echo ".design-bounce/shots")
+  echo "${dir}${SWEEP_LANG:+/$SWEEP_LANG}"
+}
 deeplink()    { cfg "['screens']['$1']['deeplink']"; }
 settle_ms()   { cfg "['screens']['$1'].get('settleMs', 0)" || echo 0; }
 
@@ -84,13 +92,16 @@ case "${1:-}" in
   build)
     if dry "$@"; then echo "swift build"; exit 0; fi
     swift build >&2 || exit 1
+    # 번들 없는 실행 파일은 자기 디렉토리를 리소스 경로로 쓴다.
+    # 여기 두어야 `-AppleLanguages '(en)'`로 띄웠을 때 영어 화면이 나온다.
+    bash scripts/l10n.sh compile .build/debug >&2 || exit 1
     echo OK
     ;;
 
   launch)
     if dry "$@"; then echo "$BIN &"; exit 0; fi
     kill_app
-    "$BIN" >/dev/null 2>&1 &
+    "$BIN" ${LANG_ARGS[@]+"${LANG_ARGS[@]}"} >/dev/null 2>&1 &
     remember_pid $!
     wait_for_window >/dev/null || { echo "창이 뜨지 않았다" >&2; exit 1; }
     echo OK
@@ -102,7 +113,7 @@ case "${1:-}" in
     if dry "$@"; then echo "$BIN $LINK &"; exit 0; fi
     kill_app
     # shellcheck disable=SC2086
-    "$BIN" $LINK >/dev/null 2>&1 &
+    "$BIN" $LINK ${LANG_ARGS[@]+"${LANG_ARGS[@]}"} >/dev/null 2>&1 &
     remember_pid $!
     wait_for_window >/dev/null || { echo "창이 뜨지 않았다: $SCREEN" >&2; exit 1; }
     echo OK

@@ -33,6 +33,8 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp .build/release/SweepApp "$APP/Contents/MacOS/Sweep"
 cp "$PLIST" "$APP/Contents/Info.plist"
 cp "$ICON" "$APP/Contents/Resources/AppIcon.icns"
+# 화면 문자열과 권한 요청 문구의 번역. 없으면 영어 사용자에게도 한국어가 뜬다.
+bash scripts/l10n.sh compile "$APP/Contents/Resources"
 
 # 서명을 붙인다. **권한 허용 팝업이 매번 다시 뜨는 것을 막는 유일한 방법이다.**
 #
