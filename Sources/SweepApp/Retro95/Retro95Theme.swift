@@ -30,6 +30,8 @@ enum R95 {
     static let sidebarWidth: CGFloat = 184
     static let sidebarRowHeight: CGFloat = 36
     static let tableRowHeight: CGFloat = 40
+    /// 한 줄짜리 상세 보기 행. 두 줄(이름+경로)이 없는 표는 이 높이로 촘촘하게 둔다.
+    static let compactRowHeight: CGFloat = 26
     static let tableHeaderHeight: CGFloat = 24
     static let titleStripHeight: CGFloat = 24
     static let statusBarHeight: CGFloat = 22

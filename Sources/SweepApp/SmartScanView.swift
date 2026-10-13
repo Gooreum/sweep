@@ -77,9 +77,8 @@ struct SmartScanView: View {
 
                 scopeCard
             }
-            .frame(maxWidth: 640, alignment: .leading)
-            .padding(10)
-            .frame(maxWidth: .infinity)
+            .padding(8)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -121,46 +120,47 @@ struct SmartScanView: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Text("이 밖은 건드리지 않습니다")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.textSecondary)
+                        .font(R95.ui(11))
+                        .foregroundStyle(R95.deep)
                 }
                 .padding(.horizontal, 8)
-                .padding(.vertical, 8)
+                .padding(.vertical, 4)
 
-                Divider().overlay(Theme.border)
+                R95.light.frame(height: 1)
 
                 ForEach(Array(scopes.enumerated()), id: \.element.id) { index, scope in
                     let blocked = readability[scope.id] == .denied
 
-                    HStack(spacing: 12) {
+                    // 탐색기 상세 보기처럼 경로와 설명을 한 줄에 둔다. 두 줄로 쌓으면
+                    // 일곱 줄이 창을 다 차지해 아래 내용이 밀려난다.
+                    HStack(spacing: 8) {
                         PixelIcon(art: .folder, size: 16)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(scope.label)
-                                .font(Theme.bodyMono)
-                                .foregroundStyle(Theme.textPrimary)
-                            // 막혔으면 무엇을 찾는 곳인지보다 왜 비어 있는지가 먼저다.
+                        Text(scope.label)
+                            .font(R95.mono(12))
+                            .foregroundStyle(R95.black)
+                            .lineLimit(1)
+                            .frame(width: 220, alignment: .leading)
+                        // 막혔으면 무엇을 찾는 곳인지보다 왜 비어 있는지가 먼저다.
+                        Group {
                             if blocked {
-                                Text("권한이 막혀 읽을 수 없습니다")
-                                    .font(Theme.caption)
-                                    .foregroundStyle(R95.danger)
-                            } else if !scope.detail.isEmpty {
-                                Text(scope.detail)
-                                    .font(Theme.caption)
-                                    .foregroundStyle(Theme.textSecondary)
+                                Text("권한이 막혀 읽을 수 없습니다").foregroundStyle(R95.danger)
+                            } else {
+                                Text(scope.detail).foregroundStyle(R95.deep)
                             }
                         }
-                        Spacer(minLength: 12)
+                        .font(R95.ui(11))
+                        .lineLimit(1)
+                        Spacer(minLength: 8)
 
                         if blocked {
                             Button("열기…") { unblock(scope) }
                         }
                     }
                     .padding(.horizontal, 8)
-                    .padding(.vertical, 8)
+                    .frame(minHeight: R95.compactRowHeight)
 
                     if index < scopes.count - 1 {
-                        Divider().overlay(Theme.border).padding(.leading, 52)
+                        R95.light.frame(height: 1)
                     }
                 }
 
@@ -337,9 +337,8 @@ struct SmartScanView: View {
                     Text(nudge).font(R95.ui()).foregroundStyle(R95.navy)
                 }
             }
-            .frame(maxWidth: 640, alignment: .leading)
-            .padding(10)
-            .frame(maxWidth: .infinity)
+            .padding(8)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -366,7 +365,7 @@ struct SmartScanView: View {
                     .frame(width: SmartSummaryColumns.bar)
             }
             .foregroundStyle(R95.black)
-            .frame(height: R95.tableRowHeight)
+            .frame(height: R95.compactRowHeight)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
