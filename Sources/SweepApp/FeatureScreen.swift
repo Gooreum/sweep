@@ -16,6 +16,8 @@ struct FeatureScreen: View {
     @State private var showsFailures = false
     /// 휴지통을 열지 못했다(샌드박스가 막는 경우). 조용히 넘어가지 않고 대신 할 일을 말한다.
     @State private var trashOpenFailed = false
+    /// 되돌리기 실패 목록 시트.
+    @State private var showsRestoreFailures = false
 
     var body: some View {
         VStack(spacing: 8) {
@@ -120,23 +122,47 @@ struct FeatureScreen: View {
         }
     }
 
-    /// 되돌리기 결과. 실패 목록 시트는 다음 단계에서 붙인다.
+    /// 되돌리기 결과. 정리 완료 화면과 같은 규칙으로 성공·일부·전부 실패를 아이콘부터 나눈다.
     @ViewBuilder
     private var restoreDone: some View {
         if let report = model.restoreReport {
             let restored = report.succeeded.count
-            Retro95Dialog(title: report.failed.isEmpty ? "되돌리기 완료" : "일부만 되돌렸습니다",
-                          icon: report.failed.isEmpty ? .check : .warning) {
-                Text(restored == 0
-                     ? "\(report.failed.count)개를 되돌리지 못했습니다"
-                     : "\(restored)개 · \(report.formattedReclaimed)를 원래 자리로 되돌렸습니다")
-                    .font(R95.ui(13, bold: true))
-                    .monospacedDigit()
+            let failed = report.failed.count
+            let (title, icon): (String, PixelArt) =
+                restored == 0 ? ("되돌리지 못했습니다", .warning)
+                : failed > 0 ? ("일부만 되돌렸습니다", .warning)
+                : ("되돌리기 완료", .check)
+            Retro95Dialog(title: title, icon: icon) {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(restored == 0
+                         ? "\(failed)개를 되돌리지 못했습니다"
+                         : "\(restored)개 · \(report.formattedReclaimed)를 원래 자리로 되돌렸습니다")
+                        .font(R95.ui(13, bold: true))
+                        .monospacedDigit()
+
+                    if failed > 0 {
+                        Button {
+                            showsRestoreFailures = true
+                        } label: {
+                            HStack(alignment: .top, spacing: 6) {
+                                PixelIcon(art: .warning, size: 16)
+                                Text(restored == 0 ? "사유 자세히 보기"
+                                     : "\(failed)개는 되돌리지 못했습니다 — 자세히 보기")
+                                    .underline()
+                            }
+                            .foregroundStyle(R95.danger)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
             } buttons: {
                 Button("완료") { model.dismissReport() }
                     .buttonStyle(Retro95ButtonStyle(isDefault: true))
             }
             .frame(maxWidth: R95.dialogWidth)
+            .sheet(isPresented: $showsRestoreFailures) {
+                RemovalFailuresSheet.restore(report.failed) { showsRestoreFailures = false }
+            }
         }
     }
 
@@ -198,6 +224,11 @@ struct FeatureScreen: View {
                     }
                 }
             } buttons: {
+                // 휴지통 위치를 아는 것이 있을 때만. 확인을 묻지 않는다 — 지우지 않고 원래 자리로 옮기기만 한다.
+                if model.canUndo {
+                    Button("되돌리기") { Task { await model.undoLastCleanup() } }
+                        .buttonStyle(Retro95ButtonStyle())
+                }
                 if moved > 0 {
                     // 열어 주기만 한다. 비우는 것은 영구 삭제라 사용자가 Finder에서 직접 한다.
                     Button("휴지통 열기") { trashOpenFailed = !ItemActions.openTrash() }

@@ -5,10 +5,37 @@ import SweepKit
 ///
 /// 행마다 "왜"와 "그래서 무엇을"을 같이 둔다. 사유만 보여주면 사용자는
 /// 다음에 무엇을 해야 하는지 모른 채 같은 버튼을 다시 누른다.
+///
+/// 정리 실패와 되돌리기 실패를 같은 시트로 보여준다. 되돌리기 실패는 다시 시도할 것이
+/// 없고(휴지통에서 직접 꺼내야 한다), "Finder에서 보기"는 휴지통 안의 항목을 가리킨다.
 struct RemovalFailuresSheet: View {
     let failed: [RemovalOutcome]
+    let title: String
+    let subtitle: String
     let onClose: () -> Void
-    let onRetry: () -> Void
+    /// nil이면 재시도 버튼을 두지 않는다.
+    let onRetry: (() -> Void)?
+    let revealURL: (RemovalOutcome) -> URL
+    /// 휴지통에서 직접 꺼내야 할 때 휴지통을 열어 준다.
+    let offersTrash: Bool
+
+    @State private var trashOpenFailed = false
+
+    init(failed: [RemovalOutcome],
+         title: String? = nil,
+         subtitle: String = "사유를 확인하고 조치한 뒤 실패한 것만 다시 시도할 수 있습니다.",
+         revealURL: @escaping (RemovalOutcome) -> URL = { $0.item.url },
+         offersTrash: Bool = false,
+         onClose: @escaping () -> Void,
+         onRetry: (() -> Void)?) {
+        self.failed = failed
+        self.title = title ?? "\(failed.count)개 항목을 옮기지 못했습니다"
+        self.subtitle = subtitle
+        self.revealURL = revealURL
+        self.offersTrash = offersTrash
+        self.onClose = onClose
+        self.onRetry = onRetry
+    }
 
     /// 권한 실패가 있고 이 빌드에서 켤 수 있을 때만 설정 버튼을 둔다.
     /// 샌드박스(App Store)에서는 전체 디스크 접근이 뜻이 없다 — `FullDiskAccessBanner`와 같은 판단.
@@ -17,9 +44,9 @@ struct RemovalFailuresSheet: View {
     }
 
     var body: some View {
-        Retro95Dialog(title: "\(failed.count)개 항목을 옮기지 못했습니다", icon: .warning) {
+        Retro95Dialog(title: title, icon: .warning) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("사유를 확인하고 조치한 뒤 실패한 것만 다시 시도할 수 있습니다.")
+                Text(subtitle)
                     .foregroundStyle(R95.deep)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -42,14 +69,29 @@ struct RemovalFailuresSheet: View {
                 Button("전체 디스크 접근 설정 열기") { PrivacySettings.openFullDiskAccess() }
                     .buttonStyle(Retro95ButtonStyle())
             }
-            Button("닫기", action: onClose)
-                .buttonStyle(Retro95ButtonStyle())
-                .keyboardShortcut(.cancelAction)
-            Button("실패한 것만 다시 시도", action: onRetry)
-                .buttonStyle(Retro95ButtonStyle(isDefault: true))
-                .keyboardShortcut(.defaultAction)
+            if offersTrash {
+                Button("휴지통 열기") { trashOpenFailed = !ItemActions.openTrash() }
+                    .buttonStyle(Retro95ButtonStyle())
+            }
+            if let onRetry {
+                Button("닫기", action: onClose)
+                    .buttonStyle(Retro95ButtonStyle())
+                    .keyboardShortcut(.cancelAction)
+                Button("실패한 것만 다시 시도", action: onRetry)
+                    .buttonStyle(Retro95ButtonStyle(isDefault: true))
+                    .keyboardShortcut(.defaultAction)
+            } else {
+                Button("닫기", action: onClose)
+                    .buttonStyle(Retro95ButtonStyle(isDefault: true))
+                    .keyboardShortcut(.defaultAction)
+            }
         }
         .frame(width: 560)
+        .alert("휴지통을 열지 못했습니다", isPresented: $trashOpenFailed) {
+            Button("확인") {}
+        } message: {
+            Text("Dock의 휴지통을 열어 '되돌려 놓기'를 쓰세요.")
+        }
         .background(R95.gray)
     }
 
@@ -78,9 +120,24 @@ struct RemovalFailuresSheet: View {
                 }
             }
             Spacer(minLength: 12)
-            Button("Finder에서 보기") { ItemActions.reveal(outcome.item.url) }
+            Button("Finder에서 보기") { ItemActions.reveal(revealURL(outcome)) }
                 .buttonStyle(Retro95ButtonStyle())
         }
         .padding(.vertical, 10)
+    }
+}
+
+extension RemovalFailuresSheet {
+    /// 되돌리기 실패. 다시 시도할 것이 없고, 휴지통 안의 항목을 가리킨다.
+    /// 샌드박스가 휴지통에서 꺼내는 것을 막으면 이 시트가 Finder로 넘겨주는 길이다.
+    static func restore(_ failed: [RemovalOutcome], onClose: @escaping () -> Void) -> RemovalFailuresSheet {
+        RemovalFailuresSheet(
+            failed: failed,
+            title: "\(failed.count)개를 되돌리지 못했습니다",
+            subtitle: "휴지통에 남아 있습니다. Finder 휴지통에서 직접 '되돌려 놓기'를 할 수 있습니다.",
+            revealURL: { $0.trashedURL ?? $0.item.url },
+            offersTrash: true,
+            onClose: onClose,
+            onRetry: nil)
     }
 }
