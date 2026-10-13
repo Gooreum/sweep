@@ -108,4 +108,39 @@ struct RemovalReportTests {
         #expect(RemovalFailureKind.protected.advice != nil)
         #expect(RemovalFailureKind.other.advice == nil)
     }
+
+    @Test("휴지통 안내는 성공분 용량만 말한다")
+    func trashNoticeCountsSuccessesOnly() {
+        let report = RemovalReport(outcomes: [
+            RemovalOutcome(item: item("ok", size: 3_500), failureReason: nil),
+            RemovalOutcome(item: item("nope", size: 9_999_999), failureReason: "권한 없음"),
+        ])
+        #expect(report.trashNotice == "휴지통을 비우면 \(report.formattedReclaimed)가 실제로 확보됩니다")
+        #expect(report.formattedReclaimed == ByteCountFormatter.string(fromByteCount: 3_500, countStyle: .file))
+    }
+
+    @Test("하나도 옮기지 못했으면 휴지통 안내가 없다")
+    func noTrashNoticeWhenNothingMoved() {
+        let report = RemovalReport(outcomes: [
+            RemovalOutcome(item: item("nope", size: 100), failureReason: "권한 없음"),
+        ])
+        #expect(report.trashNotice == nil)
+    }
+
+    @Test("되돌릴 수 있는 것은 휴지통 위치를 아는 성공분뿐이다")
+    func restorableNeedsTrashedLocation() {
+        let report = RemovalReport(outcomes: [
+            RemovalOutcome(item: item("trashed", size: 1), failureReason: nil,
+                           trashedURL: URL(filePath: "/Users/x/.Trash/trashed")),
+            RemovalOutcome(item: item("deleted", size: 1), failureReason: nil),
+            RemovalOutcome(item: item("failed", size: 1), failureReason: "권한 없음"),
+        ])
+        #expect(report.restorable.map(\.item.displayName) == ["trashed"])
+    }
+
+    @Test("되돌리기 실패 종류마다 다음 행동이 있다")
+    func restoreFailureKindsHaveAdvice() {
+        #expect(RemovalFailureKind.destinationOccupied.advice != nil)
+        #expect(RemovalFailureKind.missingFromTrash.advice != nil)
+    }
 }

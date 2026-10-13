@@ -90,4 +90,21 @@ struct ItemActionsTests {
             #expect(revealed() == [[ghost]])
         }
     }
+
+    @Test("휴지통 열기는 실제 홈의 .Trash를 넘기고 결과를 그대로 돌려준다")
+    func openTrashPassesRealHomeTrash() {
+        let opened = Box<URL>()
+        let original = ItemActions.openFolder
+        defer { ItemActions.openFolder = original }
+
+        ItemActions.openFolder = { opened.append($0); return true }
+        #expect(ItemActions.openTrash())
+        #expect(opened.value == [Sandbox.userHome.appending(path: ".Trash", directoryHint: .isDirectory)])
+        #expect(ItemActions.trashURL.path.hasPrefix(Sandbox.userHome.path))
+        #expect(ItemActions.trashURL.lastPathComponent == ".Trash")
+
+        // 샌드박스가 막으면 false가 와야 화면이 대체 안내를 띄운다.
+        ItemActions.openFolder = { _ in false }
+        #expect(!ItemActions.openTrash())
+    }
 }

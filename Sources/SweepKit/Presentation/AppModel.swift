@@ -138,6 +138,15 @@ public final class AppModel {
         model.onReport = { [weak self] report in
             self?.record(report)
         }
+        model.onRestored = { [weak self] report in
+            self?.recordRestore(report)
+        }
+    }
+
+    /// 되돌린 만큼 누적 용량에서 뺀다.
+    private func recordRestore(_ report: RemovalReport) {
+        history.recordRestore(report)
+        cleanupSummary = history.summary
     }
 
     /// 회차 결과를 기록하고 관찰 값을 갱신한다.
@@ -313,4 +322,65 @@ extension ScanModel {
     /// 다른 모델을 보면 실앱에서는 같은 객체라 안 드러나지만, 모델을 주입해
     /// 그리는 화면(단계 하니스)에서는 빈 결과가 나온다.
     public var summary: MenuBarSummary { MenuBarSummary(model: self) }
+}
+
+// MARK: - 상태바
+
+/// 창 아래 상태바 세 칸. 디스크 맵·폴더 허락 화면처럼 스캔 모델이 없는 화면도
+/// 지금 하는 일을 같은 자리에 보여준다.
+public struct StatusLine: Equatable, Sendable {
+    public let status: String
+    public let count: String
+    public let size: String
+
+    static let empty = "—"
+
+    @MainActor
+    static func scan(_ model: ScanModel?) -> StatusLine {
+        let status: String
+        switch model?.phase {
+        case .idle, .none: status = "준비됨"
+        case let .scanning(percent, _): status = "검색 중… \(percent)%"
+        case .results: status = "검색 완료"
+        case .removing: status = "정리하는 중…"
+        case .cleaned: status = "정리 완료"
+        case .restoring: status = "되돌리는 중…"
+        case .restored: status = "되돌리기 완료"
+        }
+        return StatusLine(
+            status: status,
+            count: model.map { "항목 \($0.items.count)개" } ?? empty,
+            size: model.flatMap { $0.items.isEmpty ? nil : "회수 가능 \($0.formattedTotalSize)" } ?? empty)
+    }
+
+    static func diskMap(loadPhase: DiskMapModel.LoadPhase?, current: DiskUsageNode?) -> StatusLine {
+        let status: String
+        switch loadPhase {
+        case let .counting(scanned): status = "\(scanned.formatted())개 세는 중…"
+        case let .measuring(percent): status = "사용량을 재는 중… \(percent)%"
+        case .none: status = current == nil ? "준비됨" : "표시 완료"
+        }
+        // 재는 중에는 이전 트리 숫자를 보여주지 않는다 — 곧 바뀔 값이다.
+        guard loadPhase == nil, let current else {
+            return StatusLine(status: status, count: empty, size: empty)
+        }
+        return StatusLine(status: status,
+                          count: "항목 \(current.children.count)개",
+                          size: "크기 \(current.formattedSize)")
+    }
+}
+
+extension AppModel {
+    /// 디스크 맵 모델은 **만들지 않는다.** 상태바는 body에서 읽히므로,
+    /// 여기서 만들면 관찰 중인 값을 그리는 도중에 바꾸게 된다.
+    public var statusLine: StatusLine {
+        switch selected {
+        case .diskMap:
+            StatusLine.diskMap(loadPhase: diskMapModel?.loadPhase, current: diskMapModel?.current)
+        case .junk where needsFolderAccess:
+            StatusLine(status: "폴더 허락 필요", count: StatusLine.empty, size: StatusLine.empty)
+        default:
+            StatusLine.scan(currentModel)
+        }
+    }
 }

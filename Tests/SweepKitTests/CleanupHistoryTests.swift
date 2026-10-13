@@ -106,7 +106,7 @@ struct CleanupHistoryTests {
         let summary = CleanupSummary(totalReclaimedBytes: 12_400_000_000,
                                      lastCleanup: day(3, from: now))
 
-        #expect(summary.statusLine(now: now) == "지금까지 12.4 GB 확보 · 마지막 정리 3일 전")
+        #expect(summary.statusLine(now: now) == "지금까지 12.4 GB를 휴지통으로 옮김 · 마지막 정리 3일 전")
     }
 
     // TC-7
@@ -154,5 +154,75 @@ struct CleanupHistoryTests {
         // 숫자만 남긴다. 무엇을 지웠는지는 저장하지 않는다.
         #expect(!json.contains("/private/tmp"))
         #expect(!json.contains("ok-1"))
+    }
+
+    @Test("휴지통 안내는 기록이 있을 때만 나온다")
+    func trashHintOnlyWithHistory() {
+        #expect(CleanupSummary.empty.trashHint == nil)
+        let summary = CleanupSummary(totalReclaimedBytes: 1, lastCleanup: Date())
+        #expect(summary.trashHint == "휴지통을 비워야 디스크 공간이 늘어납니다")
+    }
+
+    @Test("kind가 없는 예전 기록은 정리 회차로 읽힌다")
+    func decodesLegacyRecordsAsCleanup() throws {
+        let (defaults, cleanup) = try isolated()
+        defer { cleanup() }
+        let legacy = """
+        [{"date":700000000,"reclaimedBytes":3500,"succeededCount":2,"failedCount":1,"bytesByCategory":{"devCache":3500}}]
+        """
+        defaults.set(Data(legacy.utf8), forKey: CleanupHistory.key)
+
+        let history = CleanupHistory(defaults: defaults)
+
+        #expect(history.records.map(\.kind) == [.cleanup])
+        #expect(history.summary.totalReclaimedBytes == 3_500)
+        #expect(history.summary.lastCleanup == Date(timeIntervalSinceReferenceDate: 700_000_000))
+    }
+
+    @Test("되돌린 만큼 합계에서 빠지고 마지막 정리 날짜는 그대로다")
+    func restoreSubtractsFromTotal() throws {
+        let (defaults, cleanup) = try isolated()
+        defer { cleanup() }
+        let history = CleanupHistory(defaults: defaults)
+        let cleaned = Date(timeIntervalSince1970: 1_700_000_000)
+        let restored = cleaned.addingTimeInterval(60)
+
+        history.record(RemovalReport(outcomes: [RemovalOutcome(item: item("a", size: 10_000), failureReason: nil)]),
+                       at: cleaned)
+        history.recordRestore(RemovalReport(outcomes: [RemovalOutcome(item: item("a", size: 3_000), failureReason: nil)]),
+                              at: restored)
+
+        #expect(history.summary.totalReclaimedBytes == 7_000)
+        #expect(history.summary.lastCleanup == cleaned)
+    }
+
+    @Test("되돌린 양이 더 커도 합계는 음수가 되지 않는다")
+    func totalNeverNegative() throws {
+        let (defaults, cleanup) = try isolated()
+        defer { cleanup() }
+        let history = CleanupHistory(defaults: defaults)
+        history.record(RemovalReport(outcomes: [RemovalOutcome(item: item("a", size: 1_000), failureReason: nil)]))
+        history.recordRestore(RemovalReport(outcomes: [RemovalOutcome(item: item("a", size: 5_000), failureReason: nil)]))
+
+        #expect(history.summary.totalReclaimedBytes == 0)
+    }
+
+    @Test("하나도 되돌리지 못한 회차는 기록하지 않고, 되돌림 기록에도 경로가 없다")
+    func restoreRecordSkipsEmptyAndHasNoPaths() throws {
+        let (defaults, cleanup) = try isolated()
+        defer { cleanup() }
+        let history = CleanupHistory(defaults: defaults)
+
+        #expect(history.recordRestore(RemovalReport(outcomes: [
+            RemovalOutcome(item: item("a", size: 1), failureReason: "원래 자리에 같은 이름이 있습니다"),
+        ])) == nil)
+
+        history.recordRestore(RemovalReport(outcomes: [
+            RemovalOutcome(item: item("secret-project", size: 1), failureReason: nil,
+                           trashedURL: URL(filePath: "/Users/x/.Trash/secret-project")),
+        ]))
+        let json = String(decoding: try #require(defaults.data(forKey: CleanupHistory.key)), as: UTF8.self)
+        #expect(!json.contains("secret-project"))
+        #expect(!json.contains("/private/tmp"))
     }
 }

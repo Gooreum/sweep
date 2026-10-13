@@ -43,10 +43,14 @@ struct SweepApp: App {
             if let stage = StageHarness.requested {
                 StageHarness(stage: stage)
                     .frame(minWidth: 940, minHeight: 600)
+                    .background(R95.gray)
+                    .preferredColorScheme(.light)
             } else {
                 ContentView(app: app)
-                    // 사이드바 220 + 결과 목록이 접히지 않을 최소 폭
+                    // 결과 목록이 접히지 않도록 창의 최소 폭을 유지한다.
                     .frame(minWidth: 940, minHeight: 600)
+                    .background(R95.gray)
+                    .preferredColorScheme(.light)
             }
         }
         .defaultSize(width: Theme.windowWidth, height: Theme.windowHeight)
@@ -59,6 +63,7 @@ struct SweepApp: App {
                 // 다른 앱이 앞에 있으면 창만 만들어지고 뒤에 숨는다
                 NSApp.activate(ignoringOtherApps: true)
             }
+            .preferredColorScheme(.light)
         }
         // 기본 `.menu`는 임의 뷰를 그리지 못한다 — 텍스트 항목만 나온다
         .menuBarExtraStyle(.window)

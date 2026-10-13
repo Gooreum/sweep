@@ -7,40 +7,28 @@ struct ContentView: View {
     @Bindable var app: AppModel
 
     var body: some View {
-        HStack(spacing: 0) {
-            Sidebar(app: app)
-
-            detail
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Theme.surface)
-        }
-        // 전역 액션을 타이틀바로 올린다. 별도 툴바 줄을 만들면 사이드바 위에
-        // 가로줄이 하나 더 생겨 화면이 그만큼 낮아진다 — 타이틀바는 어차피 비어 있다.
-        // 기능 이름은 **창 제목**으로 둔다. 툴바 항목에 맨 글자를 넣으면 시스템이
-        // 유리 캡슐을 씌우는데, 버튼이 아닌 글자에는 여백이 없어 캡슐이 글자 상자에
-        // 달라붙는다 — 한글은 글자 상자가 높아 위아래가 깎여 보였다.
-        .navigationTitle(app.selected.displayName)
-        .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
-                // 한 번에 고르는 가장 흔한 경우. 메뉴로 접어 두면 두 번 눌러야 한다.
-                // 라벨에 직접 여백을 준다. 시스템 유리 캡슐은 라벨 크기에 맞춰
-                // 그려지는데, 한글은 글자 상자가 높아 기본 상태로는 캡슐이 글자에
-                // 바짝 붙어 **잘린 것처럼** 보인다. `.controlSize(.large)`로는
-                // 캡슐이 거의 안 커져서(실측) 여백을 직접 넣는다.
-                Button { app.currentModel?.apply(.safeOnly) } label: {
-                    Text("안전 항목 선택").font(.system(size: 12))
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                Sidebar(app: app)
+                VStack(spacing: 0) {
+                    Retro95TitleStrip(title: "Sweep - \(app.selected.displayName)",
+                                      icon: app.selected.pixelArt)
+                    // 디스크 맵·폴더 허락 화면은 스캔하지 않으므로 명령이 없다.
+                    if app.currentModel != nil {
+                        CommandBar(app: app)
+                    }
+                    detail
+                        .padding(8)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .disabled(app.currentModel?.items.isEmpty ?? true)
-
-                Button {
-                    guard let model = app.currentModel else { return }
-                    Task { await model.scan() }
-                } label: {
-                    Text("다시 검색").font(.system(size: 12))
-                }
-                .disabled(!app.canScan)
+                .background(R95.gray)
             }
+            AppStatusBar(app: app)
         }
+        .background(R95.gray)
+        // 기능 이름은 **창 제목**으로 둔다. 명령은 시스템 툴바가 아니라 창 안의 명령줄에 있다 —
+        // 툴바에 두면 둥근 유리 캡슐로 그려져 Win95 화면과 따로 논다.
+        .navigationTitle(app.selected.displayName)
     }
 
     @ViewBuilder
@@ -66,5 +54,47 @@ struct ContentView: View {
                 // 스크롤 위치와 애니메이션 상태가 그대로 따라온다.
                 .id(feature)
         }
+    }
+}
+
+/// 진행률을 읽는 곳을 이 줄로 가둔다. ContentView가 읽으면 진행 tick마다
+/// 사이드바·타이틀·화면까지 창 전체가 다시 평가된다.
+private struct AppStatusBar: View {
+    let app: AppModel
+
+    var body: some View {
+        let line = app.statusLine
+        Retro95StatusBar(segments: [
+            .init(text: line.status),
+            .init(text: line.count, width: 170),
+            .init(text: line.size, width: 190),
+        ])
+    }
+}
+
+/// 시스템 툴바 대신 창 안의 명령줄. 주 동작이 스크롤에 밀려 화면 밖으로 사라지지 않는다.
+private struct CommandBar: View {
+    let app: AppModel
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Button("검색") {
+                guard let model = app.currentModel else { return }
+                Task { await model.scan() }
+            }
+            .buttonStyle(Retro95ButtonStyle(isDefault: true))
+            .disabled(!app.canScan)
+
+            // 한 번에 고르는 가장 흔한 경우. 메뉴로 접어 두면 두 번 눌러야 한다.
+            Button("안전 항목 선택") { app.currentModel?.apply(.safeOnly) }
+                .buttonStyle(Retro95ButtonStyle())
+                .disabled(app.currentModel?.items.isEmpty ?? true)
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 8)
+        .frame(height: 32)
+        .background(R95.gray)
+        .overlay(alignment: .bottom) { Retro95Separator() }
     }
 }

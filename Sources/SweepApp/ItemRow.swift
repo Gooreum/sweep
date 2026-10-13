@@ -28,16 +28,16 @@ extension SafetyLevel {
     }
 }
 
-/// 정리 후보 한 줄. 체크박스 · 안전도 아이콘 · (이름 + 설명) · 크기.
-///
-/// 높이 56. 예전에는 이름 옆에 색 배지가, 왼쪽에 3pt 경고 바가 있었다.
-/// 배지를 아이콘 한 칸으로 바꾸고 경고 바를 없애 이름이 시작하는 x가 모든 행에서 같아졌다.
+/// 열 폭을 헤더와 공유해 긴 경로가 있어도 숫자 열이 흔들리지 않게 한다.
 struct ItemRow: View {
     let item: CleanupItem
     @Binding var isOn: Bool
+    /// 헤더와 같은 값을 받아야 열이 어긋나지 않는다.
+    var showsDates = true
+    @State private var isHovering = false
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 0) {
             // 되돌릴 수 없는 항목도 **고를 수는 있다.**
             //
             // 한때 아예 막아 뒀는데, 그러면 진짜로 지우려는 사람이 앱에서 할 방법이
@@ -56,87 +56,71 @@ struct ItemRow: View {
             //   거기에 아래의 그린 체크박스 → 1 / 3 / 0
             //
             // 그려서 쓰면 모양은 같고 비용이 없다. 누르는 것은 행 전체 탭이 맡는다.
-            // 글자 블록과 같은 높이를 주고 위로 붙인다. 안 그러면 세 줄 블록의
-            // **가운데**에 맞춰져 이름보다 한 줄 아래로 내려간다 — 실기에서 그랬다.
-            Image(systemName: isOn ? "checkmark.square.fill" : "square")
-                .font(.system(size: Theme.checkboxSize))
-                .foregroundStyle(isOn ? Color.accentColor : Theme.textTertiary)
+            Retro95Checkbox(state: isOn ? .on : .off)
                 .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
                 .accessibilityLabel(item.displayName)
-                .frame(height: Theme.rowTextBlockHeight, alignment: .top)
+                .accessibilityAction { isOn.toggle() }
+                .frame(width: ItemTableColumns.check)
 
-            // 등급마다 도형이 달라도 이름 열이 흔들리지 않게 칸을 고정한다.
-            Image(systemName: item.safety.symbolName)
-                .font(.system(size: Theme.safetyIconSlot))
-                .foregroundStyle(item.safety.tint)
-                .frame(width: Theme.safetyIconSlot + 4,
-                       height: Theme.rowTextBlockHeight, alignment: .top)
+            PixelIcon(art: item.category.pixelArt, size: 16)
+                .frame(width: ItemTableColumns.icon)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.displayName)
-                    .font(Theme.bodyText)
-                    .foregroundStyle(Theme.textPrimary)
+                    .font(R95.ui(12, bold: true))
+                    .foregroundStyle(R95.black)
                     .lineLimit(1)
                     .truncationMode(.middle)
 
-                // 설명이 비어도 **자리는 남긴다.** 안 그러면 경로가 둘째 줄로 올라와
-                // 행마다 셋째 줄의 위치가 달라진다.
-                Text(item.detail)
-                    .font(Theme.caption)
-                    // 위험도가 여기서 한 번 더 읽힌다 — 아이콘만으로는 작다.
-                    .foregroundStyle(item.safety == .safe
-                                     ? Theme.textSecondary : item.safety.tint)
-                    .lineLimit(1)
-                    .frame(height: Theme.rowDetailLineHeight, alignment: .leading)
-
-                // 이름만으로는 무엇인지 알 수 없는 항목이 많다 — `Cache`가 어느 앱 것인지,
-                // UUID 폴더가 어느 기기인지는 경로를 봐야 안다.
-                //
-                // **가운데를 자른다.** 끝을 자르면 긴 경로가 전부
-                // `~/Library/Developer/…`로 끝나 서로 구분되지 않는다.
+                // 이름만으로는 Cache가 어느 앱 것인지 알 수 없어 경로를 함께 보여준다.
+                // 가운데를 잘라 긴 경로의 끝에 있는 구별 가능한 이름을 남긴다.
                 Text(item.displayPath)
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.textTertiary)
+                    .font(R95.ui(10))
+                    .foregroundStyle(R95.shadow)
                     .lineLimit(1)
                     .truncationMode(.middle)
             }
-            // 두 열의 높이를 맞춰 **이름과 크기가 같은 선에** 놓이게 한다.
-            // 한쪽만 두 줄이면 SwiftUI가 각자 가운데를 맞춰 첫 줄이 어긋난다.
-            .frame(height: Theme.rowTextBlockHeight, alignment: .topLeading)
+            .padding(.horizontal, ItemTableColumns.padding)
+            .frame(maxWidth: .infinity, alignment: .leading)
 
-            Spacer(minLength: 12)
+            Text(item.detail)
+                .font(R95.ui(12))
+                .foregroundStyle(item.safety == .safe ? R95.deep : item.safety.tint)
+                // 위험·확인 항목의 설명은 왜 조심해야 하는지다. 잘리면 판단 근거가 사라진다.
+                .lineLimit(item.safety == .safe ? 1 : 2)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, ItemTableColumns.padding)
+                .frame(width: ItemTableColumns.detail, alignment: .leading)
 
-            // 우측은 크기와 날짜 두 줄. 값끼리 세로로 비교할 수 있게 오른쪽 정렬한다.
-            // 고른 것만 또렷하게 — 훑을 때 무엇을 담았는지가 숫자로 보인다.
-            VStack(alignment: .trailing, spacing: 3) {
-                Text(item.formattedSize)
-                    .font(Theme.bodyMono)
-                    .foregroundStyle(isOn ? Theme.textPrimary : Theme.textTertiary)
-
-                if let datesLine = item.datesLine() {
-                    Text(datesLine)
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.textTertiary)
-                        .lineLimit(1)
-                }
+            if showsDates {
+                Text(item.datesLine() ?? "")
+                    .font(R95.ui(11))
+                    .foregroundStyle(R95.deep)
+                    .lineLimit(1)
+                    .padding(.horizontal, ItemTableColumns.padding)
+                    .frame(width: ItemTableColumns.dates, alignment: .leading)
             }
-            .frame(width: Theme.rowMetaWidth, height: Theme.rowTextBlockHeight,
-                   alignment: .topTrailing)
+
+            // 고른 것만 또렷하게 보여 훑을 때 담은 크기를 비교할 수 있다.
+            Text(item.formattedSize)
+                .font(R95.mono(12))
+                .foregroundStyle(isOn ? R95.black : R95.shadow)
+                .lineLimit(1)
+                .padding(.horizontal, ItemTableColumns.padding)
+                .frame(width: ItemTableColumns.size, alignment: .trailing)
+
+            SafetyChip(level: item.safety)
+                .frame(width: ItemTableColumns.safety)
         }
-        .padding(.horizontal, 24)
-        .frame(height: Theme.rowHeightComfortable)
-        // 면을 통째로 칠하지 않고 9%만 얹는다. 예전에는 불투명 `surfaceRaised`였는데,
-        // 목록의 절반이 선택된 상태에서 화면이 두 덩어리로 갈려 보였다.
-        .background(isOn ? Theme.rowSelected : Color.clear)
+        .frame(height: R95.tableRowHeight)
+        .background(isHovering ? R95.light : R95.white)
+        .overlay(alignment: .bottom) { R95.light.frame(height: 1).allowsHitTesting(false) }
         .contentShape(Rectangle())
         .onTapGesture { isOn.toggle() }
-        // **툴팁을 달지 않는다.** 마우스를 올린 채로 목록을 훑으면 행마다 말풍선이
-        // 떴다 사라져 거슬린다. 담겨 있던 것은 이제 전부 행에 있다 —
-        // 경로는 셋째 줄에, 날짜는 우측 열에, 위험 표시는 자물쇠 아이콘에.
-        //
-        // 경로가 잘려 보일 때 전체를 보려면 우클릭 → 경로 복사를 쓴다.
-        //
-        // 지우기 전에 **열어 보는 길**이 있어야 한다. 정리 목록에는 그게 없었다.
+        .onHover { isHovering = $0 }
+        // 예전에는 스크롤 중 말풍선 때문에 생략했지만, 새 명세는 잘린 경로 전체를 요구한다.
+        .help(item.displayPath)
+        // 지우기 전에 열어 보고 경로를 복사할 길을 남긴다.
         .contextMenu {
             Button("Finder에서 보기") { ItemActions.reveal(item.url) }
             Button("경로 복사") { ItemActions.copyPath(item.url) }

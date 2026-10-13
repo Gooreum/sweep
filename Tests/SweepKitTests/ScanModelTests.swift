@@ -833,4 +833,89 @@ struct ScanModelTests {
 
         #expect(model.visibleRows(of: group).map(\.size) == [900, 100])
     }
+
+    // MARK: - 되돌리기
+
+    /// 휴지통으로 옮긴 것처럼 위치를 붙여 주는 삭제기.
+    private func trashes() -> @Sendable (CleanupItem) -> RemovalOutcome {
+        { RemovalOutcome(item: $0, failureReason: nil,
+                         trashedURL: URL(filePath: "/Users/x/.Trash/\($0.displayName)")) }
+    }
+
+    @Test("정리 직후 되돌리면 항목이 목록에 돌아오고 선택되지 않으며 두 번 되돌릴 수 없다")
+    func undoRestoresItemsUnselectedOnce() async {
+        let found = [item("a.cache"), item("b.cache")]
+        var reports: [RemovalReport] = []
+        let model = ScanModel(scan: stream([found]), removeOne: trashes(),
+                              restoreOne: { RemovalOutcome(item: $0.item, failure: nil) })
+        model.onRestored = { reports.append($0) }
+        await model.scan()
+        await model.removeSelected()
+        #expect(model.items.isEmpty)
+        #expect(model.canUndo)
+
+        await model.undoLastCleanup()
+
+        #expect(model.phase == .restored)
+        #expect(Set(model.items.map(\.url)) == Set(found.map(\.url)))
+        #expect(model.selection.isEmpty)
+        #expect(!model.canUndo)
+        #expect(model.restoreReport?.succeeded.count == 2)
+        #expect(reports.count == 1)
+
+        // 두 번째는 아무 일도 없다.
+        await model.undoLastCleanup()
+        #expect(reports.count == 1)
+    }
+
+    @Test("휴지통 위치가 없는 회차(영구 삭제)는 되돌릴 수 없다")
+    func cannotUndoWithoutTrashedLocation() async {
+        let model = ScanModel(scan: stream([[item("a.cache")]]), removeOne: alwaysSucceeds())
+        await model.scan()
+        await model.removeSelected()
+
+        #expect(model.phase == .cleaned)
+        #expect(!model.canUndo)
+        await model.undoLastCleanup()
+        #expect(model.phase == .cleaned)
+    }
+
+    @Test("되돌리지 못한 것은 목록에 돌아오지 않고 결과에 실패로 남는다")
+    func failedRestoresStayOut() async {
+        let model = ScanModel(scan: stream([[item("ok.cache"), item("taken.cache")]]),
+                              removeOne: trashes(),
+                              restoreOne: { outcome in
+                                  outcome.item.displayName == "taken.cache"
+                                      ? RemovalOutcome(item: outcome.item,
+                                                       failure: RemovalFailure(reason: "원래 자리에 같은 이름이 있습니다",
+                                                                               kind: .destinationOccupied),
+                                                       trashedURL: outcome.trashedURL)
+                                      : RemovalOutcome(item: outcome.item, failure: nil)
+                              })
+        await model.scan()
+        await model.removeSelected()
+        await model.undoLastCleanup()
+
+        #expect(model.items.map(\.displayName) == ["ok.cache"])
+        #expect(model.restoreReport?.failed.first?.failure?.kind == .destinationOccupied)
+    }
+
+    @Test("되돌리는 동안은 바쁜 상태다")
+    func busyWhileRestoring() async {
+        // 되돌리기를 붙잡아 두고 그 사이의 상태를 본다.
+        let gate = DispatchSemaphore(value: 0)
+        let model = ScanModel(scan: stream([[item("a.cache")]]), removeOne: trashes(),
+                              restoreOne: { gate.wait(); return RemovalOutcome(item: $0.item, failure: nil) })
+        await model.scan()
+        await model.removeSelected()
+
+        let task = Task { await model.undoLastCleanup() }
+        while model.phase != .restoring(done: 0, total: 1) { await Task.yield() }
+        #expect(model.isBusy)
+
+        gate.signal()
+        await task.value
+        #expect(model.phase == .restored)
+        #expect(!model.isBusy)
+    }
 }

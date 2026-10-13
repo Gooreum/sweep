@@ -20,66 +20,57 @@ struct CleanupConfirmSheet: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("\(model.selectedItems.count)개 항목을 휴지통으로 옮깁니다")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Theme.textPrimary)
-
-            Text(bodyText)
-                .font(Theme.bodyText)
-                .foregroundStyle(Theme.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 8)
-
-            summaryBlock
-                .padding(.top, 20)
-
-            HStack(spacing: 10) {
-                Spacer()
-                Button("취소", action: onCancel)
-                    .buttonStyle(SecondaryButtonStyle())
-                    .keyboardShortcut(.cancelAction)
-                Button("휴지통으로 옮기기", action: onConfirm)
-                    .buttonStyle(PrimaryButtonStyle())
-                    .keyboardShortcut(.defaultAction)
+        Retro95Dialog(title: "\(model.selectedItems.count)개 항목을 휴지통으로 옮깁니다",
+                      icon: .warning) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(bodyText)
+                    .foregroundStyle(R95.deep)
+                    .fixedSize(horizontal: false, vertical: true)
+                summaryBlock
             }
-            .padding(.top, 22)
+        } buttons: {
+            Button("취소", action: onCancel)
+                .buttonStyle(Retro95ButtonStyle())
+                .keyboardShortcut(.cancelAction)
+            Button("휴지통으로 옮기기", action: onConfirm)
+                .buttonStyle(Retro95ButtonStyle(isDefault: true))
+                .keyboardShortcut(.defaultAction)
         }
-        .padding(26)
         .frame(width: 440)
-        .background(Theme.surfaceRaised)
+        .background(R95.gray)
     }
 
     /// 위험한 것이 섞였을 때만 그것을 먼저 말한다. 없으면 군더더기가 된다.
     private var bodyText: String {
         riskyCount > 0
-            ? "이 중 \(riskyCount)개는 되돌릴 수 없습니다 — 다시 만들려면 처음부터 받아야 합니다. "
-                + "나머지는 휴지통에서 30일간 복구할 수 있습니다."
-            : "휴지통에서 30일간 복구할 수 있습니다."
+            ? "이 중 \(riskyCount)개는 다시 만들 수 없습니다 — 휴지통을 비우면 처음부터 받아야 합니다. "
+                + "휴지통을 비우기 전까지는 모두 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다."
+            : "휴지통을 비우기 전까지 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다."
     }
 
     private var summaryBlock: some View {
         VStack(spacing: 0) {
-            row("옮길 항목", "\(model.selectedItems.count)개", tint: Theme.textPrimary)
-            row("확보 용량", model.formattedSelectedSize, tint: Theme.accentText)
+            row("옮길 항목", "\(model.selectedItems.count)개", tint: R95.black)
+            row("옮길 용량", model.formattedSelectedSize, tint: R95.navy)
             if riskyCount > 0 {
-                row("되돌릴 수 없음", "\(riskyCount)개", tint: Theme.dangerText)
+                row("다시 만들 수 없음", "\(riskyCount)개", tint: R95.danger, isRisky: true)
             }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 4)
-        .background(Color.black.opacity(0.24),
-                    in: RoundedRectangle(cornerRadius: 8))
+        .background(R95.white)
+        .retroSunken()
     }
 
-    private func row(_ label: String, _ value: String, tint: Color) -> some View {
+    private func row(_ label: String, _ value: String, tint: Color, isRisky: Bool = false) -> some View {
         HStack {
             Text(label)
-                .font(Theme.caption)
-                .foregroundStyle(Theme.textSecondary)
+                .font(R95.ui(11))
+                .foregroundStyle(R95.deep)
             Spacer(minLength: 12)
+            if isRisky { SafetyChip(level: .danger) }
             Text(value)
-                .font(Theme.bodyMono)
+                .font(R95.mono())
                 .foregroundStyle(tint)
         }
         .frame(height: 30)

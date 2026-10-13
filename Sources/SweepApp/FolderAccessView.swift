@@ -16,31 +16,28 @@ struct FolderAccessView: View {
     @State private var failure: String?
 
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "folder.badge.plus")
-                .font(.system(size: Theme.Icon.large))
-                .foregroundStyle(Theme.accentText)
+        Retro95Dialog(title: "정리할 폴더 열기", icon: .folder) {
+            VStack(alignment: .leading, spacing: 12) {
+                VStack(spacing: 6) {
+                    Text("App Store 버전은 macOS 샌드박스 안에서 동작해서, 폴더를 열려면 한 번 허락이 필요해요.")
+                    Text("맨 위 하나만 허용해도 대부분 찾을 수 있어요.")
+                }
+                .font(R95.ui())
+                .foregroundStyle(R95.deep)
+                .multilineTextAlignment(.leading)
 
-            Text("정리할 폴더 열기")
-                .font(Theme.title)
-
-            VStack(spacing: 6) {
-                Text("App Store 버전은 macOS 샌드박스 안에서 동작해서, 폴더를 열려면 한 번 허락이 필요해요.")
-                Text("맨 위 하나만 허용해도 대부분 찾을 수 있어요.")
-            }
-            .font(Theme.bodyText)
-            .foregroundStyle(.secondary)
-            .multilineTextAlignment(.center)
-            .frame(maxWidth: 460)
-
-            VStack(spacing: 8) {
-                ForEach(FolderAccess.grantables) { grantable in
-                    row(for: grantable)
+                Retro95GroupBox(title: "허락할 폴더") {
+                    VStack(spacing: 0) {
+                        ForEach(FolderAccess.grantables) { grantable in
+                            row(for: grantable)
+                        }
+                    }
+                    .background(R95.white)
+                    .retroSunken()
                 }
             }
-            .frame(maxWidth: 460)
-            .padding(.top, 8)
         }
+        .frame(maxWidth: R95.dialogWidth)
         .alert("다른 폴더를 골랐습니다",
                isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) {
             Button("확인") { failure = nil }
@@ -54,9 +51,7 @@ struct FolderAccessView: View {
         let granted = app.isGranted(grantable)
 
         HStack(spacing: 12) {
-            Image(systemName: granted ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(granted ? Color.green : Color.secondary)
-                .font(.system(size: Theme.Icon.small))
+            PixelIcon(art: granted ? .check : .folder, size: 16)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(grantable.label)
@@ -74,11 +69,12 @@ struct FolderAccessView: View {
                     .foregroundStyle(.secondary)
             } else {
                 Button("열기…") { choose(grantable) }
+                    .buttonStyle(Retro95ButtonStyle())
             }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+        .background(R95.white)
     }
 
     private func choose(_ grantable: FolderAccess.Grantable) {

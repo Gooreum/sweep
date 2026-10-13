@@ -38,6 +38,12 @@ struct StageHarness: View {
                 } else {
                     Text("준비 중").font(Theme.bodyText)
                 }
+            } else if stage == "restore-failures-sheet" {
+                if let failed = model?.restoreReport?.failed {
+                    RemovalFailuresSheet.restore(failed) {}
+                } else {
+                    Text("준비 중").font(Theme.bodyText)
+                }
             } else if stage == "failures-sheet" {
                 // 시트는 창 위에 떠서 창 캡처에 잡히지 않는다. 시트 뷰를 그대로 그린다.
                 if let failed = model?.report?.failed {
@@ -96,6 +102,28 @@ struct StageHarness: View {
             model = created
             await created.scan()
             await created.removeSelected()
+
+        case "cleaned-trash", "restored", "restored-failed", "restore-failures-sheet":
+            // 실제 휴지통을 건드리지 않는다. 휴지통 위치만 붙여 되돌리기 흐름을 그린다.
+            let created = ScanModel(
+                scan: { Self.finishing(items) },
+                removeOne: { RemovalOutcome(item: $0, failureReason: nil,
+                                            trashedURL: URL(filePath: "/Users/me/.Trash/\($0.displayName)")) },
+                restoreOne: { outcome in
+                    // 실패 단계에서는 위험 항목 자리에 같은 이름이 생긴 것으로 친다.
+                    guard self.stage != "restored", outcome.item.safety == .danger else {
+                        return RemovalOutcome(item: outcome.item, failure: nil)
+                    }
+                    return RemovalOutcome(item: outcome.item,
+                                          failure: RemovalFailure(reason: "원래 자리에 같은 이름이 있습니다",
+                                                                  kind: .destinationOccupied),
+                                          trashedURL: outcome.trashedURL)
+                })
+            model = created
+            await created.scan()
+            created.selection = Set(items.map(\.url))
+            await created.removeSelected()
+            if stage != "cleaned-trash" { await created.undoLastCleanup() }
 
         case "cleaned-failed", "failures-sheet":
             // 실패 종류를 섞는다 — 시트가 종류마다 다른 조치 문구를 그리는지 본다.

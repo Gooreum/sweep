@@ -21,13 +21,38 @@ struct DiskMapView: View {
     /// 허락에 실패한 사유. 성공했으면 nil.
     @State private var grantFailure: String?
 
+    /// 탐색 상태와 별개로 행 강조만 보관해 모델의 선택 동작을 바꾸지 않는다.
+    @State private var focusedNode: URL?
+    @State private var hoveredNode: URL?
+
+    /// 가지치기로 자식이 없는 폴더도 실제 속성으로 구분한다.
+    @State private var directoryFlags: [URL: Bool] = [:]
+
     var body: some View {
         VStack(spacing: 0) {
             header
-            Divider()
+            Retro95Separator()
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .background(R95.gray)
+        .foregroundStyle(R95.black)
+        // 키는 URL만 본다. 노드 전체를 비교하면 다시 그릴 때마다 하위 트리까지 훑는다.
+        .task(id: model.tiles.map(\.url)) {
+            // 하위 항목이 있거나 못 읽는 것은 isFolder가 트리만으로 안다.
+            // 나머지만 디스크에 묻고, 느린 볼륨에서 화면이 멈추지 않게 메인 스레드 밖에서 묻는다.
+            let leaves = model.tiles.filter { $0.children.isEmpty && $0.isReadable }.map(\.url)
+            let flags = await Task.detached(priority: .utility) {
+                Dictionary(uniqueKeysWithValues: leaves.map { url in
+                    let values = try? url.resourceValues(forKeys: [.isDirectoryKey])
+                    return (url, values?.isDirectory ?? url.hasDirectoryPath)
+                })
+            }.value
+            guard !Task.isCancelled else { return }
+            directoryFlags = flags
+        }
+        // 보던 폴더가 바뀌면(내려가기·위로·이동·새로고침·루트 변경) 이전 행의 강조는 가리킬 곳이 없다.
+        .onChange(of: model.current?.url) { focusedNode = nil }
         .task {
             // 열자마자 뭔가 보여준다. 빈 화면에서 시작하면 뭘 해야 할지 모른다.
             //
@@ -85,22 +110,42 @@ struct DiskMapView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            Picker("시작 지점", selection: $model.selectedRoot) {
-                Text("선택하세요").tag(URL?.none)
+            Menu {
+                Button("선택하세요") { model.selectedRoot = nil }
                 // 그룹으로 나눈다. 열 몇 개를 한 줄로 늘어놓으면 고르기 어렵다.
                 ForEach(DiskMapRoot.Group.allCases, id: \.self) { group in
                     let roots = model.availableRoots.filter { $0.group == group }
                     if !roots.isEmpty {
                         Section(group.rawValue) {
                             ForEach(roots) { root in
-                                Text(root.label).tag(URL?.some(root.url))
+                                Button(root.label) { model.selectedRoot = root.url }
                             }
                         }
                     }
                 }
+            } label: {
+                Text(model.availableRoots.first(where: { $0.url == model.selectedRoot })?.label
+                     ?? "선택하세요")
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .font(R95.ui())
+                    .foregroundStyle(R95.black)
             }
-            .labelsHidden()
-            .frame(maxWidth: 240)
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            // 베벨은 메뉴 **바깥**에 그린다. borderless 메뉴는 라벨의 배경·Canvas를
+            // 버리고 글자만 남겨서, 라벨 안에 그린 상자가 화면에 나오지 않았다.
+            .padding(.leading, 8)
+            .padding(.trailing, 24)
+            .frame(width: DiskMapColumns.location, height: R95.buttonHeight, alignment: .leading)
+            .background(R95.gray)
+            .retroRaised()
+            .overlay(alignment: .trailing) {
+                PixelIcon(art: .triangleDown, size: 16)
+                    .padding(.trailing, 4)
+                    .allowsHitTesting(false)
+            }
+            .accessibilityLabel("시작 지점")
             // 도는 중에 다른 곳을 고르면 순회 두 개가 동시에 돌아
             // 나중에 끝난 쪽이 앞선 결과를 덮는다.
             .disabled(model.isScanning)
@@ -119,7 +164,10 @@ struct DiskMapView: View {
                     .foregroundStyle(.secondary)
             }
             if model.canGoUp {
-                Button("위로") { model.goUp() }
+                Button { model.goUp() } label: {
+                    HStack { PixelIcon(art: .arrowUp, size: 16); Text("위로") }
+                }
+                .help("위로")
             }
 
             // 앱 밖에서 지우거나 내려받아도 이 화면은 모른다. 다시 읽는 입구가 필요하다.
@@ -127,20 +175,24 @@ struct DiskMapView: View {
             Button {
                 Task { await model.reload() }
             } label: {
-                Image(systemName: "arrow.clockwise")
+                PixelIcon(art: .refresh, size: 16)
             }
             .help("다시 읽기")
+            .accessibilityLabel("다시 읽기")
             .disabled(model.selectedRoot == nil || model.isScanning)
         }
-        .padding(12)
+        .padding(8)
+        .buttonStyle(Retro95ButtonStyle())
+        .background(R95.gray)
+        .retroRaised()
     }
 
     private var breadcrumb: some View {
         HStack(spacing: 4) {
             ForEach(Array(model.path.enumerated()), id: \.element.id) { index, node in
-                if index > 0 { Image(systemName: "chevron.right").font(.caption2) }
+                if index > 0 { PixelIcon(art: .triangleRight, size: 16) }
                 Button(node.name.isEmpty ? "/" : node.name) { model.jump(to: index) }
-                    .buttonStyle(.link)
+                    .buttonStyle(Retro95ButtonStyle())
             }
         }
         .lineLimit(1)
@@ -153,22 +205,19 @@ struct DiskMapView: View {
                 switch phase {
                 case .counting(let scanned):
                     // 분모를 만드는 중이라 아직 퍼센트가 없다. 숫자를 지어내지 않는다.
-                    ProgressView()
-                    Text("\(scanned.formatted())개 세는 중…")
-                        .font(Theme.bodyText.monospacedDigit())
-                        .foregroundStyle(.secondary)
+                    Retro95ScanPanel(title: "재는 중", headline: "\(scanned.formatted())개 세는 중…",
+                                     detail: nil, fraction: nil, percentText: nil,
+                                     leftFooter: nil, rightFooter: nil)
                 case .measuring(let percent):
-                    RingGauge(percent: percent, caption: "재는 중")
-                    Text("사용량을 재는 중…")
-                        .font(Theme.caption)
-                        .foregroundStyle(.secondary)
+                    Retro95ScanPanel(title: "재는 중", headline: "사용량을 재는 중…",
+                                     detail: nil, fraction: Double(percent) / 100,
+                                     percentText: "\(percent)%", leftFooter: nil, rightFooter: nil)
                 }
-
                 // 볼륨 전체는 몇 분이 걸린다. 못 멈추면 못 쓴다.
                 Button("중단") { model.cancelLoad() }
-                    .buttonStyle(SecondaryButtonStyle())
-                    .padding(.top, 4)
+                    .buttonStyle(Retro95ButtonStyle())
             }
+            .padding(12)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let current = model.current {
             if model.tiles.isEmpty {
@@ -179,18 +228,13 @@ struct DiskMapView: View {
             }
         } else if model.selectedRoot != nil {
             // 중단했거나 아직 못 읽은 상태. 고른 곳은 있으니 다시 훑을 길을 준다.
-            VStack(spacing: 10) {
-                Image(systemName: "square.grid.2x2")
-                    .font(.system(size: Theme.Icon.large))
-                    .foregroundStyle(.secondary)
-                Text("훑기를 멈췄습니다").font(Theme.title)
+            Retro95Dialog(title: "훑기를 멈췄습니다", icon: .pieChart) {
                 Text("다시 훑으면 이어서가 아니라 처음부터 셉니다.")
-                    .font(Theme.bodyText)
-                    .foregroundStyle(.secondary)
+            } buttons: {
                 Button("다시 훑기") { Task { await model.reload() } }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .padding(.top, 6)
+                    .buttonStyle(Retro95ButtonStyle(isDefault: true))
             }
+            .frame(maxWidth: R95.dialogWidth)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             placeholder("시작 지점을 고르세요",
@@ -202,18 +246,29 @@ struct DiskMapView: View {
     /// 5.76GB짜리 하나가 나머지를 눌러 면적 비교가 성립하지 않는다.
     private var usageList: some View {
         VStack(spacing: 0) {
-            List(model.tiles) { node in
-                row(node, largest: model.tiles.first?.size ?? 0)
+            Retro95GroupBox(title: "디스크 사용량") {
+                VStack(spacing: 0) {
+                    Retro95TableHeader(columns: DiskMapColumns.headers)
+                    List(model.tiles) { node in
+                        row(node, largest: model.tiles.first?.size ?? 0)
+                            .listRowInsets(EdgeInsets())
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(R95.white)
+                    }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .scrollIndicators(.visible)
+                }
+                .background(R95.white)
+                .retroSunken()
             }
-            .listStyle(.inset)
-            .scrollIndicators(.visible)
 
             blockedFooter
 
             // 전체 디스크 접근은 **한 번 켜면 끝나는 스위치**다. 앱 폴더마다 따로 묻는
             // "다른 앱의 데이터" 물음을 통째로 없앤다 — 늘 보이는 자리에 둔다.
             if FullDiskAccessBanner.isNeeded {
-                Divider().overlay(Theme.border)
+                Retro95Separator()
                 FullDiskAccessBanner()
             }
         }
@@ -227,7 +282,7 @@ struct DiskMapView: View {
     @ViewBuilder
     private var blockedFooter: some View {
         if model.tiles.contains(where: { !$0.isReadable }) {
-            Divider().overlay(Theme.border)
+            Retro95Separator()
 
             HStack(spacing: 12) {
                 Text("권한이 막혀 못 읽는 폴더가 있어요")
@@ -235,6 +290,7 @@ struct DiskMapView: View {
                     .foregroundStyle(SafetyLevel.caution.tint)
                 Spacer(minLength: 12)
                 Button("시스템 설정 열기") { PrivacySettings.openFilesAndFolders() }
+                    .buttonStyle(Retro95ButtonStyle())
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
@@ -268,61 +324,63 @@ struct DiskMapView: View {
         let isDrillable = !node.children.isEmpty
         let veto = model.veto(for: node)
 
-        return HStack(spacing: 12) {
-            Text(node.name)
-                .font(Theme.bodyText)
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .frame(width: 200, alignment: .leading)
-
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    // 알약이 아니라 막대다. 창 안의 다른 막대와 radius를 맞춘다.
-                    RoundedRectangle(cornerRadius: 3).fill(Theme.border)
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(Theme.accent.opacity(0.55))
-                        // 아주 작아도 흔적은 남긴다. 0폭이면 있는지조차 모른다.
-                        .frame(width: max(geometry.size.width * ratio, 2))
-                }
+        let isFocused = focusedNode == node.id
+        return HStack(spacing: 0) {
+            HStack(spacing: 6) {
+                PixelIcon(art: isFolder(node) ? .folder : .documents, size: 16)
+                Text(node.name)
+                    .font(R95.ui(12, bold: true))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
             }
-            .frame(height: 6)
+            .padding(.horizontal, 6)
+            .frame(width: DiskMapColumns.name, alignment: .leading)
 
             // 못 읽은 폴더는 크기를 지어내지 않는다. 0 KB라고 쓰면 거짓말이다.
-            //
-            // 무채색으로 두면 "작아서 안 보이는 것"과 구분되지 않는다. 경고색을 준다.
             Text(node.isReadable ? node.formattedSize : "권한 없음")
-                .font(node.isReadable ? Theme.bodyText.monospacedDigit() : Theme.caption)
-                .foregroundStyle(node.isReadable
-                                 ? Color.secondary : SafetyLevel.caution.tint)
-                .frame(width: 84, alignment: .trailing)
+                .font(R95.mono(11))
+                .padding(.horizontal, 6)
+                .frame(width: DiskMapColumns.size, alignment: .trailing)
 
-            statusBadge(node, veto: veto)
-                .frame(width: 78, alignment: .leading)
+            // 아주 작아도 블록 하나를 남겨 항목의 존재를 알린다.
+            Retro95ProgressBar(fraction: ratio)
+                .padding(.horizontal, 6)
+                .frame(maxWidth: .infinity)
 
-            // 우클릭해야 나오는 기능은 없는 기능이나 마찬가지다. 행에 그대로 둔다.
-            HStack(spacing: 2) {
-                // 못 읽는 줄에는 지우기보다 **여는 것**이 먼저다.
-                // 알려만 주고 길을 주지 않으면 사용자가 할 수 있는 게 없다.
-                if !node.isReadable {
-                    Button("열기…") { unblock(node) }
-                        .font(Theme.caption)
+            HStack(spacing: DiskMapColumns.actionSpacing) {
+                statusBadge(node, veto: veto)
+                    .frame(width: DiskMapColumns.status)
+                Group {
+                    if !node.isReadable {
+                        Button("열기…") { unblock(node) }
+                            .buttonStyle(Retro95ButtonStyle())
+                    } else {
+                        Color.clear.frame(height: R95.buttonHeight)
+                    }
                 }
-                iconButton("folder", "Finder에서 보기") { ItemActions.reveal(node.url) }
-                iconButton("doc.on.doc", "경로 복사") { ItemActions.copyPath(node.url) }
+                .frame(width: DiskMapColumns.open)
+                iconButton(.folder, "Finder에서 보기") { ItemActions.reveal(node.url) }
+                iconButton(.documents, "경로 복사") { ItemActions.copyPath(node.url) }
                 // 왜 못 지우는지는 눌러 보고 알 일이 아니다. 사유를 미리 붙인다.
-                iconButton("trash", veto?.message ?? "휴지통으로 이동") {
+                iconButton(.trash, veto?.message ?? "휴지통으로 이동") {
                     pendingDelete = node
                 }
                 .disabled(veto != nil)
+                PixelIcon(art: .triangleRight, size: 16)
+                    .opacity(isDrillable ? 1 : 0)
+                    .frame(width: DiskMapColumns.disclosure)
             }
-
-            // 더 들어갈 수 있는 항목만 화살표를 준다
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(isDrillable ? Color.secondary : Color.clear)
+            .frame(width: DiskMapColumns.actions, alignment: .leading)
         }
+        .frame(minHeight: R95.tableRowHeight)
+        .foregroundStyle(isFocused ? R95.white : R95.black)
+        .background(isFocused ? R95.navy : hoveredNode == node.id ? R95.light : R95.white)
         .contentShape(Rectangle())
-        .onTapGesture { model.drillDown(into: node) }
+        .onHover { hoveredNode = $0 ? node.id : nil }
+        .onTapGesture {
+            focusedNode = node.id
+            model.drillDown(into: node)
+        }
         .contextMenu {
             Button("Finder에서 보기") { ItemActions.reveal(node.url) }
             Button("경로 복사") { ItemActions.copyPath(node.url) }
@@ -337,55 +395,51 @@ struct DiskMapView: View {
         .help(node.url.path)
     }
 
-    /// 지울 수 있는지를 **행에서 바로** 알린다.
-    ///
-    /// 새 색을 만들지 않는다 — 이 프로젝트의 색은 전부 대비를 실측해 고른 것이라
-    /// 여기서 임의로 더하면 그 규칙이 깨진다. 초록은 디스크 맵 고유색을 쓰고,
-    /// 보호됨은 색 대신 자물쇠 기호로 구분한다.
-    ///
-    /// **못 읽는 것이 먼저다.** 예전엔 `veto`만 봐서, 권한이 막혀 안을 볼 수도 없는
-    /// 폴더가 "정리 가능 ✓"으로 떴다.
+    /// 하위 항목이 있거나 못 읽는 것은 트리가 이미 폴더로 알고 있다.
+    /// 디스크를 다시 묻는 것은 빈 폴더처럼 트리만으로 모를 때뿐이다.
+    private func isFolder(_ node: DiskUsageNode) -> Bool {
+        !node.children.isEmpty || !node.isReadable || directoryFlags[node.url] == true
+    }
+
+    /// 못 읽는 상태를 먼저 표시해 보호 여부만 보고 정리 가능으로 오해하지 않게 한다.
     @ViewBuilder
     private func statusBadge(_ node: DiskUsageNode, veto: RemovalVeto?) -> some View {
         if !node.isReadable {
-            Label("권한 없음", systemImage: "exclamationmark.triangle.fill")
-                .font(Theme.caption)
-                .foregroundStyle(SafetyLevel.caution.tint)
+            Retro95StatusChip(title: "권한 없음", icon: .warning, level: .caution)
                 .help("권한이 막혀 안을 볼 수 없습니다")
         } else if let veto {
-            Label("보호됨", systemImage: "lock.fill")
-                .font(Theme.caption)
-                .foregroundStyle(Theme.textTertiary)
+            Retro95StatusChip(title: "보호됨", icon: .lock, level: .danger)
                 .help(veto.message)
         } else {
-            Label("정리 가능", systemImage: "checkmark")
-                .font(Theme.caption)
-                .foregroundStyle(Theme.tint(.diskMap))
+            // 막는 조건이 없다는 뜻이지 지워도 된다는 뜻이 아니다. SAFE와 같은 녹색을 쓰면
+            // 여행 원본 영상까지 안전한 것으로 읽힌다 — 색 없는 회색으로 둔다.
+            Text("이동 가능")
+                .font(R95.ui(10, bold: true))
+                .foregroundStyle(R95.black)
+                .padding(.horizontal, 6)
+                .frame(height: 20)
+                .background(R95.gray)
+                .retroBevel(.field)
         }
     }
 
-    /// 행 안의 작은 액션 버튼. `.plain`이라야 행 전체 탭 제스처와 다투지 않는다.
-    private func iconButton(_ symbol: String, _ hint: String,
+    /// 명시적 버튼 스타일로 목록의 행 탭과 액션을 따로 처리한다.
+    private func iconButton(_ art: PixelArt, _ hint: String,
                             action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol)
-                .font(.system(size: Theme.Icon.small))
-                .frame(width: 22, height: 22)
-                .contentShape(Rectangle())
+            PixelIcon(art: art, size: 16)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(Retro95ButtonStyle())
+        .frame(width: DiskMapColumns.iconButton)
         .help(hint)
+        .accessibilityLabel(hint)
     }
 
     private func placeholder(_ title: String, detail: String) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: "square.grid.2x2")
-                .font(.system(size: Theme.Icon.large))
-                .foregroundStyle(.secondary)
-            Text(title).font(Theme.title)
-            Text(detail).font(Theme.bodyText).foregroundStyle(.secondary)
+        Retro95Dialog(title: title, icon: .pieChart) {
+            Text(detail)
         }
+        .frame(maxWidth: R95.dialogWidth)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-
 }

@@ -15,6 +15,9 @@ struct MenuBarPanel: View {
     /// 볼륨 용량은 스캔과 무관하고 패널이 열릴 때마다 바뀌지 않는다.
     private let usage = VolumeUsage.current()
 
+    /// 휴지통을 열지 못했다(샌드박스). 대신 할 일을 말한다.
+    @State private var trashOpenFailed = false
+
     var body: some View {
         // 요약을 한 번만 만들어 내려보낸다. 섹션마다 부르면 그때마다
         // 전체 항목을 기능 수만큼 필터링한다.
@@ -22,12 +25,20 @@ struct MenuBarPanel: View {
 
         return VStack(alignment: .leading, spacing: 0) {
             diskSection
-            Divider()
+            Retro95Separator()
             scanSection(summary)
-            Divider()
+            Retro95Separator()
             actions(isScanning: summary.isScanning)
         }
         .frame(width: Theme.panelWidth)
+        .alert("휴지통을 열지 못했습니다", isPresented: $trashOpenFailed) {
+            Button("확인") {}
+        } message: {
+            Text("Dock의 휴지통을 열어 비워 주세요.")
+        }
+        .foregroundStyle(R95.black)
+        .background(R95.gray)
+        .retroRaised()
     }
 
     /// 디스크 사용량. 스캔하지 않아도 늘 보여줄 수 있는 유일한 값이다.
@@ -46,17 +57,7 @@ struct MenuBarPanel: View {
                         .monospacedDigit()
                 }
 
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        // Capsule은 높이 8에서 양 끝이 과하게 둥글어 막대가 알약이 된다.
-                        // 창 안의 다른 막대(디스크 맵·개요)와 같은 radius를 쓴다.
-                        RoundedRectangle(cornerRadius: 4).fill(Theme.border)
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Theme.accent)
-                            .frame(width: geometry.size.width * usage.usedFraction)
-                    }
-                }
-                .frame(height: 8)
+                Retro95ProgressBar(fraction: usage.usedFraction)
 
                 Text("사용 가능: \(usage.formattedAvailable)  전체: \(usage.formattedTotal)")
                     .font(Theme.caption)
@@ -77,6 +78,7 @@ struct MenuBarPanel: View {
                         .font(Theme.bodyText.monospacedDigit())
                         .foregroundStyle(Theme.accentText)
                 }
+                Retro95ProgressBar(fraction: Double(percent) / 100)
             } else if let reclaimable = summary.reclaimable {
                 HStack {
                     Text("회수 가능").font(Theme.bodyText.weight(.medium))
@@ -112,6 +114,19 @@ struct MenuBarPanel: View {
                     .font(Theme.caption)
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
+            }
+
+            // 옮긴 양은 휴지통을 비워야 공간이 된다. 앱은 비웠는지 알 수 없어 기록이 있으면 늘 둔다.
+            if let hint = app.cleanupSummary.trashHint {
+                HStack(spacing: 6) {
+                    Text(hint)
+                        .font(Theme.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
+                    Button("휴지통 열기") { trashOpenFailed = !ItemActions.openTrash() }
+                        .buttonStyle(.link)
+                        .font(Theme.caption)
+                }
             }
         }
         .padding(Theme.panelPadding)
