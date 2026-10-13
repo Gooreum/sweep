@@ -2,17 +2,56 @@
 
 macOS 개발 머신의 디스크를 정리하는 앱.
 
-Xcode 산출물, 개발 도구 캐시, **폭주 중인 임시 파일**, 중복 내려받기를 찾아
-안전도별로 보여주고 휴지통으로 보낸다.
+Xcode 산출물, 개발 도구·앱 캐시, **폭주 중인 임시 파일**, 잊고 있던 큰 파일과 중복 내려받기를 찾아
+안전도별로 보여주고 휴지통으로 보낸다. 방금 정리한 것은 되돌릴 수 있다.
 
-```
-runawayTemp  safe    3.65 GB   /private/var/folders/mg
-xcode        caution 5.76 GB   ~/Library/Developer/Xcode/iOS DeviceSupport/...
-xcode        safe    1.24 GB   ~/Library/Developer/Xcode/DerivedData/...
-xcode        danger  234.5 MB  ~/Library/Developer/Xcode/Archives/2026-03-26
-duplicate    safe    16.2 MB   ~/Downloads/...
-총 18개 · 11.38 GB
-```
+![Sweep](docs/images/hero.png)
+
+**1.0.2** · macOS 14+ · 한국어 / English · 인터넷 연결 없음, 데이터 수집 없음
+
+## 화면
+
+| 스마트 스캔 | 정크 파일 |
+|---|---|
+| ![스마트 스캔](docs/images/smart-scan.png) | ![정크 파일](docs/images/junk.png) |
+| 한 번 훑어 기능별로 회수할 수 있는 용량을 요약한다 | 항목마다 왜 지워도 되는지 적고, 안전도별로 묶는다 |
+
+| 큰 파일 | 중복 파일 |
+|---|---|
+| ![큰 파일](docs/images/large.png) | ![중복 파일](docs/images/duplicate.png) |
+| `~/Downloads`의 100MB 이상 파일을 크기순으로 | 내용이 같은 파일만 묶고, 가장 먼저 받은 원본은 남긴다 |
+
+| 디스크 맵 | 정리 완료 |
+|---|---|
+| ![디스크 맵](docs/images/diskmap.png) | ![정리 완료](docs/images/cleaned.png) |
+| 폴더를 눌러 들어가며 무엇이 공간을 차지하는지 본다 | 휴지통을 비워야 공간이 생긴다는 것까지 알려준다 |
+
+## 기능
+
+| 탭 | 하는 일 |
+|---|---|
+| 스마트 스캔 | 아래 세 탭을 한 번에 훑고 결과를 탭마다 나눠 담는다. 디스크 사용량과 지금까지 정리한 누적 용량도 보여준다 |
+| 정크 파일 | 다시 만들어지는 것들. 아래 다섯 갈래 |
+| 큰 파일 | `~/Downloads`의 독립 파일 중 100MB 이상. 받은 지 며칠 됐는지 함께 |
+| 중복 파일 | `~/Downloads`에서 내용까지 같은 파일 |
+| 디스크 맵 | 폴더 크기를 막대로 비교. 그 자리에서 Finder로 열기·경로 복사·휴지통 |
+
+정크 파일의 갈래:
+
+| 갈래 | 대상 |
+|---|---|
+| 폭주 임시 파일 | `/private/var/folders`·`/private/tmp`에서 지금 커지고 있는 것 |
+| Xcode · 시뮬레이터 | DerivedData, iOS DeviceSupport, 시뮬레이터 캐시, Archives |
+| 개발 캐시 | `~/Library/Caches`의 개발 도구 캐시, `~/Library/Logs`, `~/.npm`·`~/.expo` 안의 캐시 폴더 |
+| 앱 웹 캐시 | Slack·Notion 같은 Electron·Chromium 앱의 `Cache`·`GPUCache` 등 |
+| 묵은 캐시 | 90일 넘게 손대지 않은 `~/Library/Caches` 항목 |
+
+그 밖에:
+
+- **되돌리기** — 정리 완료 화면에서 방금 정리한 회차를 원래 자리로 돌려놓는다
+- **휴지통 안내** — 휴지통으로 옮겼을 뿐 아직 공간이 생기지 않았다는 것을 알리고 휴지통을 연다
+- **메뉴 막대** — 디스크 사용량과 회수 가능 용량을 보고, 창을 열지 않고 검색을 시작한다
+- **단축키** — ⌘R 검색, ⌘⌫ 정리
 
 ## 설계
 
@@ -35,6 +74,8 @@ duplicate    safe    16.2 MB   ~/Downloads/...
 경로 비교는 문자열 접두사가 아니라 구성요소 단위라 `~/Downloads-backup`을
 `~/Downloads`의 하위로 오판하지 않는다. 심볼릭 링크가 허용 범위 밖을 가리키면
 실경로를 풀어 거부한다.
+
+그 밖에 루트 자체·홈·다른 사용자나 시스템 소유 파일·SIP 보호 경로도 거부한다.
 
 관문은 **두 번** 통과한다. `ScanCoordinator`가 스캔 결과를 거르고,
 `Remover`가 삭제 직전 다시 검증한다. 스캐너 버그가 삭제까지 이어지면 안 된다.
@@ -66,24 +107,52 @@ duplicate    safe    16.2 MB   ~/Downloads/...
 읽을 수 없는 두 파일을 "내용이 같다"고 할 근거는 없다 — 빈 해시로 묶이면
 서로 다른 파일이 `safe` 중복이 되어 한쪽이 휴지통으로 간다.
 
+### 되돌리기
+
+`Remover`는 휴지통으로 옮긴 항목의 **새 위치**를 결과에 담는다. `Restorer`가 그것을 원래 자리로
+돌려놓는데, 되돌리기도 파일을 쓰는 동작이라 지울 때와 같은 관문을 다시 지난다 — 그 사이 부모 폴더가
+허용 범위 밖을 가리키는 링크로 바뀌었다면 쓰지 않는다. 되돌린 회차는 `CleanupHistory`의 누적 용량에서
+뺀다. 기록에는 경로 없이 숫자만 남긴다.
+
+### App Store 샌드박스
+
+샌드박스에서는 사용자가 열기 대화상자에서 고른 폴더만 읽을 수 있다. 그래서 두 축을 나눴다.
+
+- 허락 = "읽을 수 있는가" (`FolderAccess`, 보안 범위 북마크로 다음 실행에도 유지)
+- 루트 = "지워도 되는가" (`ProtectedPaths`)
+
+`~/Library`를 허락받아도 허용 루트는 넓어지지 않는다. 허락은 루트를 켜고 끄는 열쇠로만 쓴다.
+`/private/tmp`처럼 고를 수 없는 경로는 App Store 판에서 빠진다. 자세한 내용은
+[`docs/APPSTORE.md`](docs/APPSTORE.md).
+
 ## 실행
 
 ```bash
 swift run SweepApp              # GUI
 swift run SweepApp --scan-only  # 창 없이 스캔 결과만 출력 (아무것도 지우지 않음)
-swift test                      # 561개 테스트
+swift test                      # 603개 테스트
 ```
+
+| 하려는 일 | 볼 곳 |
+|---|---|
+| 직접 배포 (Developer ID 서명·공증) | [`docs/RELEASE.md`](docs/RELEASE.md) |
+| Mac App Store 제출 | [`docs/APPSTORE.md`](docs/APPSTORE.md) |
+| 현지화 키 뽑기·카탈로그 맞추기 | `scripts/l10n.sh` |
+| 스토어 스크린샷 합성 | `scripts/store-screenshots.swift` |
 
 ## 구조
 
 ```
 SweepKit/
-  Safety/      ProtectedPaths      — 삭제 관문
-  Model/       CleanupItem, SafetyLevel, ScanCategory
-  Scan/        CleanupScanner 프로토콜 + 스캐너 4종 + ScanCoordinator
-  Remove/      Remover, RemovalReport
-  Presentation/ScanModel           — SwiftUI 비의존 상태 관리
-SweepApp/      SwiftUI 화면
+  Safety/       ProtectedPaths — 삭제 관문
+                FolderAccess, Sandbox, FullDiskAccess — 읽기 권한
+  Model/        CleanupItem, SafetyLevel, ScanCategory
+  Scan/         CleanupScanner 프로토콜 + 스캐너 7종 + ScanCoordinator
+  Remove/       Remover, Restorer, CleanupHistory, RemovalReport
+  Insight/      DiskUsageTree, DiskMapModel, VolumeUsage — 디스크 맵
+  Presentation/ AppModel, ScanModel, Feature — SwiftUI 비의존 상태 관리
+SweepApp/       SwiftUI 화면
+  Retro95/      Win95 스타일 컴포넌트
 ```
 
 `CleanupScanner`가 `Scanner`가 아닌 이유는 `Foundation.Scanner`와 충돌하기 때문이다.
