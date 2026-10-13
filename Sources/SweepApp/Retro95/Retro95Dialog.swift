@@ -25,6 +25,8 @@ struct Retro95Dialog<Content: View, Buttons: View>: View {
                         .font(R95.ui(12))
                         .foregroundStyle(R95.black)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        // 세로로 늘어나게 둔다. 영어 설명은 한국어보다 길어 한 줄에서 잘렸다.
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 // 버튼이 없는 대화상자에 빈 줄을 남기면 아래 여백만 12pt 넘게 커진다.
                 if Buttons.self != EmptyView.self {

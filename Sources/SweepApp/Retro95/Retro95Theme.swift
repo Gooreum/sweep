@@ -107,7 +107,8 @@ enum DiskMapColumns {
     static let size: CGFloat = 90
     static let location: CGFloat = 168
     static let status: CGFloat = 92
-    static let open: CGFloat = 60
+    // 영어 "Open…"이 60pt에서 두 줄로 꺾였다.
+    static let open: CGFloat = 72
     static let iconButton: CGFloat = 40
     static let disclosure: CGFloat = 16
     static let actionSpacing: CGFloat = 4

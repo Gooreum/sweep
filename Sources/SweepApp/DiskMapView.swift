@@ -354,6 +354,7 @@ struct DiskMapView: View {
                     if !node.isReadable {
                         Button("열기…") { unblock(node) }
                             .buttonStyle(Retro95ButtonStyle())
+                            .lineLimit(1)
                     } else {
                         Color.clear.frame(height: R95.buttonHeight)
                     }
