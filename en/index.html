@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sweep Support</title>
+<meta name="description" content="Support for Sweep, a Mac app that finds and safely clears Xcode build data, developer caches and forgotten downloads.">
+<link rel="alternate" hreflang="ko" href="https://gooreum.github.io/sweep/">
+<link rel="alternate" hreflang="en" href="https://gooreum.github.io/sweep/en/">
+<style>
+  :root {
+    --bg: #f6f7fb; --surface: #ffffff; --text: #16181d; --muted: #5b6270;
+    --line: #e3e6ee; --accent: #2f5bea; --accent-soft: #e8eeff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121418; --surface: #1b1e24; --text: #eceef3; --muted: #a2a9b7;
+      --line: #2a2f38; --accent: #7c9cff; --accent-soft: #1f2740;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.7 -apple-system, BlinkMacSystemFont, sans-serif;
+    padding-inline: 20px;
+  }
+  main { max-width: 720px; margin: 0 auto; padding-block: 56px 72px; }
+  header { margin-bottom: 40px; }
+  .app { display: flex; align-items: center; gap: 14px; }
+  .mark {
+    width: 52px; height: 52px; border-radius: 12px; flex: none;
+    background: linear-gradient(160deg, #4d6cff, #2536b8);
+    display: grid; place-items: center; color: #fff; font-size: 26px;
+  }
+  h1 { font-size: 30px; line-height: 1.2; margin: 0; letter-spacing: -0.5px; }
+  .tagline { color: var(--muted); margin: 14px 0 0; font-size: 17px; }
+  h2 { font-size: 20px; margin: 44px 0 14px; letter-spacing: -0.3px; }
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .card strong { display: block; margin-bottom: 4px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; }
+  summary { cursor: pointer; font-weight: 600; }
+  details p { margin: 10px 0 2px; color: var(--muted); }
+  .contact { background: var(--accent-soft); border-radius: 12px; padding: 20px 22px; }
+  .contact p { margin: 0 0 6px; }
+  a { color: var(--accent); }
+  footer { margin-top: 48px; color: var(--muted); font-size: 14px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .lang { margin-left: auto; font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="app">
+      <div class="mark" aria-hidden="true">✦</div>
+      <h1>Sweep</h1>
+      <a class="lang" href="../" hreflang="ko" lang="ko">한국어</a>
+    </div>
+    <p class="tagline">Sweep finds the space that development quietly eats up on your Mac — Xcode build data, developer caches, and large or duplicate downloads — and helps you clear it safely.</p>
+  </header>
+
+  <h2>What it does</h2>
+  <div class="features">
+    <div class="card"><strong>Smart Scan</strong><p>One scan shows how much space you can reclaim.</p></div>
+    <div class="card"><strong>Xcode &amp; Simulators</strong><p>Finds DerivedData, device support files and simulator caches.</p></div>
+    <div class="card"><strong>Large Files</strong><p>Lists files over 100 MB by size, with when you downloaded them.</p></div>
+    <div class="card"><strong>Duplicates</strong><p>Compares file contents to find identical copies and keeps the original.</p></div>
+    <div class="card"><strong>Disk Map</strong><p>Compares file and folder sizes as bars, and lets you clean up in place.</p></div>
+    <div class="card"><strong>Safety labels</strong><p>Every item is marked Safe, Review or Danger. Only safe items are preselected.</p></div>
+  </div>
+
+  <h2>FAQ</h2>
+  <details>
+    <summary>Where do removed files go?</summary>
+    <p>To the Trash — nothing is deleted right away. You can undo your last cleanup in Sweep, or put files back from the Trash. Space is freed once you empty the Trash.</p>
+  </details>
+  <details>
+    <summary>Why do I have to open folders myself?</summary>
+    <p>The App Store version runs in the macOS sandbox, so it can only look inside folders you allow. Choose a folder in the "Open Folders to Clean" window and click Allow in the dialog that appears. You only need to do this once — Sweep remembers it.</p>
+  </details>
+  <details>
+    <summary>Which folders does Sweep look at?</summary>
+    <p>Your Downloads folder, plus only the folders you allow: ~/Library (Xcode data, simulators, app caches and logs), ~/.npm, ~/.expo, and Applications (to remove apps you no longer use). Even inside an allowed folder, Sweep only cleans a fixed set of locations and never touches anything outside them. You can revoke access at any time.</p>
+  </details>
+  <details>
+    <summary>How do I know what will be removed?</summary>
+    <p>Every item has a Safe, Review or Danger label with a short reason. Only safe items are checked in advance; everything else must be selected by you. Items that can't be recreated, like App Store submission archives, are never preselected. Before cleaning up, Sweep shows exactly how many items and how much space are involved.</p>
+  </details>
+  <details>
+    <summary>Does any file information leave my Mac?</summary>
+    <p>No. Sweep never connects to the internet and collects no data. See the <a href="privacy.html">Privacy Policy</a> for details.</p>
+  </details>
+  <details>
+    <summary>Which versions of macOS are supported?</summary>
+    <p>macOS 14 or later. Sweep is available in English and Korean.</p>
+  </details>
+
+  <h2>Contact</h2>
+  <div class="contact">
+    <p>For bug reports, feature requests or any other questions, please email:</p>
+    <p><a href="mailto:mg.seo.dev@gmail.com">mg.seo.dev@gmail.com</a></p>
+  </div>
+
+  <footer>
+    <span>© 2026 MINGU SEO</span>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="../" hreflang="ko" lang="ko">한국어</a>
+  </footer>
+</main>
+</body>
+</html>
