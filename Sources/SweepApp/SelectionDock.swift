@@ -18,7 +18,10 @@ struct SelectionDock: View {
                     .font(R95.ui(20, bold: true))
                     .monospacedDigit()
                     .lineLimit(1)
+                    // 이 줄이 독의 요점이다. 폭이 모자라면 옆의 안내문이 줄을 바꾼다.
+                    .fixedSize()
             }
+            .layoutPriority(1)
             Spacer(minLength: 0)
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
@@ -61,6 +64,9 @@ struct SelectionDock: View {
             SafetyChip(level: level, compact: true)
             Text("\(count)개")
                 .font(R95.mono(11))
+                // 영어 "7 items"는 폭이 모자라면 글자 단위로 세로로 꺾였다.
+                .lineLimit(1)
+                .fixedSize()
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(level.dockLabel) \(count)개")
