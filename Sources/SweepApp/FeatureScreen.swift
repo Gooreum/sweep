@@ -18,6 +18,10 @@ struct FeatureScreen: View {
     @State private var trashOpenFailed = false
     /// 되돌리기 실패 목록 시트.
     @State private var showsRestoreFailures = false
+    /// 열 머리 경계를 끌어 바꾼 폭. 다음 실행에도 남긴다.
+    @AppStorage("itemTable.columns") private var columns = ItemColumnLayout()
+    /// 이름 열의 실제 폭을 구하려고 표 전체 폭을 잰다.
+    @State private var tableWidth: CGFloat = 0
 
     var body: some View {
         VStack(spacing: 8) {
@@ -280,7 +284,17 @@ struct FeatureScreen: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     VStack(spacing: 0) {
-                        Retro95TableHeader(columns: ItemTableColumns.headers(showsDates: showsDates))
+                        Retro95TableHeader(columns: ItemTableColumns.headers(
+                            layout: columns, showsDates: showsDates, onDrag: { column, delta in
+                                let visible = ItemTableColumns.visible(showsDates: showsDates)
+                                let fixed = visible.reduce(ItemTableColumns.check + ItemTableColumns.icon) {
+                                    $0 + CGFloat(columns.width($1))
+                                }
+                                columns.dragLeadingEdge(of: column, by: Double(delta), visible: visible,
+                                                        nameWidth: Double(tableWidth - fixed))
+                            }))
+                        // 이름 열은 남는 폭이라 표 전체 폭에서 다른 열을 빼서 구한다.
+                        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { tableWidth = $0 }
                         List {
                             ForEach(groups) { group in
                                 Section {
@@ -296,7 +310,7 @@ struct FeatureScreen: View {
                                     // 전부 다시 훑는다 — 실측에서 `ModifiedElements.makeElements`가
                                     // 메인 스레드 상위를 차지했다. `ForEach` 하나에 붙이면 한 겹이다.
                                     ForEach(model.visibleRows(of: group)) { item in
-                                        ItemRow(item: item, isOn: binding(for: item), showsDates: showsDates)
+                                        ItemRow(item: item, isOn: binding(for: item), showsDates: showsDates, columns: columns)
                                     }
                                     .listRowInsets(EdgeInsets())
                                     .listRowSeparator(.hidden)

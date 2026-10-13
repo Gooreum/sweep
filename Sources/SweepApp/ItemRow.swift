@@ -34,6 +34,8 @@ struct ItemRow: View {
     @Binding var isOn: Bool
     /// 헤더와 같은 값을 받아야 열이 어긋나지 않는다.
     var showsDates = true
+    /// 헤더와 같은 값을 받아야 열이 어긋나지 않는다.
+    var columns = ItemColumnLayout()
     @State private var isHovering = false
 
     var body: some View {
@@ -90,7 +92,7 @@ struct ItemRow: View {
                 .lineLimit(item.safety == .safe ? 1 : 2)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, ItemTableColumns.padding)
-                .frame(width: ItemTableColumns.detail, alignment: .leading)
+                .frame(width: CGFloat(columns.width(.detail)), alignment: .leading)
 
             if showsDates {
                 Text(item.datesLine() ?? "")
@@ -98,7 +100,7 @@ struct ItemRow: View {
                     .foregroundStyle(R95.deep)
                     .lineLimit(1)
                     .padding(.horizontal, ItemTableColumns.padding)
-                    .frame(width: ItemTableColumns.dates, alignment: .leading)
+                    .frame(width: CGFloat(columns.width(.dates)), alignment: .leading)
             }
 
             // 고른 것만 또렷하게 보여 훑을 때 담은 크기를 비교할 수 있다.
@@ -107,10 +109,10 @@ struct ItemRow: View {
                 .foregroundStyle(isOn ? R95.black : R95.shadow)
                 .lineLimit(1)
                 .padding(.horizontal, ItemTableColumns.padding)
-                .frame(width: ItemTableColumns.size, alignment: .trailing)
+                .frame(width: CGFloat(columns.width(.size)), alignment: .trailing)
 
             SafetyChip(level: item.safety)
-                .frame(width: ItemTableColumns.safety)
+                .frame(width: CGFloat(columns.width(.safety)))
         }
         .frame(height: R95.tableRowHeight)
         .background(isHovering ? R95.light : R95.white)

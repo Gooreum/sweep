@@ -213,6 +213,8 @@ struct Retro95TableHeader: View {
         let title: String
         var width: CGFloat? = nil
         var alignment: Alignment = .leading
+        /// 있으면 이 열의 왼쪽 경계를 끌 수 있다. 오른쪽으로 끈 거리(+)를 조금씩 넘긴다.
+        var onResizeLeadingEdge: (@MainActor (CGFloat) -> Void)? = nil
     }
     let columns: [Column]
     var body: some View {
@@ -223,8 +225,41 @@ struct Retro95TableHeader: View {
                     .frame(width: columns[index].width, height: R95.tableHeaderHeight, alignment: columns[index].alignment)
                     .frame(maxWidth: columns[index].width == nil ? .infinity : nil, alignment: columns[index].alignment)
                     .background(R95.gray).retroRaised()
+                    // 뒤에 오는 열이 위에 그려지므로 왼쪽 열의 끝까지 손잡이가 덮는다.
+                    .overlay(alignment: .leading) {
+                        if let onResize = columns[index].onResizeLeadingEdge {
+                            ColumnResizeHandle(onDrag: onResize).offset(x: -4)
+                        }
+                    }
             }
         }
+    }
+}
+
+/// 열 경계 손잡이.
+///
+/// 손잡이가 경계를 따라 움직이므로 자기 좌표로 재면 끄는 동안 기준이 흔들린다.
+/// 전역 좌표로 재고, 직전보다 바뀐 만큼만 넘긴다.
+private struct ColumnResizeHandle: View {
+    let onDrag: @MainActor (CGFloat) -> Void
+    @State private var last: CGFloat = 0
+
+    var body: some View {
+        Color.clear
+            .frame(width: 8)
+            .contentShape(Rectangle())
+            .onHover { inside in
+                if inside { NSCursor.resizeLeftRight.push() } else { NSCursor.pop() }
+            }
+            .gesture(
+                DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                    .onChanged { value in
+                        onDrag(value.translation.width - last)
+                        last = value.translation.width
+                    }
+                    .onEnded { _ in last = 0 }
+            )
+            .accessibilityHidden(true)
     }
 }
 
