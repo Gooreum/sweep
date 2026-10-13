@@ -1,0 +1,221 @@
+import SwiftUI
+import SweepKit
+
+struct Retro95ButtonStyle: ButtonStyle {
+    var isDefault = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        StyledLabel(configuration: configuration, isDefault: isDefault)
+    }
+
+    /// 상태 저장소가 뷰 그래프에 설치되도록 hover를 중첩 뷰에서 관리한다.
+    private struct StyledLabel: View {
+        let configuration: ButtonStyleConfiguration
+        let isDefault: Bool
+        @Environment(\.isEnabled) private var isEnabled
+        @Environment(\.isFocused) private var isFocused
+        @Environment(\.displayScale) private var displayScale
+        @State private var isHovering = false
+
+        var body: some View {
+            configuration.label
+                .font(R95.ui(12, bold: isDefault))
+                .foregroundStyle(isEnabled ? R95.black : R95.shadow)
+                .background(alignment: .topLeading) {
+                    if !isEnabled {
+                        configuration.label
+                            .foregroundStyle(R95.white)
+                            .offset(x: 1, y: 1)
+                            .accessibilityHidden(true)
+                    }
+                }
+                .offset(x: pressed ? 1 : 0, y: pressed ? 1 : 0)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 4)
+                .frame(minHeight: R95.buttonHeight)
+                .background(isHovering && isEnabled ? R95.light : R95.gray)
+                .retroBevel(pressed ? .pressed : .raised)
+                .overlay {
+                    if isFocused && isEnabled {
+                        Rectangle().inset(by: 4)
+                            .strokeBorder(R95.black, style: StrokeStyle(lineWidth: 1 / displayScale, dash: [1, 1]))
+                            .allowsHitTesting(false)
+                    }
+                }
+                .padding(isDefault ? 1 / displayScale : 0)
+                .background(R95.black)
+                .onHover { isHovering = $0 }
+        }
+
+        private var pressed: Bool { configuration.isPressed && isEnabled }
+    }
+}
+
+enum Retro95CheckState { case off, on, mixed }
+
+/// 행마다 네이티브 컨트롤을 만들지 않아 긴 목록의 스크롤 비용을 줄인다.
+struct Retro95Checkbox: View {
+    let state: Retro95CheckState
+
+    var body: some View {
+        Canvas { context, size in
+            if state == .on {
+                let cells = [(2, 6), (3, 7), (4, 8), (5, 7), (6, 6), (7, 5), (8, 4), (9, 3)]
+                var check = Path()
+                for (x, y) in cells {
+                    check.addRect(CGRect(x: x, y: y, width: 1, height: 2))
+                }
+                context.fill(check, with: .color(R95.navy))
+            } else if state == .mixed {
+                context.fill(Path(CGRect(x: 3, y: 3, width: size.width - 6, height: size.height - 6)), with: .color(R95.shadow))
+            }
+        }
+        .frame(width: R95.checkboxSize, height: R95.checkboxSize)
+        .background(R95.white)
+        .retroSunken()
+        .accessibilityLabel(state == .on ? "선택됨" : state == .mixed ? "부분 선택됨" : "선택 안 됨")
+    }
+}
+
+struct Retro95ProgressBar: View {
+    let fraction: Double?
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: fraction != nil)) { timeline in
+            Canvas { context, size in
+                let block: CGFloat = 10
+                let step: CGFloat = 12
+                let slots = max(0, Int((size.width + 2) / step))
+                let bounded = fraction.map { $0.isFinite ? min(1, max(0, $0)) : 0 }
+                let filled = bounded.map { Int(ceil($0 * Double(slots))) }
+                let travel = max(0, slots - 4)
+                let phase = timeline.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 2.4) / 1.2
+                let start = Int((phase <= 1 ? phase : 2 - phase) * Double(travel))
+                for index in 0..<slots {
+                    let visible = filled.map { index < $0 } ?? (index >= start && index < start + 4)
+                    if visible {
+                        context.fill(Path(CGRect(x: CGFloat(index) * step, y: 0, width: block, height: size.height)), with: .color(R95.navy))
+                    }
+                }
+            }
+            .padding(3)
+        }
+        .frame(height: 20)
+        .background(R95.white)
+        .retroSunken()
+        .accessibilityLabel("진행률")
+        .accessibilityValue(fraction.map { "\(Int(($0.isFinite ? min(1, max(0, $0)) : 0) * 100))%" } ?? "진행 중")
+    }
+}
+
+struct Retro95GroupBox<Content: View>: View {
+    let title: String
+    private let content: Content
+
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                Text(title).font(R95.ui(13, bold: true)).foregroundStyle(R95.white)
+                    .padding(.horizontal, 8).padding(.vertical, 3).background(R95.navy)
+                Rectangle().fill(R95.navy).frame(height: 3)
+            }
+            content.padding(12).frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .background(R95.gray)
+        .retroBevel(.groove)
+    }
+}
+
+struct Retro95StatusBar: View {
+    struct Segment {
+        let text: String
+        var width: CGFloat? = nil
+    }
+    let segments: [Segment]
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(segments.indices, id: \.self) { index in
+                Text(segments[index].text).font(R95.ui(11)).foregroundStyle(R95.black)
+                    .lineLimit(1)
+                    .padding(.horizontal, 5)
+                    .frame(width: segments[index].width, height: R95.statusBarHeight - 4, alignment: .leading)
+                    .frame(maxWidth: segments[index].width == nil ? .infinity : nil, alignment: .leading)
+                    .retroBevel(.field)
+            }
+            Canvas { context, _ in
+                for row in 0..<3 {
+                    for column in 0...row {
+                        let rect = CGRect(x: 10 - column * 4, y: 3 + row * 4, width: 2, height: 2)
+                        context.fill(Path(rect.offsetBy(dx: 1, dy: 1)), with: .color(R95.white))
+                        context.fill(Path(rect), with: .color(R95.shadow))
+                    }
+                }
+            }.frame(width: 16, height: 16).accessibilityHidden(true)
+        }
+        .padding(.horizontal, 2)
+        .frame(height: R95.statusBarHeight)
+        .background(R95.gray)
+    }
+}
+
+struct Retro95TitleStrip: View {
+    let title: String
+    var body: some View {
+        Text(title).font(R95.ui(13, bold: true)).foregroundStyle(R95.white)
+            .lineLimit(1).padding(.horizontal, 6)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(height: R95.titleStripHeight).background(R95.navy)
+    }
+}
+
+struct SafetyChip: View {
+    let level: SafetyLevel
+    private var label: String {
+        switch level { case .safe: "SAFE"; case .caution: "REVIEW"; case .danger: "DANGER" }
+    }
+    private var fill: Color {
+        switch level { case .safe: R95.safe; case .caution: R95.review; case .danger: R95.danger }
+    }
+    var body: some View {
+        Text(label).font(R95.ui(11, bold: true))
+            .foregroundStyle(level == .caution ? R95.black : R95.white)
+            .frame(width: 64, height: 20).background(fill).retroBevel(.field)
+            .accessibilityLabel(level.displayName)
+    }
+}
+
+struct Retro95TableHeader: View {
+    struct Column {
+        let title: String
+        var width: CGFloat? = nil
+        var alignment: Alignment = .leading
+    }
+    let columns: [Column]
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(columns.indices, id: \.self) { index in
+                Text(columns[index].title).font(R95.ui(12, bold: true)).foregroundStyle(R95.black)
+                    .lineLimit(1).padding(.horizontal, 6)
+                    .frame(width: columns[index].width, height: R95.tableHeaderHeight, alignment: columns[index].alignment)
+                    .frame(maxWidth: columns[index].width == nil ? .infinity : nil, alignment: columns[index].alignment)
+                    .background(R95.gray).retroRaised()
+            }
+        }
+    }
+}
+
+struct Retro95Separator: View {
+    @Environment(\.displayScale) private var displayScale
+    var body: some View {
+        VStack(spacing: 0) {
+            R95.shadow.frame(height: 1 / displayScale)
+            R95.white.frame(height: 1 / displayScale)
+        }.accessibilityHidden(true)
+    }
+}
