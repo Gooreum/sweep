@@ -44,8 +44,8 @@ struct CleanupConfirmSheet: View {
     private var bodyText: String {
         riskyCount > 0
             ? "이 중 \(riskyCount)개는 다시 만들 수 없습니다 — 휴지통을 비우면 처음부터 받아야 합니다. "
-                + "휴지통을 비우기 전까지는 모두 복원할 수 있습니다."
-            : "휴지통을 비우기 전까지 복원할 수 있습니다."
+                + "휴지통을 비우기 전까지는 모두 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다."
+            : "휴지통을 비우기 전까지 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다."
     }
 
     private var summaryBlock: some View {
