@@ -90,4 +90,21 @@ struct ItemActionsTests {
             #expect(revealed() == [[ghost]])
         }
     }
+
+    // TC-5
+    @Test("openTrash는 실제 홈의 .Trash를 넘기고 결과를 그대로 돌려준다")
+    func openTrashPassesTrashURL() {
+        let opened = Box<URL>()
+        let original = ItemActions.openFolder
+        defer { ItemActions.openFolder = original }
+
+        ItemActions.openFolder = { opened.append($0); return false }
+        #expect(ItemActions.openTrash() == false)
+
+        ItemActions.openFolder = { opened.append($0); return true }
+        #expect(ItemActions.openTrash() == true)
+
+        let expected = Sandbox.userHome.appending(path: ".Trash", directoryHint: .isDirectory)
+        #expect(opened.value == [expected, expected])
+    }
 }

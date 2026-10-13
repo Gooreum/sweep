@@ -54,14 +54,14 @@ struct CleanupConfirmSheet: View {
     private var bodyText: String {
         riskyCount > 0
             ? "이 중 \(riskyCount)개는 되돌릴 수 없습니다 — 다시 만들려면 처음부터 받아야 합니다. "
-                + "나머지는 휴지통에서 30일간 복구할 수 있습니다."
-            : "휴지통에서 30일간 복구할 수 있습니다."
+                + "나머지는 휴지통에서 30일간 복구할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다."
+            : "휴지통에서 30일간 복구할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다."
     }
 
     private var summaryBlock: some View {
         VStack(spacing: 0) {
             row("옮길 항목", "\(model.selectedItems.count)개", tint: Theme.textPrimary)
-            row("확보 용량", model.formattedSelectedSize, tint: Theme.accentText)
+            row("옮길 용량", model.formattedSelectedSize, tint: Theme.accentText)
             if riskyCount > 0 {
                 row("되돌릴 수 없음", "\(riskyCount)개", tint: Theme.dangerText)
             }

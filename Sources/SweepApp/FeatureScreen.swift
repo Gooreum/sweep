@@ -15,6 +15,9 @@ struct FeatureScreen: View {
     /// 옮기지 못한 항목 시트를 띄울지.
     @State private var showsFailures = false
 
+    /// 휴지통을 열지 못했을 때(샌드박스 등) 대신 띄울 안내.
+    @State private var trashOpenFailed = false
+
     var body: some View {
         HStack(spacing: 0) {
             stage
@@ -128,9 +131,17 @@ struct FeatureScreen: View {
                     .font(.system(size: Theme.Icon.large))
                     .foregroundStyle(Theme.accentText)
 
-                Text("\(report.formattedReclaimed)의 파일이 삭제됨")
+                // 지운 것이 아니라 옮긴 것이다. 휴지통을 비우기 전에는 디스크가 늘지 않는다.
+                Text("\(report.formattedReclaimed)를 휴지통으로 옮겼습니다")
                     .font(Theme.title)
                     .monospacedDigit()
+
+                if let notice = report.trashNotice {
+                    Text(notice)
+                        .font(Theme.bodyText)
+                        .foregroundStyle(Theme.textSecondary)
+                        .monospacedDigit()
+                }
 
                 // 실패 사유는 길어서 한 줄에 안 들어간다. 예전에는 툴팁에 합쳐 넣었는데,
                 // 호버해야 보이고 어느 파일이 왜 실패했는지 구분되지 않았다.
@@ -147,9 +158,23 @@ struct FeatureScreen: View {
                     .buttonStyle(.plain)
                 }
 
-                Button("완료") { model.dismissReport() }
-                    .buttonStyle(PrimaryButtonStyle())
-                    .padding(.top, 6)
+                // 비우기는 영구 삭제라 앱이 하지 않는다. 휴지통을 열어 주는 데서 멈춘다.
+                HStack(spacing: 10) {
+                    if report.trashNotice != nil {
+                        Button("휴지통 열기") {
+                            if !ItemActions.openTrash() { trashOpenFailed = true }
+                        }
+                        .buttonStyle(SecondaryButtonStyle())
+                    }
+                    Button("완료") { model.dismissReport() }
+                        .buttonStyle(PrimaryButtonStyle())
+                }
+                .padding(.top, 6)
+            }
+            .alert("휴지통을 열지 못했습니다", isPresented: $trashOpenFailed) {
+                Button("확인") { trashOpenFailed = false }
+            } message: {
+                Text("Dock의 휴지통을 열어 비워 주세요.")
             }
             .sheet(isPresented: $showsFailures) {
                 RemovalFailuresSheet(failed: report.failed) {

@@ -15,6 +15,9 @@ struct MenuBarPanel: View {
     /// 볼륨 용량은 스캔과 무관하고 패널이 열릴 때마다 바뀌지 않는다.
     private let usage = VolumeUsage.current()
 
+    /// 휴지통을 열지 못했는지(샌드박스 등). 패널 안에서는 alert 대신 안내 문구를 바꾼다.
+    @State private var trashOpenFailed = false
+
     var body: some View {
         // 요약을 한 번만 만들어 내려보낸다. 섹션마다 부르면 그때마다
         // 전체 항목을 기능 수만큼 필터링한다.
@@ -112,6 +115,21 @@ struct MenuBarPanel: View {
                     .font(Theme.caption)
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
+            }
+
+            // 옮긴 양은 휴지통을 비워야 디스크로 돌아온다. 비우기는 사용자가 Finder에서 한다.
+            if let hint = app.cleanupSummary.trashHint {
+                HStack(spacing: 6) {
+                    Text(trashOpenFailed ? "Dock의 휴지통을 열어 비워 주세요" : hint)
+                        .font(Theme.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("휴지통 열기") {
+                        if !ItemActions.openTrash() { trashOpenFailed = true }
+                    }
+                    .buttonStyle(.link)
+                    .font(Theme.caption)
+                }
             }
         }
         .padding(Theme.panelPadding)

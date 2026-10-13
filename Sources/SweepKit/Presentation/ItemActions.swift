@@ -21,6 +21,21 @@ public enum ItemActions {
         NSPasteboard.general.setString($0, forType: .string)
     }
 
+    nonisolated(unsafe) public static var openFolder: @Sendable (URL) -> Bool = {
+        NSWorkspace.shared.open($0)
+    }
+
+    /// 사용자의 휴지통. 샌드박스에서는 `homeDirectoryForCurrentUser`가 컨테이너를 가리키므로
+    /// 실제 홈(`Sandbox.userHome`)을 기준으로 한다.
+    public static var trashURL: URL {
+        Sandbox.userHome.appending(path: ".Trash", directoryHint: .isDirectory)
+    }
+
+    /// Finder에서 휴지통을 연다. **비우지는 않는다** — 영구 삭제는 사용자가 직접 한다.
+    /// 열지 못하면 false. 화면이 대신 안내해야 한다.
+    @discardableResult
+    public static func openTrash() -> Bool { openFolder(trashURL) }
+
     /// Finder를 열어 이 항목을 고른 상태로 보여준다.
     ///
     /// 경로가 실제로 있는지 우리가 먼저 보지 않는다. 그 판단은 Finder가 하고,

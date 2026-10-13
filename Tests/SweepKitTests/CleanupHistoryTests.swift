@@ -106,7 +106,7 @@ struct CleanupHistoryTests {
         let summary = CleanupSummary(totalReclaimedBytes: 12_400_000_000,
                                      lastCleanup: day(3, from: now))
 
-        #expect(summary.statusLine(now: now) == "지금까지 12.4 GB 확보 · 마지막 정리 3일 전")
+        #expect(summary.statusLine(now: now) == "지금까지 12.4 GB를 휴지통으로 옮김 · 마지막 정리 3일 전")
     }
 
     // TC-7
@@ -154,5 +154,18 @@ struct CleanupHistoryTests {
         // 숫자만 남긴다. 무엇을 지웠는지는 저장하지 않는다.
         #expect(!json.contains("/private/tmp"))
         #expect(!json.contains("ok-1"))
+    }
+
+    // MARK: - 휴지통 안내 (pm #6)
+
+    @Test("기록이 없으면 휴지통 안내가 없다")
+    func noTrashHintWithoutRecords() {
+        #expect(CleanupSummary.empty.trashHint == nil)
+    }
+
+    @Test("기록이 있으면 휴지통을 비워야 한다고 안내한다")
+    func trashHintWithRecords() {
+        let summary = CleanupSummary(totalReclaimedBytes: 1_000, lastCleanup: Date())
+        #expect(summary.trashHint == "휴지통을 비워야 디스크 공간이 늘어납니다")
     }
 }

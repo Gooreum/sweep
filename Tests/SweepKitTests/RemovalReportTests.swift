@@ -108,4 +108,23 @@ struct RemovalReportTests {
         #expect(RemovalFailureKind.protected.advice != nil)
         #expect(RemovalFailureKind.other.advice == nil)
     }
+
+    // MARK: - 휴지통 안내 (pm #6)
+
+    @Test("휴지통 안내는 옮긴 용량만 말한다")
+    func trashNoticeCountsOnlySuccesses() {
+        let report = RemovalReport(outcomes: [
+            RemovalOutcome(item: item("ok", size: 1_200_000_000), failureReason: nil),
+            RemovalOutcome(item: item("nope", size: 9_000_000_000), failureReason: "권한 없음"),
+        ])
+        #expect(report.trashNotice == "휴지통을 비우면 1.2 GB가 실제로 확보됩니다")
+    }
+
+    @Test("전부 실패하면 휴지통 안내가 없다")
+    func noTrashNoticeWhenAllFailed() {
+        let report = RemovalReport(outcomes: [
+            RemovalOutcome(item: item("nope", size: 1_000), failureReason: "권한 없음"),
+        ])
+        #expect(report.trashNotice == nil)
+    }
 }
