@@ -60,7 +60,7 @@ struct SweepCommands: Commands {
 
             // 고를 것이 없으면 프리셋도 뜻이 없다
             ForEach(ScanModel.SelectionPreset.allCases, id: \.self) { preset in
-                Button(preset.rawValue) { app.currentModel?.apply(preset) }
+                Button(preset.title) { app.currentModel?.apply(preset) }
                     .disabled(app.currentModel?.items.isEmpty ?? true)
             }
         }

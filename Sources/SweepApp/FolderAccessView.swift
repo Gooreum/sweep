@@ -16,7 +16,7 @@ struct FolderAccessView: View {
     @State private var failure: String?
 
     var body: some View {
-        Retro95Dialog(title: "정리할 폴더 열기", icon: .folder) {
+        Retro95Dialog(title: String(localized: "정리할 폴더 열기"), icon: .folder) {
             VStack(alignment: .leading, spacing: 12) {
                 VStack(spacing: 6) {
                     Text("App Store 버전은 macOS 샌드박스 안에서 동작해서, 폴더를 열려면 한 번 허락이 필요해요.")
@@ -26,7 +26,7 @@ struct FolderAccessView: View {
                 .foregroundStyle(R95.deep)
                 .multilineTextAlignment(.leading)
 
-                Retro95GroupBox(title: "허락할 폴더") {
+                Retro95GroupBox(title: String(localized: "허락할 폴더")) {
                     VStack(spacing: 0) {
                         ForEach(FolderAccess.grantables) { grantable in
                             row(for: grantable)

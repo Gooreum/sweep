@@ -14,7 +14,7 @@ struct SelectionDock: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("선택: \(model.selectedItems.count)개 · 전체 \(model.items.count)개 중")
                     .font(R95.ui(12))
-                Text("선택 크기: " + model.formattedSelectedSize)
+                Text("선택 크기: \(model.formattedSelectedSize)")
                     .font(R95.ui(20, bold: true))
                     .monospacedDigit()
                     .lineLimit(1)
@@ -73,9 +73,9 @@ extension SafetyLevel {
     /// "안전 4개"보다 "다시 만들 수 있음 4개"가 고를 때 쓸모 있다.
     var dockLabel: String {
         switch self {
-        case .safe: "다시 만들 수 있음"
-        case .caution: "확인 필요"
-        case .danger: "되돌릴 수 없음"
+        case .safe: String(localized: "다시 만들 수 있음")
+        case .caution: String(localized: "확인 필요")
+        case .danger: String(localized: "되돌릴 수 없음")
         }
     }
 }

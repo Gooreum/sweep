@@ -65,11 +65,11 @@ enum ItemTableColumns {
     static func headers(showsDates: Bool) -> [Retro95TableHeader.Column] {
         [.init(title: "", width: check),
          .init(title: "", width: icon),
-         .init(title: "이름"),
-         .init(title: "설명", width: detail)]
-        + (showsDates ? [.init(title: "날짜", width: dates)] : [])
-        + [.init(title: "크기", width: size, alignment: .trailing),
-           .init(title: "안전도", width: safety, alignment: .center)]
+         .init(title: String(localized: "이름")),
+         .init(title: String(localized: "설명"), width: detail)]
+        + (showsDates ? [.init(title: String(localized: "날짜"), width: dates)] : [])
+        + [.init(title: String(localized: "크기"), width: size, alignment: .trailing),
+           .init(title: String(localized: "안전도"), width: safety, alignment: .center)]
     }
 }
 
@@ -79,10 +79,10 @@ enum SmartSummaryColumns {
     static let size: CGFloat = 96
     static let bar: CGFloat = 120
     static let headers: [Retro95TableHeader.Column] = [
-        .init(title: "기능"),
-        .init(title: "항목", width: count, alignment: .trailing),
-        .init(title: "크기", width: size, alignment: .trailing),
-        .init(title: "비율 막대", width: bar)
+        .init(title: String(localized: "기능")),
+        .init(title: String(localized: "항목"), width: count, alignment: .trailing),
+        .init(title: String(localized: "크기"), width: size, alignment: .trailing),
+        .init(title: String(localized: "비율 막대"), width: bar)
     ]
 }
 
@@ -113,9 +113,9 @@ enum DiskMapColumns {
     static let actionSpacing: CGFloat = 4
     static let actions = status + open + iconButton * 3 + disclosure + actionSpacing * 5
     static let headers: [Retro95TableHeader.Column] = [
-        .init(title: "이름", width: name),
-        .init(title: "크기", width: size, alignment: .trailing),
-        .init(title: "비율 막대"),
-        .init(title: "상태/동작", width: actions)
+        .init(title: String(localized: "이름"), width: name),
+        .init(title: String(localized: "크기"), width: size, alignment: .trailing),
+        .init(title: String(localized: "비율 막대")),
+        .init(title: String(localized: "상태/동작"), width: actions)
     ]
 }

@@ -91,6 +91,16 @@
         }
       }
     },
+    "%@ 훑는 중…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 훑는 중…"
+          }
+        }
+      }
+    },
     "%@/분 증가 중": {
       "localizations": {
         "ko": {
@@ -107,6 +117,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@개 세는 중…"
+          }
+        }
+      }
+    },
+    "%@에는 더 나눌 항목이 없습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@에는 더 나눌 항목이 없습니다"
           }
         }
       }
@@ -161,6 +181,16 @@
         }
       }
     },
+    "%lld개 · %@ 발견": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld개 · %2$@ 발견"
+          }
+        }
+      }
+    },
     "%lld개 · %@를 원래 자리로 되돌렸습니다": {
       "localizations": {
         "ko": {
@@ -187,6 +217,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld개 항목"
+          }
+        }
+      }
+    },
+    "%lld개 항목을 옮기지 못했습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 항목을 옮기지 못했습니다"
+          }
+        }
+      }
+    },
+    "%lld개 항목을 휴지통으로 옮깁니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 항목을 휴지통으로 옮깁니다"
           }
         }
       }
@@ -541,6 +591,16 @@
         }
       }
     },
+    "Mac 전체를 훑는 중…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac 전체를 훑는 중…"
+          }
+        }
+      }
+    },
     "Playwright 브라우저 캐시": {
       "localizations": {
         "ko": {
@@ -567,6 +627,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sweep 열기"
+          }
+        }
+      }
+    },
+    "Sweep이 %@을(를) 찾을 수 있게 %@ 폴더를 허용하세요.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Sweep이 %1$@을(를) 찾을 수 있게 %2$@ 폴더를 허용하세요."
           }
         }
       }
@@ -777,6 +847,16 @@
         }
       }
     },
+    "검색 중": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "검색 중"
+          }
+        }
+      }
+    },
     "검색 중… %lld%%": {
       "localizations": {
         "ko": {
@@ -803,6 +883,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "권장"
+          }
+        }
+      }
+    },
+    "권한 없음": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한 없음"
           }
         }
       }
@@ -873,6 +963,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "기능별로 나눠 두었습니다. 잠긴 항목은 되돌릴 수 없어 선택할 수 없습니다."
+          }
+        }
+      }
+    },
+    "날짜": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "날짜"
           }
         }
       }
@@ -1017,12 +1117,32 @@
         }
       }
     },
+    "되돌리는 중": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "되돌리는 중"
+          }
+        }
+      }
+    },
     "되돌리는 중…": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "되돌리는 중…"
+          }
+        }
+      }
+    },
+    "되돌리지 못했습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "되돌리지 못했습니다"
           }
         }
       }
@@ -1053,6 +1173,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "디스크 맵"
+          }
+        }
+      }
+    },
+    "디스크 사용량": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스크 사용량"
+          }
+        }
+      }
+    },
+    "디스크 정보": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스크 정보"
           }
         }
       }
@@ -1167,12 +1307,32 @@
         }
       }
     },
+    "보호됨": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보호됨"
+          }
+        }
+      }
+    },
     "부분 선택됨": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "부분 선택됨"
+          }
+        }
+      }
+    },
+    "비율 막대": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "비율 막대"
           }
         }
       }
@@ -1207,6 +1367,26 @@
         }
       }
     },
+    "사용됨": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사용됨"
+          }
+        }
+      }
+    },
+    "사용량을 재는 중…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사용량을 재는 중…"
+          }
+        }
+      }
+    },
     "사용량을 재는 중… %lld%%": {
       "localizations": {
         "ko": {
@@ -1227,12 +1407,42 @@
         }
       }
     },
+    "사유를 확인하고 조치한 뒤 실패한 것만 다시 시도할 수 있습니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사유를 확인하고 조치한 뒤 실패한 것만 다시 시도할 수 있습니다."
+          }
+        }
+      }
+    },
+    "상태/동작": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "상태/동작"
+          }
+        }
+      }
+    },
     "선택 안 됨": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "선택 안 됨"
+          }
+        }
+      }
+    },
+    "선택 크기: %@": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택 크기: %@"
           }
         }
       }
@@ -1283,6 +1493,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "선택한 항목 없음"
+          }
+        }
+      }
+    },
+    "설명": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설명"
           }
         }
       }
@@ -1377,6 +1597,16 @@
         }
       }
     },
+    "시작 지점을 고르세요": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시작 지점을 고르세요"
+          }
+        }
+      }
+    },
     "실패한 것만 다시 시도": {
       "localizations": {
         "ko": {
@@ -1443,6 +1673,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "안전 항목 선택"
+          }
+        }
+      }
+    },
+    "안전도": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "안전도"
           }
         }
       }
@@ -1547,6 +1787,16 @@
         }
       }
     },
+    "약 %@ 남음": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "약 %@ 남음"
+          }
+        }
+      }
+    },
     "어디가 용량을 차지하는지 크기순으로 훑어봅니다.": {
       "localizations": {
         "ko": {
@@ -1607,12 +1857,52 @@
         }
       }
     },
+    "옮길 용량": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "옮길 용량"
+          }
+        }
+      }
+    },
     "완료": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "완료"
+          }
+        }
+      }
+    },
+    "용량 확인": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "용량 확인"
+          }
+        }
+      }
+    },
+    "원래 자리로 되돌리는 중": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "원래 자리로 되돌리는 중"
+          }
+        }
+      }
+    },
+    "원래 자리로 되돌리는 중…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "원래 자리로 되돌리는 중…"
           }
         }
       }
@@ -1717,6 +2007,16 @@
         }
       }
     },
+    "이 중 %lld개는 다시 만들 수 없습니다 — 휴지통을 비우면 처음부터 받아야 합니다. 휴지통을 비우기 전까지는 모두 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 중 %lld개는 다시 만들 수 없습니다 — 휴지통을 비우면 처음부터 받아야 합니다. 휴지통을 비우기 전까지는 모두 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다."
+          }
+        }
+      }
+    },
     "이동 가능": {
       "localizations": {
         "ko": {
@@ -1727,12 +2027,52 @@
         }
       }
     },
+    "이름": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이름"
+          }
+        }
+      }
+    },
+    "일부만 되돌렸습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일부만 되돌렸습니다"
+          }
+        }
+      }
+    },
+    "일부만 정리했습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "일부만 정리했습니다"
+          }
+        }
+      }
+    },
     "임시 파일·빌드 산출물·개발 캐시를 찾아 디스크 공간을 확보합니다.": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "임시 파일·빌드 산출물·개발 캐시를 찾아 디스크 공간을 확보합니다."
+          }
+        }
+      }
+    },
+    "재는 중": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "재는 중"
           }
         }
       }
@@ -1827,12 +2167,82 @@
         }
       }
     },
+    "정리 요약": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정리 요약"
+          }
+        }
+      }
+    },
+    "정리 중": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정리 중"
+          }
+        }
+      }
+    },
+    "정리 항목": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정리 항목"
+          }
+        }
+      }
+    },
+    "정리하는 중": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정리하는 중"
+          }
+        }
+      }
+    },
     "정리하는 중…": {
       "localizations": {
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "정리하는 중…"
+          }
+        }
+      }
+    },
+    "정리하지 못했습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정리하지 못했습니다"
+          }
+        }
+      }
+    },
+    "정리할 폴더 열기": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정리할 폴더 열기"
+          }
+        }
+      }
+    },
+    "정리할 항목이 없음": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정리할 항목이 없음"
           }
         }
       }
@@ -1957,6 +2367,16 @@
         }
       }
     },
+    "크기": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "크기"
+          }
+        }
+      }
+    },
     "크기 %@": {
       "localizations": {
         "ko": {
@@ -2037,6 +2457,16 @@
         }
       }
     },
+    "항목": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "항목"
+          }
+        }
+      }
+    },
     "항목 %lld개": {
       "localizations": {
         "ko": {
@@ -2053,6 +2483,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "해제"
+          }
+        }
+      }
+    },
+    "허락할 폴더": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "허락할 폴더"
+          }
+        }
+      }
+    },
+    "허용": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "허용"
           }
         }
       }
@@ -2093,6 +2543,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "홈 안"
+          }
+        }
+      }
+    },
+    "홈·볼륨 전체·응용 프로그램까지 살펴봅니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "홈·볼륨 전체·응용 프로그램까지 살펴봅니다."
           }
         }
       }
@@ -2147,6 +2607,16 @@
         }
       }
     },
+    "훑기를 멈췄습니다": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "훑기를 멈췄습니다"
+          }
+        }
+      }
+    },
     "훑는 중": {
       "localizations": {
         "ko": {
@@ -2167,6 +2637,16 @@
         }
       }
     },
+    "휴지통에 남아 있습니다. Finder 휴지통에서 직접 '되돌려 놓기'를 할 수 있습니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통에 남아 있습니다. Finder 휴지통에서 직접 '되돌려 놓기'를 할 수 있습니다."
+          }
+        }
+      }
+    },
     "휴지통에서 찾을 수 없습니다": {
       "localizations": {
         "ko": {
@@ -2183,6 +2663,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "휴지통으로 옮기기"
+          }
+        }
+      }
+    },
+    "휴지통으로 옮기는 중…": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통으로 옮기는 중…"
           }
         }
       }
@@ -2213,6 +2703,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "휴지통을 비우기 전까지 복원할 수 있습니다."
+          }
+        }
+      }
+    },
+    "휴지통을 비우기 전까지 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다.": {
+      "localizations": {
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통을 비우기 전까지 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다."
           }
         }
       }
