@@ -400,6 +400,31 @@ struct AppModelTests {
         running.cancel()
     }
 
+    @Test("정리 결과를 띄운 탭은 배분이 덮지 않아 되돌릴 수 있다")
+    func sharingSkipsTabShowingOutcome() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let app = app(scanning: .smartScan, finds: mixed, history: history,
+                      removeOne: { RemovalOutcome(item: $0, failureReason: nil,
+                                                  trashedURL: URL(filePath: "/Users/x/.Trash/\($0.displayName)")) })
+        let smart = app.model(for: .smartScan)
+        await smart.scan()
+
+        let junk = app.model(for: .junk)
+        let target = try #require(junk.items.first, "정크 탭이 비어 배분이 끊겼다")
+        junk.selection = [target.url]
+        await junk.removeSelected()
+        #expect(junk.canUndo, "되돌릴 수 없는 상태라 TC가 공허하다")
+
+        // 다른 탭에서 스마트 스캔을 다시 돌려도 완료 화면과 되돌리기는 남아야 한다
+        await smart.scan()
+
+        #expect(junk.phase == .cleaned, "완료 화면이 덮였다")
+        #expect(junk.canUndo, "되돌리기 기록이 사라졌다")
+        // 나머지 탭은 정상 배분
+        #expect(app.model(for: .largeFile).phase == .results)
+    }
+
     // TC-6
     @Test("기능 탭에서 지우면 스마트 스캔 목록에서도 빠진다")
     func removalInFeatureTabPropagatesToSmartScan() async throws {

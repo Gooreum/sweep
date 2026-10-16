@@ -171,8 +171,9 @@ public final class AppModel {
 
         for target in Feature.summaryCards {
             let model = self.model(for: target)
-            // 그 탭이 자기 스캔을 도는 중이면 덮지 않는다
-            guard !model.isBusy else { continue }
+            // 그 탭이 자기 스캔을 도는 중이거나, 정리 결과를 띄워 되돌리기를
+            // 기다리는 중이면 덮지 않는다
+            guard !model.isBusy, !model.isShowingOutcome else { continue }
             model.adopt(target.items(from: items))
         }
     }
