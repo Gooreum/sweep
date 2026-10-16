@@ -718,6 +718,64 @@ struct ScanModelTests {
         #expect(model.selection == before)
     }
 
+    @Test("스캔 도중 다른 화면에서 지운 파일은 스캔이 끝나도 되살아나지 않는다")
+    func forgetDuringScanSurvivesLaterSnapshots() async {
+        let gone = item("지워진것")
+        let kept = item("남을것")
+        let (snapshots, continuation) = AsyncStream.makeStream(of: ScanCoordinator.Progress.self)
+        let model = ScanModel(scan: { snapshots })
+        var finished: [[CleanupItem]] = []
+        model.onScanFinished = { finished.append($0) }
+
+        let running = Task { await model.scan() }
+        for _ in 0..<50 where model.isBusy == false {
+            await Task.yield()
+        }
+        // 첫 스냅샷이 오기 전, 아직 내 목록에 없을 때 지워진다
+        model.forget([gone.url])
+
+        // 훑은 시점의 스냅샷에는 지워진 파일이 그대로 실려 온다
+        continuation.yield(ScanCoordinator.Progress(
+            items: [gone, kept], fraction: 1, elapsed: .seconds(1),
+            estimatedRemaining: nil, finishedScanners: 1, totalScanners: 1))
+        continuation.finish()
+        await running.value
+
+        #expect(model.items.map(\.url) == [kept.url])
+        #expect(model.selection == [kept.url])
+        // 다른 탭으로 퍼지는 결과에도 없어야 한다
+        #expect(finished.first?.map(\.url) == [kept.url])
+    }
+
+    @Test("다시 스캔하면 지난 스캔 중에 지운 기록은 잊는다")
+    func rescanClearsRemovedDuringScan() async {
+        let back = item("되돌아온것")
+        let (snapshots, continuation) = AsyncStream.makeStream(of: ScanCoordinator.Progress.self)
+        nonisolated(unsafe) var round = 0
+        let model = ScanModel(scan: {
+            round += 1
+            return round == 1 ? snapshots : AsyncStream { c in
+                c.yield(ScanCoordinator.Progress(
+                    items: [back], fraction: 1, elapsed: .seconds(1),
+                    estimatedRemaining: nil, finishedScanners: 1, totalScanners: 1))
+                c.finish()
+            }
+        })
+
+        let running = Task { await model.scan() }
+        for _ in 0..<50 where model.isBusy == false {
+            await Task.yield()
+        }
+        model.forget([back.url])
+        continuation.finish()
+        await running.value
+        #expect(model.items.isEmpty)
+
+        // 그사이 휴지통에서 되돌려 다시 있는 파일이면 새 스캔에는 나와야 한다
+        await model.scan()
+        #expect(model.items.map(\.url) == [back.url])
+    }
+
     // TC-6
     @Test("스캔이 끝나면 결과와 함께 한 번 알린다")
     func scanNotifiesOnceWhenFinished() async {

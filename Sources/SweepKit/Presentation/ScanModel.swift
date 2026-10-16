@@ -89,6 +89,13 @@ public final class ScanModel {
     public private(set) var restoreReport: RemovalReport?
     public var selection: Set<URL> = []
 
+    /// 스캔 도중 다른 화면에서 지워진 경로.
+    ///
+    /// 스트림이 주는 결과는 훑은 시점의 스냅샷이라, 그사이 지워진 파일이 다음
+    /// 스냅샷에 다시 실려 온다. 걸러 내지 않으면 사라진 파일이 선택된 채 목록에
+    /// 되살아나고, 정리하면 '실패'로 남는다.
+    private var removedDuringScan: Set<URL> = []
+
     private let scanStream: @Sendable () -> AsyncStream<ScanCoordinator.Progress>
     private let performRemove: @Sendable (CleanupItem) -> RemovalOutcome
     private let performRestore: @Sendable (RemovalOutcome) -> RemovalOutcome
@@ -283,9 +290,10 @@ public final class ScanModel {
         restoreReport = nil
         items = []
         selection = []
+        removedDuringScan = []
 
         for await progress in scanStream() {
-            items = progress.items
+            items = progress.items.filter { !removedDuringScan.contains($0.url) }
             // safe만 미리 체크한다. 사용자가 "전체 선택 → 삭제"를 눌러도
             // 되돌릴 수 없는 것(Archives 등)은 빠져 있어야 한다.
             //
@@ -388,6 +396,8 @@ public final class ScanModel {
     /// ("정리할 항목이 없음")이 뜨는데, 그게 사실이다.
     public func forget(_ urls: [URL]) {
         let gone = Set(urls)
+        // 스캔 중이면 아직 목록에 없는 것도 기억한다. 다음 스냅샷에 실려 올 수 있다.
+        if case .scanning = phase { removedDuringScan.formUnion(gone) }
         guard items.contains(where: { gone.contains($0.url) }) else { return }
         items.removeAll { gone.contains($0.url) }
         selection.subtract(gone)
