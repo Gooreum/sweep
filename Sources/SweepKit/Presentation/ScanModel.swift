@@ -144,6 +144,14 @@ public final class ScanModel {
         }
     }
 
+    /// 정리·되돌리기 결과 화면을 보여 주는 중.
+    ///
+    /// 바쁘지는 않지만 되돌리기를 기다릴 수 있는 상태라, 다른 화면이 결과를
+    /// 나눠 줄 때 덮으면 안 된다 — 덮으면 `report`가 사라져 되돌릴 수 없게 된다.
+    public var isShowingOutcome: Bool {
+        phase == .cleaned || phase == .restored
+    }
+
     /// 완료 화면에서 되돌릴 수 있는가. 휴지통 위치를 아는 성공분이 있어야 한다.
     /// 한 번 되돌리면 `report`가 비어 다시 되돌릴 수 없다.
     public var canUndo: Bool {
