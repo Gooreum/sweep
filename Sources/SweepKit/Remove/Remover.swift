@@ -9,7 +9,14 @@ public struct Remover: Sendable {
     /// 기본은 휴지통. 되돌릴 수 있어야 한다.
     public let movesToTrash: Bool
 
-    public init(movesToTrash: Bool = true) { self.movesToTrash = movesToTrash }
+    /// 어느 관문 범위로 검사할지. 기본은 스캐너용 화이트리스트다 —
+    /// 디스크 맵만 `.diskMap`을 넘긴다.
+    public let scope: RemovalScope
+
+    public init(movesToTrash: Bool = true, scope: RemovalScope = .cleanup) {
+        self.movesToTrash = movesToTrash
+        self.scope = scope
+    }
 
     public func remove(_ items: [CleanupItem]) -> RemovalReport {
         RemovalReport(outcomes: items.map(removeOne))
@@ -42,7 +49,7 @@ public struct Remover: Sendable {
     private func perform(at url: URL) -> (trashed: URL?, failure: RemovalFailure?) {
         do {
             // 관문이 먼저다. 예외 없음.
-            try ProtectedPaths.validate(url)
+            try ProtectedPaths.validate(url, scope: scope)
 
             if movesToTrash {
                 var resulting: NSURL?

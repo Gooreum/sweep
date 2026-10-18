@@ -297,4 +297,113 @@ struct ProtectedPathsTests {
             }
         }
     }
+
+    // MARK: - 디스크 맵 범위 (내 소유면 어디든, 기본 폴더 자체·계정 데이터만 제외)
+
+    private func diskMapVeto(_ relative: String) -> RemovalVeto? {
+        ProtectedPaths.veto(for: home.appending(path: relative), scope: .diskMap)
+    }
+
+    // TC-1 · TC-2
+    @Test("내 문서는 디스크 맵 범위에서는 열리고 정리 범위에서는 막힌다")
+    func documentsOpenOnlyInDiskMapScope() {
+        let target = home.appending(path: "Documents/영상.mov")
+
+        #expect(ProtectedPaths.veto(for: target, scope: .diskMap) == nil)
+        // 스캐너 쪽 관문은 그대로다 — 범위를 열었다고 2차 방어선이 넓어지면 안 된다.
+        guard case .outsideAllowedRoots = ProtectedPaths.veto(for: target) else {
+            Issue.record("정리 범위 판정이 바뀌었다")
+            return
+        }
+    }
+
+    // TC-3
+    @Test("디스크 맵에서도 루트·홈·정리 루트 자체·denyList는 막힌다")
+    func diskMapKeepsCommonVetoes() {
+        guard case .rootOrHome = ProtectedPaths.veto(for: URL(filePath: "/"), scope: .diskMap) else {
+            Issue.record("루트가 열렸다"); return
+        }
+        guard case .rootOrHome = ProtectedPaths.veto(for: home, scope: .diskMap) else {
+            Issue.record("홈이 열렸다"); return
+        }
+        guard case .allowedRootItself = diskMapVeto("Library/Caches") else {
+            Issue.record("정리 루트 자체가 열렸다"); return
+        }
+        guard case .protectedPath = diskMapVeto("Library/Developer/Xcode/UserData/Provisioning Profiles") else {
+            Issue.record("denyList가 열렸다"); return
+        }
+    }
+
+    // TC-4 · TC-5
+    @Test("홈의 기본 폴더는 자체만 막히고 안의 항목은 열린다")
+    func essentialFoldersBlockThemselvesOnly() {
+        for folder in ["Documents", "Library", "Library/Application Support", "Library/Containers"] {
+            guard case .essentialFolder = diskMapVeto(folder) else {
+                Issue.record("\(folder) 자체가 열렸다: \(String(describing: diskMapVeto(folder)))")
+                continue
+            }
+        }
+        #expect(diskMapVeto("Documents/안/파일.txt") == nil)
+        #expect(diskMapVeto("Library/Application Support/SomeApp") == nil)
+    }
+
+    // TC-6
+    @Test("계정 데이터는 자체와 그 아래가 모두 막힌다")
+    func userDataBlocksDescendants() {
+        for path in ["Library/Keychains", "Library/Keychains/login.keychain-db",
+                     "Library/Mobile Documents/com~apple~CloudDocs/메모.txt"] {
+            guard case .essentialFolder = diskMapVeto(path) else {
+                Issue.record("\(path)가 열렸다: \(String(describing: diskMapVeto(path)))")
+                continue
+            }
+        }
+    }
+
+    // TC-7
+    @Test("시스템 영역은 범위가 아니라 소유권·플래그가 막는다")
+    func systemAreaIsVetoedByOwnershipNotScope() {
+        let veto = ProtectedPaths.veto(for: URL(filePath: "/System/Library"), scope: .diskMap)
+        #expect(veto != nil, "/System/Library가 열렸다")
+        if case .outsideAllowedRoots = veto {
+            Issue.record("디스크 맵 범위가 영역으로 막았다 — 소유권으로 막혀야 한다")
+        }
+    }
+
+    // TC-8
+    @Test("샌드박스 디스크 맵은 Downloads와 허락받은 폴더 안만 닿는다")
+    func diskMapReachabilityFollowsGrants() {
+        let documents = home.appending(path: "Documents/a.mov").standardizedFileURL.pathComponents
+        let downloads = home.appending(path: "Downloads/a.dmg").standardizedFileURL.pathComponents
+        let apps = URL(filePath: "/Applications/x.app").standardizedFileURL.pathComponents
+
+        // 샌드박스 밖에서는 어디든 — 시스템은 소유권·플래그가 지킨다
+        #expect(ProtectedPaths.diskMapReachable(apps, sandboxed: false, granted: []))
+
+        #expect(ProtectedPaths.diskMapReachable(downloads, sandboxed: true, granted: []))
+        #expect(!ProtectedPaths.diskMapReachable(documents, sandboxed: true, granted: []))
+
+        #expect(ProtectedPaths.diskMapReachable(documents, sandboxed: true, granted: [home]))
+        #expect(!ProtectedPaths.diskMapReachable(apps, sandboxed: true, granted: [home]))
+    }
+
+    // TC-9
+    @Test("디스크 맵 범위에서도 isRemovable과 veto 판정이 일치한다")
+    func diskMapEntriesNeverDisagree() {
+        var probes: [URL] = [
+            URL(filePath: "/"), home,
+            home.appending(path: "Documents/중요파일.txt"),
+            home.appending(path: "Library/Keychains/login.keychain-db"),
+            home.appending(path: "Library/Application Support/SomeApp"),
+            URL(filePath: "/System/Library"),
+            URL(filePath: "/private/tmp/sweep-\(UUID().uuidString).bin"),
+        ]
+        probes += ProtectedPaths.allowedRoots
+        probes += ProtectedPaths.allowedRoots.map { $0.appending(path: "child.bin") }
+
+        for url in probes {
+            #expect(ProtectedPaths.isRemovable(url, scope: .diskMap)
+                    == (ProtectedPaths.veto(for: url, scope: .diskMap) == nil),
+                    "판정이 갈라졌다: \(url.path)")
+        }
+    }
 }
