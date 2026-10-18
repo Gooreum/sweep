@@ -106,7 +106,10 @@ public final class AppModel {
 
     /// 이 폴더가 이미 열려 있는가. 허락 화면이 체크 표시를 그린다.
     public func isGranted(_ grantable: FolderAccess.Grantable) -> Bool {
-        folderAccess.isGranted(grantable)
+        // 허락이 바뀌면 이 값이 바뀐다. 읽어 둬야 이걸 부른 뷰가 다시 그려진다 —
+        // 레지스트리는 관찰 대상이 아니라서 그것만 읽으면 배너가 허락 뒤에도 남는다.
+        _ = grantedFolderCount
+        return folderAccess.isGranted(grantable)
     }
 
     /// 기능마다 모델을 하나씩만 만들어 재사용한다.

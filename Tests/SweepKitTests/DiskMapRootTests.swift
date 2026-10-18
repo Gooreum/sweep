@@ -111,6 +111,61 @@ struct DiskMapRootTests {
                 == home.standardizedFileURL)
     }
 
+    // MARK: - 샌드박스 (허락 범위가 곧 보이는 범위)
+
+    private func sandboxPaths(granted: [URL]) -> Set<String> {
+        Set(DiskMapRoot.roots(home: home, sandboxed: true, granted: granted) { _ in true }
+            .map { $0.url.standardizedFileURL.path })
+    }
+
+    private var downloads: String { home.appending(path: "Downloads").standardizedFileURL.path }
+    private var desktop: String { home.appending(path: "Desktop").standardizedFileURL.path }
+
+    @Test("샌드박스에서 아무것도 허락하지 않으면 Downloads만 보인다")
+    func sandboxWithoutGrantShowsDownloadsOnly() {
+        // 샌드박스가 스스로 열 수 있는 유일한 곳이다
+        #expect(sandboxPaths(granted: []) == [downloads])
+    }
+
+    @Test("디스크를 허락하면 비샌드박스와 같은 시작점이 전부 보인다")
+    func sandboxWithWholeDiskMatchesUnsandboxed() {
+        let opened = sandboxPaths(granted: [URL(filePath: "/")])
+        // 정리 대상 그룹은 샌드박스에서 "허락한 폴더"라 비교에서 뺀다
+        let full = Set(DiskMapRoot.roots(home: home, sandboxed: false) { _ in true }
+            .filter { $0.group != .cleanup }
+            .map { $0.url.standardizedFileURL.path })
+
+        #expect(opened.isSuperset(of: full), "빠진 시작점: \(full.subtracting(opened))")
+        #expect(opened.contains(home.standardizedFileURL.path))
+        #expect(opened.contains("/"))
+        #expect(opened.contains("/Applications"))
+        #expect(opened.contains(desktop))
+    }
+
+    @Test("홈만 허락하면 홈 안은 보이고 디스크·응용 프로그램은 안 보인다")
+    func sandboxWithHomeOnly() {
+        let opened = sandboxPaths(granted: [home])
+
+        #expect(opened.contains(home.standardizedFileURL.path))
+        #expect(opened.contains(desktop))
+        #expect(!opened.contains("/"))
+        #expect(!opened.contains("/Applications"))
+    }
+
+    @Test("~/Library만 허락하면 홈 안 그룹에 한 번만 나온다")
+    func sandboxWithLibraryOnlyIsNotDuplicated() {
+        let library = home.appending(path: "Library")
+        let roots = DiskMapRoot.roots(home: home, sandboxed: true, granted: [library]) { _ in true }
+        let libraryRoots = roots.filter {
+            $0.url.standardizedFileURL.path == library.standardizedFileURL.path
+        }
+
+        // 홈 안 목록이 먼저 집으므로 정리 대상 루프에서는 중복으로 걸러진다
+        #expect(libraryRoots.count == 1)
+        #expect(libraryRoots.first?.group == .home)
+        #expect(roots.map(\.label).count == Set(roots.map(\.label)).count)
+    }
+
     // MARK: - 응용 프로그램 (앱 삭제)
 
     private func appPaths(in roots: [DiskMapRoot]) -> [String] {

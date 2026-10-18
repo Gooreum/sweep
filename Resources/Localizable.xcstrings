@@ -2267,6 +2267,22 @@
         }
       }
     },
+    "디스크 맵 전체 보기 · 아래 폴더도 한 번에": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See the whole disk in Disk Map · opens every folder below at once"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스크 맵 전체 보기 · 아래 폴더도 한 번에"
+          }
+        }
+      }
+    },
     "디스크 사용량": {
       "localizations": {
         "en": {
@@ -2295,6 +2311,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "디스크 정보"
+          }
+        }
+      }
+    },
+    "디스크 허용…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow Disk…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스크 허용…"
+          }
+        }
+      }
+    },
+    "디스크를 한 번 허용하면 홈과 이 Mac 전체를 봅니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow the disk once to see your home folder and all of this Mac."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스크를 한 번 허용하면 홈과 이 Mac 전체를 봅니다."
           }
         }
       }
@@ -4153,6 +4201,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "지금까지 %1$@를 휴지통으로 옮김 · 마지막 정리 %2$@"
+          }
+        }
+      }
+    },
+    "지금은 다운로드 폴더만 보입니다": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only your Downloads folder is visible right now"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금은 다운로드 폴더만 보입니다"
           }
         }
       }

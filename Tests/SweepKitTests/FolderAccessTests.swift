@@ -31,6 +31,35 @@ struct FolderAccessTests {
         return .init(folder: folder, label: "~/\(relative)", purpose: "테스트용")
     }
 
+    // MARK: - 디스크 전체
+
+    @Test("디스크 전체가 허락 목록 맨 위에 있다")
+    func wholeDiskIsFirstGrantable() {
+        let first = FolderAccess.grantables.first
+        #expect(first?.folder.path == "/")
+        #expect(first?.label == FolderAccess.wholeDisk.label)
+        #expect(FolderAccess.wholeDisk.label == "이 Mac")
+    }
+
+    @Test("열기 대화상자에서 디스크를 고르면 디스크 전체와 일치한다")
+    func pickingRootMatchesWholeDisk() {
+        #expect(FolderAccess.matches(URL(filePath: "/"), folder: FolderAccess.wholeDisk.folder))
+        // 홈을 고르면 안 된다 — 디스크 전체가 아니다
+        #expect(!FolderAccess.matches(Sandbox.userHome, folder: FolderAccess.wholeDisk.folder))
+    }
+
+    @Test("디스크 전체를 허락하면 그 아래 허락 대상이 전부 열린 것으로 본다")
+    func wholeDiskGrantOpensEverything() throws {
+        let (registry, _, _, cleanup) = try makeRegistry()
+        defer { cleanup() }
+
+        try registry.grant(URL(filePath: "/"), as: FolderAccess.wholeDisk)
+
+        for grantable in FolderAccess.grantables {
+            #expect(registry.isGranted(grantable), "\(grantable.label)이 닫혀 있다")
+        }
+    }
+
     // TC-1
     @Test("허락한 폴더가 열린 목록에 들어간다")
     func grantOpensFolder() throws {
