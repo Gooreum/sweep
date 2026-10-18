@@ -69,6 +69,10 @@ struct SmartScanView: View {
     private var welcome: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
+                // 검색 버튼이 이 화면에 없었다. 명령줄의 작은 버튼이 유일해서
+                // 사용자가 "어디서 검색하냐"고 물었다 — 첫 화면 맨 위에 둔다.
+                scanHero
+
                 // 요약을 한 번만 만들어 넘긴다. 화면 안에서 두 번 부르면
                 // 그때마다 전체 항목을 기능 수만큼 필터링한다.
                 diskCard
@@ -87,6 +91,30 @@ struct SmartScanView: View {
             .padding(8)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    /// 첫 화면의 주 동작. 무엇을 훑는지 한 줄로 말하고 바로 누르게 한다.
+    ///
+    /// 정리 독(`SelectionDock`)과 같은 구성 — 48px 아이콘 · 두 줄 설명 · 오른쪽 주 버튼.
+    /// 앱 안에서 이미 익숙한 모양이라 "여기가 주 동작"으로 바로 읽힌다.
+    private var scanHero: some View {
+        HStack(spacing: 12) {
+            PixelIcon(art: .magnifier, size: 48)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Mac 전체를 한 번에 훑습니다")
+                    .font(R95.ui(14, bold: true))
+                Text("Xcode 산출물 · 캐시 · 큰 파일 · 중복 파일을 찾아 기능별로 나눠 보여줍니다.")
+                    .font(R95.ui(11))
+                    .foregroundStyle(R95.deep)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 12)
+            ScanButton(model: model, title: String(localized: "전체 검색"), showsShortcut: true)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity)
+        .background(R95.gray)
+        .retroRaised()
     }
 
     /// 전체 디스크는 작은 미터로 보여줘 권한 목록과 결과에 공간을 남긴다.
