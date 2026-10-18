@@ -1259,6 +1259,22 @@
         }
       }
     },
+    "Mac 전체를 한 번에 훑습니다": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan your whole Mac at once"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac 전체를 한 번에 훑습니다"
+          }
+        }
+      }
+    },
     "Mac 전체를 훑는 중…": {
       "localizations": {
         "en": {
@@ -1447,6 +1463,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Xcode 산출물 · 시뮬레이터 · DerivedData"
+          }
+        }
+      }
+    },
+    "Xcode 산출물 · 캐시 · 큰 파일 · 중복 파일을 찾아 기능별로 나눠 보여줍니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finds Xcode output, caches, large files and duplicates, sorted by feature."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Xcode 산출물 · 캐시 · 큰 파일 · 중복 파일을 찾아 기능별로 나눠 보여줍니다."
           }
         }
       }
@@ -1735,6 +1767,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "검색 중"
+          }
+        }
+      }
+    },
+    "검색 중…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanning…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "검색 중…"
           }
         }
       }
@@ -3817,6 +3865,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "전체"
+          }
+        }
+      }
+    },
+    "전체 검색": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan Everything"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 검색"
           }
         }
       }

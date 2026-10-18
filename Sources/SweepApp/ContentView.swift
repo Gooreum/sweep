@@ -77,13 +77,15 @@ private struct CommandBar: View {
     let app: AppModel
 
     var body: some View {
-        HStack(spacing: 6) {
-            Button("검색") {
-                guard let model = app.currentModel else { return }
-                Task { await model.scan() }
+        HStack(spacing: 10) {
+            // 주 동작. 12pt 회색 버튼이었을 때 사용자가 못 찾았다 — 아이콘과 굵은 글자로 키운다.
+            // `CommandBar`는 `currentModel`이 있을 때만 그려지므로 `if let`은 안전망이다.
+            if let model = app.currentModel {
+                ScanButton(model: model,
+                           title: app.selected == .smartScan
+                               ? String(localized: "전체 검색") : String(localized: "검색"),
+                           showsShortcut: true)
             }
-            .buttonStyle(Retro95ButtonStyle(isDefault: true))
-            .disabled(!app.canScan)
 
             // 한 번에 고르는 가장 흔한 경우. 메뉴로 접어 두면 두 번 눌러야 한다.
             Button("안전 항목 선택") { app.currentModel?.apply(.safeOnly) }
@@ -93,7 +95,8 @@ private struct CommandBar: View {
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 8)
-        .frame(height: 32)
+        .padding(.vertical, 6)
+        .frame(height: 48)
         .background(R95.gray)
         .overlay(alignment: .bottom) { Retro95Separator() }
     }

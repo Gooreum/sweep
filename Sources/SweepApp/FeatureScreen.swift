@@ -77,8 +77,8 @@ struct FeatureScreen: View {
         Retro95Dialog(title: feature.displayName, icon: feature.pixelArt) {
             Text(feature.summary)
         } buttons: {
-            Button("검색") { Task { await model.scan() } }
-                .buttonStyle(Retro95ButtonStyle(isDefault: true))
+            // 명령줄·스마트 스캔 첫 화면과 같은 버튼. 작은 글자 버튼은 구석에서 안 보였다.
+            ScanButton(model: model)
         }
         .frame(maxWidth: R95.dialogWidth)
     }
