@@ -56,14 +56,14 @@ public final class DiskMapModel {
 
     /// 지금 보고 있는 지점까지의 경로. 첫 원소가 루트다.
     public private(set) var path: [DiskUsageNode] = [] {
-        didSet { refreshVetoes() }
+        didSet { refreshVerdicts() }
     }
 
-    /// 지금 보이는 자식들의 삭제 가능 여부.
+    /// 지금 보이는 자식들의 판정 — 지워도 됨 / 확인 필요 / 보호됨.
     ///
     /// `ProtectedPaths.validate`는 경로를 정규화하고 캐시를 훑는다. 매 렌더마다
     /// 행 수만큼 부르면 스크롤이 버벅인다 — `path`가 바뀔 때만 계산한다.
-    public private(set) var tileVetoes: [URL: RemovalVeto?] = [:]
+    public private(set) var tileVerdicts: [URL: RemovalVerdict] = [:]
     public private(set) var loadPhase: LoadPhase?
 
     /// Picker가 고른 시작 지점.
@@ -181,20 +181,23 @@ public final class DiskMapModel {
         loadPhase = nil
     }
 
-    /// 이 항목을 지울 수 없는 사유. 지울 수 있으면 nil.
-    ///
-    /// 지금 보고 있는 지점의 자식이 아니면 nil이다 — 목록에 없는 것을
-    /// "지울 수 있다"고 말하는 셈이지만, 화면이 그리지 않으므로 쓰이지 않는다.
-    public func veto(for node: DiskUsageNode) -> RemovalVeto? {
-        tileVetoes[node.url] ?? nil
+    /// 이 항목의 판정. 지금 보고 있는 지점의 자식이 아니면 nil —
+    /// 화면이 그리지 않으므로 쓰이지 않는다.
+    public func verdict(for node: DiskUsageNode) -> RemovalVerdict? {
+        tileVerdicts[node.url]
     }
 
-    private func refreshVetoes() {
-        var map: [URL: RemovalVeto?] = [:]
+    /// 막는 사유만 필요할 때. 판정이 없으면 nil(= 막지 않음).
+    public func veto(for node: DiskUsageNode) -> RemovalVeto? {
+        tileVerdicts[node.url]?.veto
+    }
+
+    private func refreshVerdicts() {
+        var map: [URL: RemovalVerdict] = [:]
         for child in path.last?.children ?? [] {
-            map[child.url] = ProtectedPaths.veto(for: child.url)
+            map[child.url] = RemovalVerdict.forDiskMap(child.url)
         }
-        tileVetoes = map
+        tileVerdicts = map
     }
 
     /// 도는 순회를 멈춘다.
@@ -257,12 +260,14 @@ public final class DiskMapModel {
 
     /// 지금 보고 있는 지점의 자식 하나를 휴지통으로 보낸다.
     ///
-    /// 관문은 `Remover`가 지킨다 — 디스크 맵이라고 다른 길로 가지 않는다.
+    /// 관문은 `Remover`가 지킨다 — 디스크 맵이라고 다른 길로 가지 않는다. 다만 **범위**는
+    /// 디스크 맵 것이다. 화면이 "지워도 됨"이라 쓴 것과 같은 판정으로 지운다.
     /// 허용 루트 자체는 `allowedRootItself`로 거부되므로 최상위는 지워지지 않는다.
     ///
     /// **성공했을 때만 트리에서 뺀다.** 실패했는데 화면에서 사라지면
     /// 사용자는 지워진 줄 안다.
-    public func remove(_ node: DiskUsageNode, using remover: Remover = Remover()) async {
+    public func remove(_ node: DiskUsageNode,
+                       using remover: Remover = Remover(scope: .diskMap)) async {
         let url = node.url
         let failure = await Task.detached { remover.removeFile(at: url) }.value
 

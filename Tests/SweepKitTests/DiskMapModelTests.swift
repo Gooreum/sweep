@@ -349,7 +349,7 @@ struct DiskMapModelTests {
         let child = DiskUsageNode(url: file, size: 128)
         model.seed(DiskUsageNode(url: dir, size: 128, children: [child]))
 
-        await model.remove(child, using: Remover(movesToTrash: false))
+        await model.remove(child, using: Remover(movesToTrash: false, scope: .diskMap))
 
         #expect(model.removalFailure == nil)
         #expect(model.tiles.isEmpty)
@@ -357,22 +357,48 @@ struct DiskMapModelTests {
         #expect(!fm.fileExists(atPath: file.path))
     }
 
+    // TC-9 (Step 2)
+    @Test("정리 범위 밖이어도 디스크 맵 범위면 내 파일을 지운다")
+    func removeDeletesFileOutsideCleanupRoots() async throws {
+        // `Application Support`는 정리 루트가 아니다. 예전 관문이면 `outsideAllowedRoots`로
+        // 막히던 곳 — 디스크 맵 범위에서는 "확인 필요"로 열린다.
+        let fm = FileManager.default
+        let dir = fm.homeDirectoryForCurrentUser
+            .appending(path: "Library/Application Support/sweep-diskmap-test-\(UUID().uuidString)")
+        try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: dir) }
+
+        let file = dir.appending(path: "x.bin")
+        try Data(count: 64).write(to: file)
+
+        let model = DiskMapModel()
+        let child = DiskUsageNode(url: file, size: 64)
+        model.seed(DiskUsageNode(url: dir, size: 64, children: [child]))
+        #expect(model.verdict(for: child)?.level == .caution)
+
+        await model.remove(child, using: Remover(movesToTrash: false, scope: .diskMap))
+
+        #expect(model.removalFailure == nil)
+        #expect(model.tiles.isEmpty)
+        #expect(!fm.fileExists(atPath: file.path))
+    }
+
     // TC-6
     @Test("관문이 거부하면 사유가 남고 트리는 변하지 않는다")
     func removeKeepsTreeWhenGateRefuses() async {
-        // 만들지도 않은, 허용 루트 밖 경로. 관문이 빠져도 지울 것이 없다.
-        let outside = FileManager.default.homeDirectoryForCurrentUser
-            .appending(path: "Documents/sweep-never-exists-\(UUID().uuidString)")
+        // 만들지도 않은, 계정 데이터 안 경로. 관문이 빠져도 지울 것이 없다.
+        let blocked = FileManager.default.homeDirectoryForCurrentUser
+            .appending(path: "Library/Keychains/sweep-never-exists-\(UUID().uuidString)")
 
         let model = DiskMapModel()
-        let child = DiskUsageNode(url: outside, size: 500)
+        let child = DiskUsageNode(url: blocked, size: 500)
         model.seed(DiskUsageNode(url: URL(filePath: "/private/tmp/root"),
                                  size: 500, children: [child]))
         let before = model.path
 
         await model.remove(child)
 
-        #expect(model.removalFailure?.contains("정리 대상 범위 밖입니다") == true)
+        #expect(model.removalFailure?.contains("삭제할 수 없습니다") == true)
         // 실패했는데 화면에서 사라지면 사용자는 지워진 줄 안다
         #expect(model.path == before)
     }
@@ -381,7 +407,7 @@ struct DiskMapModelTests {
     @Test("clearRemovalFailure가 사유를 지운다")
     func clearRemovalFailureResetsState() async {
         let outside = FileManager.default.homeDirectoryForCurrentUser
-            .appending(path: "Documents/sweep-never-exists-\(UUID().uuidString)")
+            .appending(path: "Library/Keychains/sweep-never-exists-\(UUID().uuidString)")
         let model = DiskMapModel()
         model.seed(DiskUsageNode(url: URL(filePath: "/private/tmp/root"), size: 1,
                                  children: [DiskUsageNode(url: outside, size: 1)]))
@@ -446,17 +472,18 @@ struct DiskMapModelTests {
 
     // MARK: - 지울 수 있는지 (범위 확대)
 
-    /// 정리 루트 안(지울 수 있음)과 밖(못 지움)을 한 지점에 섞어 둔 트리.
+    /// 지워도 됨(캐시)·확인 필요(내 문서)·보호됨(계정 데이터)을 한 지점에 섞어 둔 트리.
     private func mixedRemovabilityTree() -> DiskUsageNode {
         let home = FileManager.default.homeDirectoryForCurrentUser
         let ok = DiskUsageNode(url: home.appending(path: "Library/Caches/지울수있음"),
                                size: 300)
-        let blocked = DiskUsageNode(url: home.appending(path: "Documents/못지움"),
+        let mine = DiskUsageNode(url: home.appending(path: "Documents/내문서"), size: 250)
+        let blocked = DiskUsageNode(url: home.appending(path: "Library/Keychains/못지움"),
                                     size: 200,
                                     children: [DiskUsageNode(
-                                        url: home.appending(path: "Documents/못지움/안"),
+                                        url: home.appending(path: "Library/Keychains/못지움/안"),
                                         size: 200)])
-        return DiskUsageNode(url: home, size: 500, children: [ok, blocked])
+        return DiskUsageNode(url: home, size: 750, children: [ok, mine, blocked])
     }
 
     // TC-6
@@ -469,7 +496,26 @@ struct DiskMapModelTests {
         let blocked = model.tiles.first { $0.name == "못지움" }!
 
         #expect(model.veto(for: ok) == nil, "정리 루트 안인데 막혔다")
-        #expect(model.veto(for: blocked) != nil, "허용 루트 밖인데 통과했다")
+        #expect(model.veto(for: blocked) != nil, "계정 데이터인데 통과했다")
+    }
+
+    // TC-8 (Step 2)
+    @Test("자식마다 지워도 됨·확인 필요·보호됨이 갈린다")
+    func verdictsSplitThreeWays() {
+        let model = DiskMapModel()
+        model.seed(mixedRemovabilityTree())
+
+        let ok = model.tiles.first { $0.name == "지울수있음" }!
+        let mine = model.tiles.first { $0.name == "내문서" }!
+        let blocked = model.tiles.first { $0.name == "못지움" }!
+
+        #expect(model.verdict(for: ok)?.level == .safe)
+        #expect(model.verdict(for: mine)?.level == .caution)
+        #expect(model.verdict(for: blocked)?.level == .danger)
+        // 세 갈래 모두 사유가 있어야 설명 줄에 쓸 수 있다
+        for node in [ok, mine, blocked] {
+            #expect(model.verdict(for: node)?.reason.isEmpty == false, "\(node.name)에 사유가 없다")
+        }
     }
 
     // TC-7
@@ -482,8 +528,8 @@ struct DiskMapModelTests {
         model.drillDown(into: blocked)
 
         // 이전 지점의 키가 남아 있으면 화면과 어긋난다
-        #expect(model.tileVetoes.count == 1)
-        #expect(model.tileVetoes.keys.first?.lastPathComponent == "안")
+        #expect(model.tileVerdicts.count == 1)
+        #expect(model.tileVerdicts.keys.first?.lastPathComponent == "안")
     }
 
     // TC-8
