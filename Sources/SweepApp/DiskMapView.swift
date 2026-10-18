@@ -21,6 +21,12 @@ struct DiskMapView: View {
     /// 허락에 실패한 사유. 성공했으면 nil.
     @State private var grantFailure: String?
 
+    /// 사용자가 피커에서 시작점을 직접 고른 적이 있는가.
+    ///
+    /// 샌드박스에서는 홈이 안 보여 Downloads로 **떨어진** 채 시작한다. 디스크를
+    /// 허용해 홈이 열리면 그리로 옮겨 주되, 사용자가 일부러 고른 곳이면 건드리지 않는다.
+    @State private var userPickedRoot = false
+
     /// 탐색 상태와 별개로 행 강조만 보관해 모델의 선택 동작을 바꾸지 않는다.
     @State private var focusedNode: URL?
     @State private var hoveredNode: URL?
@@ -32,6 +38,7 @@ struct DiskMapView: View {
         VStack(spacing: 0) {
             header
             Retro95Separator()
+            wholeDiskBanner
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -104,7 +111,49 @@ struct DiskMapView: View {
         // 이 한 줄이 두 경우를 함께 처리한다 — 이 화면에서 허락한 경우와
         // 다른 화면(스마트 스캔·허락 화면)에서 허락한 경우.
         .onChange(of: app.grantedFolderCount) {
-            Task { await model.reload() }
+            // 디스크를 허용한 순간 홈이 열린다. 홈이 없어 Downloads에 떨어져 있던
+            // 거라면 홈으로 옮긴다 — `selectedRoot`가 바뀌면 위의 `onChange`가 읽으므로
+            // 여기서 `load`를 또 부르지 않는다. 두 순회가 동시에 돌면 늦게 끝난 쪽이 덮는다.
+            let home = Sandbox.userHome.standardizedFileURL
+            let homeVisible = model.availableRoots.contains { $0.url.standardizedFileURL == home }
+            if homeVisible, !userPickedRoot, model.selectedRoot?.standardizedFileURL != home {
+                model.selectedRoot = Sandbox.userHome
+            } else {
+                Task { await model.reload() }
+            }
+        }
+    }
+
+    /// 샌드박스에서 디스크 전체를 아직 못 보는 상태. 한 번 허용하면 사라진다.
+    ///
+    /// 샌드박스가 스스로 열 수 있는 곳은 Downloads뿐이라, 허용 전에는 "디스크 맵"이
+    /// 다운로드 폴더 맵이다. 왜 그런지와 어떻게 푸는지를 같은 자리에서 말한다 —
+    /// 피커에 항목이 없는 것만 보여 주면 사용자는 고장으로 안다.
+    @ViewBuilder
+    private var wholeDiskBanner: some View {
+        if Sandbox.isActive, !app.isGranted(FolderAccess.wholeDisk) {
+            HStack(spacing: 12) {
+                PixelIcon(art: .pieChart, size: 24)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("지금은 다운로드 폴더만 보입니다")
+                        .font(Theme.bodyText)
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("디스크를 한 번 허용하면 홈과 이 Mac 전체를 봅니다.")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+
+                Spacer(minLength: 12)
+
+                Button("디스크 허용…") { grant(FolderAccess.wholeDisk) }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 8)
+            .background(R95.gray)
+            .retroRaised()
+            .buttonStyle(Retro95ButtonStyle())
+            Retro95Separator()
         }
     }
 
@@ -118,7 +167,10 @@ struct DiskMapView: View {
                     if !roots.isEmpty {
                         Section(group.title) {
                             ForEach(roots) { root in
-                                Button(root.label) { model.selectedRoot = root.url }
+                                Button(root.label) {
+                                    userPickedRoot = true
+                                    model.selectedRoot = root.url
+                                }
                             }
                         }
                     }
@@ -306,16 +358,19 @@ struct DiskMapView: View {
     /// 다시 읽는 것은 여기서 하지 않는다. 허락이 늘면 `grantedFolderCount`가 바뀌고
     /// `onChange`가 받아 제자리에서 다시 읽는다.
     private func unblock(_ node: DiskUsageNode) {
-        let grantable = FolderAccess.Grantable(folder: node.url,
-                                               label: node.name,
-                                               purpose: String(localized: "용량 확인"))
+        grant(FolderAccess.Grantable(folder: node.url,
+                                     label: node.name,
+                                     purpose: String(localized: "용량 확인")))
+    }
+
+    /// 열기 대화상자로 폴더 하나를 허락받는다. 막힌 폴더 풀기와 디스크 전체 허용이 같이 쓴다.
+    private func grant(_ grantable: FolderAccess.Grantable) {
         guard let picked = FolderPicker.ask(for: grantable) else { return }
         do {
             try app.grantFolderAccess(picked, as: grantable)
-        } catch let failure as FolderAccess.Failure {
-            grantFailure = failure.message
         } catch {
-            grantFailure = error.localizedDescription
+            // 던지는 타입이 `FolderAccess.Failure` 하나라 캐스팅할 것이 없다
+            grantFailure = error.message
         }
     }
 

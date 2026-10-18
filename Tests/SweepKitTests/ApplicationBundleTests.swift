@@ -335,7 +335,8 @@ struct ApplicationGrantableTests {
     @Test("기존 허락 대상이 그대로다")
     func existingGrantablesUnchanged() {
         let labels = FolderAccess.grantables.map(\.label)
-        #expect(labels.prefix(3) == ["~/Library", "~/.npm", "~/.expo"])
+        // 디스크 전체가 맨 위에 오고, 그 뒤 순서는 예전 그대로다
+        #expect(labels.prefix(4) == ["이 Mac", "~/Library", "~/.npm", "~/.expo"])
     }
 }
 

@@ -72,6 +72,20 @@ extension DiskMapRoot {
         var seenLabels = Set<String>()
         var result: [DiskMapRoot] = []
 
+        /// 샌드박스에서 읽을 수 있는가.
+        ///
+        /// Downloads는 전용 entitlement로 늘 열리고, 나머지는 자신이나 조상 폴더를
+        /// 사용자가 열어 줬을 때만 열린다. 디스크(`/`)를 열어 주면 전부 참이 되어
+        /// 비샌드박스와 같은 목록이 된다 — 그래서 샌드박스 전용 분기가 따로 없다.
+        /// 예전엔 "Downloads + 허락 폴더"만 올려서 디스크 맵이 Downloads만 보여 줬다.
+        let downloads = DownloadsFolder.url(in: home).standardizedFileURL
+        func readable(_ url: URL) -> Bool {
+            guard sandboxed else { return true }
+            let target = url.standardizedFileURL
+            if target == downloads { return true }
+            return granted.contains { target == $0.standardizedFileURL || target.isDescendant(of: $0) }
+        }
+
         /// 경로**와 라벨** 둘 다로 거른다.
         ///
         /// 임시 컨테이너는 `.../C`와 `.../T` 두 경로인데 둘 다 "앱 임시 폴더"로
@@ -80,23 +94,11 @@ extension DiskMapRoot {
         func add(_ url: URL, _ label: String, _ group: Group) {
             let path = url.standardizedFileURL.path
             guard !seenPaths.contains(path), !seenLabels.contains(label),
-                  exists(path)
+                  readable(url), exists(path)
             else { return }
             seenPaths.insert(path)
             seenLabels.insert(label)
             result.append(DiskMapRoot(url: url, label: label, group: group))
-        }
-
-        // 샌드박스에서 열 수 있는 곳은 Downloads와, 사용자가 열어 준 폴더뿐이다.
-        if sandboxed {
-            add(DownloadsFolder.url(in: home), "~/Downloads", .home)
-            // 허락받은 폴더를 그대로 시작점으로 둔다. 디스크 맵은 읽기 전용이고
-            // "용량이 어디 갔나"를 보는 화면이라, 지울 수 있는 범위보다 넓어도 된다 —
-            // 타일의 휴지통 버튼은 관문(`ProtectedPaths`)이 따로 잠근다.
-            for url in granted {
-                add(url, cleanupLabel(for: url, home: home), .cleanup)
-            }
-            return result
         }
 
         add(home, String(localized: "홈"), .whole)
@@ -112,7 +114,9 @@ extension DiskMapRoot {
         add(home.appending(path: "Applications"), "~/Applications", .apps)
 
         // 정리 화면과 같은 범위. 여기서 시작하면 "보이는 건 다 지울 수 있다"가 성립한다.
-        for url in ProtectedPaths.allowedRoots {
+        // 샌드박스에서는 사용자가 열어 준 폴더가 그 범위다 — 디스크 맵은 읽기 전용이라
+        // 지울 수 있는 범위보다 넓어도 된다. 타일의 휴지통 버튼은 관문(`ProtectedPaths`)이 잠근다.
+        for url in sandboxed ? granted : ProtectedPaths.allowedRoots {
             add(url, cleanupLabel(for: url, home: home), .cleanup)
         }
 

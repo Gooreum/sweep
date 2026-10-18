@@ -59,7 +59,17 @@ public enum FolderAccess {
     ///
     /// `~/Library`는 Finder에서 숨김이지만 `NSOpenPanel.directoryURL`로 지정하면
     /// 그 폴더가 선택된 채로 열려서, 사용자는 "허용"만 누르면 된다.
+    /// 디스크 전체. 디스크 맵이 "용량이 어디 갔나"를 홈·볼륨 단위로 보려면 이것 하나면 된다.
+    ///
+    /// DaisyDisk 같은 샌드박스 앱이 쓰는 길과 같다 — 열기 대화상자에서 디스크를 고른다.
+    /// 조상 검사(`isGranted`) 덕에 아래 폴더들도 함께 열린 것으로 판정된다.
+    /// 지울 수 있는 범위는 `ProtectedPaths`가 따로 잠그므로 이것으로 넓어지지 않는다.
+    public static let wholeDisk = Grantable(
+        folder: URL(filePath: "/"), label: String(localized: "이 Mac"),
+        purpose: String(localized: "디스크 맵 전체 보기 · 아래 폴더도 한 번에"))
+
     public static let grantables: [Grantable] = [
+        wholeDisk,
         .init(folder: inHome("Library"), label: "~/Library",
               purpose: String(localized: "시뮬레이터 · 앱 웹 캐시 · 브라우저 캐시 · 로그")),
         .init(folder: inHome(".npm"), label: "~/.npm",
