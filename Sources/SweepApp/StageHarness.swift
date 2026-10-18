@@ -218,12 +218,15 @@ struct StageHarness: View {
             -> DiskUsageNode {
             DiskUsageNode(url: preview.appending(path: name), size: size, children: kids)
         }
-        // 정리 범위 밖(보호됨)과 못 읽는 폴더도 섞는다. 한 상태만 보이면
-        // 배지가 실제로 갈라지는지 눈으로 확인할 수 없다.
+        // 내 문서(확인 필요)·계정 데이터(보호됨)·못 읽는 폴더도 섞는다. 한 상태만
+        // 보이면 배지가 실제로 세 갈래로 갈라지는지 눈으로 확인할 수 없다.
         let home = FileManager.default.homeDirectoryForCurrentUser
-        let outside = DiskUsageNode(
-            url: home.appending(path: "Documents/sweep-harness-preview/보호된폴더"),
+        let mine = DiskUsageNode(
+            url: home.appending(path: "Documents/sweep-harness-preview/내문서"),
             size: 2_147_483_648)
+        let protected = DiskUsageNode(
+            url: home.appending(path: "Library/Keychains/sweep-harness-preview/보호된폴더"),
+            size: 268_435_456)
         let locked = DiskUsageNode(
             url: home.appending(path: "Documents/sweep-harness-preview/잠긴폴더"),
             size: 0, isReadable: false)
@@ -231,9 +234,10 @@ struct StageHarness: View {
         let model = DiskMapModel()
         model.seed(DiskUsageNode(url: caches, size: 9_663_676_416, children: [
             child("Homebrew", 5_368_709_120, [child("downloads", 4_294_967_296)]),
-            outside,
+            mine,
             child("com.apple.dt.Xcode", 1_610_612_736),
             child("org.swift.swiftpm", 419_430_400),
+            protected,
             child("Google", 117_440_512),
             locked,
         ]))

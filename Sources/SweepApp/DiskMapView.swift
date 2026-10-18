@@ -75,7 +75,11 @@ struct DiskMapView: View {
         // 정리 화면과 달리 여기엔 안전도 배지도 기본 선택도 없다.
         // 무엇을 지우는지 경로와 크기로 다시 보여주고 확인을 받는다.
         .confirmationDialog(
-            "휴지통으로 이동할까요?",
+            // 확인 필요 항목은 제목부터 다르다 — 캐시를 지울 때와 내 문서를 지울 때가
+            // 같은 얼굴이면 배지를 세 갈래로 나눈 뜻이 없다.
+            pendingDelete.flatMap { model.verdict(for: $0) }?.level == .caution
+                ? Text("확인 필요 — 휴지통으로 이동할까요?")
+                : Text("휴지통으로 이동할까요?"),
             isPresented: Binding(get: { pendingDelete != nil },
                                  set: { if !$0 { pendingDelete = nil } }),
             presenting: pendingDelete
@@ -90,7 +94,9 @@ struct DiskMapView: View {
             // 줄바꿈으로 나누면 **뒷줄이 렌더되지 않는다** — 실측에서 경로만
             // 보이고 크기가 통째로 사라졌다. 한 줄로 잇는다.
             // 크기가 앞이다. "지울까?"에 답하려면 그 숫자가 먼저 필요하다.
-            Text("\(node.formattedSize) · \(node.url.path)")
+            // 그 뒤에 왜 그 판정인지 — 무엇이 사라지는지 — 를 같은 줄에 잇는다.
+            let line = "\(node.formattedSize) · \(node.url.path)"
+            Text(verbatim: model.verdict(for: node).map { "\(line) — \($0.reason)" } ?? line)
         }
         .alert("옮기지 못했습니다",
                isPresented: Binding(get: { model.removalFailure != nil },
@@ -315,6 +321,9 @@ struct DiskMapView: View {
                 .retroSunken()
             }
 
+            Retro95Separator()
+            verdictFooter
+
             blockedFooter
 
             // 전체 디스크 접근은 **한 번 켜면 끝나는 스위치**다. 앱 폴더마다 따로 묻는
@@ -324,6 +333,33 @@ struct DiskMapView: View {
                 FullDiskAccessBanner()
             }
         }
+    }
+
+    /// 가리키거나 고른 행이 왜 그 판정인지. 아무것도 없으면 세 갈래가 무슨 뜻인지.
+    ///
+    /// 툴팁에만 두면 마우스를 올리고 1초를 기다려야 보인다. 배지가 세 갈래인 이유를
+    /// 늘 보이는 자리에서 말한다.
+    private var verdictFooter: some View {
+        let target = model.tiles.first { $0.id == (hoveredNode ?? focusedNode) }
+        let verdict = target.flatMap { model.verdict(for: $0) }
+        return HStack(spacing: 8) {
+            if let target, let verdict {
+                Retro95StatusChip(title: verdict.title, icon: chipIcon(verdict.level), level: verdict.level)
+                Text(verbatim: "\(target.name) — \(verdict.reason)")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.textPrimary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            } else {
+                Text("지워도 됨: 캐시·로그처럼 다시 만들어지는 것 · 확인 필요: 내 파일·앱 데이터 · 보호됨: 시스템·계정 데이터")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.textSecondary)
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 28)
     }
 
     /// 보이는 것 중 못 읽는 것이 하나라도 있으면 나온다.
@@ -377,7 +413,7 @@ struct DiskMapView: View {
     private func row(_ node: DiskUsageNode, largest: Int64) -> some View {
         let ratio = node.barRatio(largest: largest)
         let isDrillable = !node.children.isEmpty
-        let veto = model.veto(for: node)
+        let verdict = model.verdict(for: node)
 
         let isFocused = focusedNode == node.id
         return HStack(spacing: 0) {
@@ -403,7 +439,7 @@ struct DiskMapView: View {
                 .frame(maxWidth: .infinity)
 
             HStack(spacing: DiskMapColumns.actionSpacing) {
-                statusBadge(node, veto: veto)
+                statusBadge(node, verdict: verdict)
                     .frame(width: DiskMapColumns.status)
                 Group {
                     if !node.isReadable {
@@ -418,10 +454,13 @@ struct DiskMapView: View {
                 iconButton(.folder, String(localized: "Finder에서 보기")) { ItemActions.reveal(node.url) }
                 iconButton(.documents, String(localized: "경로 복사")) { ItemActions.copyPath(node.url) }
                 // 왜 못 지우는지는 눌러 보고 알 일이 아니다. 사유를 미리 붙인다.
-                iconButton(.trash, veto?.message ?? String(localized: "휴지통으로 이동")) {
+                // 못 읽는 폴더는 안을 못 봤으니 "확인"할 수가 없다. 열어서 본 뒤에 지운다.
+                iconButton(.trash, !node.isReadable
+                           ? String(localized: "권한이 막혀 안을 볼 수 없습니다")
+                           : verdict?.veto?.message ?? String(localized: "휴지통으로 이동")) {
                     pendingDelete = node
                 }
-                .disabled(veto != nil)
+                .disabled(!node.isReadable || verdict?.allowsRemoval == false)
                 PixelIcon(art: .triangleRight, size: 16)
                     .opacity(isDrillable ? 1 : 0)
                     .frame(width: DiskMapColumns.disclosure)
@@ -446,7 +485,7 @@ struct DiskMapView: View {
             // 옆의 휴지통 아이콘과 **같은 조건**으로 잠근다. 예전엔 메뉴에만 검사가
             // 없어서, 아이콘은 비활성인데 메뉴에서는 눌리고 조용히 실패했다.
             Button("휴지통으로 이동", role: .destructive) { pendingDelete = node }
-                .disabled(veto != nil)
+                .disabled(!node.isReadable || verdict?.allowsRemoval == false)
         }
         .help(node.url.path)
     }
@@ -458,24 +497,27 @@ struct DiskMapView: View {
     }
 
     /// 못 읽는 상태를 먼저 표시해 보호 여부만 보고 정리 가능으로 오해하지 않게 한다.
+    ///
+    /// 나머지는 세 갈래다 — 지워도 됨(녹색, 다시 만들어진다) · 확인 필요(노랑, 내 파일·앱
+    /// 데이터) · 보호됨(빨강, 관문). 예전엔 "막히지 않음"을 회색 하나로 뭉뚱그렸는데,
+    /// 그러면 캐시와 여행 원본 영상이 같은 얼굴이라 뭘 믿고 눌러야 할지 몰랐다.
     @ViewBuilder
-    private func statusBadge(_ node: DiskUsageNode, veto: RemovalVeto?) -> some View {
+    private func statusBadge(_ node: DiskUsageNode, verdict: RemovalVerdict?) -> some View {
         if !node.isReadable {
             Retro95StatusChip(title: String(localized: "권한 없음"), icon: .warning, level: .caution)
                 .help("권한이 막혀 안을 볼 수 없습니다")
-        } else if let veto {
-            Retro95StatusChip(title: String(localized: "보호됨"), icon: .lock, level: .danger)
-                .help(veto.message)
-        } else {
-            // 막는 조건이 없다는 뜻이지 지워도 된다는 뜻이 아니다. SAFE와 같은 녹색을 쓰면
-            // 여행 원본 영상까지 안전한 것으로 읽힌다 — 색 없는 회색으로 둔다.
-            Text("이동 가능")
-                .font(R95.ui(10, bold: true))
-                .foregroundStyle(R95.black)
-                .padding(.horizontal, 6)
-                .frame(height: 20)
-                .background(R95.gray)
-                .retroBevel(.field)
+        } else if let verdict {
+            Retro95StatusChip(title: verdict.title, icon: chipIcon(verdict.level), level: verdict.level)
+                .help(verdict.reason)
+        }
+    }
+
+    /// 판정 색마다 짝이 되는 아이콘. 배지와 설명 줄이 같은 짝을 쓴다.
+    private func chipIcon(_ level: SafetyLevel) -> PixelArt {
+        switch level {
+        case .safe: .check
+        case .caution: .warning
+        case .danger: .lock
         }
     }
 

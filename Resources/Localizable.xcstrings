@@ -55,22 +55,6 @@
         }
       }
     },
-    "%@ · %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ · %2$@"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ · %2$@"
-          }
-        }
-      }
-    },
     "%@ · %@ — 설치한 앱과 설정이 사라집니다": {
       "localizations": {
         "en": {
@@ -1195,6 +1179,22 @@
         }
       }
     },
+    "Expo 캐시입니다. 빌드할 때 다시 받습니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expo cache. Re-downloaded on build."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expo 캐시입니다. 빌드할 때 다시 받습니다."
+          }
+        }
+      }
+    },
     "Finder에서 보기": {
       "localizations": {
         "en": {
@@ -1627,6 +1627,22 @@
         }
       }
     },
+    "npm 캐시입니다. 설치할 때 다시 받습니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "npm cache. Re-downloaded on install."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "npm 캐시입니다. 설치할 때 다시 받습니다."
+          }
+        }
+      }
+    },
     "npx 실행 캐시": {
       "localizations": {
         "en": {
@@ -1979,6 +1995,22 @@
         }
       }
     },
+    "내 파일입니다. 휴지통으로 가지만 비우면 되돌릴 수 없습니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your file. It goes to the Trash, but emptying it is final."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내 파일입니다. 휴지통으로 가지만 비우면 되돌릴 수 없습니다."
+          }
+        }
+      }
+    },
     "내려받은 파일 · 중복본": {
       "localizations": {
         "en": {
@@ -1991,6 +2023,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "내려받은 파일 · 중복본"
+          }
+        }
+      }
+    },
+    "내려받은 파일입니다. 다시 받을 수 있으면 지워도 됩니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A download. Fine to delete if you can get it again."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내려받은 파일입니다. 다시 받을 수 있으면 지워도 됩니다."
           }
         }
       }
@@ -2411,6 +2459,22 @@
         }
       }
     },
+    "로그 파일입니다. 다시 쌓입니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log files. They build up again."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그 파일입니다. 다시 쌓입니다."
+          }
+        }
+      }
+    },
     "루트 또는 홈 디렉토리는 삭제할 수 없습니다: %@": {
       "localizations": {
         "en": {
@@ -2785,6 +2849,22 @@
         }
       }
     },
+    "샌드박스 앱의 데이터입니다. 앱을 지웠다면 찌꺼기지만, 쓰는 앱이면 데이터가 사라집니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Data of a sandboxed app. Leftover if the app is gone, but a live app loses its data."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "샌드박스 앱의 데이터입니다. 앱을 지웠다면 찌꺼기지만, 쓰는 앱이면 데이터가 사라집니다."
+          }
+        }
+      }
+    },
     "선택 안 됨": {
       "localizations": {
         "en": {
@@ -2957,6 +3037,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "시뮬레이터 · 앱 웹 캐시 · 브라우저 캐시 · 로그"
+          }
+        }
+      }
+    },
+    "시뮬레이터 기기입니다. 안의 앱·데이터가 함께 사라집니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A simulator device. Its apps and data go with it."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시뮬레이터 기기입니다. 안의 앱·데이터가 함께 사라집니다."
           }
         }
       }
@@ -3249,6 +3345,22 @@
         }
       }
     },
+    "앱 데이터입니다. 지우면 그 앱의 설정·로그인·문서가 사라질 수 있습니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App data. Deleting it may remove that app's settings, logins and documents."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱 데이터입니다. 지우면 그 앱의 설정·로그인·문서가 사라질 수 있습니다."
+          }
+        }
+      }
+    },
     "앱 로그": {
       "localizations": {
         "en": {
@@ -3309,6 +3421,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "앱 임시 폴더"
+          }
+        }
+      }
+    },
+    "앱 캐시입니다. 앱이 필요하면 다시 만듭니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App cache. The app rebuilds it when needed."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱 캐시입니다. 앱이 필요하면 다시 만듭니다."
+          }
+        }
+      }
+    },
+    "앱·시스템 설정 데이터입니다. 무엇인지 확실할 때만 지우세요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App or system settings data. Delete only if you know what it is."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱·시스템 설정 데이터입니다. 무엇인지 확실할 때만 지우세요."
           }
         }
       }
@@ -3681,6 +3825,22 @@
         }
       }
     },
+    "응용 프로그램입니다. 지우면 앱이 사라집니다. 설정은 ~/Library에 남습니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An application. Deleting removes the app; its settings stay in ~/Library."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "응용 프로그램입니다. 지우면 앱이 사라집니다. 설정은 ~/Library에 남습니다."
+          }
+        }
+      }
+    },
     "이 Mac": {
       "localizations": {
         "en": {
@@ -3757,22 +3917,6 @@
         }
       }
     },
-    "이동 가능": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Movable"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "이동 가능"
-          }
-        }
-      }
-    },
     "이름": {
       "localizations": {
         "en": {
@@ -3833,6 +3977,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "임시 파일·빌드 산출물·개발 캐시를 찾아 디스크 공간을 확보합니다."
+          }
+        }
+      }
+    },
+    "임시 파일입니다. 재부팅하면 비워집니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temporary files. Cleared on reboot."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "임시 파일입니다. 재부팅하면 비워집니다."
           }
         }
       }
@@ -4285,6 +4445,38 @@
         }
       }
     },
+    "지워도 됨": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deletable"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지워도 됨"
+          }
+        }
+      }
+    },
+    "지워도 됨: 캐시·로그처럼 다시 만들어지는 것 · 확인 필요: 내 파일·앱 데이터 · 보호됨: 시스템·계정 데이터": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deletable: caches and logs that rebuild · Review: your files and app data · Protected: system and account data"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지워도 됨: 캐시·로그처럼 다시 만들어지는 것 · 확인 필요: 내 파일·앱 데이터 · 보호됨: 시스템·계정 데이터"
+          }
+        }
+      }
+    },
     "진행 중": {
       "localizations": {
         "en": {
@@ -4633,6 +4825,38 @@
         }
       }
     },
+    "홈 기본 폴더·계정 데이터라 삭제할 수 없습니다: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't delete a home folder or account data: %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "홈 기본 폴더·계정 데이터라 삭제할 수 없습니다: %@"
+          }
+        }
+      }
+    },
+    "홈 밖의 내 소유 항목입니다. 어떤 프로그램이 쓰는지 확인하고 지우세요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yours, but outside your home. Check which program uses it first."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "홈 밖의 내 소유 항목입니다. 어떤 프로그램이 쓰는지 확인하고 지우세요."
+          }
+        }
+      }
+    },
     "홈 안": {
       "localizations": {
         "en": {
@@ -4693,6 +4917,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "확인 필요"
+          }
+        }
+      }
+    },
+    "확인 필요 — 휴지통으로 이동할까요?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review — move to Trash?"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "확인 필요 — 휴지통으로 이동할까요?"
           }
         }
       }
