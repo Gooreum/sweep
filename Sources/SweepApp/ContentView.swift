@@ -77,7 +77,9 @@ private struct CommandBar: View {
     let app: AppModel
 
     var body: some View {
-        HStack(spacing: 10) {
+        // 세로 패딩 없이 `frame(height:)` 안에서 중심 정렬한다. 패딩을 두면 기본 베벨의
+        // 1px 테두리 때문에 검색 버튼만 반 픽셀 밀려 두 버튼의 중심이 어긋난다.
+        HStack(alignment: .center, spacing: 8) {
             // 주 동작. 12pt 회색 버튼이었을 때 사용자가 못 찾았다 — 아이콘과 굵은 글자로 키운다.
             // `CommandBar`는 `currentModel`이 있을 때만 그려지므로 `if let`은 안전망이다.
             if let model = app.currentModel {
@@ -88,14 +90,22 @@ private struct CommandBar: View {
             }
 
             // 한 번에 고르는 가장 흔한 경우. 메뉴로 접어 두면 두 번 눌러야 한다.
-            Button("안전 항목 선택") { app.currentModel?.apply(.safeOnly) }
-                .buttonStyle(Retro95ButtonStyle())
-                .disabled(app.currentModel?.items.isEmpty ?? true)
+            // 검색 버튼과 같은 높이·글자 크기로 나란히 선다. 보조 동작이라 굵기와
+            // 기본 베벨은 주지 않는다 — 둘 다 굵으면 어느 쪽이 주 동작인지 모른다.
+            Button { app.currentModel?.apply(.safeOnly) } label: {
+                HStack(spacing: 8) {
+                    PixelIcon(art: .check, size: 24)
+                    Text("안전 항목 선택")
+                        .font(R95.ui(14))
+                }
+                .frame(minHeight: ItemTableColumns.actionButtonHeight - 10)
+            }
+            .buttonStyle(Retro95ButtonStyle())
+            .disabled(app.currentModel?.items.isEmpty ?? true)
 
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 8)
-        .padding(.vertical, 6)
         .frame(height: 48)
         .background(R95.gray)
         .overlay(alignment: .bottom) { Retro95Separator() }
