@@ -157,6 +157,22 @@
         }
       }
     },
+    "%@ 외 %lld개": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ and %lld more"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 외 %2$lld개"
+          }
+        }
+      }
+    },
     "%@ 폴더를 골라 주세요. (고른 곳: %@)": {
       "localizations": {
         "en": {
@@ -1455,6 +1471,22 @@
         }
       }
     },
+    "Finder에서 휴지통을 비우면 Mac 암호를 묻고 지웁니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empty the Trash in Finder — it asks for your Mac password and deletes them."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finder에서 휴지통을 비우면 Mac 암호를 묻고 지웁니다."
+          }
+        }
+      }
+    },
     "Go 빌드 캐시": {
       "localizations": {
         "en": {
@@ -1903,6 +1935,22 @@
         }
       }
     },
+    "iCloud에만 있음 — 지우면 iCloud 공간만 비워집니다": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only in iCloud — deleting frees iCloud storage only"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud에만 있음 — 지우면 iCloud 공간만 비워집니다"
+          }
+        }
+      }
+    },
     "iOS 기기 백업": {
       "localizations": {
         "en": {
@@ -2203,6 +2251,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "고른 항목은 휴지통에서 바로 지워져 되돌릴 수 없습니다."
+          }
+        }
+      }
+    },
+    "관리자 소유 항목 %lld개(%@)는 Sweep이 지울 수 없습니다": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweep can't delete %lld administrator-owned item(s) (%@)"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "관리자 소유 항목 %1$lld개(%2$@)는 Sweep이 지울 수 없습니다"
           }
         }
       }

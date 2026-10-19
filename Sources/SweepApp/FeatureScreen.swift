@@ -22,6 +22,8 @@ struct FeatureScreen: View {
     @AppStorage("itemTable.columns") private var columns = ItemColumnLayout()
     /// 이름 열의 실제 폭을 구하려고 표 전체 폭을 잰다.
     @State private var tableWidth: CGFloat = 0
+    /// 휴지통에 남은 관리자 소유 항목. 스캔이 끝나거나 비운 뒤에 다시 센다.
+    @State private var adminLeftovers: [URL] = []
 
     var body: some View {
         VStack(spacing: 8) {
@@ -29,6 +31,10 @@ struct FeatureScreen: View {
             // 휴지통이 빈 것과 구분되지 않는다 — 화면 위에 이유를 먼저 둔다.
             if feature == .trash, FullDiskAccessBanner.isNeeded {
                 FullDiskAccessBanner(message: String(localized: "켜야 휴지통 안을 볼 수 있습니다. 꺼져 있으면 비어 있는 것처럼 보입니다."))
+            }
+
+            if feature == .trash, showsLeftovers, !adminLeftovers.isEmpty {
+                TrashLeftoverNotice(leftovers: adminLeftovers)
             }
 
             stage
@@ -41,6 +47,10 @@ struct FeatureScreen: View {
             }
         }
         .background(R95.gray)
+        .task(id: model.phase) {
+            guard feature == .trash, showsLeftovers else { return }
+            adminLeftovers = TrashScanner().adminOwnedLeftovers()
+        }
         .sheet(isPresented: $showsConfirm) {
             CleanupConfirmSheet(model: model, permanent: feature.removesPermanently) {
                 showsConfirm = false
@@ -48,6 +58,14 @@ struct FeatureScreen: View {
             } onCancel: {
                 showsConfirm = false
             }
+        }
+    }
+
+    /// 결과를 보거나 비운 직후에만. 시작·검색 중에는 아직 휴지통을 보지 않았다.
+    private var showsLeftovers: Bool {
+        switch model.phase {
+        case .results, .cleaned: true
+        default: false
         }
     }
 
