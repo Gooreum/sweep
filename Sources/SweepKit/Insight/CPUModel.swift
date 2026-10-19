@@ -24,6 +24,18 @@ public final class CPUModel {
     /// 상위 20개만 더하면 나머지 300개의 몫까지 "목록에 없음"으로 잘못 넘어간다.
     public private(set) var ownTotal: Double = 0
 
+    /// 목록에 없는 몫(root·다른 계정 프로세스)을 프로세스 행과 같은 단위로.
+    ///
+    /// 기계 전체 기준 차이(`load.used − ownTotal`)에 코어 수를 곱해 코어 하나 = 100으로
+    /// 바꾼다. 측정 시차로 차이가 음수가 될 수 있어 0에서 막는다. 커널 값이 없으면 nil.
+    public var unlistedPercent: Double? {
+        guard let load else { return nil }
+        return max(0, load.used - ownTotal) * Double(cores)
+    }
+
+    /// 표와 상위 목록이 그리는 줄. 읽은 프로세스 사이에 시스템 프로세스 합계가 끼어 있다.
+    public var rows: [CPURow] { CPURow.rows(usage: usage, unlisted: unlistedPercent) }
+
     /// 첫 두 샘플이 아직 모이지 않았다.
     ///
     /// **빈 목록과 다르다.** 빈 목록은 "아무도 CPU를 안 쓴다"이고 이것은

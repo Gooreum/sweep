@@ -223,4 +223,38 @@ struct CPUModelTests {
         #expect(model.usage.count == 1)
         #expect(model.ownTotal * 2 > shown)
     }
+
+    @Test("목록에 없는 몫은 기계 전체 차이에 코어 수를 곱한다")
+    func unlistedPercentUsesCoreUnits() async throws {
+        // 커널: 사용 50% (가짜 틱 30·20·50). 코어 4개.
+        // 프로세스 하나가 아주 조금만 써서 ownTotal은 50보다 훨씬 작다.
+        let model = CPUModel(
+            interval: .milliseconds(10), cores: 4,
+            sample: climbing(pids: [1], step: 1, counter: Counter()),
+            loadSample: climbingLoad(counter: Counter()))
+
+        let task = Task { await model.run() }
+        await waitForUsage(model)
+        task.cancel()
+
+        let unlisted = try #require(model.unlistedPercent)
+        #expect(abs(unlisted - (50 - model.ownTotal) * 4) < 0.0001)
+        // 표에는 합계 행이 실제로 들어 있다
+        #expect(model.rows.contains(.unlisted(percent: unlisted)))
+    }
+
+    @Test("목록 합이 커널 사용량보다 커도 음수가 되지 않는다")
+    func unlistedNeverNegative() async throws {
+        // 측정 시차로 내 프로세스 합이 커널 합계를 넘는 순간이 있다
+        let model = CPUModel(
+            interval: .milliseconds(10), cores: 1,
+            sample: climbing(pids: [1], step: 1_000_000_000, counter: Counter()),
+            loadSample: climbingLoad(counter: Counter()))
+
+        let task = Task { await model.run() }
+        await waitForUsage(model)
+        task.cancel()
+
+        #expect(try #require(model.unlistedPercent) == 0)
+    }
 }
