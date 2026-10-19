@@ -2043,6 +2043,22 @@
         }
       }
     },
+    "내림차순": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descending"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내림차순"
+          }
+        }
+      }
+    },
     "내용이 같은 파일을 찾아 한 벌만 남깁니다.": {
       "localizations": {
         "en": {
@@ -3601,6 +3617,22 @@
         }
       }
     },
+    "오름차순": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ascending"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오름차순"
+          }
+        }
+      }
+    },
     "옮기지 못했습니다": {
       "localizations": {
         "en": {
@@ -4105,6 +4137,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "전체 디스크 접근이 꺼져 있습니다"
+          }
+        }
+      }
+    },
+    "정렬": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정렬"
           }
         }
       }

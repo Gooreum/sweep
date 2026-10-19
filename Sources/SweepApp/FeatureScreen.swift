@@ -285,7 +285,9 @@ struct FeatureScreen: View {
 
                     VStack(spacing: 0) {
                         Retro95TableHeader(columns: ItemTableColumns.headers(
-                            layout: columns, showsDates: showsDates, onDrag: { column, delta in
+                            layout: columns, showsDates: showsDates,
+                            sort: model.sort, onSort: { model.toggleSort($0) },
+                            onDrag: { column, delta in
                                 let visible = ItemTableColumns.visible(showsDates: showsDates)
                                 let fixed = visible.reduce(ItemTableColumns.check + ItemTableColumns.icon) {
                                     $0 + CGFloat(columns.width($1))

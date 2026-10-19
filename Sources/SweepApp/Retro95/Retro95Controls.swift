@@ -215,23 +215,69 @@ struct Retro95TableHeader: View {
         var alignment: Alignment = .leading
         /// 있으면 이 열의 왼쪽 경계를 끌 수 있다. 오른쪽으로 끈 거리(+)를 조금씩 넘긴다.
         var onResizeLeadingEdge: (@MainActor (CGFloat) -> Void)? = nil
+        /// 있으면 칸을 눌러 이 열로 정렬한다.
+        var onSort: (@MainActor () -> Void)? = nil
+        /// 지금 이 열로 정렬 중이면 방향. true면 ▲(오름차순).
+        var sortAscending: Bool? = nil
     }
     let columns: [Column]
     var body: some View {
         HStack(spacing: 0) {
             ForEach(columns.indices, id: \.self) { index in
-                Text(columns[index].title).font(R95.ui(12, bold: true)).foregroundStyle(R95.black)
-                    .lineLimit(1).padding(.horizontal, 6)
-                    .frame(width: columns[index].width, height: R95.tableHeaderHeight, alignment: columns[index].alignment)
-                    .frame(maxWidth: columns[index].width == nil ? .infinity : nil, alignment: columns[index].alignment)
-                    .background(R95.gray).retroRaised()
+                cell(columns[index])
                     // 뒤에 오는 열이 위에 그려지므로 왼쪽 열의 끝까지 손잡이가 덮는다.
+                    // 손잡이가 버튼보다 위라 경계를 끌어도 정렬이 바뀌지 않는다.
                     .overlay(alignment: .leading) {
                         if let onResize = columns[index].onResizeLeadingEdge {
                             ColumnResizeHandle(onDrag: onResize).offset(x: -4)
                         }
                     }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func cell(_ column: Column) -> some View {
+        if let onSort = column.onSort {
+            Button(action: onSort) {
+                // 누르는 동안은 ButtonStyle이 눌린 베벨을 그린다.
+                EmptyView()
+            }
+            .buttonStyle(HeaderCellStyle(column: column))
+            .accessibilityLabel(column.title)
+            .accessibilityHint(Text("정렬"))
+        } else {
+            HeaderCellLabel(column: column, isPressed: false)
+        }
+    }
+
+    /// 헤더 칸 전체가 누르는 면이다. 글자만 누를 수 있으면 넓은 칸에서 헛누르게 된다.
+    private struct HeaderCellStyle: ButtonStyle {
+        let column: Column
+        func makeBody(configuration: Configuration) -> some View {
+            HeaderCellLabel(column: column, isPressed: configuration.isPressed)
+                .contentShape(Rectangle())
+        }
+    }
+
+    private struct HeaderCellLabel: View {
+        let column: Column
+        let isPressed: Bool
+        var body: some View {
+            HStack(spacing: 2) {
+                Text(column.title).font(R95.ui(12, bold: true)).foregroundStyle(R95.black)
+                    .lineLimit(1)
+                if let ascending = column.sortAscending {
+                    PixelIcon(art: ascending ? .triangleUp : .triangleDown, size: 16)
+                        .accessibilityLabel(ascending ? Text("오름차순") : Text("내림차순"))
+                }
+            }
+            .padding(.horizontal, 6)
+            .offset(x: isPressed ? 1 : 0, y: isPressed ? 1 : 0)
+            .frame(width: column.width, height: R95.tableHeaderHeight, alignment: column.alignment)
+            .frame(maxWidth: column.width == nil ? .infinity : nil, alignment: column.alignment)
+            .background(R95.gray)
+            .retroBevel(isPressed ? .pressed : .raised)
         }
     }
 }

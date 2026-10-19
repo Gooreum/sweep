@@ -63,21 +63,30 @@ enum ItemTableColumns {
     }
 
     /// 폭은 `layout`에서 받는다. 경계를 끌면 `onDrag`가 어느 열의 왼쪽 경계인지와 거리를 받는다.
+    /// 칸을 누르면 `onSort`가 그 열의 정렬 키를 받는다. 지금 정렬 열에는 ▲/▼가 붙는다.
     static func headers(layout: ItemColumnLayout, showsDates: Bool,
+                        sort: ItemSort,
+                        onSort: @escaping @MainActor (ItemSort.Key) -> Void,
                         onDrag: @escaping @MainActor (ItemColumnLayout.Column, CGFloat) -> Void)
         -> [Retro95TableHeader.Column] {
         func width(_ column: ItemColumnLayout.Column) -> CGFloat { CGFloat(layout.width(column)) }
+        func arrow(_ key: ItemSort.Key) -> Bool? { sort.key == key ? sort.ascending : nil }
         return [.init(title: "", width: check),
                 .init(title: "", width: icon),
-                .init(title: String(localized: "이름")),
+                .init(title: String(localized: "이름"),
+                      onSort: { onSort(.name) }, sortAscending: arrow(.name)),
                 .init(title: String(localized: "설명"), width: width(.detail),
-                      onResizeLeadingEdge: { onDrag(.detail, $0) })]
+                      onResizeLeadingEdge: { onDrag(.detail, $0) },
+                      onSort: { onSort(.detail) }, sortAscending: arrow(.detail))]
         + (showsDates ? [.init(title: String(localized: "날짜"), width: width(.dates),
-                               onResizeLeadingEdge: { onDrag(.dates, $0) })] : [])
+                               onResizeLeadingEdge: { onDrag(.dates, $0) },
+                               onSort: { onSort(.dates) }, sortAscending: arrow(.dates))] : [])
         + [.init(title: String(localized: "크기"), width: width(.size), alignment: .trailing,
-                 onResizeLeadingEdge: { onDrag(.size, $0) }),
+                 onResizeLeadingEdge: { onDrag(.size, $0) },
+                 onSort: { onSort(.size) }, sortAscending: arrow(.size)),
            .init(title: String(localized: "안전도"), width: width(.safety), alignment: .center,
-                 onResizeLeadingEdge: { onDrag(.safety, $0) })]
+                 onResizeLeadingEdge: { onDrag(.safety, $0) },
+                 onSort: { onSort(.safety) }, sortAscending: arrow(.safety))]
     }
 }
 

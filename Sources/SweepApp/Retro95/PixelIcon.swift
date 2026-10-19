@@ -459,6 +459,26 @@ extension PixelArt {
         "................",
     ], palette: retroPalette)
 
+    /// `triangleDown`을 위아래로 뒤집은 것. 표 헤더의 오름차순 표시.
+    static let triangleUp = PixelArt(rows: [
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+        ".......k........",
+        "......kwk.......",
+        ".....kwgdk......",
+        "....kwgggdk.....",
+        "...kkkkkkkkk....",
+        "................",
+        "................",
+        "................",
+        "................",
+        "................",
+    ], palette: retroPalette)
+
     static let triangleDown = PixelArt(rows: [
         "................",
         "................",
@@ -540,6 +560,7 @@ struct PixelIconGallery: View {
         ("check", .check),
         ("triangleRight", .triangleRight),
         ("triangleDown", .triangleDown),
+        ("triangleUp", .triangleUp),
     ]
 
     var body: some View {
