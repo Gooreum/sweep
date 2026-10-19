@@ -2015,6 +2015,22 @@
         }
       }
     },
+    "kernel_task·WindowServer 등 목록 밖 합계": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kernel_task, WindowServer & other unlisted (total)"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kernel_task·WindowServer 등 목록 밖 합계"
+          }
+        }
+      }
+    },
     "node-gyp 캐시": {
       "localizations": {
         "en": {
@@ -3157,22 +3173,6 @@
         }
       }
     },
-    "목록에 없는 시스템·다른 계정 프로세스: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "System and other-account processes not listed: %@"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "목록에 없는 시스템·다른 계정 프로세스: %@"
-          }
-        }
-      }
-    },
     "묵은 캐시": {
       "localizations": {
         "en": {
@@ -3793,6 +3793,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "시스템"
+          }
+        }
+      }
+    },
+    "시스템 계정 프로세스와 잠깐 돌고 끝난 프로세스 몫입니다. App Store 앱은 하나씩 읽을 수 없습니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System-account processes and short-lived ones that already exited. An App Store app can't read them one by one."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템 계정 프로세스와 잠깐 돌고 끝난 프로세스 몫입니다. App Store 앱은 하나씩 읽을 수 없습니다."
           }
         }
       }

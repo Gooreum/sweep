@@ -245,10 +245,12 @@ struct CPUModelTests {
 
     @Test("목록 합이 커널 사용량보다 커도 음수가 되지 않는다")
     func unlistedNeverNegative() async throws {
-        // 측정 시차로 내 프로세스 합이 커널 합계를 넘는 순간이 있다
+        // 측정 시차로 내 프로세스 합이 커널 합계를 넘는 순간이 있다.
+        // 한 바퀴에 1000초치를 쓴다고 넣는다 — 기계가 바빠 구간이 몇 초로 늘어도
+        // 프로세스 합이 커널 사용량(50%)을 확실히 넘는다.
         let model = CPUModel(
             interval: .milliseconds(10), cores: 1,
-            sample: climbing(pids: [1], step: 1_000_000_000, counter: Counter()),
+            sample: climbing(pids: [1], step: 1_000_000_000_000, counter: Counter()),
             loadSample: climbingLoad(counter: Counter()))
 
         let task = Task { await model.run() }

@@ -8,7 +8,11 @@ import Foundation
 /// 것"으로 읽혀서, 활성 상태 보기와 같은 단위의 한 줄로 목록에 넣는다.
 public enum CPURow: Sendable, Equatable, Identifiable {
     case process(ProcessUsage)
-    /// root·다른 계정 프로세스 합계. 프로세스 행과 같이 코어 하나 = 100 단위다.
+    /// 목록 밖 합계. 프로세스 행과 같이 코어 하나 = 100 단위다.
+    ///
+    /// root·시스템 계정 프로세스(kernel_task, WindowServer)와, 두 샘플 사이에 떴다가
+    /// 끝나 기준선이 없는 짧은 프로세스(빌드 중 clang 등)가 섞여 있다. 커널 합계에서
+    /// 읽은 프로세스 합을 뺀 값이라 둘을 가를 수 없다.
     case unlisted(percent: Double)
 
     public var id: String {

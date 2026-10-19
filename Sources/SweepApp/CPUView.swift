@@ -84,8 +84,8 @@ struct CPUView: View {
                         // 이 목록만 스크롤시켜 높이를 창 안에 가둔다.
                         ScrollView {
                             VStack(spacing: 8) {
-                                ForEach(model.usage.prefix(6)) { usage in
-                                    topRow(usage)
+                                ForEach(model.rows.prefix(6)) { row in
+                                    topRow(row)
                                 }
                             }
                         }
@@ -116,14 +116,6 @@ struct CPUView: View {
                 loadRow(String(localized: "시스템"), load.system, fill: R95.navy)
                 // 유휴는 쓰이지 않은 몫이라 회색으로 물러나게 한다.
                 loadRow(String(localized: "유휴"), load.idle, fill: R95.shadow)
-                // 기계는 바쁜데 목록 합이 작으면 앱이 틀린 것처럼 보인다. 차이를 이름 붙여 말한다.
-                let hidden = load.used - model.ownTotal
-                if hidden >= 0.5 {
-                    Text("목록에 없는 시스템·다른 계정 프로세스: \(String(format: "%.1f%%", hidden))")
-                        .font(R95.ui(11))
-                        .foregroundStyle(R95.deep)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
             }
         } else {
             // 준비 중이거나 커널 값을 못 읽었다. 프로세스 합으로 지어내지 않는다 —
@@ -151,18 +143,30 @@ struct CPUView: View {
         }
     }
 
-    private func topRow(_ usage: ProcessUsage) -> some View {
+    private func topRow(_ row: CPURow) -> some View {
         VStack(spacing: 3) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(usage.name).font(R95.ui(12, bold: true))
-                    .lineLimit(1).truncationMode(.middle)
-                Text(verbatim: usage.formattedPID)
-                    .font(R95.mono(9)).foregroundStyle(R95.deep)
+                Text(name(of: row)).font(R95.ui(12, bold: true))
+                    .lineLimit(1).truncationMode(.tail)
+                if case .process(let usage) = row {
+                    Text(verbatim: usage.formattedPID)
+                        .font(R95.mono(9)).foregroundStyle(R95.deep)
+                }
                 Spacer(minLength: 0)
-                Text(usage.formattedPercent).font(R95.mono(12)).foregroundStyle(R95.navy)
+                Text(row.formattedPercent).font(R95.mono(12)).foregroundStyle(R95.navy)
             }
             // 막대 끝이 코어 1개다. 여러 코어를 쓰면 막대는 꽉 차고 숫자가 100을 넘는다.
-            Retro95ProgressBar(fraction: min(1, usage.percent / 100), height: 14)
+            Retro95ProgressBar(fraction: min(1, row.percent / 100), height: 14)
+        }
+    }
+
+    private func name(of row: CPURow) -> String {
+        switch row {
+        case .process(let usage): usage.name
+        // 활성 상태 보기에서 가장 크게 보이는 두 이름을 앞에 둬야 "kernel_task가 없다"로
+        // 읽히지 않는다. 다만 이 줄엔 잠깐 돌고 끝난 프로세스 몫도 섞여 있어(실측: 빌드 중
+        // 기계 787% 중 top도 약 390%를 어느 행에도 못 붙였다) "합계"라고 밝힌다.
+        case .unlisted: String(localized: "kernel_task·WindowServer 등 목록 밖 합계")
         }
     }
 
@@ -184,16 +188,16 @@ struct CPUView: View {
         if model.isWarmingUp {
             placeholder(String(localized: "측정 중…"),
                         detail: String(localized: "두 번 재야 사용률이 나옵니다."))
-        } else if model.usage.isEmpty {
+        } else if model.rows.isEmpty {
             placeholder(String(localized: "지금 CPU를 쓰는 프로세스가 없습니다."),
                         detail: String(localized: "직전 구간 동안 아무것도 계산하지 않았습니다."))
         } else {
             // 주기적 갱신이 NSTableView 대리자로 재진입하지 않도록 List 대신 스크롤 뷰를 쓴다.
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    ForEach(model.usage) { usage in
-                        row(usage)
-                        if usage.id != model.usage.last?.id {
+                    ForEach(model.rows) { item in
+                        row(item)
+                        if item.id != model.rows.last?.id {
                             Rectangle().fill(R95.light).frame(height: 1)
                         }
                     }
@@ -203,29 +207,30 @@ struct CPUView: View {
         }
     }
 
-    private func row(_ usage: ProcessUsage) -> some View {
+    private func row(_ item: CPURow) -> some View {
         HStack(spacing: 0) {
-            Text(usage.formattedPercent)
+            Text(item.formattedPercent)
                 .font(R95.mono(12)).foregroundStyle(R95.navy)
                 .padding(.horizontal, 6)
                 .frame(width: Columns.percent, alignment: .trailing)
             VStack(alignment: .leading, spacing: 2) {
-                Text(usage.name).font(R95.ui(12, bold: true))
+                Text(name(of: item)).font(R95.ui(12, bold: true))
                     .foregroundStyle(R95.black)
                     .lineLimit(1).truncationMode(.middle)
-                if let path = usage.displayPath {
-                    Text(path).font(R95.ui(10)).foregroundStyle(R95.deep)
+                if let detail = detail(of: item) {
+                    Text(detail).font(R95.ui(10)).foregroundStyle(R95.deep)
                         .lineLimit(1).truncationMode(.middle)
                 }
             }
             .padding(.horizontal, 6)
             .frame(maxWidth: .infinity, alignment: .leading)
             // 열 머리가 이미 PID라 "pid " 접두어를 빼야 좁은 칸에서 줄이 꺾이지 않는다.
-            Text(verbatim: "\(usage.pid)").font(R95.mono(10)).foregroundStyle(R95.deep)
+            // 합계 행은 여러 프로세스라 pid가 없다.
+            Text(verbatim: item.pidText).font(R95.mono(10)).foregroundStyle(R95.deep)
                 .padding(.horizontal, 6)
                 .frame(width: Columns.pid, alignment: .trailing)
             HStack(spacing: 4) {
-                if let path = usage.executablePath {
+                if case .process(let usage) = item, let path = usage.executablePath {
                     let url = URL(filePath: path)
                     iconButton(.folder, String(localized: "Finder에서 보기")) { ItemActions.reveal(url) }
                     iconButton(.documents, String(localized: "경로 복사")) { ItemActions.copyPath(url) }
@@ -234,6 +239,14 @@ struct CPUView: View {
             .frame(width: Columns.actions)
         }
         .frame(minHeight: R95.tableRowHeight)
+    }
+
+    private func detail(of row: CPURow) -> String? {
+        switch row {
+        case .process(let usage): usage.displayPath
+        case .unlisted:
+            String(localized: "시스템 계정 프로세스와 잠깐 돌고 끝난 프로세스 몫입니다. App Store 앱은 하나씩 읽을 수 없습니다.")
+        }
     }
 
     /// 활성 상태 보기를 연다. **샌드박스에서도 된다** — 실측으로 확인했다.
@@ -262,5 +275,14 @@ struct CPUView: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+private extension CPURow {
+    var pidText: String {
+        switch self {
+        case .process(let usage): "\(usage.pid)"
+        case .unlisted: "—"
+        }
     }
 }
