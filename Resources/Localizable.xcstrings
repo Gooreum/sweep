@@ -667,6 +667,34 @@
         }
       }
     },
+    "%lld개월 전 백업": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Backed up %lld month ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Backed up %lld months ago"
+                }
+              }
+            }
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개월 전 백업"
+          }
+        }
+      }
+    },
     "%lld개월 전 사용": {
       "localizations": {
         "en": {
@@ -719,6 +747,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld개월 전에 받았습니다"
+          }
+        }
+      }
+    },
+    "%lld개월 전에 수정했습니다": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Modified %lld month ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Modified %lld months ago"
+                }
+              }
+            }
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개월 전에 수정했습니다"
           }
         }
       }
@@ -851,6 +907,34 @@
         }
       }
     },
+    "%lld일 전 백업": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Backed up %lld day ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Backed up %lld days ago"
+                }
+              }
+            }
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld일 전 백업"
+          }
+        }
+      }
+    },
     "%lld일 전 사용": {
       "localizations": {
         "en": {
@@ -907,6 +991,34 @@
         }
       }
     },
+    "%lld일 전에 수정했습니다": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Modified %lld day ago"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Modified %lld days ago"
+                }
+              }
+            }
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld일 전에 수정했습니다"
+          }
+        }
+      }
+    },
     "%lld초": {
       "localizations": {
         "en": {
@@ -951,6 +1063,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bazelisk 캐시"
+          }
+        }
+      }
+    },
+    "Cargo 레지스트리 캐시": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargo registry cache"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargo 레지스트리 캐시"
           }
         }
       }
@@ -1227,6 +1355,22 @@
         }
       }
     },
+    "Gradle 캐시": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gradle cache"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gradle 캐시"
+          }
+        }
+      }
+    },
     "Homebrew 내려받기 캐시": {
       "localizations": {
         "en": {
@@ -1259,6 +1403,22 @@
         }
       }
     },
+    "Library 안은 추가할 수 없습니다. 앱 데이터라 정크 검사가 따로 봅니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can't add folders inside Library. That's app data, and the junk scan checks it separately."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Library 안은 추가할 수 없습니다. 앱 데이터라 정크 검사가 따로 봅니다."
+          }
+        }
+      }
+    },
     "Mac 전체를 한 번에 훑습니다": {
       "localizations": {
         "en": {
@@ -1287,6 +1447,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mac 전체를 훑는 중…"
+          }
+        }
+      }
+    },
+    "Maven 저장소 캐시": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maven repository cache"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maven 저장소 캐시"
           }
         }
       }
@@ -1595,6 +1771,22 @@
         }
       }
     },
+    "iOS 기기 백업": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS device backup"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOS 기기 백업"
+          }
+        }
+      }
+    },
     "node-gyp 캐시": {
       "localizations": {
         "en": {
@@ -1719,6 +1911,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "uv 패키지 캐시"
+          }
+        }
+      }
+    },
+    "~ 홈 폴더": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~ Home folders"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~ 홈 폴더"
           }
         }
       }
@@ -1927,6 +2135,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "권한이 막힌 폴더가 있어요"
+          }
+        }
+      }
+    },
+    "기기 백업": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Device backups"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기기 백업"
           }
         }
       }
@@ -2593,6 +2817,38 @@
         }
       }
     },
+    "메일 첨부 사본": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mail attachment copies"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "메일 첨부 사본"
+          }
+        }
+      }
+    },
+    "메일에서 다시 열면 생깁니다": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comes back when you open the attachment in Mail"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "메일에서 다시 열면 생깁니다"
+          }
+        }
+      }
+    },
     "묵은 캐시": {
       "localizations": {
         "en": {
@@ -2705,6 +2961,22 @@
         }
       }
     },
+    "비우면 되돌릴 수 없습니다": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emptying this can't be undone"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "비우면 되돌릴 수 없습니다"
+          }
+        }
+      }
+    },
     "비율 막대": {
       "localizations": {
         "en": {
@@ -2733,6 +3005,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "빌드하면 다시 생성됩니다"
+          }
+        }
+      }
+    },
+    "빼기": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빼기"
           }
         }
       }
@@ -3133,6 +3421,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "시스템 임시 파일"
+          }
+        }
+      }
+    },
+    "시스템 폴더는 추가할 수 없습니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can't add system folders."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템 폴더는 추가할 수 없습니다."
           }
         }
       }
@@ -3585,6 +3889,22 @@
         }
       }
     },
+    "오늘 백업": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backed up today"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘 백업"
+          }
+        }
+      }
+    },
     "오늘 사용": {
       "localizations": {
         "en": {
@@ -3597,6 +3917,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘 사용"
+          }
+        }
+      }
+    },
+    "오늘 수정했습니다": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modified today"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘 수정했습니다"
           }
         }
       }
@@ -3677,6 +4013,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "완료"
+          }
+        }
+      }
+    },
+    "외장 디스크 같은 다른 폴더에서도 큰 파일·중복 파일을 찾습니다": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also look for large files and duplicates in other folders, like external drives"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "외장 디스크 같은 다른 폴더에서도 큰 파일·중복 파일을 찾습니다"
           }
         }
       }
@@ -3933,6 +4285,22 @@
         }
       }
     },
+    "이 폴더는 추가할 수 없습니다": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This folder can't be added"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 폴더는 추가할 수 없습니다"
+          }
+        }
+      }
+    },
     "이름": {
       "localizations": {
         "en": {
@@ -3945,6 +4313,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "이름"
+          }
+        }
+      }
+    },
+    "이미 보고 있는 폴더입니다: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweep already looks in this folder: %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이미 보고 있는 폴더입니다: %@"
           }
         }
       }
@@ -3981,18 +4365,18 @@
         }
       }
     },
-    "임시 파일·빌드 산출물·개발 캐시를 찾아 디스크 공간을 확보합니다.": {
+    "임시 파일·빌드 산출물·개발 캐시·휴지통·기기 백업을 찾아 디스크 공간을 확보합니다.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finds temporary files, build products and developer caches to free up disk space."
+            "value": "Finds temporary files, build products, developer caches, Trash, and device backups to free up disk space."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "임시 파일·빌드 산출물·개발 캐시를 찾아 디스크 공간을 확보합니다."
+            "value": "임시 파일·빌드 산출물·개발 캐시·휴지통·기기 백업을 찾아 디스크 공간을 확보합니다."
           }
         }
       }
@@ -4557,6 +4941,38 @@
         }
       }
     },
+    "추가": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "추가"
+          }
+        }
+      }
+    },
+    "추가…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "추가…"
+          }
+        }
+      }
+    },
     "취소": {
       "localizations": {
         "en": {
@@ -4637,6 +5053,102 @@
         }
       }
     },
+    "큰 파일 · 중복 파일": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large files · Duplicates"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "큰 파일 · 중복 파일"
+          }
+        }
+      }
+    },
+    "큰 파일 · 중복 파일 · 직접 추가함": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large files · Duplicates · Added by you"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "큰 파일 · 중복 파일 · 직접 추가함"
+          }
+        }
+      }
+    },
+    "큰 파일 · 중복 파일 · 휴지통 · 개발 도구 캐시": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large files · Duplicates · Trash · Developer tool caches"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "큰 파일 · 중복 파일 · 휴지통 · 개발 도구 캐시"
+          }
+        }
+      }
+    },
+    "큰 파일 · 중복 파일 — %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large files · Duplicates — %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "큰 파일 · 중복 파일 — %@"
+          }
+        }
+      }
+    },
+    "큰 파일 · 중복 파일 — %@ 외 %lld곳": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Large files · Duplicates — %1$@ and %2$lld more"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "큰 파일 · 중복 파일 — %@ 외 %lld곳"
+          }
+        }
+      }
+    },
+    "큰 파일·중복 파일을 찾을 폴더를 고르세요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a folder to search for large files and duplicates."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "큰 파일·중복 파일을 찾을 폴더를 고르세요."
+          }
+        }
+      }
+    },
     "테스트용 시뮬레이터 기기입니다": {
       "localizations": {
         "en": {
@@ -4681,6 +5193,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "폴더 접근 권한을 저장하지 못했습니다: %@"
+          }
+        }
+      }
+    },
+    "폴더 추가": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Folder"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "폴더 추가"
           }
         }
       }
@@ -4825,22 +5353,6 @@
         }
       }
     },
-    "허용된 범위 안에서 유난히 큰 파일을 찾습니다.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finds unusually large files within the allowed locations."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "허용된 범위 안에서 유난히 큰 파일을 찾습니다."
-          }
-        }
-      }
-    },
     "허용됨": {
       "localizations": {
         "en": {
@@ -4917,6 +5429,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "홈 안"
+          }
+        }
+      }
+    },
+    "홈 폴더나 그 위는 추가할 수 없습니다. 홈 아래 보이는 폴더는 이미 모두 봅니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can't add your home folder or anything above it. Sweep already looks in every visible folder in your home."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "홈 폴더나 그 위는 추가할 수 없습니다. 홈 아래 보이는 폴더는 이미 모두 봅니다."
+          }
+        }
+      }
+    },
+    "홈 폴더와 추가한 폴더에서 유난히 큰 파일을 찾습니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finds unusually large files in your home folders and the folders you add."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "홈 폴더와 추가한 폴더에서 유난히 큰 파일을 찾습니다."
           }
         }
       }
@@ -5061,6 +5605,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "훑는 중"
+          }
+        }
+      }
+    },
+    "휴지통": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trash"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통"
+          }
+        }
+      }
+    },
+    "휴지통 — 비우면 되돌릴 수 없습니다": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trash — emptying it can't be undone"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통 — 비우면 되돌릴 수 없습니다"
           }
         }
       }

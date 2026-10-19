@@ -24,6 +24,9 @@ struct SmartScanView: View {
     /// 틀린 폴더를 골랐을 때 알려줄 말. nil이면 닫혀 있다.
     @State private var grantFailure: String?
 
+    /// 추가할 수 없는 폴더를 골랐을 때 알려줄 말. 허락 실패와 제목이 달라 따로 둔다.
+    @State private var addFailure: String?
+
     /// 보는 곳마다 지금 읽을 수 있는지. 줄마다 디스크를 두드리지 않도록 한 번에 만든다.
     ///
     /// 권한은 실행 중에 막히거나 풀린다 — TCC 프롬프트를 거부하거나, 시스템 설정에서
@@ -59,6 +62,7 @@ struct SmartScanView: View {
         .foregroundStyle(R95.black)
         // 폴더를 새로 허락하면 "보는 곳" 목록이 늘고, 읽기 상태도 달라진다.
         .onChange(of: app.grantedFolderCount) { refreshReadability() }
+        .onChange(of: app.scanFolderCount) { refreshReadability() }
     }
 
 
@@ -189,6 +193,8 @@ struct SmartScanView: View {
 
                         if blocked {
                             Button("열기…") { unblock(scope) }
+                        } else if scope.isCustom {
+                            Button("빼기") { app.removeScanFolder(scope.url) }
                         }
                     }
                     .padding(.horizontal, 8)
@@ -199,6 +205,7 @@ struct SmartScanView: View {
                     }
                 }
 
+                addFolderRow
                 folderAccessRows
                 blockedFooter
 
@@ -221,6 +228,48 @@ struct SmartScanView: View {
             Button("확인") { grantFailure = nil }
         } message: {
             Text(grantFailure ?? "")
+        }
+        .alert("이 폴더는 추가할 수 없습니다",
+               isPresented: Binding(get: { addFailure != nil },
+                                    set: { if !$0 { addFailure = nil } })) {
+            Button("확인") { addFailure = nil }
+        } message: {
+            Text(addFailure ?? "")
+        }
+    }
+
+    /// 큰 파일·중복 파일을 찾을 폴더를 더하는 줄. 홈 아래 보이는 폴더는 이미 다 보므로
+    /// 외장 디스크처럼 홈 밖을 더하는 입구다 — 샌드박스에서는 홈 안 폴더를 여는 길도 된다.
+    private var addFolderRow: some View {
+        VStack(spacing: 0) {
+            Divider().overlay(Theme.border)
+
+            HStack(spacing: 12) {
+                PixelIcon(art: .folder, size: 16)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("폴더 추가")
+                        .font(Theme.bodyText)
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("외장 디스크 같은 다른 폴더에서도 큰 파일·중복 파일을 찾습니다")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                Spacer(minLength: 12)
+
+                Button("추가…") { addFolder() }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 8)
+        }
+    }
+
+    private func addFolder() {
+        guard let picked = FolderPicker.askAnyFolder() else { return }
+        do {
+            try app.addScanFolder(picked)
+        } catch {
+            addFailure = error.message
         }
     }
 
@@ -301,7 +350,8 @@ struct SmartScanView: View {
     /// TCC 거부는 "앱이 알아서 여는 것"을 막는 것이라, 사용자가 명시적으로 고른
     /// 폴더는 보안 범위 접근이 따로 부여된다. 그것으로도 안 풀리면 시스템 설정이 남는다.
     private func unblock(_ scope: CleanupScope) {
-        let grantable = FolderAccess.Grantable(folder: scope.url,
+        // 홈 묶음 줄은 홈 허락과 같은 것이다. 같은 키로 저장해야 다음 실행에 복원된다.
+        let grantable = scope.url.path == Sandbox.userHome.path ? FolderAccess.home : FolderAccess.Grantable(folder: scope.url,
                                                label: scope.label,
                                                purpose: scope.detail.isEmpty
                                                    ? String(localized: "정리 대상") : scope.detail)
