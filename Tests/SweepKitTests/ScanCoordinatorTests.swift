@@ -123,7 +123,8 @@ struct ScanCoordinatorTests {
             // 분류마다 범위가 다르다 — 큰 파일·중복 파일은 사용자 폴더까지 연다.
             #expect(ProtectedPaths.isRemovable(item.url, scope: item.category.removalScope),
                     "관문 미통과: \(item.url.path)")
-            #expect(item.size > 0)
+            // 휴지통만 크기 0을 허용한다 — iCloud에만 있는 항목이다.
+            #expect(item.size > 0 || item.category == .trash, "크기 0: \(item.url.path)")
         }
     }
 

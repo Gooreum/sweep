@@ -13,11 +13,18 @@ public struct TrashScanner: CleanupScanner {
 
     private let home: URL
     private let volumes: URL
+    private let isDataless: @Sendable (URL) -> Bool
 
-    /// `volumes`는 테스트가 갈아끼운다 — 진짜 외장 디스크를 읽으면 안 된다.
+    /// `volumes`·`isDataless`는 테스트가 갈아끼운다 — 진짜 외장 디스크를 읽으면 안 되고,
+    /// iCloud 자리표시자는 테스트에서 만들 수 없다.
     public init(home: URL = Sandbox.userHome, volumes: URL = URL(filePath: "/Volumes")) {
+        self.init(home: home, volumes: volumes, isDataless: UserFileWalker.isDataless)
+    }
+
+    init(home: URL, volumes: URL, isDataless: @escaping @Sendable (URL) -> Bool) {
         self.home = home
         self.volumes = volumes
+        self.isDataless = isDataless
     }
 
     /// 바로 아래 항목마다 크기를 잰다. 휴지통이 크면 몇 초까지 걸린다.
@@ -39,14 +46,18 @@ public struct TrashScanner: CleanupScanner {
     }
 
     public func scan() async -> [CleanupItem] {
-        // iCloud에만 있고 이 Mac에 내용이 없는 항목은 할당 크기가 0이라 여기서 빠진다.
-        // 지워도 이 Mac의 공간이 돌아오지 않는다.
         locations().flatMap { folder, detail in
             children(of: folder).compactMap { url in
                 let found = DirectorySize.summary(at: url)
-                guard found.bytes > 0 else { return nil }
-                return CleanupItem(url: url, size: found.bytes, category: .trash,
-                                   safety: .caution, detail: detail, dates: found.dates)
+                // iCloud에만 있고 이 Mac에 내용이 없는 항목은 할당 크기가 0이다. 지워도 이 Mac의
+                // 공간은 그대로지만 iCloud 공간이 비워지고, 남겨 두면 Finder 휴지통에 계속 보인다.
+                let cloudOnly = found.bytes == 0 && isDataless(url)
+                guard found.bytes > 0 || cloudOnly else { return nil }
+                return CleanupItem(url: url, size: found.bytes, category: .trash, safety: .caution,
+                                   detail: cloudOnly
+                                       ? String(localized: "iCloud에만 있음 — 지우면 iCloud 공간만 비워집니다")
+                                       : detail,
+                                   dates: found.dates)
             }
         }
     }

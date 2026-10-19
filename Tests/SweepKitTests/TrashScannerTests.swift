@@ -102,4 +102,24 @@ struct TrashScannerTests {
         #expect(!TrashScanner.isInICloudTrash(URL(filePath: "/Users/x/Library/Mobile Documents/.Trash"), home: home))
         #expect(!TrashScanner.isInICloudTrash(URL(filePath: "/Users/x/.Trash/a.png"), home: home))
     }
+
+    // MARK: - iCloud에만 있는 항목
+
+    @Test("iCloud에만 있는 항목은 크기 0으로, iCloud 공간만 비워진다고 올린다")
+    func listsCloudOnlyItems() async throws {
+        let home = try makeHome()
+        defer { try? fm.removeItem(at: home) }
+        let iCloud = home.appending(path: "Library/Mobile Documents/.Trash")
+        try fm.createDirectory(at: iCloud, withIntermediateDirectories: true)
+        // 자리표시자는 만들 수 없다. 빈 파일을 두고 dataless로 친다.
+        try Data().write(to: iCloud.appending(path: "index.html"))
+        try Data().write(to: iCloud.appending(path: "그냥빈파일.txt"))
+
+        let items = await TrashScanner(home: home, volumes: home.appending(path: "Volumes"),
+                                       isDataless: { $0.lastPathComponent == "index.html" }).scan()
+
+        #expect(items.map(\.displayName) == ["index.html"])
+        #expect(items.first?.size == 0)
+        #expect(items.first?.detail == "iCloud에만 있음 — 지우면 iCloud 공간만 비워집니다")
+    }
 }

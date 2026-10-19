@@ -108,6 +108,16 @@ struct UserFilesScopeTests {
         #expect(!ProtectedPaths.isInsideTrash(home.appending(path: "Downloads/a")))
     }
 
+    @Test("normalize는 휴지통 항목만 크기 0이어도 남긴다")
+    func normalizeKeepsZeroSizeTrash() {
+        let cloudOnly = CleanupItem(url: home.appending(path: "Library/Mobile Documents/.Trash/sweep-없는-index.html"),
+                                    size: 0, category: .trash, safety: .caution)
+        let empty = CleanupItem(url: home.appending(path: "Library/Caches/sweep-없는-빈캐시"),
+                                size: 0, category: .devCache, safety: .safe)
+
+        #expect(ScanCoordinator.normalize([cloudOnly, empty]).map(\.url) == [cloudOnly.url])
+    }
+
     @Test("normalize는 분류마다 다른 범위로 거른다")
     func normalizeUsesCategoryScope() {
         let url = home.appending(path: "Documents/sweep-없는-영상.mov")

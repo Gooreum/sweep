@@ -157,7 +157,9 @@ public struct ScanCoordinator: Sendable {
     static func normalize(_ items: [CleanupItem]) -> [CleanupItem] {
         var seen: Set<URL> = []
         return items
-            .filter { $0.size > 0 && ProtectedPaths.isRemovable($0.url, scope: $0.category.removalScope) }
+            // 휴지통은 크기 0도 남긴다. iCloud에만 있는 항목은 이 Mac 공간이 0이어도 지울 뜻이 있다.
+            .filter { ($0.size > 0 || $0.category == .trash)
+                && ProtectedPaths.isRemovable($0.url, scope: $0.category.removalScope) }
             .sorted { lhs, rhs in
                 // 위험한 카테고리가 위로, 같은 카테고리 안에서는 큰 것부터
                 lhs.category.sortOrder == rhs.category.sortOrder
