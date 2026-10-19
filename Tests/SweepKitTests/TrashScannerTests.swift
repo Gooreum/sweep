@@ -122,4 +122,40 @@ struct TrashScannerTests {
         #expect(items.first?.size == 0)
         #expect(items.first?.detail == "iCloud에만 있음 — 지우면 iCloud 공간만 비워집니다")
     }
+
+    // MARK: - 관리자 소유
+
+    @Test("남의 소유 항목만 모든 휴지통에서 골라 준다")
+    func findsAdminOwnedLeftovers() throws {
+        let home = try makeHome()
+        defer { try? fm.removeItem(at: home) }
+        let iCloud = home.appending(path: "Library/Mobile Documents/.Trash")
+        let volume = home.appending(path: "Volumes/Ext/.Trashes/\(getuid())")
+        for folder in [iCloud, volume] {
+            try fm.createDirectory(at: folder, withIntermediateDirectories: true)
+        }
+        for url in [home.appending(path: ".Trash/Sweep.app"), home.appending(path: ".Trash/내것.zip"),
+                    iCloud.appending(path: "root.pkg"), volume.appending(path: "root.mov")] {
+            try Data([1]).write(to: url)
+        }
+        let rootOwned: Set<String> = ["Sweep.app", "root.pkg", "root.mov"]
+
+        let scanner = TrashScanner(home: home, volumes: home.appending(path: "Volumes"),
+                                   isDataless: { _ in false },
+                                   isOwnedByMe: { !rootOwned.contains($0.lastPathComponent) })
+
+        #expect(Set(scanner.adminOwnedLeftovers().map(\.lastPathComponent)) == rootOwned)
+    }
+
+    @Test("휴지통이 비었거나 없으면 남은 것도 없다")
+    func noLeftoversWhenEmpty() throws {
+        let home = try makeHome()
+        defer { try? fm.removeItem(at: home) }
+        let scanner = TrashScanner(home: home, volumes: home.appending(path: "Volumes"),
+                                   isDataless: { _ in false }, isOwnedByMe: { _ in false })
+        #expect(scanner.adminOwnedLeftovers().isEmpty)
+
+        try fm.removeItem(at: home.appending(path: ".Trash"))
+        #expect(scanner.adminOwnedLeftovers().isEmpty)
+    }
 }
