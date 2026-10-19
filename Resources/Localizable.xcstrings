@@ -4013,6 +4013,22 @@
         }
       }
     },
+    "재는 중에는 바꿀 수 없습니다. 중단하면 고를 수 있습니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't change while measuring. Stop to choose another."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "재는 중에는 바꿀 수 없습니다. 중단하면 고를 수 있습니다."
+          }
+        }
+      }
+    },
     "전체": {
       "localizations": {
         "en": {

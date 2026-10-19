@@ -163,47 +163,67 @@ struct DiskMapView: View {
         }
     }
 
+    /// 시작 지점 상자의 창 좌표. 메뉴를 그 바로 아래에 띄운다.
+    @State private var rootBoxFrame: CGRect = .zero
+
+    /// 시작 지점 메뉴 항목. "선택하세요" + 그룹별 섹션, 지금 고른 곳에 체크.
+    private var rootMenuSections: [RootMenu.Section] {
+        var sections = [RootMenu.Section(title: nil, items: [
+            .init(title: String(localized: "선택하세요"), isChecked: model.selectedRoot == nil) {
+                model.selectedRoot = nil
+            },
+        ])]
+        // 그룹으로 나눈다. 열 몇 개를 한 줄로 늘어놓으면 고르기 어렵다.
+        for group in DiskMapRoot.Group.allCases {
+            let roots = model.availableRoots.filter { $0.group == group }
+            guard !roots.isEmpty else { continue }
+            sections.append(.init(title: group.title, items: roots.map { root in
+                .init(title: root.label, isChecked: root.url == model.selectedRoot) {
+                    userPickedRoot = true
+                    model.selectedRoot = root.url
+                }
+            }))
+        }
+        return sections
+    }
+
     private var header: some View {
         HStack(spacing: 12) {
-            Menu {
-                Button("선택하세요") { model.selectedRoot = nil }
-                // 그룹으로 나눈다. 열 몇 개를 한 줄로 늘어놓으면 고르기 어렵다.
-                ForEach(DiskMapRoot.Group.allCases, id: \.self) { group in
-                    let roots = model.availableRoots.filter { $0.group == group }
-                    if !roots.isEmpty {
-                        Section(group.title) {
-                            ForEach(roots) { root in
-                                Button(root.label) {
-                                    userPickedRoot = true
-                                    model.selectedRoot = root.url
-                                }
-                            }
-                        }
-                    }
-                }
+            // 상자 전체가 누르는 면이다. borderless `Menu`는 글자 위만 눌려서
+            // 상자 빈 곳·▼를 눌러도 열리지 않았다 — 버튼으로 받고 메뉴는 직접 띄운다.
+            Button {
+                RootMenu.show(rootMenuSections, below: rootBoxFrame)
             } label: {
-                Text(model.availableRoots.first(where: { $0.url == model.selectedRoot })?.label
-                     ?? String(localized: "선택하세요"))
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .font(R95.ui())
-                    .foregroundStyle(R95.black)
+                HStack(spacing: 4) {
+                    Text(model.availableRoots.first(where: { $0.url == model.selectedRoot })?.label
+                         ?? String(localized: "선택하세요"))
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .font(R95.ui())
+                        .foregroundStyle(model.isScanning ? R95.shadow : R95.black)
+                    Spacer(minLength: 0)
+                    PixelIcon(art: .triangleDown, size: 16)
+                }
+                .padding(.leading, 8)
+                .padding(.trailing, 4)
+                .frame(width: DiskMapColumns.location, height: R95.buttonHeight)
+                .background(R95.gray)
+                .retroRaised()
+                .contentShape(Rectangle())
             }
-            .menuStyle(.borderlessButton)
-            .menuIndicator(.hidden)
-            // 베벨은 메뉴 **바깥**에 그린다. borderless 메뉴는 라벨의 배경·Canvas를
-            // 버리고 글자만 남겨서, 라벨 안에 그린 상자가 화면에 나오지 않았다.
-            .padding(.leading, 8)
-            .padding(.trailing, 24)
-            .frame(width: DiskMapColumns.location, height: R95.buttonHeight, alignment: .leading)
-            .background(R95.gray)
-            .retroRaised()
-            .overlay(alignment: .trailing) {
-                PixelIcon(art: .triangleDown, size: 16)
-                    .padding(.trailing, 4)
-                    .allowsHitTesting(false)
+            .buttonStyle(.plain)
+            .background {
+                GeometryReader { proxy in
+                    Color.clear
+                        .onAppear { rootBoxFrame = proxy.frame(in: .global) }
+                        .onChange(of: proxy.frame(in: .global)) { _, new in rootBoxFrame = new }
+                }
             }
             .accessibilityLabel("시작 지점")
+            // 회색으로만 바뀌면 왜 안 열리는지 모른다.
+            .help(model.isScanning
+                  ? String(localized: "재는 중에는 바꿀 수 없습니다. 중단하면 고를 수 있습니다.")
+                  : "")
             // 도는 중에 다른 곳을 고르면 순회 두 개가 동시에 돌아
             // 나중에 끝난 쪽이 앞선 결과를 덮는다.
             .disabled(model.isScanning)
