@@ -120,7 +120,9 @@ struct ScanCoordinatorTests {
     func standardScanPassesSafetyGate() async {
         let items = await ScanCoordinator.standard().scan()
         for item in items {
-            #expect(ProtectedPaths.isRemovable(item.url), "관문 미통과: \(item.url.path)")
+            // 분류마다 범위가 다르다 — 큰 파일·중복 파일은 사용자 폴더까지 연다.
+            #expect(ProtectedPaths.isRemovable(item.url, scope: item.category.removalScope),
+                    "관문 미통과: \(item.url.path)")
             #expect(item.size > 0)
         }
     }

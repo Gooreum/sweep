@@ -281,4 +281,73 @@ struct DuplicateScannerTests {
         #expect(items.count == 1)
         #expect(items.first?.displayName == "b.bin")
     }
+
+    // MARK: - 사용자 폴더 전체
+
+    /// 홈 기준 상대 경로에 파일을 만든다.
+    @discardableResult
+    private func put(_ relative: String, bytes: Data, in home: URL, created: Date) throws -> URL {
+        let url = home.appending(path: relative)
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
+                                                withIntermediateDirectories: true)
+        try bytes.write(to: url)
+        try FileManager.default.setAttributes([.creationDate: created], ofItemAtPath: url.path)
+        return url
+    }
+
+    @Test("Downloads와 Documents 사이의 중복을 찾는다")
+    func findsDuplicatesAcrossRoots() async throws {
+        let home = try makeFakeHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+        let data = payload(0x51, 2 * Self.oneMB)
+        try put("Documents/계약서.pdf", bytes: data, in: home, created: Date(timeIntervalSince1970: 1_000))
+        try put("Downloads/계약서 (1).pdf", bytes: data, in: home, created: Date(timeIntervalSince1970: 2_000))
+
+        let items = await DuplicateScanner(home: home).scan()
+
+        #expect(items.map(\.displayName) == ["계약서 (1).pdf"])
+        // 원본이 다른 폴더에 있으면 어디 있는지 경로로 말한다
+        #expect(items.first?.detail == "~/Documents/계약서.pdf와 내용이 같습니다")
+    }
+
+    @Test("Downloads 안의 사본은 safe, 밖의 사본은 caution이다")
+    func safetyDependsOnLocation() async throws {
+        let home = try makeFakeHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+        let data = payload(0x52, 2 * Self.oneMB)
+        try put("Code/원본.png", bytes: data, in: home, created: Date(timeIntervalSince1970: 1_000))
+        try put("Downloads/받은.png", bytes: data, in: home, created: Date(timeIntervalSince1970: 2_000))
+        try put("Desktop/복사.png", bytes: data, in: home, created: Date(timeIntervalSince1970: 3_000))
+
+        let items = await DuplicateScanner(home: home).scan()
+        let safety = Dictionary(uniqueKeysWithValues: items.map { ($0.displayName, $0.safety) })
+
+        #expect(safety == ["받은.png": .safe, "복사.png": .caution])
+        #expect(items.first { $0.displayName == "복사.png" }?.isSelectedByDefault == false)
+    }
+
+    @Test("iCloud에만 있는 파일은 해시하지 않아 중복으로 묶이지 않는다")
+    func datalessFilesAreNotHashed() async throws {
+        let home = try makeFakeHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+        let data = payload(0x53, 2 * Self.oneMB)
+        try put("Documents/클라우드.key", bytes: data, in: home, created: Date(timeIntervalSince1970: 1_000))
+        try put("Downloads/클라우드 (1).key", bytes: data, in: home, created: Date(timeIntervalSince1970: 2_000))
+
+        let items = await DuplicateScanner(minimumSize: Int64(Self.oneMB), home: home, roots: nil,
+                                           isDataless: { $0.path.contains("/Documents/") }).scan()
+        #expect(items.isEmpty)
+    }
+
+    @Test("의존성 폴더 안의 같은 파일은 중복으로 올리지 않는다")
+    func skipsDependencyFolders() async throws {
+        let home = try makeFakeHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+        let data = payload(0x54, 2 * Self.oneMB)
+        try put("Code/a/node_modules/x/lib.wasm", bytes: data, in: home, created: Date(timeIntervalSince1970: 1_000))
+        try put("Code/b/node_modules/x/lib.wasm", bytes: data, in: home, created: Date(timeIntervalSince1970: 2_000))
+
+        let items = await DuplicateScanner(home: home).scan()
+        #expect(items.isEmpty)
+    }
 }
