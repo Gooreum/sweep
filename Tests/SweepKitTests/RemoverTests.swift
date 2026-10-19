@@ -281,4 +281,38 @@ struct RemoverTests {
         #expect(!blocked.succeeded)
         #expect(blocked.trashedURL == nil)
     }
+
+    // MARK: - 휴지통 비우기
+
+    @Test("휴지통 안의 항목은 휴지통으로 옮기지 않고 바로 지운다")
+    func emptiesTrashItemsPermanently() throws {
+        // 가짜 휴지통은 허용 루트(`/private/tmp`) 안에 둔다. 진짜 휴지통은 건드리지 않는다.
+        let trash = URL(filePath: "/private/tmp").appending(path: "sweep-trash-\(UUID().uuidString)")
+        try fm.createDirectory(at: trash, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: trash) }
+        let file = trash.appending(path: "버린것.zip")
+        try Data(repeating: 0x41, count: 4096).write(to: file)
+
+        let remover = Remover(movesToTrash: true, scope: .cleanup, trashFolder: trash)
+        let outcome = remover.removeOne(CleanupItem(url: file, size: 4096, category: .trash, safety: .caution))
+
+        #expect(outcome.failure == nil)
+        #expect(!fm.fileExists(atPath: file.path))
+        // 되돌릴 자리가 없다
+        #expect(outcome.trashedURL == nil)
+    }
+
+    @Test("휴지통 밖 항목은 여전히 휴지통으로 간다")
+    func otherItemsStillGoToTrash() throws {
+        let file = try makeAllowedFile()
+        defer { try? fm.removeItem(at: file.deletingLastPathComponent()) }
+        let elsewhere = URL(filePath: "/private/tmp").appending(path: "sweep-not-trash-\(UUID().uuidString)")
+
+        let remover = Remover(movesToTrash: true, scope: .cleanup, trashFolder: elsewhere)
+        let outcome = remover.removeOne(item(file))
+
+        #expect(outcome.failure == nil)
+        #expect(outcome.trashedURL != nil)
+        if let trashed = outcome.trashedURL { try? fm.removeItem(at: trashed) }
+    }
 }

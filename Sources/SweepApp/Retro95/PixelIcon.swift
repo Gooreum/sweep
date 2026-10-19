@@ -520,6 +520,9 @@ extension ScanCategory {
         case .devCache: .box
         case .appCache: .globe
         case .staleCache: .clock
+        case .mailAttachment: .documents
+        case .trash: .trash
+        case .deviceBackup: .hardDrive
         case .largeFile: .bigFile
         case .duplicate: .documents
         }

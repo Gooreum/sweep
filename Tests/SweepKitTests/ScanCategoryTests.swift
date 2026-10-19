@@ -6,9 +6,26 @@ import Foundation
 struct ScanCategoryTests {
 
     // TC-1
-    @Test("카테고리는 6종이다")
-    func hasSixCases() {
-        #expect(ScanCategory.allCases.count == 7)
+    @Test("카테고리는 10종이다")
+    func hasTenCases() {
+        #expect(ScanCategory.allCases.count == 10)
+    }
+
+    @Test("새 정크 세 종은 재생성 쉬운 캐시 뒤, 사용자 파일 앞에 온다")
+    func newJunkCategoriesSitBetween() {
+        let order: [ScanCategory] = [.staleCache, .mailAttachment, .trash, .deviceBackup, .largeFile]
+        #expect(order.map(\.sortOrder) == order.map(\.sortOrder).sorted())
+        #expect(ScanCategory.trash.displayName == "휴지통")
+        #expect(ScanCategory.deviceBackup.displayName == "기기 백업")
+        #expect(ScanCategory.mailAttachment.displayName == "메일 첨부 사본")
+    }
+
+    @Test("큰 파일·중복 파일만 사용자 폴더 범위로 검사한다")
+    func onlyUserFileCategoriesUseUserFilesScope() {
+        for category in ScanCategory.allCases {
+            let expected: RemovalScope = [.largeFile, .duplicate].contains(category) ? .userFiles : .cleanup
+            #expect(category.removalScope == expected, "\(category)")
+        }
     }
 
     // TC-2
@@ -53,7 +70,8 @@ struct ScanCategoryTests {
         let sorted = ScanCategory.allCases.sorted { $0.sortOrder < $1.sortOrder }
 
         #expect(sorted == [.runawayTemp, .xcode, .devCache, .appCache,
-                           .staleCache, .largeFile, .duplicate])
+                           .staleCache, .mailAttachment, .trash, .deviceBackup,
+                           .largeFile, .duplicate])
     }
 
     // TC-7
