@@ -293,7 +293,8 @@ struct AppModelTests {
         [categorized("정크.bin", .devCache),
          categorized("임시", .runawayTemp),
          categorized("큰영상.mov", .largeFile),
-         categorized("사본.zip", .duplicate)]
+         categorized("사본.zip", .duplicate),
+         categorized("버린것.dmg", .trash)]
     }
 
     /// 지우지 않는 테스트용 기록 저장소. 한 번도 쓰지 않으므로 디스크에 남는 것이 없다.
@@ -631,5 +632,43 @@ struct AppModelTests {
 
         #expect(app.cleanupSummary.totalReclaimedBytes == 0)
         #expect(history.records.map(\.kind) == [.cleanup, .restore])
+    }
+
+    // MARK: - 휴지통 비우기는 합계에 넣지 않는다
+
+    @Test("휴지통 항목을 지운 양은 '휴지통으로 옮김' 합계에 더해지지 않는다")
+    func emptyingTrashIsNotCounted() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let found = [
+            CleanupItem(url: URL(filePath: "/Users/x/.Trash/a.zip"), size: 2_000, category: .trash, safety: .caution),
+            CleanupItem(url: URL(filePath: "/Users/x/.Trash/b.zip"), size: 3_000, category: .trash, safety: .caution),
+        ]
+        let app = app(scanning: .trash, finds: found, history: history)
+        let trash = app.model(for: .trash)
+        await trash.scan()
+        trash.selection = Set(found.map(\.url))
+        await trash.removeSelected()
+
+        #expect(trash.report?.succeeded.count == 2, "지우기 자체는 성공해야 한다")
+        #expect(app.cleanupSummary.totalReclaimedBytes == 0)
+        #expect(history.records.isEmpty)
+    }
+
+    @Test("섞인 회차에서는 휴지통 몫만 빼고 기록한다")
+    func mixedReportRecordsOnlyMovedItems() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let found = [
+            CleanupItem(url: URL(filePath: "/Users/x/.Trash/a.zip"), size: 2_000, category: .trash, safety: .caution),
+            CleanupItem(url: URL(filePath: "/Users/x/Library/Caches/pip"), size: 500, category: .devCache, safety: .safe),
+        ]
+        let app = app(scanning: .smartScan, finds: found, history: history)
+        let smart = app.model(for: .smartScan)
+        await smart.scan()
+        smart.selection = Set(found.map(\.url))
+        await smart.removeSelected()
+
+        #expect(app.cleanupSummary.totalReclaimedBytes == 500)
     }
 }

@@ -199,8 +199,13 @@ public final class AppModel {
     ///
     /// 어느 기능 모델에서 지웠든 한 곳에 쌓인다. 모델 안에 두면 폴더 허락이
     /// 바뀔 때 `forgetScans()`가 모델과 함께 기록도 버린다.
+    ///
+    /// 휴지통 비우기는 기록하지 않는다. 합계 문구가 "휴지통으로 옮김"이라 이미 휴지통에 있던 것을
+    /// 지운 양을 더하면 거짓말이 되고, 되돌릴 수도 없다. 남는 성공분이 없으면 기록이 건너뛴다.
     private func record(_ report: RemovalReport) {
-        history.record(report)
+        history.record(RemovalReport(outcomes: report.outcomes.filter {
+            !$0.item.category.removesPermanently
+        }))
         cleanupSummary = history.summary
     }
 
