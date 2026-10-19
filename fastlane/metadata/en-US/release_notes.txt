@@ -1,8 +1,8 @@
-Sweep just got a retro makeover.
+Sweep now looks further and tells you more.
 
-• RETRO IS BACK — A completely redesigned interface inspired by classic 90s desktop utilities.
-• English support — Sweep now adapts to your Mac's language settings.
-• Undo cleanup — Restore files from your most recent cleanup to their original locations.
-• Clearer storage guidance — See when space will actually be freed, with quick access to the Trash.
-• Resizable columns — Adjust Name and Description column widths.
-• Fixes and improvements — Better cleanup error alerts and fixes for truncated descriptions and Disk Map rows.
+• Trash — See what's in the Trash by size and empty only what you choose, including iCloud Drive and external drive trash.
+• Wider search — Find large and duplicate files across your home folder and folders you add, plus iOS device backups, Mail attachments and Gradle, Cargo and Maven caches.
+• Disk Map verdicts — Every item is marked Safe to delete, Needs review or Protected, with the reason.
+• Sortable lists — Click a column header to sort by name, size, date or safety.
+• Live free space — Available space updates right after you clean up or undo.
+• Fixes — Files deleted from another tab no longer reappear in results, and more.
