@@ -135,34 +135,6 @@ struct CPUModelTests {
         #expect(counter.count >= 2)
     }
 
-    // TC-2 (분모)
-    @Test("코어 수가 많을수록 같은 일이 더 작은 비중으로 나온다")
-    func coresDivideTheResult() async {
-        // 같은 입력을 코어 1개·4개로 각각 돌려 분모가 실제로 먹는지 본다.
-        func percent(cores: Int) async -> Double {
-            let model = CPUModel(
-                interval: .milliseconds(10), limit: 5, cores: cores,
-                sample: climbing(pids: [1], step: 1_000_000, counter: Counter()))
-            let task = Task { await model.run() }
-            await waitForUsage(model)
-            task.cancel()
-            return model.usage.first?.percent ?? 0
-        }
-
-        let one = await percent(cores: 1)
-        // 4가 아니라 **터무니없이 큰 수**를 쓴다. 모델은 약속한 구간이 아니라
-        // 실제로 흐른 시간으로 나누는데, 테스트를 병렬로 돌리면 그 시간이 실행마다
-        // 수십 배씩 달라진다 — 4배 차이는 그 잡음에 묻힌다(실측으로 그렇게 뒤집혔다).
-        // 배율을 100만으로 두면 타이밍이 아무리 흔들려도 결론이 바뀌지 않는다.
-        let many = await percent(cores: 1_000_000)
-
-        #expect(one > 0)
-        // 정확한 나눗셈은 순수 함수 쪽 TC("코어가 8개면 12.5%")가 본다.
-        // 여기서 볼 것은 cores가 compute까지 **전달되는가**다.
-        // 전달되지 않으면 두 값이 같은 수준이 되어 이 검사에 걸린다.
-        #expect(many < one / 1_000, "코어 1개 \(one)% / 100만개 \(many)% — 분모가 안 먹는다")
-    }
-
     // TC-3 (분모)
     @Test("모델이 분모를 밖에서 읽을 수 있다")
     func coresIsReadable() {

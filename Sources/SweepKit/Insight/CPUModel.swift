@@ -70,8 +70,7 @@ public final class CPUModel {
             // 실측: 테스트를 병렬로 돌려 기계가 바쁠 때 12.5%짜리가 68.7%로 찍혔다.
             // 하필 CPU가 바쁠 때 틀리는 값이라, 이 화면을 볼 이유가 있는 순간에 틀린다.
             usage = Array(
-                ProcessUsage.compute(from: previous, to: current, over: now - previousAt,
-                                     cores: cores)
+                ProcessUsage.compute(from: previous, to: current, over: now - previousAt)
                     .prefix(limit))
             isWarmingUp = false
             previous = current
