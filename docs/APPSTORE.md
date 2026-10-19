@@ -136,20 +136,53 @@ Organizer가 조용히 올려서 업로드한다. 실제로 소스 빌드 1이 �
 | 1.0.0 (3) | 2026-09-14 | `40ce256`. 개발 폴더 허락으로 Xcode 정리 |
 | 1.0.0 (4) | 2026-09-18 | `58f76e6`. 정리 목록 행에 경로 표시(세 줄), 툴팁 제거, 행 재생성 비용 감소 |
 | 1.0.1 (5) | 업로드 전 | 읽기 불가 파일 중복 오판 수정, 정리 기록·누적 확보 용량, 삭제 실패 시트·재시도 |
+| 1.0.3 (9) | 2026-10-19 | `88c957a`. 휴지통 탭, 디스크 맵 삭제 판정, 정리 후 사용량 갱신 |
+
+이후 빌드는 태그 `v<버전>-<빌드>`로 남는다(`git tag -l 'v*'`).
 
 ---
 
-## 제출 (사람이 한다)
+## 올리기 — GitHub Actions가 한다
+
+PR을 main에 머지한 뒤 Claude가 `/sweep-release` 스킬(`.claude/skills/sweep-release/SKILL.md`)로
+**배포할지부터** 묻는다. 배포한다면 버전 → 앱 정보 → 업데이트 내용(확정 필수) → 스크린샷 →
+그 밖의 정보를 차례로 묻고, 답을 반영한 **릴리스 커밋**을 main에 푸시한다.
+그 커밋을 `.github/workflows/appstore.yml`이 받아 올린다. **심사 제출은 사람이 한다.**
+
+| 바뀐 것 | 워크플로가 하는 일 |
+|---|---|
+| `CFBundleVersion` (빌드 번호) | `make-archive.sh` → `upload-archive.sh` → 태그 `v<버전>-<빌드>` |
+| `fastlane/metadata/**` | `fastlane mac metadata` — 이름·설명·키워드·업데이트 내용 등 |
+| `fastlane/screenshots/**` | `fastlane mac metadata screenshots:true` — 스크린샷 교체 |
+
+판정은 `scripts/release-diff.sh <이전> <새>`가 한다. 일반 머지는 이 경로를 건드리지 않아 워크플로가 돌지 않는다.
+
+- **앱 정보 원본**은 `fastlane/metadata/{ko,en-US}`다. App Store Connect에서 고친 값은
+  `fastlane mac pull_metadata`로 내려받아 커밋해야 다음 릴리스에서 덮어쓰이지 않는다.
+  심사 담당자 연락처(`review_information/`)는 공개 저장소라 올리지 않는다.
+- **스크린샷**은 `scripts/capture-store-shots.sh <장면...>`로 원본을 찍고
+  `scripts/store-compose.py <장면...>`로 `fastlane/screenshots/{ko,en-US}/NN.png`를 만든다(합성은 Codex가 돌린다).
+
+### 시크릿
+
+| 이름 | 값 |
+|---|---|
+| `ASC_KEY_ID` | App Store Connect API 키 ID (`2V2Z827B4Q`, "GitHub Actions CI", 관리자) |
+| `ASC_ISSUER_ID` | 같은 페이지 위쪽의 Issuer ID |
+| `ASC_KEY_P8` | `base64 -i AuthKey_<ID>.p8` |
+
+키는 **관리자 권한**이어야 한다. CI에는 Xcode 계정이 없어 이 키로 Apple Distribution·Mac Installer
+인증서와 프로파일을 받는다(클라우드 서명). 서명만 확인: `gh workflow run appstore.yml -f build=true -f dry_run=true`.
+
+### 손으로 올릴 때
 
 ```bash
-open dist/Sweep.xcarchive
+bash scripts/make-archive.sh && bash scripts/upload-archive.sh   # Xcode 계정으로 서명
+# 또는 open dist/Sweep.xcarchive → Organizer → Distribute App → App Store Connect → Upload
 ```
 
-Xcode Organizer가 열린다 → **Distribute App** → **App Store Connect** → **Upload**.
-
-이 단계에서 Xcode가 하는 일: Apple Distribution으로 재서명, App Store 프로비저닝
-프로파일 발급·삽입, `.pkg`로 감싸 업로드. 필요한 인증서(Mac Installer Distribution 포함)가
-없으면 Xcode가 만들어 준다 — 계정이 로그인돼 있어야 한다.
+Organizer로 올리면 Xcode가 Apple Distribution으로 재서명하고, App Store 프로비저닝 프로파일을
+발급·삽입한 뒤 `.pkg`로 감싸 업로드한다. 필요한 인증서(Mac Installer Distribution 포함)가 없으면 Xcode가 만들어 준다.
 
 ### 그 전에 준비돼 있어야 하는 것
 
