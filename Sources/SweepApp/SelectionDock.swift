@@ -4,6 +4,8 @@ import SweepKit
 /// 결과 아래에 선택량과 동작을 나란히 두어 확인 시트 전에 판단할 수 있게 한다.
 struct SelectionDock: View {
     @Bindable var model: ScanModel
+    /// 휴지통으로 옮기지 않고 바로 지우는가. "복원할 수 있습니다"를 말하면 안 된다.
+    var permanent = false
 
     /// 주 동작은 확인 시트를 열어 목록에서 바로 지우지 않게 한다.
     let onClean: () -> Void
@@ -32,7 +34,8 @@ struct SelectionDock: View {
                 }
                 // 되돌릴 수 있다는 것을 버튼 앞에 말한다. 누른 뒤에 알려주면 늦다.
                 // 휴지통을 언제 비우는지는 사용자 설정에 달려 있다. 기간을 약속하지 않는다.
-                Text("휴지통을 비우기 전까지 복원할 수 있습니다.")
+                Text(permanent ? "고른 항목은 바로 지워져 되돌릴 수 없습니다."
+                               : "휴지통을 비우기 전까지 복원할 수 있습니다.")
                     .font(R95.ui(11))
                     .foregroundStyle(R95.deep)
                     .fixedSize(horizontal: false, vertical: true)
@@ -42,7 +45,8 @@ struct SelectionDock: View {
             Button { onClean() } label: {
                 HStack(spacing: 8) {
                     PixelIcon(art: .trash, size: 24)
-                    Text(model.hasSelection ? "선택 항목 정리" : "선택한 항목 없음")
+                    Text(!model.hasSelection ? "선택한 항목 없음"
+                         : permanent ? "선택 항목 영구 삭제" : "선택 항목 정리")
                         .font(R95.ui(14, bold: true))
                 }
                 .frame(minWidth: ItemTableColumns.actionButtonWidth - 26,

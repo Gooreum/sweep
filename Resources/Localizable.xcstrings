@@ -367,6 +367,22 @@
         }
       }
     },
+    "%lld개 · %@를 영구 삭제했습니다": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permanently deleted %1$lld items · %2$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld개 · %2$@를 영구 삭제했습니다"
+          }
+        }
+      }
+    },
     "%lld개 · %@를 원래 자리로 되돌렸습니다": {
       "localizations": {
         "en": {
@@ -471,6 +487,34 @@
         }
       }
     },
+    "%lld개 항목을 영구 삭제합니다": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Permanently delete %lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Permanently delete %lld items"
+                }
+              }
+            }
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개 항목을 영구 삭제합니다"
+          }
+        }
+      }
+    },
     "%lld개 항목을 옮기지 못했습니다": {
       "localizations": {
         "en": {
@@ -555,6 +599,34 @@
         }
       }
     },
+    "%lld개는 삭제하지 못했습니다 — 자세히 보기": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item couldn't be deleted — see details"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items couldn't be deleted — see details"
+                }
+              }
+            }
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개는 삭제하지 못했습니다 — 자세히 보기"
+          }
+        }
+      }
+    },
     "%lld개는 옮기지 못했습니다 — 자세히 보기": {
       "localizations": {
         "en": {
@@ -607,6 +679,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld개를 되돌리지 못했습니다"
+          }
+        }
+      }
+    },
+    "%lld개를 삭제하지 못했습니다": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Couldn't delete %lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Couldn't delete %lld items"
+                }
+              }
+            }
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개를 삭제하지 못했습니다"
           }
         }
       }
@@ -2043,6 +2143,38 @@
         }
       }
     },
+    "고른 항목은 바로 지워져 되돌릴 수 없습니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected items are deleted right away and can't be restored."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고른 항목은 바로 지워져 되돌릴 수 없습니다."
+          }
+        }
+      }
+    },
+    "고른 항목은 휴지통에서 바로 지워져 되돌릴 수 없습니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected items are deleted from the Trash right away and can't be restored."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고른 항목은 휴지통에서 바로 지워져 되돌릴 수 없습니다."
+          }
+        }
+      }
+    },
     "권장": {
       "localizations": {
         "en": {
@@ -3201,6 +3333,22 @@
         }
       }
     },
+    "선택 항목 영구 삭제": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Selected Permanently"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택 항목 영구 삭제"
+          }
+        }
+      }
+    },
     "선택 항목 정리": {
       "localizations": {
         "en": {
@@ -3857,6 +4005,38 @@
         }
       }
     },
+    "영구 삭제": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Permanently"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "영구 삭제"
+          }
+        }
+      }
+    },
+    "영구 삭제하는 중…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deleting permanently…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "영구 삭제하는 중…"
+          }
+        }
+      }
+    },
     "오늘": {
       "localizations": {
         "en": {
@@ -4365,18 +4545,18 @@
         }
       }
     },
-    "임시 파일·빌드 산출물·개발 캐시·휴지통·기기 백업을 찾아 디스크 공간을 확보합니다.": {
+    "임시 파일·빌드 산출물·개발 캐시·기기 백업을 찾아 디스크 공간을 확보합니다.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finds temporary files, build products, developer caches, Trash, and device backups to free up disk space."
+            "value": "Finds temporary files, build products, developer caches, and device backups to free up disk space."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "임시 파일·빌드 산출물·개발 캐시·휴지통·기기 백업을 찾아 디스크 공간을 확보합니다."
+            "value": "임시 파일·빌드 산출물·개발 캐시·기기 백업을 찾아 디스크 공간을 확보합니다."
           }
         }
       }
@@ -4877,6 +5057,38 @@
         }
       }
     },
+    "지울 용량": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Size to delete"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지울 용량"
+          }
+        }
+      }
+    },
+    "지울 항목": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Items to delete"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지울 항목"
+          }
+        }
+      }
+    },
     "지워도 됨": {
       "localizations": {
         "en": {
@@ -5001,6 +5213,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "켜면 앱 캐시까지 찾고, ‘다른 앱의 데이터’ 물음이 더 뜨지 않습니다."
+          }
+        }
+      }
+    },
+    "켜야 휴지통 안을 볼 수 있습니다. 꺼져 있으면 비어 있는 것처럼 보입니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn it on to see inside the Trash. While it's off, the Trash looks empty."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "켜야 휴지통 안을 볼 수 있습니다. 꺼져 있으면 비어 있는 것처럼 보입니다."
           }
         }
       }
@@ -5669,6 +5897,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "휴지통에 남아 있습니다. Finder 휴지통에서 직접 '되돌려 놓기'를 할 수 있습니다."
+          }
+        }
+      }
+    },
+    "휴지통에 든 것을 크기순으로 보고 골라서 비웁니다. 비우면 되돌릴 수 없습니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows what's in the Trash by size so you can choose what to empty. Emptying can't be undone."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통에 든 것을 크기순으로 보고 골라서 비웁니다. 비우면 되돌릴 수 없습니다."
+          }
+        }
+      }
+    },
+    "휴지통에서 바로 지워져 되돌릴 수 없습니다. 지운 만큼 공간이 바로 확보됩니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These are deleted from the Trash right away and can't be restored. The space is freed immediately."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통에서 바로 지워져 되돌릴 수 없습니다. 지운 만큼 공간이 바로 확보됩니다."
           }
         }
       }
