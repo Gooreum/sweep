@@ -31,7 +31,7 @@ enum StoreDemo {
 
     /// 스캐너와 같은 키 — 카탈로그에 번역이 이미 있고, 영어에서는 복수형까지 맞는다.
     private static func monthsAgo(_ months: Int) -> String {
-        String(localized: "\(months)개월 전에 받았습니다")
+        String(localized: "\(months)개월 전에 받았어요")
     }
 
     /// 실앱과 같은 흐름으로 채운 `AppModel`.
@@ -82,7 +82,7 @@ enum StoreDemo {
         func dup(_ name: String, _ size: Int64, of original: String) -> CleanupItem {
             CleanupItem(url: preview.appending(path: name), size: size,
                         category: .duplicate, safety: .safe,
-                        detail: String(localized: "\(original)와 내용이 같습니다"))
+                        detail: String(localized: "\(original)와 내용이 같아요"))
         }
         // `XcodeScanner`와 같은 안전도·설명. 목록에는 마지막 경로 이름만 보인다.
         func xcode(_ path: String, _ size: Int64, _ safety: SafetyLevel, _ detail: String)
@@ -92,25 +92,25 @@ enum StoreDemo {
         }
         return [
             xcode("Xcode/iOS DeviceSupport/iPhone17,1 26.0 (23A341)", 7_900_000_000,
-                  .caution, String(localized: "기기를 다시 연결하면 내려받습니다")),
+                  .caution, String(localized: "기기를 다시 연결하면 내려받아요")),
             xcode("Xcode/DerivedData/Budgetly-fhbqxkwzpnmxdgaclrviosbtuey", 6_400_000_000,
-                  .safe, String(localized: "빌드하면 다시 생성됩니다")),
+                  .safe, String(localized: "Xcode가 앱을 만들 때 다시 생겨요")),
             xcode("Xcode/iOS DeviceSupport/iPhone15,2 18.6 (22G86)", 5_800_000_000,
-                  .caution, String(localized: "기기를 다시 연결하면 내려받습니다")),
+                  .caution, String(localized: "기기를 다시 연결하면 내려받아요")),
             xcode("Xcode/DerivedData/PhotoMemo-cgkwzhxeqvnbdjlrtyaoupmsif", 3_100_000_000,
-                  .safe, String(localized: "빌드하면 다시 생성됩니다")),
-            xcode("CoreSimulator/Caches", 2_300_000_000, .safe, String(localized: "시뮬레이터 캐시입니다")),
+                  .safe, String(localized: "Xcode가 앱을 만들 때 다시 생겨요")),
+            xcode("CoreSimulator/Caches", 2_300_000_000, .safe, String(localized: "앱 시험 도구의 임시 파일이에요")),
             xcode("Xcode/DerivedData/ModuleCache.noindex", 1_200_000_000,
-                  .safe, String(localized: "빌드하면 다시 생성됩니다")),
+                  .safe, String(localized: "Xcode가 앱을 만들 때 다시 생겨요")),
             xcode("Xcode/Archives/2026-08-21", 184_000_000,
-                  .danger, String(localized: "앱 심사 제출본 — 지우면 복구할 수 없습니다")),
+                  .danger, String(localized: "앱 심사 제출본이에요. 지우면 복구할 수 없어요")),
             large("Xcode_26.0.xip", 9_800_000_000, monthsAgo(4)),
             large("Windows11_ARM64.iso", 6_120_000_000, monthsAgo(7)),
             large(tripVideo, 4_210_000_000, monthsAgo(2)),
             large(projectBackup, 3_380_000_000, monthsAgo(5)),
             large(meetingVideo, 1_270_000_000, monthsAgo(3)),
             large("Docker.dmg", 524_000_000, monthsAgo(1)),
-            large("Blender-4.2-macos-arm64.dmg", 412_000_000, String(localized: "\(12)일 전에 받았습니다")),
+            large("Blender-4.2-macos-arm64.dmg", 412_000_000, String(localized: "\(12)일 전에 받았어요")),
             dup("Zoom (1).pkg", 91_800_000, of: "Zoom.pkg"),
             dup(name("KakaoTalk (1).dmg", "Slack (1).dmg"), 74_600_000,
                 of: name("KakaoTalk.dmg", "Slack.dmg")),
