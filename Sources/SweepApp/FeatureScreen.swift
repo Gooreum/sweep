@@ -57,8 +57,8 @@ struct FeatureScreen: View {
         switch model.phase {
         case .idle:
             welcome
-        case let .scanning(percent, remaining):
-            scanning(percent: percent, remaining: remaining)
+        case let .scanning(percent, _):
+            scanning(percent: percent)
         case .results:
             if model.items.isEmpty { emptyResult } else { resultList }
         case let .removing(done, total):
@@ -83,7 +83,7 @@ struct FeatureScreen: View {
         .frame(maxWidth: R95.dialogWidth)
     }
 
-    private func scanning(percent: Int, remaining: Int?) -> some View {
+    private func scanning(percent: Int) -> some View {
         VStack(spacing: 0) {
             // 다 끝나기 전에도 성과가 보여야 기다릴 만하다
             Retro95ScanPanel(
@@ -93,7 +93,8 @@ struct FeatureScreen: View {
                 fraction: Double(percent) / 100,
                 percentText: "\(percent)%",
                 leftFooter: model.items.isEmpty ? nil : String(localized: "\(model.items.count)개 · \(model.formattedTotalSize) 발견"),
-                rightFooter: remaining.map { String(localized: "약 \(ProgressDisplay.readable(seconds: $0)) 남음") })
+                // 남은 시간은 넣지 않는다. 스캐너마다 속도가 달라 어림값이 크게 틀렸다.
+                rightFooter: nil)
             Spacer()
         }
     }

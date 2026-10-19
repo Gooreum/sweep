@@ -3521,22 +3521,6 @@
         }
       }
     },
-    "약 %@ 남음": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "About %@ left"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "약 %@ 남음"
-          }
-        }
-      }
-    },
     "어디가 용량을 차지하는지 크기순으로 훑어봅니다.": {
       "localizations": {
         "en": {

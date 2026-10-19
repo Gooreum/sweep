@@ -35,8 +35,8 @@ struct SmartScanView: View {
             switch model.phase {
             case .idle:
                 welcome
-            case let .scanning(percent, remaining):
-                scanning(percent: percent, remaining: remaining)
+            case let .scanning(percent, _):
+                scanning(percent: percent)
             case let .removing(done, total):
                 Retro95ScanPanel(
                     title: String(localized: "정리 중"), headline: String(localized: "정리하는 중"), detail: nil,
@@ -323,13 +323,14 @@ struct SmartScanView: View {
         readability = CleanupScope.readabilityMap(of: scopes)
     }
 
-    private func scanning(percent: Int, remaining: Int?) -> some View {
+    private func scanning(percent: Int) -> some View {
         VStack(spacing: 0) {
             Retro95ScanPanel(
                 title: String(localized: "검색 중"), headline: String(localized: "Mac 전체를 훑는 중…"), detail: nil,
                 fraction: Double(percent) / 100, percentText: "\(percent)%",
                 leftFooter: model.items.isEmpty ? nil : String(localized: "\(model.items.count)개 · \(model.formattedTotalSize) 발견"),
-                rightFooter: remaining.map { String(localized: "약 \(ProgressDisplay.readable(seconds: $0)) 남음") })
+                // 남은 시간은 넣지 않는다. 스캐너마다 속도가 달라 어림값이 크게 틀렸다.
+                rightFooter: nil)
             Spacer()
         }
         .padding(10)
