@@ -7,7 +7,9 @@ build/
 
 # 로컬 작업 문서·설정 (개인 파일 경로가 담긴다)
 .ai-bouncer-tasks/
-.claude/
+.claude/*
+# 릴리스 스킬은 저장소와 함께 다닌다
+!.claude/skills/
 
 # 스토어 스크린샷 작업 폴더. 캡처에 개인 파일 경로가 그대로 담긴다.
 .appshot/
@@ -23,3 +25,9 @@ Derived/
 # 아이콘 자산 카탈로그도 생성물 -- scripts/make-icon.swift --appiconset이 만든다.
 # 이미지 파일을 저장소에 넣지 않는 것이 이 저장소의 방침이다.
 Resources/Assets.xcassets/
+
+# 심사 담당자 연락처가 담긴다. 공개 저장소에 올리지 않는다 — App Store Connect 값을 그대로 둔다.
+fastlane/metadata/review_information/
+# fastlane 실행 부산물
+fastlane/report.xml
+fastlane/README.md

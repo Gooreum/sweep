@@ -1,0 +1,101 @@
+[Your code grows. Your free space shrinks.]
+
+Xcode build artifacts. Old simulator files. Forgotten downloads. Duplicate files.
+
+Over time, development leaves behind gigabytes of files you may no longer need.
+
+Meet Sweep — a disk cleanup utility built for Mac developers.
+
+[Find the clutter. Know what's safe. Clean with confidence.]
+
+■ BUILT FOR DEVELOPER MACHINES
+
+Find space-consuming files across your development environment with a single scan.
+
+• Xcode DerivedData and build caches
+• iOS simulator caches and device support files
+• npm, Yarn, pnpm, and Expo caches
+• Swift Package Manager, CocoaPods, and Homebrew caches
+• Large files in Downloads
+• Duplicate files with identical content
+
+See how much space you could reclaim before removing anything.
+
+■ NOT EVERYTHING SHOULD BE DELETED
+
+Some files can be regenerated in seconds. Others may be difficult or impossible to recover.
+
+Sweep classifies cleanup items into three safety levels:
+
+• SAFE — Files that can be regenerated
+• REVIEW — Files that require your attention
+• DANGER — Files that may be impossible to recover
+
+Only safe items are preselected.
+
+Important development files, including Xcode Archives, are protected from accidental cleanup.
+
+■ FIND FORGOTTEN LARGE FILES
+
+That old DMG. A downloaded video. An archive you opened once.
+
+Sweep finds files larger than 100 MB in your Downloads folder and sorts them by size.
+
+Review when files were downloaded and decide what stays.
+
+■ REMOVE DUPLICATES, KEEP THE ORIGINAL
+
+Different names don't always mean different files.
+
+Sweep compares file contents to identify exact duplicates, excluding the earliest downloaded copy from cleanup candidates.
+
+■ SEE WHERE YOUR SPACE GOES
+
+Explore your storage with Disk Map.
+
+Compare file and folder sizes, navigate directories, and quickly open items in Finder, copy paths, or move files to the Trash.
+
+■ CLEAN WITHOUT SECOND-GUESSING
+
+Sweep is designed to make cleanup deliberate and reversible.
+
+• Files are moved to the macOS Trash, not permanently erased
+• Undo your most recent cleanup
+• Review safety classifications before deleting
+• Keep cleanup operations within defined locations
+• See how much space will be freed after emptying the Trash
+
+You're always in control of what gets removed.
+
+■ OLD-SCHOOL LOOK. MODERN MAC UTILITY.
+
+Inspired by classic 1990s desktop software.
+
+Pixel-style icons, beveled buttons, gray panels, and compact file lists bring back the charm of early desktop computing.
+
+Retro on the outside. Practical on the inside.
+
+■ STAY IN YOUR FLOW
+
+• Check disk usage from the menu bar
+• Start scans without opening the main window
+• Press ⌘R to scan
+• Press ⌘⌫ to clean
+• Resize table columns to fit your workflow
+
+■ YOUR FILES STAY YOURS
+
+Sweep works entirely offline.
+
+No accounts. No cloud uploads. No analytics. No data collection.
+
+The Mac App Store version uses macOS sandbox permissions. You choose which supported folders Sweep can access, and you can revoke that access at any time.
+
+---
+
+**Less clutter. More room to build.**
+
+Sweep — Disk cleanup for Mac developers.
+
+Requires macOS 14 or later.
+Available in English and Korean.

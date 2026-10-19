@@ -1,0 +1,1 @@
+xcode,deriveddata,simulator,build,cache,storage,cleanup,duplicates,large files,developer,disk space

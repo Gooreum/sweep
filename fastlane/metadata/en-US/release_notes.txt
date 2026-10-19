@@ -1,0 +1,8 @@
+Sweep just got a retro makeover.
+
+• RETRO IS BACK — A completely redesigned interface inspired by classic 90s desktop utilities.
+• English support — Sweep now adapts to your Mac's language settings.
+• Undo cleanup — Restore files from your most recent cleanup to their original locations.
+• Clearer storage guidance — See when space will actually be freed, with quick access to the Trash.
+• Resizable columns — Adjust Name and Description column widths.
+• Fixes and improvements — Better cleanup error alerts and fixes for truncated descriptions and Disk Map rows.

@@ -1,0 +1,51 @@
+# App Store 앱 정보·스크린샷 업로드.
+#
+# 빌드 업로드는 여기서 하지 않는다 — `scripts/upload-archive.sh`가 한다.
+# 이 레인은 `fastlane/metadata`·`fastlane/screenshots`를 App Store Connect에 맞춘다.
+# 심사 제출은 사람이 한다.
+#
+# 키는 업로드 스크립트와 같은 환경변수로 받는다: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH(.p8)
+#
+#   fastlane mac metadata                    앱 정보만
+#   fastlane mac metadata screenshots:true   스크린샷까지 교체
+#   fastlane mac pull_metadata               App Store Connect 값을 fastlane/metadata로 내려받기
+default_platform(:mac)
+
+platform :mac do
+  lane :metadata do |options|
+    api_key
+    deliver(
+      platform: "osx",
+      skip_binary_upload: true,
+      skip_screenshots: options[:screenshots].to_s != "true",
+      overwrite_screenshots: true,
+      submit_for_review: false,
+      # CI라 HTML 미리보기 확인을 띄울 사람이 없다
+      force: true,
+      run_precheck_before_submit: false
+    )
+  end
+
+  # `fastlane deliver download_metadata`는 API 키를 JSON 본문으로만 받는다.
+  # 키 파일을 복사하지 않으려고 같은 일을 레인 안에서 한다.
+  lane :pull_metadata do
+    api_key
+    require "deliver"
+    require "deliver/setup"
+    options = FastlaneCore::Configuration.create(Deliver::Options.available_options, {
+      platform: "osx", force: true, api_key: lane_context[SharedValues::APP_STORE_CONNECT_API_KEY]
+    })
+    Deliver::Runner.new(options)
+    app = Deliver.cache[:app]
+    version = app.get_latest_app_store_version(platform: Spaceship::ConnectAPI::Platform::MAC_OS)
+    Deliver::Setup.new.generate_metadata_files(app, version, File.expand_path("metadata", __dir__), options)
+  end
+
+  private_lane :api_key do
+    app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_filepath: ENV.fetch("ASC_KEY_PATH")
+    )
+  end
+end
