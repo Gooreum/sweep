@@ -1199,18 +1199,18 @@
         }
       }
     },
-    "CPU 전체 부하": {
+    "CPU 부하": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Total CPU Load"
+            "value": "CPU Load"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "CPU 전체 부하"
+            "value": "CPU 부하"
           }
         }
       }
@@ -1579,6 +1579,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Library 안은 추가할 수 없습니다. 앱 데이터라 정크 검사가 따로 봅니다."
+          }
+        }
+      }
+    },
+    "Mac 전체 부하를 읽지 못했습니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't read the Mac's overall load."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac 전체 부하를 읽지 못했습니다."
           }
         }
       }
@@ -2463,22 +2479,6 @@
         }
       }
     },
-    "기타": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Other"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "기타"
-          }
-        }
-      }
-    },
     "날짜": {
       "localizations": {
         "en": {
@@ -3077,6 +3077,22 @@
         }
       }
     },
+    "막대 끝 = 코어 1개를 꽉 채움": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full bar = one core fully used"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "막대 끝 = 코어 1개를 꽉 채움"
+          }
+        }
+      }
+    },
     "만든 날 %@": {
       "localizations": {
         "en": {
@@ -3137,6 +3153,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "메일에서 다시 열면 생깁니다"
+          }
+        }
+      }
+    },
+    "목록에 없는 시스템·다른 계정 프로세스: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System and other-account processes not listed: %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "목록에 없는 시스템·다른 계정 프로세스: %@"
           }
         }
       }
@@ -3413,6 +3445,22 @@
         }
       }
     },
+    "사용자": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사용자"
+          }
+        }
+      }
+    },
     "사유 자세히 보기": {
       "localizations": {
         "en": {
@@ -3445,7 +3493,7 @@
         }
       }
     },
-    "상위 프로세스 점유율": {
+    "상위 프로세스": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3456,7 +3504,7 @@
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "상위 프로세스 점유율"
+            "value": "상위 프로세스"
           }
         }
       }
@@ -3729,6 +3777,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "시뮬레이터 캐시입니다"
+          }
+        }
+      }
+    },
+    "시스템": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템"
           }
         }
       }
@@ -4405,6 +4469,22 @@
         }
       }
     },
+    "왼쪽 위 사용자·시스템·유휴는 Mac 전체를 100%로 본 값입니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "User, System and Idle at top left treat the whole Mac as 100%."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "왼쪽 위 사용자·시스템·유휴는 Mac 전체를 100%로 본 값입니다."
+          }
+        }
+      }
+    },
     "용량 확인": {
       "localizations": {
         "en": {
@@ -4581,22 +4661,6 @@
         }
       }
     },
-    "유휴 %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Idle %@"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "유휴 %@"
-          }
-        }
-      }
-    },
     "응용 프로그램": {
       "localizations": {
         "en": {
@@ -4641,6 +4705,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 Mac"
+          }
+        }
+      }
+    },
+    "이 Mac의 CPU 코어는 %lld개입니다 (성능 %lld + 효율 %lld).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Mac has %1$lld CPU cores (%2$lld performance + %3$lld efficiency)."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 Mac의 CPU 코어는 %1$lld개입니다 (성능 %2$lld + 효율 %3$lld)."
+          }
+        }
+      }
+    },
+    "이 Mac의 CPU 코어는 %lld개입니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Mac has %lld CPU cores."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 Mac의 CPU 코어는 %lld개입니다."
           }
         }
       }
@@ -4877,22 +4973,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "전체"
-          }
-        }
-      }
-    },
-    "전체 CPU 기준 · 각 막대 100%": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Share of total CPU · each bar is 100%"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "전체 CPU 기준 · 각 막대 100%"
           }
         }
       }
@@ -5585,38 +5665,6 @@
         }
       }
     },
-    "코어 %lld개 전체 = 100%%": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "All %lld cores = 100%%"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "코어 %lld개 전체 = 100%%"
-          }
-        }
-      }
-    },
-    "코어 %lld개 전체 = 100%% · 내 계정으로 실행된 프로세스만 보입니다.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "All %lld cores = 100%% · Only processes run by your account are shown."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "코어 %lld개 전체 = 100%% · 내 계정으로 실행된 프로세스만 보입니다."
-          }
-        }
-      }
-    },
     "크기": {
       "localizations": {
         "en": {
@@ -5885,6 +5933,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "프로세스 · 점유율순"
+          }
+        }
+      }
+    },
+    "프로세스 점유율은 활성 상태 보기와 같이 코어 하나를 100%%로 셉니다. 여러 코어를 쓰면 100%%를 넘고, 전부 합치면 최대 %lld%%입니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Like Activity Monitor, process usage counts one core as 100%%. A process using several cores goes over 100%%, and everything together can reach %lld%%."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "프로세스 점유율은 활성 상태 보기와 같이 코어 하나를 100%%로 셉니다. 여러 코어를 쓰면 100%%를 넘고, 전부 합치면 최대 %lld%%입니다."
           }
         }
       }
@@ -6185,22 +6249,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "활성 상태 보기 열기"
-          }
-        }
-      }
-    },
-    "활성 상태 보기는 코어 하나를 100%로 세므로 같은 프로세스도 숫자가 다릅니다.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Activity Monitor counts one core as 100%, so the same process shows a different number there."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "활성 상태 보기는 코어 하나를 100%로 세므로 같은 프로세스도 숫자가 다릅니다."
           }
         }
       }

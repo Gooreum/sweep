@@ -36,11 +36,17 @@ struct CPUView: View {
 
     private var header: some View {
         HStack(alignment: .top, spacing: 12) {
+            // 숫자가 왜 이렇게 나오는지를 숫자보다 먼저 말한다. 프로세스 %가 100을 넘거나
+            // 합이 수백 %가 되는 것을 처음 보면 고장으로 읽힌다.
             VStack(alignment: .leading, spacing: 3) {
-                Text("코어 \(model.cores)개 전체 = 100% · 내 계정으로 실행된 프로세스만 보입니다.")
+                Text(coreSentence)
                     .font(R95.ui(12, bold: true))
                     .foregroundStyle(R95.black)
-                Text("활성 상태 보기는 코어 하나를 100%로 세므로 같은 프로세스도 숫자가 다릅니다.")
+                Text("프로세스 점유율은 활성 상태 보기와 같이 코어 하나를 100%로 셉니다. 여러 코어를 쓰면 100%를 넘고, 전부 합치면 최대 \(model.cores * 100)%입니다.")
+                    .font(R95.ui(11))
+                    .foregroundStyle(R95.deep)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("왼쪽 위 사용자·시스템·유휴는 Mac 전체를 100%로 본 값입니다.")
                     .font(R95.ui(11))
                     .foregroundStyle(R95.deep)
             }
@@ -53,40 +59,24 @@ struct CPUView: View {
         .padding(.vertical, 2)
     }
 
-    private var shares: [CPUShare] { CPUShare.slices(from: model.usage) }
-    private var used: Double { model.usage.reduce(0) { $0 + $1.percent } }
-    private var idle: Double { shares.first(where: { $0.kind == .idle })?.percent ?? 0 }
+    /// "코어 8개(성능 4 + 효율 4)". 인텔 맥은 코어 종류가 하나라 총수만 말한다.
+    private var coreSentence: String {
+        if let performance = ProcessCPUSampler.performanceCores,
+           let efficiency = ProcessCPUSampler.efficiencyCores {
+            String(localized: "이 Mac의 CPU 코어는 \(model.cores)개입니다 (성능 \(performance) + 효율 \(efficiency)).")
+        } else {
+            String(localized: "이 Mac의 CPU 코어는 \(model.cores)개입니다.")
+        }
+    }
 
     private var chart: some View {
         VStack(spacing: 10) {
-            Retro95GroupBox(title: String(localized: "CPU 전체 부하")) {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(alignment: .center, spacing: 18) {
-                        PixelIcon(art: .computer, size: 32)
-                        VStack(alignment: .leading, spacing: 0) {
-                            // 준비 중에는 0%를 꾸며내지 않는다.
-                            Text(model.isWarmingUp ? "—" : String(format: "%.0f%%", used))
-                                .font(R95.mono(30))
-                                .foregroundStyle(R95.navy)
-                            Text("사용 중").font(R95.ui(13, bold: true))
-                        }
-                    }
-                    Retro95ProgressBar(fraction: model.isWarmingUp ? nil : used / 100)
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text("코어 \(model.cores)개 전체 = 100%")
-                            .font(R95.ui(12, bold: true))
-                        if !model.isWarmingUp {
-                            Text("유휴 \(String(format: "%.1f%%", idle))")
-                                .font(R95.ui(11))
-                                .foregroundStyle(R95.deep)
-                                .frame(maxWidth: .infinity, alignment: .trailing)
-                        }
-                    }
-                }
+            Retro95GroupBox(title: String(localized: "CPU 부하")) {
+                loadBox
             }
-            Retro95GroupBox(title: String(localized: "상위 프로세스 점유율")) {
+            Retro95GroupBox(title: String(localized: "상위 프로세스")) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("전체 CPU 기준 · 각 막대 100%")
+                    Text("막대 끝 = 코어 1개를 꽉 채움")
                         .font(R95.ui(11))
                         .foregroundStyle(R95.deep)
                     if !model.isWarmingUp {
@@ -94,8 +84,8 @@ struct CPUView: View {
                         // 이 목록만 스크롤시켜 높이를 창 안에 가둔다.
                         ScrollView {
                             VStack(spacing: 8) {
-                                ForEach(shares) { share in
-                                    shareRow(share)
+                                ForEach(model.usage.prefix(6)) { usage in
+                                    topRow(usage)
                                 }
                             }
                         }
@@ -108,29 +98,71 @@ struct CPUView: View {
         .frame(maxHeight: .infinity, alignment: .top)
     }
 
-    private func shareRow(_ share: CPUShare) -> some View {
-        VStack(spacing: 3) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(shareName(share)).font(R95.ui(12, bold: true))
-                    .lineLimit(1).truncationMode(.middle)
-                if case .process(let pid) = share.kind {
-                    Text(verbatim: "pid \(pid)")
-                        .font(R95.mono(9)).foregroundStyle(R95.deep)
+    /// 활성 상태 보기 아래쪽 요약과 같은 숫자. 커널 합계라 root 프로세스까지 담는다.
+    @ViewBuilder
+    private var loadBox: some View {
+        if let load = model.load {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .center, spacing: 18) {
+                    PixelIcon(art: .computer, size: 32)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(verbatim: String(format: "%.0f%%", load.used))
+                            .font(R95.mono(30))
+                            .foregroundStyle(R95.navy)
+                        Text("사용 중").font(R95.ui(13, bold: true))
+                    }
                 }
-                Spacer(minLength: 0)
-                Text(share.formattedPercent).font(R95.mono(12)).foregroundStyle(R95.navy)
+                loadRow(String(localized: "사용자"), load.user, fill: R95.navy)
+                loadRow(String(localized: "시스템"), load.system, fill: R95.navy)
+                // 유휴는 쓰이지 않은 몫이라 회색으로 물러나게 한다.
+                loadRow(String(localized: "유휴"), load.idle, fill: R95.shadow)
+                // 기계는 바쁜데 목록 합이 작으면 앱이 틀린 것처럼 보인다. 차이를 이름 붙여 말한다.
+                let hidden = load.used - model.ownTotal
+                if hidden >= 0.5 {
+                    Text("목록에 없는 시스템·다른 계정 프로세스: \(String(format: "%.1f%%", hidden))")
+                        .font(R95.ui(11))
+                        .foregroundStyle(R95.deep)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
-            // 유휴는 쓰이지 않은 몫이라 회색으로 물러나게 한다.
-            Retro95ProgressBar(fraction: share.percent / 100, height: 14,
-                               fill: share.kind == .idle ? R95.shadow : R95.navy)
+        } else {
+            // 준비 중이거나 커널 값을 못 읽었다. 프로세스 합으로 지어내지 않는다 —
+            // root 프로세스 몫이 유휴로 둔갑한다.
+            VStack(alignment: .leading, spacing: 8) {
+                PixelIcon(art: .computer, size: 32)
+                Text(model.isWarmingUp ? String(localized: "측정 중…")
+                                       : String(localized: "Mac 전체 부하를 읽지 못했습니다."))
+                    .font(R95.ui(12))
+                    .foregroundStyle(R95.deep)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
-    private func shareName(_ share: CPUShare) -> String {
-        switch share.kind {
-        case .process: share.name
-        case .other: String(localized: "기타")
-        case .idle: String(localized: "유휴")
+    private func loadRow(_ label: String, _ percent: Double, fill: Color) -> some View {
+        VStack(spacing: 3) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(label).font(R95.ui(12, bold: true))
+                Spacer(minLength: 0)
+                Text(verbatim: String(format: "%.1f%%", percent))
+                    .font(R95.mono(12)).foregroundStyle(R95.navy)
+            }
+            Retro95ProgressBar(fraction: percent / 100, height: 14, fill: fill)
+        }
+    }
+
+    private func topRow(_ usage: ProcessUsage) -> some View {
+        VStack(spacing: 3) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(usage.name).font(R95.ui(12, bold: true))
+                    .lineLimit(1).truncationMode(.middle)
+                Text(verbatim: usage.formattedPID)
+                    .font(R95.mono(9)).foregroundStyle(R95.deep)
+                Spacer(minLength: 0)
+                Text(usage.formattedPercent).font(R95.mono(12)).foregroundStyle(R95.navy)
+            }
+            // 막대 끝이 코어 1개다. 여러 코어를 쓰면 막대는 꽉 차고 숫자가 100을 넘는다.
+            Retro95ProgressBar(fraction: min(1, usage.percent / 100), height: 14)
         }
     }
 

@@ -100,9 +100,11 @@ struct SweepApp: App {
         let clock = ContinuousClock()
         let cores = ProcessCPUSampler.coreCount
         let before = ProcessCPUSampler.tick()
+        let loadBefore = SystemCPULoad.tick()
         let start = clock.now
         Thread.sleep(forTimeInterval: 2)
         let elapsed = clock.now - start
+        let loadAfter = SystemCPULoad.tick()
         let usage = ProcessUsage.compute(
             from: before, to: ProcessCPUSampler.tick(), over: elapsed)
 
@@ -118,11 +120,20 @@ struct SweepApp: App {
         // 읽은 수와 **그중 쓰고 있는 수**를 따로 적는다. 앞의 것이 0이면 수집이
         // 막힌 것이고, 뒤의 것만 0이면 정말 아무도 안 쓴 것이다.
         //
-        // 합계는 위에서 자른 20개가 아니라 **전부** 더한다. 분모가 기계 전체라
-        // 이 합이 곧 기계의 부하이고, 100을 넘지 않는다는 것이 새 성질이다.
+        // 합계는 위에서 자른 20개가 아니라 **전부** 더한다. 코어 하나가 100이라
+        // 최대 코어 수 × 100까지 간다. 내 계정 것만이라 기계 전체가 아니다 —
+        // 기계 전체는 커널 합계로 따로 찍어 `top`의 CPU usage 줄과 맞춰 볼 수 있게 한다.
         let total = usage.reduce(0) { $0 + $1.percent }
-        print(String(format: "측정 %d개 · 사용 중 %d개 · 합계 %.1f%% (코어 %d개)",
-                     before.count, usage.count, total, cores))
+        var summary = String(format: "측정 %d개 · 사용 중 %d개 · 목록 합계 %.1f%% (코어 %d개)",
+                             before.count, usage.count, total, cores)
+        if let loadBefore, let loadAfter,
+           let load = SystemCPULoad.compute(from: loadBefore, to: loadAfter) {
+            summary += String(format: " · 기계 전체 사용자 %.1f%% 시스템 %.1f%% 유휴 %.1f%%",
+                              load.user, load.system, load.idle)
+        } else {
+            summary += " · 기계 전체 부하를 읽지 못함"
+        }
+        print(summary)
         exit(0)
     }
 
