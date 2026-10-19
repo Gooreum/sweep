@@ -40,8 +40,8 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         // 샌드박스에서는 사용자가 연 개발 폴더만 본다. 임시 파일·캐시라고 쓰면 과장이다.
         case .junk: Sandbox.isActive
             ? String(localized: "Xcode 빌드 산출물·시뮬레이터 파일을 찾아 디스크 공간을 확보합니다.")
-            : String(localized: "임시 파일·빌드 산출물·개발 캐시를 찾아 디스크 공간을 확보합니다.")
-        case .largeFile: String(localized: "허용된 범위 안에서 유난히 큰 파일을 찾습니다.")
+            : String(localized: "임시 파일·빌드 산출물·개발 캐시·휴지통·기기 백업을 찾아 디스크 공간을 확보합니다.")
+        case .largeFile: String(localized: "홈 폴더와 추가한 폴더에서 유난히 큰 파일을 찾습니다.")
         case .duplicate: String(localized: "내용이 같은 파일을 찾아 한 벌만 남깁니다.")
         case .diskMap: String(localized: "어디가 용량을 차지하는지 크기순으로 훑어봅니다.")
         }
@@ -106,18 +106,22 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
             AppCacheScanner()
         }
         let staleCache = ifReadable(["Library/Caches"]) { StaleCacheScanner() }
-        let devCache = ifReadable(["Library/Caches", "Library/Logs", ".npm", ".expo"]) {
+        let devCache = ifReadable(["Library/Caches", "Library/Logs", ".npm", ".expo",
+                                   ".gradle", ".cargo", ".m2"]) {
             DevCacheScanner()
         }
+        let mail = ifReadable(["Library/Containers/com.apple.mail"]) { MailDownloadsScanner() }
+        let trash = ifReadable([".Trash"]) { TrashScanner() }
+        let backup = ifReadable(["Library/Application Support/MobileSync"]) { DeviceBackupScanner() }
         // 폭주 임시 파일은 샌드박스에서 살릴 방법이 없다.
         let runaway: [any CleanupScanner] = sandboxed ? [] : [RunawayTempScanner()]
+        let junk = runaway + xcode + devCache + appCache + staleCache + mail + trash + backup
 
         switch self {
         case .smartScan:
-            return runaway + xcode + devCache + appCache + staleCache
-                + [LargeFileScanner(), DuplicateScanner()]
+            return junk + [LargeFileScanner(), DuplicateScanner()]
         case .junk:
-            return runaway + xcode + devCache + appCache + staleCache
+            return junk
         case .largeFile:
             return [LargeFileScanner()]
         case .duplicate:

@@ -277,4 +277,33 @@ struct DevCacheScannerTests {
         let items = await DevCacheScanner(home: home).scan()
         #expect(items.isEmpty)
     }
+
+    // MARK: - Gradle·Cargo·Maven
+
+    @Test("도구 캐시 폴더는 통째가 아니라 바로 아래 항목마다 올라온다")
+    func homeCacheRootsAreExpanded() async throws {
+        let home = try makeFakeHome()
+        defer { try? FileManager.default.removeItem(at: home) }
+        for relative in [".gradle/caches/modules-2", ".gradle/caches/8.5",
+                         ".cargo/registry/cache", ".m2/repository/org"] {
+            let dir = home.appending(path: relative)
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            try Data(repeating: 0x41, count: 8192).write(to: dir.appending(path: "blob.bin"))
+        }
+        // 같은 층의 인증 정보·실행 파일은 후보가 아니다
+        try "org.gradle.jvmargs".write(to: home.appending(path: ".gradle/gradle.properties"),
+                                       atomically: true, encoding: .utf8)
+        try FileManager.default.createDirectory(at: home.appending(path: ".cargo/bin"),
+                                                withIntermediateDirectories: true)
+        try Data(repeating: 0x41, count: 8192).write(to: home.appending(path: ".cargo/bin/cargo"))
+
+        let items = await DevCacheScanner(home: home).scan()
+        // 경로 앞부분은 `/var` ↔ `/private/var`로 흔들린다. 끝 세 구성요소로 비교한다.
+        let paths = Set(items.map { $0.url.pathComponents.suffix(3).joined(separator: "/") })
+
+        #expect(paths == [".gradle/caches/modules-2", ".gradle/caches/8.5",
+                          ".cargo/registry/cache", ".m2/repository/org"])
+        #expect(items.allSatisfy { $0.safety == .safe })
+        #expect(items.first { $0.displayName == "cache" }?.detail == "Cargo 레지스트리 캐시")
+    }
 }
