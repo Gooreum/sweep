@@ -31,7 +31,9 @@ struct DiskMapRootTests {
 
         // 범위를 넓히면서 기존 시작점을 잃으면 안 된다.
         // 그룹은 달라도 된다 — `~/Downloads`는 "홈 안"으로 올라간다.
-        for root in ProtectedPaths.allowedRoots where !isTemporary(root.path) {
+        // 없는 폴더는 시작점이 될 수 없다. `~/.m2`처럼 도구를 안 쓰는 기계에는 없다.
+        for root in ProtectedPaths.allowedRoots
+        where !isTemporary(root.path) && FileManager.default.fileExists(atPath: root.path) {
             #expect(paths.contains(root.standardizedFileURL.path),
                     "정리 루트가 빠졌다: \(root.path)")
         }

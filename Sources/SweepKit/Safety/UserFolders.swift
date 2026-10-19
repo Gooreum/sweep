@@ -124,6 +124,14 @@ public enum UserFolders {
         return nil
     }
 
+    /// 사용자가 추가한 폴더의 허락 단위. 샌드박스에서 북마크를 저장·복원할 때 쓴다.
+    ///
+    /// 라벨이 북마크 키가 되므로(`Grantable.key`) 경로 그대로 둔다 — 폴더마다 달라야 한다.
+    public static func grantable(for url: URL) -> FolderAccess.Grantable {
+        FolderAccess.Grantable(folder: url, label: url.standardizedFileURL.path,
+                               purpose: String(localized: "큰 파일 · 중복 파일"))
+    }
+
     // MARK: - 관문용 캐시
 
     private static let cacheLock = NSLock()
