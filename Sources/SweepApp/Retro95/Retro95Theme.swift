@@ -115,6 +115,7 @@ extension R95 {
         case .duplicate: purple
         case .trash: danger
         case .diskMap: navy
+        case .cpu: navy
         }
     }
 }

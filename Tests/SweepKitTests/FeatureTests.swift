@@ -6,16 +6,16 @@ import Foundation
 struct FeatureTests {
 
     // TC-1
-    @Test("6개 기능 전부 표시명·아이콘·설명을 가진다")
+    @Test("7개 기능 전부 표시명·아이콘·설명을 가진다")
     func everyFeatureIsPresentable() {
-        #expect(Feature.allCases.count == 6)
+        #expect(Feature.allCases.count == 7)
         for feature in Feature.allCases {
             #expect(!feature.displayName.isEmpty)
             #expect(!feature.systemImageName.isEmpty)
             #expect(!feature.summary.isEmpty)
         }
         // 표시명이 겹치면 사이드바에서 같은 줄이 두 번 보인다
-        #expect(Set(Feature.allCases.map(\.displayName)).count == 6)
+        #expect(Set(Feature.allCases.map(\.displayName)).count == 7)
     }
 
     // TC-2
@@ -218,7 +218,7 @@ struct FeatureTests {
     @Test("기능 색끼리 색상각이 충분히 벌어져 있다")
     func featureTintsAreDistinguishable() {
         let hues = Feature.allCases.compactMap { $0.tintHex }.map { hue(rgb($0.dark)) }.sorted()
-        #expect(hues.count == 5, "고유색을 가진 기능이 5개여야 한다")
+        #expect(hues.count == 6, "고유색을 가진 기능이 6개여야 한다")
 
         // 색상각이 붙어 있으면 사이드바에서 두 기능이 같은 색으로 읽힌다.
         // 색상환은 돈다 — 맨 끝(보라·빨강)과 맨 앞(빨강)도 이웃이다.
@@ -250,6 +250,7 @@ struct FeatureTests {
 
     @Test("휴지통은 사이드바에서 중복 파일 다음, 디스크 맵 앞에 온다")
     func trashSitsBeforeDiskMap() {
-        #expect(Feature.allCases.suffix(3) == [.duplicate, .trash, .diskMap])
+        // CPU가 맨 뒤에 붙어도 셋의 순서만 본다 — 선언 순서가 ⌘N을 정한다.
+        #expect(Array(Feature.allCases.drop { $0 != .duplicate }.prefix(3)) == [.duplicate, .trash, .diskMap])
     }
 }

@@ -184,7 +184,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         case .duplicate: (0x5FD3C4, 0x0C6558)
         case .trash:     (0xFF8A70, 0xB42318)
         case .diskMap:   (0x7ED88F, 0x186628)
-        case .cpu:       (0xFFB86B, 0x9A4200)
+        case .cpu:       (0xE8D46A, 0x6E5E00)
         }
     }
 
