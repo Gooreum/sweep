@@ -119,7 +119,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
             DevCacheScanner()
         }
         let mail = ifReadable(["Library/Containers/com.apple.mail"]) { MailDownloadsScanner() }
-        let trash = ifReadable([".Trash"]) { TrashScanner() }
+        let trash = ifReadable([".Trash", "Library/Mobile Documents"]) { TrashScanner() }
         let backup = ifReadable(["Library/Application Support/MobileSync"]) { DeviceBackupScanner() }
         // 폭주 임시 파일은 샌드박스에서 살릴 방법이 없다.
         let runaway: [any CleanupScanner] = sandboxed ? [] : [RunawayTempScanner()]

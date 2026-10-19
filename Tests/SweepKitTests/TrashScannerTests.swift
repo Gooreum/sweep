@@ -13,6 +13,11 @@ struct TrashScannerTests {
         return home
     }
 
+    /// 빈 가짜 `/Volumes`를 준다 — 이 Mac에 꽂힌 진짜 디스크가 섞이면 안 된다.
+    private func scanner(_ home: URL) -> TrashScanner {
+        TrashScanner(home: home, volumes: home.appending(path: "Volumes"))
+    }
+
     @Test("휴지통 바로 아래 항목마다 하나씩, caution으로 올린다")
     func listsTopLevelItemsAsCaution() async throws {
         let home = try makeHome()
@@ -22,7 +27,7 @@ struct TrashScannerTests {
         try fm.createDirectory(at: trash.appending(path: "프로젝트/src"), withIntermediateDirectories: true)
         try Data(repeating: 0x42, count: 8192).write(to: trash.appending(path: "프로젝트/src/a.swift"))
 
-        let items = await TrashScanner(home: home).scan()
+        let items = await scanner(home).scan()
 
         #expect(Set(items.map(\.displayName)) == ["옛날.dmg", "프로젝트"])
         #expect(items.allSatisfy { $0.category == .trash && $0.safety == .caution })
@@ -34,10 +39,10 @@ struct TrashScannerTests {
     func emptyOrMissingTrash() async throws {
         let home = try makeHome()
         defer { try? fm.removeItem(at: home) }
-        #expect(await TrashScanner(home: home).scan().isEmpty)
+        #expect(await scanner(home).scan().isEmpty)
 
         try fm.removeItem(at: home.appending(path: ".Trash"))
-        #expect(await TrashScanner(home: home).scan().isEmpty)
+        #expect(await scanner(home).scan().isEmpty)
     }
 
     @Test("빈 폴더는 크기 0이라 올리지 않는다")
@@ -46,6 +51,55 @@ struct TrashScannerTests {
         defer { try? fm.removeItem(at: home) }
         try fm.createDirectory(at: home.appending(path: ".Trash/빈폴더"), withIntermediateDirectories: true)
 
-        #expect(await TrashScanner(home: home).scan().isEmpty)
+        #expect(await scanner(home).scan().isEmpty)
+    }
+
+    // MARK: - 다른 휴지통
+
+    @Test("iCloud Drive 휴지통 항목을 iCloud 설명과 함께 올린다")
+    func listsICloudTrash() async throws {
+        let home = try makeHome()
+        defer { try? fm.removeItem(at: home) }
+        let iCloud = home.appending(path: "Library/Mobile Documents/.Trash")
+        try fm.createDirectory(at: iCloud, withIntermediateDirectories: true)
+        try Data(repeating: 0x41, count: 8192).write(to: iCloud.appending(path: "스크린샷.png"))
+        try Data(repeating: 0x42, count: 8192).write(to: home.appending(path: ".Trash/옛날.dmg"))
+
+        let items = await scanner(home).scan()
+
+        #expect(items.count == 2)
+        let shot = try #require(items.first { $0.displayName == "스크린샷.png" })
+        #expect(shot.category == .trash && shot.safety == .caution)
+        #expect(shot.detail == "iCloud Drive 휴지통 — 비우면 다른 기기에서도 사라집니다")
+        #expect(TrashScanner.isInICloudTrash(shot.url, home: home))
+    }
+
+    @Test("외장 디스크의 내 휴지통만 디스크 이름과 함께 올린다")
+    func listsVolumeTrash() async throws {
+        let home = try makeHome()
+        defer { try? fm.removeItem(at: home) }
+        let volumes = home.appending(path: "Volumes")
+        let mine = volumes.appending(path: "Ext/.Trashes/\(getuid())")
+        let others = volumes.appending(path: "Ext/.Trashes/99999")
+        try fm.createDirectory(at: mine, withIntermediateDirectories: true)
+        try fm.createDirectory(at: others, withIntermediateDirectories: true)
+        try Data(repeating: 0x41, count: 8192).write(to: mine.appending(path: "영상.mov"))
+        try Data(repeating: 0x42, count: 8192).write(to: others.appending(path: "남의것.mov"))
+        // 시동 디스크처럼 `/`를 가리키는 링크는 건너뛴다
+        try fm.createSymbolicLink(at: volumes.appending(path: "Macintosh HD"),
+                                  withDestinationURL: URL(filePath: "/"))
+
+        let items = await scanner(home).scan()
+
+        #expect(items.map(\.displayName) == ["영상.mov"])
+        #expect(items.first?.detail == "Ext 휴지통 — 비우면 되돌릴 수 없습니다")
+    }
+
+    @Test("isInICloudTrash는 iCloud 휴지통 안에서만 참이다")
+    func iCloudTrashMembership() {
+        let home = URL(filePath: "/Users/x")
+        #expect(TrashScanner.isInICloudTrash(URL(filePath: "/Users/x/Library/Mobile Documents/.Trash/a.png"), home: home))
+        #expect(!TrashScanner.isInICloudTrash(URL(filePath: "/Users/x/Library/Mobile Documents/.Trash"), home: home))
+        #expect(!TrashScanner.isInICloudTrash(URL(filePath: "/Users/x/.Trash/a.png"), home: home))
     }
 }

@@ -114,6 +114,8 @@ extension CleanupScope {
         case "~/.cargo/registry": String(localized: "Cargo 레지스트리 캐시")
         case "~/.m2/repository": String(localized: "Maven 저장소 캐시")
         case "~/.Trash": String(localized: "휴지통 — 비우면 되돌릴 수 없습니다")
+        case "~/Library/Mobile Documents/.Trash":
+            String(localized: "iCloud Drive 휴지통 — 비우면 다른 기기에서도 사라집니다")
         case "~/Library/Application Support/MobileSync/Backup": String(localized: "iOS 기기 백업")
         case "~/Library/Containers/com.apple.mail/Data/Library/Mail Downloads":
             String(localized: "메일 첨부 사본")
