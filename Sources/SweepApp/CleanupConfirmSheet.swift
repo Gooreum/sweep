@@ -22,6 +22,11 @@ struct CleanupConfirmSheet: View {
         model.selectedItems.filter { $0.safety == .danger }.count
     }
 
+    /// 고른 것 중 iCloud Drive 휴지통 항목 수. 이것은 이 Mac만이 아니라 다른 기기에서도 지워진다.
+    private var iCloudCount: Int {
+        model.selectedItems.filter { TrashScanner.isInICloudTrash($0.url) }.count
+    }
+
     var body: some View {
         Retro95Dialog(title: permanent
                         ? String(localized: "\(model.selectedItems.count)개 항목을 영구 삭제합니다")
@@ -57,7 +62,10 @@ struct CleanupConfirmSheet: View {
     /// 위험한 것이 섞였을 때만 그것을 먼저 말한다. 없으면 군더더기가 된다.
     private var bodyText: String {
         if permanent {
-            return String(localized: "휴지통에서 바로 지워져 되돌릴 수 없습니다. 지운 만큼 공간이 바로 확보됩니다.")
+            let base = String(localized: "휴지통에서 바로 지워져 되돌릴 수 없습니다. 지운 만큼 공간이 바로 확보됩니다.")
+            return iCloudCount > 0
+                ? base + " " + String(localized: "이 중 \(iCloudCount)개는 iCloud Drive 항목이라 다른 기기에서도 지워집니다.")
+                : base
         }
         return riskyCount > 0
             ? String(localized: "이 중 \(riskyCount)개는 다시 만들 수 없습니다 — 휴지통을 비우면 처음부터 받아야 합니다. 휴지통을 비우기 전까지는 모두 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다.")

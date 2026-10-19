@@ -111,6 +111,9 @@ struct StageHarness: View {
                             category: .trash, safety: .caution, detail: "비우면 되돌릴 수 없습니다"),
                 CleanupItem(url: URL(filePath: "/Users/me/.Trash/프로젝트 사본"), size: 838_860_800,
                             category: .trash, safety: .caution, detail: "비우면 되돌릴 수 없습니다"),
+                CleanupItem(url: Sandbox.userHome.appending(path: "Library/Mobile Documents/.Trash/스크린샷 모음.zip"),
+                            size: 524_288_000, category: .trash, safety: .caution,
+                            detail: "iCloud Drive 휴지통 — 비우면 다른 기기에서도 사라집니다"),
             ]
             let created = ScanModel(scan: { Self.finishing(trash) },
                                     removeOne: { RemovalOutcome(item: $0, failureReason: nil) })

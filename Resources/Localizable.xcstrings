@@ -189,6 +189,22 @@
         }
       }
     },
+    "%@ 휴지통 — 비우면 되돌릴 수 없습니다": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Trash — can't be restored once emptied"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 휴지통 — 비우면 되돌릴 수 없습니다"
+          }
+        }
+      }
+    },
     "%@/분 증가 중": {
       "localizations": {
         "en": {
@@ -1867,6 +1883,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "해제"
+          }
+        }
+      }
+    },
+    "iCloud Drive 휴지통 — 비우면 다른 기기에서도 사라집니다": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive Trash — emptying also removes it from your other devices"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive 휴지통 — 비우면 다른 기기에서도 사라집니다"
           }
         }
       }
@@ -4433,6 +4465,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 밖은 건드리지 않습니다"
+          }
+        }
+      }
+    },
+    "이 중 %lld개는 iCloud Drive 항목이라 다른 기기에서도 지워집니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld of these are iCloud Drive items and will also be deleted from your other devices."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 중 %lld개는 iCloud Drive 항목이라 다른 기기에서도 지워집니다."
           }
         }
       }
