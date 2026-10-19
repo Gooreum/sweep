@@ -140,9 +140,17 @@ rm -rf "$ARCHIVE"
 #
 # 실패해도 멈추지 않는다: Organizer의 "Distribute App"이 App Store 배포용으로
 # 어차피 다시 서명하므로, 서명 없는 아카이브로도 제출은 된다.
+# CI에는 Xcode 계정이 없다. API 키가 있으면 그것으로 프로비저닝을 받는다
+# (`scripts/upload-archive.sh`와 같은 환경변수).
+AUTH=()
+if [ -n "${ASC_KEY_PATH:-}" ]; then
+  AUTH=(-authenticationKeyPath "$ASC_KEY_PATH"
+        -authenticationKeyID "${ASC_KEY_ID:?ASC_KEY_ID}"
+        -authenticationKeyIssuerID "${ASC_ISSUER_ID:?ASC_ISSUER_ID}")
+fi
 if ! xcodebuild -workspace Sweep.xcworkspace -scheme Sweep \
      -configuration Release -archivePath "$ARCHIVE" \
-     -allowProvisioningUpdates archive 2>&1 | tail -5; then
+     -allowProvisioningUpdates ${AUTH[@]+"${AUTH[@]}"} archive 2>&1 | tail -5; then
   echo
   echo "자동 서명이 막혔다. 서명 없이 아카이브한다 —"
   echo "Organizer가 Distribute App 단계에서 App Store용으로 다시 서명한다."
