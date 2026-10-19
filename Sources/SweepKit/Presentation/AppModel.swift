@@ -48,6 +48,15 @@ public final class AppModel {
     /// 저장소(`CleanupHistory`)는 관찰되지 않으므로 화면이 따라오려면
     /// 여기 관찰되는 값이 하나 있어야 한다 — `needsFolderAccess`와 같은 이유다.
     public private(set) var cleanupSummary: CleanupSummary
+
+    /// 홈 볼륨의 사용량. 화면 셋(사이드바·스마트 스캔·메뉴바)이 이것 하나를 본다.
+    ///
+    /// 예전엔 화면마다 만들어질 때 한 번 읽어 두어, 휴지통을 비워도 숫자가 그대로였다.
+    /// 정리·되돌리기 직후 다시 읽는다 — 파일을 다시 훑는 게 아니라 볼륨에 한 번 묻는 것이다.
+    public private(set) var volumeUsage: VolumeUsage?
+
+    /// 테스트가 갈아끼운다 — 진짜 디스크 용량은 테스트에서 바꿀 수 없다.
+    private let readVolumeUsage: @Sendable () -> VolumeUsage?
     private let history: CleanupHistory
 
     /// 기능 모델을 만드는 방법을 주입할 수 있게 열어 둔다.
@@ -65,13 +74,16 @@ public final class AppModel {
                 folderAccess: FolderAccess.Registry = FolderAccess.shared,
                 userFolders: UserFolders.Registry = UserFolders.shared,
                 history: CleanupHistory = .shared,
-                needsFolderAccess: Bool? = nil) {
+                needsFolderAccess: Bool? = nil,
+                readVolumeUsage: @escaping @Sendable () -> VolumeUsage? = { VolumeUsage.current() }) {
         self.makeModel = makeModel
         self.makeDiskMap = makeDiskMap
         self.folderAccess = folderAccess
         self.userFolders = userFolders
         self.history = history
         self.cleanupSummary = history.summary
+        self.readVolumeUsage = readVolumeUsage
+        self.volumeUsage = readVolumeUsage()
         // 주입값이 있으면 그것이 "허락을 요구하는 환경인가"를 대신한다 — 테스트·데모용.
         self.requiresFolderAccess = needsFolderAccess ?? Sandbox.isActive
         self.needsFolderAccess = self.requiresFolderAccess && !folderAccess.hasAny
@@ -180,12 +192,28 @@ public final class AppModel {
         }
         model.onRemoved = { [weak self] urls in
             self?.forget(urls, except: feature)
+            self?.refreshVolumeUsageAfterChange()
         }
         model.onReport = { [weak self] report in
             self?.record(report)
         }
         model.onRestored = { [weak self] report in
             self?.recordRestore(report)
+            self?.refreshVolumeUsageAfterChange()
+        }
+    }
+
+    /// 디스크 사용량을 지금 값으로 다시 읽는다. 메뉴바 패널이 열릴 때도 부른다.
+    public func refreshVolumeUsage() {
+        volumeUsage = readVolumeUsage()
+    }
+
+    /// 지운 직후 한 번, 잠시 뒤 한 번 더. APFS는 돌려받은 공간을 몇 초 늦게 반영하기도 한다.
+    private func refreshVolumeUsageAfterChange() {
+        refreshVolumeUsage()
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(2))
+            self?.refreshVolumeUsage()
         }
     }
 
