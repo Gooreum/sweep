@@ -1199,6 +1199,22 @@
         }
       }
     },
+    "CPU 전체 부하": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total CPU Load"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CPU 전체 부하"
+          }
+        }
+      }
+    },
     "Cargo 레지스트리 캐시": {
       "localizations": {
         "en": {
@@ -1611,6 +1627,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Maven 저장소 캐시"
+          }
+        }
+      }
+    },
+    "PID": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PID"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PID"
           }
         }
       }
@@ -2431,6 +2463,22 @@
         }
       }
     },
+    "기타": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기타"
+          }
+        }
+      }
+    },
     "날짜": {
       "localizations": {
         "en": {
@@ -2795,6 +2843,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "되돌릴 수 없음"
+          }
+        }
+      }
+    },
+    "두 번 재야 사용률이 나옵니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage appears after two samples."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "두 번 재야 사용률이 나옵니다."
           }
         }
       }
@@ -3285,6 +3349,22 @@
         }
       }
     },
+    "사용 중": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Use"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사용 중"
+          }
+        }
+      }
+    },
     "사용됨": {
       "localizations": {
         "en": {
@@ -3361,6 +3441,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "사유를 확인하고 조치한 뒤 실패한 것만 다시 시도할 수 있습니다."
+          }
+        }
+      }
+    },
+    "상위 프로세스 점유율": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top Processes"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "상위 프로세스 점유율"
           }
         }
       }
@@ -4437,6 +4533,22 @@
         }
       }
     },
+    "위치 / 복사": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reveal / Copy"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "위치 / 복사"
+          }
+        }
+      }
+    },
     "위험": {
       "localizations": {
         "en": {
@@ -4449,6 +4561,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "위험"
+          }
+        }
+      }
+    },
+    "유휴": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idle"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "유휴"
+          }
+        }
+      }
+    },
+    "유휴 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idle %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "유휴 %@"
           }
         }
       }
@@ -4737,6 +4881,22 @@
         }
       }
     },
+    "전체 CPU 기준 · 각 막대 100%": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share of total CPU · each bar is 100%"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 CPU 기준 · 각 막대 100%"
+          }
+        }
+      }
+    },
     "전체 검색": {
       "localizations": {
         "en": {
@@ -4797,6 +4957,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "전체 디스크 접근이 꺼져 있습니다"
+          }
+        }
+      }
+    },
+    "점유율 ▼": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share ▼"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "점유율 ▼"
           }
         }
       }
@@ -5137,6 +5313,38 @@
         }
       }
     },
+    "지금 CPU를 쓰는 프로세스가 없습니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No processes are using the CPU right now."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 CPU를 쓰는 프로세스가 없습니다."
+          }
+        }
+      }
+    },
+    "지금 어떤 프로세스가 CPU를 쓰고 있는지 보여줍니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows which processes are using the CPU right now."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 어떤 프로세스가 CPU를 쓰고 있는지 보여줍니다."
+          }
+        }
+      }
+    },
     "지금까지 %@를 휴지통으로 옮김 · 마지막 정리 %@": {
       "localizations": {
         "en": {
@@ -5233,6 +5441,22 @@
         }
       }
     },
+    "직전 구간 동안 아무것도 계산하지 않았습니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing was computing during the last interval."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "직전 구간 동안 아무것도 계산하지 않았습니다."
+          }
+        }
+      }
+    },
     "진행 중": {
       "localizations": {
         "en": {
@@ -5313,6 +5537,22 @@
         }
       }
     },
+    "측정 중…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measuring…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "측정 중…"
+          }
+        }
+      }
+    },
     "켜면 앱 캐시까지 찾고, ‘다른 앱의 데이터’ 물음이 더 뜨지 않습니다.": {
       "localizations": {
         "en": {
@@ -5341,6 +5581,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "켜야 휴지통 안을 볼 수 있습니다. 꺼져 있으면 비어 있는 것처럼 보입니다."
+          }
+        }
+      }
+    },
+    "코어 %lld개 전체 = 100%%": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All %lld cores = 100%%"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "코어 %lld개 전체 = 100%%"
+          }
+        }
+      }
+    },
+    "코어 %lld개 전체 = 100%% · 내 계정으로 실행된 프로세스만 보입니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All %lld cores = 100%% · Only processes run by your account are shown."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "코어 %lld개 전체 = 100%% · 내 계정으로 실행된 프로세스만 보입니다."
           }
         }
       }
@@ -5581,6 +5853,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "표시 완료"
+          }
+        }
+      }
+    },
+    "프로세스 / 실행 경로": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Process / Executable Path"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "프로세스 / 실행 경로"
+          }
+        }
+      }
+    },
+    "프로세스 · 점유율순": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Processes · by Share"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "프로세스 · 점유율순"
           }
         }
       }
@@ -5865,6 +6169,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "확인 필요 — 휴지통으로 이동할까요?"
+          }
+        }
+      }
+    },
+    "활성 상태 보기 열기": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Activity Monitor"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "활성 상태 보기 열기"
+          }
+        }
+      }
+    },
+    "활성 상태 보기는 코어 하나를 100%로 세므로 같은 프로세스도 숫자가 다릅니다.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activity Monitor counts one core as 100%, so the same process shows a different number there."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "활성 상태 보기는 코어 하나를 100%로 세므로 같은 프로세스도 숫자가 다릅니다."
           }
         }
       }

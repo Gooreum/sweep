@@ -81,6 +81,10 @@ struct Retro95Checkbox: View {
 
 struct Retro95ProgressBar: View {
     let fraction: Double?
+    /// CPU 점유율처럼 한 화면에 막대가 여럿이면 낮게 그린다. 늘리거나 눌러 그리면 베벨까지 찌그러진다.
+    var height: CGFloat = 20
+    /// 유휴처럼 "쓰이지 않은 몫"은 회색으로 물러나게 한다.
+    var fill: Color = R95.navy
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1 / 30, paused: fraction != nil)) { timeline in
@@ -96,13 +100,13 @@ struct Retro95ProgressBar: View {
                 for index in 0..<slots {
                     let visible = filled.map { index < $0 } ?? (index >= start && index < start + 4)
                     if visible {
-                        context.fill(Path(CGRect(x: CGFloat(index) * step, y: 0, width: block, height: size.height)), with: .color(R95.navy))
+                        context.fill(Path(CGRect(x: CGFloat(index) * step, y: 0, width: block, height: size.height)), with: .color(fill))
                     }
                 }
             }
             .padding(3)
         }
-        .frame(height: 20)
+        .frame(height: height)
         .background(R95.white)
         .retroSunken()
         .accessibilityLabel("진행률")
