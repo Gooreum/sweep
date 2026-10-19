@@ -8,11 +8,6 @@ struct SmartScanView: View {
     @Bindable var app: AppModel
     @Bindable var model: ScanModel
 
-    /// 볼륨 용량은 스캔과 무관하고 화면을 보는 동안 거의 변하지 않는다.
-    /// body 안에서 부르면 스캔 진행률이 바뀔 때마다 볼륨을 다시 조회한다 —
-    /// `Sidebar`·`MenuBarPanel`이 이미 저장 프로퍼티로 쓰고 있다.
-    private let usage = VolumeUsage.current()
-
     /// 샌드박스에서는 폴더를 **여러 번** 허락할 수 있다. 생성 때 한 번만 읽으면
     /// 두 번째 허락이 목록에 반영되지 않는다 — 예전에는 허락이 한 번뿐이라
     /// `let`으로 두고 부모가 다시 그리는 것에 기댔다.
@@ -124,7 +119,9 @@ struct SmartScanView: View {
     /// 전체 디스크는 작은 미터로 보여줘 권한 목록과 결과에 공간을 남긴다.
     @ViewBuilder
     private var diskCard: some View {
-        if let usage {
+        // 디스크 용량은 `AppModel`이 들고 있다가 정리·되돌리기 직후 다시 읽는다.
+        // 여기서 볼륨을 조회하지 않는다 — body는 스캔 진행률마다 다시 돈다.
+        if let usage = app.volumeUsage {
             Retro95GroupBox(title: String(localized: "디스크 정보")) {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 16) {

@@ -12,9 +12,6 @@ struct MenuBarPanel: View {
     /// 창을 앞으로 부르는 동작. 씬 밖에서는 `openWindow`를 쓸 수 없어 주입받는다.
     let openMain: () -> Void
 
-    /// 볼륨 용량은 스캔과 무관하고 패널이 열릴 때마다 바뀌지 않는다.
-    private let usage = VolumeUsage.current()
-
     /// 휴지통을 열지 못했다(샌드박스). 대신 할 일을 말한다.
     @State private var trashOpenFailed = false
 
@@ -31,6 +28,8 @@ struct MenuBarPanel: View {
             actions(isScanning: summary.isScanning)
         }
         .frame(width: Theme.panelWidth)
+        // 패널은 열 때마다 지금 디스크 용량을 보여준다. 마지막 정리 뒤 시간이 지났을 수 있다.
+        .onAppear { app.refreshVolumeUsage() }
         .alert("휴지통을 열지 못했습니다", isPresented: $trashOpenFailed) {
             Button("확인") {}
         } message: {
@@ -46,7 +45,9 @@ struct MenuBarPanel: View {
     /// 읽지 못하면 아예 그리지 않는다 — 사이드바 게이지와 같은 판단이다.
     @ViewBuilder
     private var diskSection: some View {
-        if let usage {
+        // 디스크 용량은 `AppModel`이 들고 있다가 정리·되돌리기 직후 다시 읽는다.
+        // 여기서 볼륨을 조회하지 않는다 — body는 스캔 진행률마다 다시 돈다.
+        if let usage = app.volumeUsage {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text("디스크").font(Theme.bodyText.weight(.medium))
