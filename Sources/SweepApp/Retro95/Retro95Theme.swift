@@ -136,6 +136,6 @@ enum DiskMapColumns {
         .init(title: String(localized: "이름"), width: name),
         .init(title: String(localized: "크기"), width: size, alignment: .trailing),
         .init(title: String(localized: "비율 막대")),
-        .init(title: String(localized: "상태/동작"), width: actions)
+        .init(title: String(localized: "상태·동작"), width: actions)
     ]
 }

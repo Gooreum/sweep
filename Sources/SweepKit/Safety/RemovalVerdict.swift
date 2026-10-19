@@ -70,10 +70,10 @@ public enum RemovalVerdict: Equatable, Sendable {
         }
         if target.isDescendant(of: URL(filePath: "/private/tmp"))
             || ProtectedPaths.userTemporaryRoots.contains(where: { target.isDescendant(of: $0) }) {
-            return .safe(reason: String(localized: "임시 파일입니다. 재부팅하면 비워집니다."))
+            return .safe(reason: String(localized: "임시 파일이에요. Mac을 재시동하면 비워져요."))
         }
         if under("Library/Application Support"), ProtectedPaths.matchesAppCacheName(target) {
-            return .safe(reason: String(localized: "앱 캐시입니다. 앱이 필요하면 다시 만듭니다."))
+            return .safe(reason: String(localized: "앱의 임시 파일이에요. 필요하면 앱이 다시 만들어요."))
         }
 
         // 확인 — 지울 수는 있지만 되돌릴 수 없을 수 있다. 위치별로 무엇이 사라지는지 말한다.
@@ -81,15 +81,15 @@ public enum RemovalVerdict: Equatable, Sendable {
             return .caution(reason: rule.reason)
         }
         if target.lastPathComponent.hasSuffix(".app") {
-            return .caution(reason: String(localized: "응용 프로그램입니다. 지우면 앱이 사라집니다. 설정은 ~/Library에 남습니다."))
+            return .caution(reason: String(localized: "앱이에요. 지우면 앱이 사라지고, 설정은 ~/Library 폴더에 남아요."))
         }
         if under("Library") {
-            return .caution(reason: String(localized: "앱·시스템 설정 데이터입니다. 무엇인지 확실할 때만 지우세요."))
+            return .caution(reason: String(localized: "앱과 시스템의 설정 정보예요. 무엇인지 확실할 때만 지우세요."))
         }
         if target.isDescendant(of: home) {
-            return .caution(reason: String(localized: "내 파일입니다. 휴지통으로 가지만 비우면 되돌릴 수 없습니다."))
+            return .caution(reason: String(localized: "내 파일이에요. 휴지통으로 가지만 비우면 되돌릴 수 없어요."))
         }
-        return .caution(reason: String(localized: "홈 밖의 내 소유 항목입니다. 어떤 프로그램이 쓰는지 확인하고 지우세요."))
+        return .caution(reason: String(localized: "내 사용자 폴더 밖에 있는 내 소유 항목이에요. 어떤 프로그램이 쓰는지 확인하고 지우세요."))
     }
 
     private struct Rule {
@@ -100,40 +100,40 @@ public enum RemovalVerdict: Equatable, Sendable {
     /// 지워도 다시 만들어지는 곳. 스캐너의 안전 판정과 같은 근거다.
     private static let safeRules: [Rule] = [
         .init(path: "Library/Developer/Xcode/DerivedData",
-              reason: String(localized: "빌드하면 다시 생성됩니다")),
+              reason: String(localized: "Xcode가 앱을 만들 때 다시 생겨요")),
         .init(path: "Library/Developer/CoreSimulator/Caches",
-              reason: String(localized: "시뮬레이터 캐시입니다")),
+              reason: String(localized: "앱 시험 도구의 임시 파일이에요")),
         .init(path: "Library/Developer/CoreSimulator/Temp",
-              reason: String(localized: "시뮬레이터 임시 파일입니다")),
+              reason: String(localized: "앱 시험 도구가 쓰다 남긴 임시 파일이에요")),
         .init(path: "Library/Caches",
-              reason: String(localized: "앱 캐시입니다. 앱이 필요하면 다시 만듭니다.")),
+              reason: String(localized: "앱의 임시 파일이에요. 필요하면 앱이 다시 만들어요.")),
         .init(path: "Library/Logs",
-              reason: String(localized: "로그 파일입니다. 다시 쌓입니다.")),
+              reason: String(localized: "앱 활동 기록이에요. 다시 쌓여요.")),
         .init(path: ".npm/_cacache",
-              reason: String(localized: "npm 캐시입니다. 설치할 때 다시 받습니다.")),
+              reason: String(localized: "npm 임시 파일이에요. 설치할 때 다시 받아요.")),
         .init(path: ".expo",
-              reason: String(localized: "Expo 캐시입니다. 빌드할 때 다시 받습니다.")),
+              reason: String(localized: "Expo 임시 파일이에요. 앱을 만들 때 다시 받아요.")),
     ]
 
     /// 지울 수는 있지만 무엇이 사라지는지 알고 눌러야 하는 곳.
     private static let cautionRules: [Rule] = [
         .init(path: "Library/Developer/Xcode/Archives",
-              reason: String(localized: "앱 심사 제출본 — 지우면 복구할 수 없습니다")),
+              reason: String(localized: "앱 심사 제출본이에요. 지우면 복구할 수 없어요")),
         .init(path: "Library/Developer/Xcode/iOS DeviceSupport",
-              reason: String(localized: "기기를 다시 연결하면 내려받습니다")),
+              reason: String(localized: "기기를 다시 연결하면 내려받아요")),
         .init(path: "Library/Developer/DVTDownloads",
-              reason: String(localized: "Xcode가 내려받은 구성요소입니다")),
+              reason: String(localized: "Xcode가 내려받은 구성요소예요")),
         .init(path: "Library/Developer/XCTestDevices",
-              reason: String(localized: "테스트용 시뮬레이터 기기입니다")),
+              reason: String(localized: "앱을 시험하는 데 쓰는 가상 기기예요")),
         .init(path: "Library/Developer/CoreSimulator/Devices",
-              reason: String(localized: "시뮬레이터 기기입니다. 안의 앱·데이터가 함께 사라집니다.")),
+              reason: String(localized: "앱 시험용 가상 기기예요. 안의 앱과 데이터가 함께 사라져요.")),
         .init(path: "Library/Application Support",
-              reason: String(localized: "앱 데이터입니다. 지우면 그 앱의 설정·로그인·문서가 사라질 수 있습니다.")),
+              reason: String(localized: "앱 데이터예요. 지우면 그 앱의 설정, 로그인 정보, 문서가 사라질 수 있어요.")),
         .init(path: "Library/Containers",
-              reason: String(localized: "샌드박스 앱의 데이터입니다. 앱을 지웠다면 찌꺼기지만, 쓰는 앱이면 데이터가 사라집니다.")),
+              reason: String(localized: "앱이 따로 보관하는 데이터예요. 앱을 지웠다면 남은 파일이지만, 쓰는 앱이면 데이터가 사라져요.")),
         .init(path: "Library/Group Containers",
-              reason: String(localized: "샌드박스 앱의 데이터입니다. 앱을 지웠다면 찌꺼기지만, 쓰는 앱이면 데이터가 사라집니다.")),
+              reason: String(localized: "앱이 따로 보관하는 데이터예요. 앱을 지웠다면 남은 파일이지만, 쓰는 앱이면 데이터가 사라져요.")),
         .init(path: "Downloads",
-              reason: String(localized: "내려받은 파일입니다. 다시 받을 수 있으면 지워도 됩니다.")),
+              reason: String(localized: "내려받은 파일이에요. 다시 받을 수 있으면 지워도 돼요.")),
     ]
 }

@@ -74,15 +74,15 @@ public struct LargeFileScanner: CleanupScanner {
         let days = Int(now.timeIntervalSince(modified) / 86_400)
         if downloaded {
             switch days {
-            case ..<1: return String(localized: "오늘 받았습니다")
-            case ..<30: return String(localized: "\(days)일 전에 받았습니다")
-            default: return String(localized: "\(days / 30)개월 전에 받았습니다")
+            case ..<1: return String(localized: "오늘 받았어요")
+            case ..<30: return String(localized: "\(days)일 전에 받았어요")
+            default: return String(localized: "\(days / 30)개월 전에 받았어요")
             }
         }
         switch days {
-        case ..<1: return String(localized: "오늘 수정했습니다")
-        case ..<30: return String(localized: "\(days)일 전에 수정했습니다")
-        default: return String(localized: "\(days / 30)개월 전에 수정했습니다")
+        case ..<1: return String(localized: "오늘 수정했어요")
+        case ..<30: return String(localized: "\(days)일 전에 수정했어요")
+        default: return String(localized: "\(days / 30)개월 전에 수정했어요")
         }
     }
 }

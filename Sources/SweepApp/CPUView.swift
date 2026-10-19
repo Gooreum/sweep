@@ -12,10 +12,10 @@ struct CPUView: View {
         static let pid: CGFloat = 60
         static let actions: CGFloat = 96
         static let headers: [Retro95TableHeader.Column] = [
-            .init(title: String(localized: "점유율 ▼"), width: percent),
-            .init(title: String(localized: "프로세스 / 실행 경로")),
-            .init(title: String(localized: "PID"), width: pid),
-            .init(title: String(localized: "위치 / 복사"), width: actions)
+            .init(title: String(localized: "사용률 ▼"), width: percent),
+            .init(title: String(localized: "프로그램과 위치")),
+            .init(title: String(localized: "번호"), width: pid),
+            .init(title: String(localized: "위치·복사"), width: actions)
         ]
     }
 
@@ -42,11 +42,11 @@ struct CPUView: View {
                 Text(coreSentence)
                     .font(R95.ui(12, bold: true))
                     .foregroundStyle(R95.black)
-                Text("프로세스 점유율은 활성 상태 보기와 같이 코어 하나를 100%로 셉니다. 여러 코어를 쓰면 100%를 넘고, 전부 합치면 최대 \(model.cores * 100)%입니다.")
+                Text("프로그램 사용률은 활성 상태 보기처럼 코어 하나를 100%로 세요. 여러 코어를 함께 쓰면 100%를 넘고, 모두 합치면 최대 \(model.cores * 100)%예요.")
                     .font(R95.ui(11))
                     .foregroundStyle(R95.deep)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("왼쪽 위 사용자·시스템·유휴는 Mac 전체를 100%로 본 값입니다.")
+                Text("왼쪽은 Mac 전체를 100%로 봐요. 프로그램 실행, Mac 기본 작동, 쉬는 몫을 나눠 보여줘요.")
                     .font(R95.ui(11))
                     .foregroundStyle(R95.deep)
             }
@@ -63,20 +63,20 @@ struct CPUView: View {
     private var coreSentence: String {
         if let performance = ProcessCPUSampler.performanceCores,
            let efficiency = ProcessCPUSampler.efficiencyCores {
-            String(localized: "이 Mac의 CPU 코어는 \(model.cores)개입니다 (성능 \(performance) + 효율 \(efficiency)).")
+            String(localized: "CPU 안에는 계산을 나눠 하는 코어가 \(model.cores)개 있어요. 빠른 계산용 \(performance)개와 전기를 덜 쓰는 \(efficiency)개예요.")
         } else {
-            String(localized: "이 Mac의 CPU 코어는 \(model.cores)개입니다.")
+            String(localized: "CPU 안에는 계산을 나눠 하는 코어가 \(model.cores)개 있어요.")
         }
     }
 
     private var chart: some View {
         VStack(spacing: 10) {
-            Retro95GroupBox(title: String(localized: "CPU 부하")) {
+            Retro95GroupBox(title: String(localized: "CPU 사용량")) {
                 loadBox
             }
-            Retro95GroupBox(title: String(localized: "상위 프로세스")) {
+            Retro95GroupBox(title: String(localized: "많이 쓰는 프로그램")) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("막대가 꽉 차면 CPU 코어 하나를 통째로 쓰는 중입니다. 200%면 코어 두 개를 쓰는 것입니다.")
+                    Text("막대가 꽉 차면 코어 하나 이상을 쓰고 있어요. 100%는 코어 하나, 200%는 두 개를 온전히 쓰는 양이에요.")
                         .font(R95.ui(11))
                         .foregroundStyle(R95.deep)
                         .fixedSize(horizontal: false, vertical: true)
@@ -113,10 +113,10 @@ struct CPUView: View {
                         Text("사용 중").font(R95.ui(13, bold: true))
                     }
                 }
-                loadRow(String(localized: "사용자"), load.user, fill: R95.navy)
-                loadRow(String(localized: "시스템"), load.system, fill: R95.navy)
+                loadRow(String(localized: "프로그램"), load.user, fill: R95.navy)
+                loadRow(String(localized: "Mac 작동"), load.system, fill: R95.navy)
                 // 유휴는 쓰이지 않은 몫이라 회색으로 물러나게 한다.
-                loadRow(String(localized: "유휴"), load.idle, fill: R95.shadow)
+                loadRow(String(localized: "쉬는 중"), load.idle, fill: R95.shadow)
             }
         } else {
             // 준비 중이거나 커널 값을 못 읽었다. 프로세스 합으로 지어내지 않는다 —
@@ -124,7 +124,7 @@ struct CPUView: View {
             VStack(alignment: .leading, spacing: 8) {
                 PixelIcon(art: .computer, size: 32)
                 Text(model.isWarmingUp ? String(localized: "측정 중…")
-                                       : String(localized: "Mac 전체 부하를 읽지 못했습니다."))
+                                       : String(localized: "Mac 전체 CPU 사용량을 읽지 못했어요."))
                     .font(R95.ui(12))
                     .foregroundStyle(R95.deep)
             }
@@ -167,12 +167,12 @@ struct CPUView: View {
         // 활성 상태 보기에서 가장 크게 보이는 두 이름을 앞에 둬야 "kernel_task가 없다"로
         // 읽히지 않는다. 다만 이 줄엔 잠깐 돌고 끝난 프로세스 몫도 섞여 있어(실측: 빌드 중
         // 기계 787% 중 top도 약 390%를 어느 행에도 못 붙였다) "합계"라고 밝힌다.
-        case .unlisted: String(localized: "kernel_task·WindowServer 등 목록 밖 합계")
+        case .unlisted: String(localized: "kernel_task, WindowServer 등 목록 밖 합계")
         }
     }
 
     private var processTable: some View {
-        Retro95GroupBox(title: String(localized: "프로세스 · 점유율순")) {
+        Retro95GroupBox(title: String(localized: "프로그램 사용률순")) {
             VStack(spacing: 0) {
                 Retro95TableHeader(columns: Columns.headers)
                 content
@@ -188,10 +188,10 @@ struct CPUView: View {
     private var content: some View {
         if model.isWarmingUp {
             placeholder(String(localized: "측정 중…"),
-                        detail: String(localized: "두 번 재야 사용률이 나옵니다."))
+                        detail: String(localized: "사용률을 계산하려고 두 번 재고 있어요."))
         } else if model.rows.isEmpty {
-            placeholder(String(localized: "지금 CPU를 쓰는 프로세스가 없습니다."),
-                        detail: String(localized: "직전 구간 동안 아무것도 계산하지 않았습니다."))
+            placeholder(String(localized: "지금 CPU를 쓰는 프로그램이 없어요."),
+                        detail: String(localized: "방금 측정한 동안에는 계산한 일이 없어요."))
         } else {
             // 주기적 갱신이 NSTableView 대리자로 재진입하지 않도록 List 대신 스크롤 뷰를 쓴다.
             ScrollView {
@@ -234,7 +234,7 @@ struct CPUView: View {
                 if case .process(let usage) = item, let path = usage.executablePath {
                     let url = URL(filePath: path)
                     iconButton(.folder, String(localized: "Finder에서 보기")) { ItemActions.reveal(url) }
-                    iconButton(.documents, String(localized: "경로 복사")) { ItemActions.copyPath(url) }
+                    iconButton(.documents, String(localized: "위치 복사")) { ItemActions.copyPath(url) }
                 }
             }
             .frame(width: Columns.actions)
@@ -246,7 +246,7 @@ struct CPUView: View {
         switch row {
         case .process(let usage): usage.displayPath
         case .unlisted:
-            String(localized: "시스템 계정 프로세스와 잠깐 돌고 끝난 프로세스 몫입니다. App Store 앱은 하나씩 읽을 수 없습니다.")
+            String(localized: "Mac 시스템 계정으로 실행되거나 잠깐 실행됐다 끝난 프로그램의 합계예요. App Store 앱은 보안 때문에 각각의 사용량을 볼 수 없어요.")
         }
     }
 

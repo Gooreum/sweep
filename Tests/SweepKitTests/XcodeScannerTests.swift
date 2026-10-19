@@ -99,7 +99,7 @@ struct XcodeScannerTests {
         let items = await XcodeScanner(home: home).scan()
         #expect(items.count == 1)
         #expect(items.first?.safety == .safe)
-        #expect(items.first?.detail == "빌드하면 다시 생성됩니다")
+        #expect(items.first?.detail == "Xcode가 앱을 만들 때 다시 생겨요")
         #expect(items.first?.isSelectedByDefault == true)
     }
 

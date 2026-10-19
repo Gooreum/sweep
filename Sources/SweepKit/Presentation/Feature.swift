@@ -45,18 +45,18 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
     /// 시작 화면에 뜨는 설명 한 줄. 무엇을 하는 화면인지 먼저 말한다.
     public var summary: String {
         switch self {
-        case .smartScan: String(localized: "한 번에 전체를 점검하고 회수할 수 있는 용량을 알려줍니다.")
+        case .smartScan: String(localized: "한 번에 전체를 살펴보고 정리할 수 있는 용량을 알려줘요.")
         // 샌드박스에서는 사용자가 연 개발 폴더만 본다. 임시 파일·캐시라고 쓰면 과장이다.
         case .junk: Sandbox.isActive
-            ? String(localized: "Xcode 빌드 산출물·시뮬레이터 파일을 찾아 디스크 공간을 확보합니다.")
-            : String(localized: "임시 파일·빌드 산출물·개발 캐시·기기 백업을 찾아 디스크 공간을 확보합니다.")
-        case .largeFile: String(localized: "홈 폴더와 추가한 폴더에서 유난히 큰 파일을 찾습니다.")
-        case .duplicate: String(localized: "내용이 같은 파일을 찾아 한 벌만 남깁니다.")
-        case .trash: String(localized: "휴지통에 든 것을 크기순으로 보고 골라서 비웁니다. 비우면 되돌릴 수 없습니다.")
-        case .diskMap: String(localized: "어디가 용량을 차지하는지 크기순으로 훑어봅니다.")
+            ? String(localized: "Xcode가 앱을 만들거나 시험할 때 생긴 파일을 찾아 공간을 비워요.")
+            : String(localized: "임시 파일, 앱을 만들 때 생긴 파일, 개발 도구의 임시 파일, 기기 백업을 찾아 공간을 비워요.")
+        case .largeFile: String(localized: "내 사용자 폴더와 추가한 폴더에서 큰 파일을 찾아요.")
+        case .duplicate: String(localized: "내용이 같은 파일을 찾아 하나만 남겨요.")
+        case .trash: String(localized: "휴지통에 든 것을 크기순으로 보고 골라서 비워요. 비우면 되돌릴 수 없어요.")
+        case .diskMap: String(localized: "무엇이 공간을 차지하는지 큰 것부터 살펴봐요.")
         // 내 계정 소유만 읽힌다는 것을 여기서 미리 말한다. 화면에 들어가서야
         // 알면 "왜 활성 상태 보기와 목록이 다르지"로 읽힌다.
-        case .cpu: String(localized: "지금 어떤 프로세스가 CPU를 쓰고 있는지 보여줍니다.")
+        case .cpu: String(localized: "지금 어떤 프로그램이 CPU를 쓰는지 보여줘요.")
         }
     }
 
@@ -68,15 +68,15 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
     public var reviewHint: String {
         switch self {
         case .junk:
-            String(localized: "대부분 빌드하면 다시 생깁니다. 되돌릴 수 없는 심사 제출본은 잠가 두었습니다.")
+            String(localized: "대부분 앱을 만들면 다시 생겨요. 복구할 수 없는 앱 심사 제출본은 선택할 수 없게 잠가 뒀어요.")
         case .largeFile:
-            String(localized: "설치 파일은 다시 받을 수 있습니다. 촬영 원본과 백업은 내용을 확인한 뒤 고르세요.")
+            String(localized: "설치 파일은 다시 받을 수 있어요. 촬영 원본과 백업은 내용을 확인한 뒤 고르세요.")
         case .duplicate:
-            String(localized: "원본은 항상 남깁니다. 아래는 지워도 같은 파일이 그대로 남아 있는 사본입니다.")
+            String(localized: "원본은 항상 남겨요. 아래 파일을 지워도 내용이 같은 파일은 그대로 남아요.")
         case .trash:
-            String(localized: "고른 항목은 휴지통에서 바로 지워져 되돌릴 수 없습니다.")
+            String(localized: "고른 항목은 휴지통에서 바로 지워져 되돌릴 수 없어요.")
         case .smartScan:
-            String(localized: "기능별로 나눠 두었습니다. 잠긴 항목은 되돌릴 수 없어 선택할 수 없습니다.")
+            String(localized: "기능별로 나눠 뒀어요. 잠긴 항목은 되돌릴 수 없어 선택할 수 없어요.")
         case .diskMap:
             ""
         case .cpu:

@@ -24,7 +24,7 @@ public struct MailDownloadsScanner: CleanupScanner {
             guard found.bytes > 0 else { return nil }
             return CleanupItem(url: url, size: found.bytes, category: .mailAttachment,
                                safety: .safe,
-                               detail: String(localized: "메일에서 다시 열면 생깁니다"),
+                               detail: String(localized: "메일에서 다시 열면 생겨요"),
                                dates: found.dates)
         }
     }

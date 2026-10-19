@@ -39,14 +39,14 @@ struct RunawayTempScannerTests {
     @Test("증가량이 0이면 증가 없음으로 표시된다")
     func zeroGrowthIsIdle() {
         let text = RunawayTempScanner.detail(growth: 0, over: .seconds(3))
-        #expect(text == "증가 없음 — 남겨진 임시 파일")
+        #expect(text == "쓰다 남긴 임시 파일이에요. 크기는 늘지 않아요")
     }
 
     // TC-3
     @Test("크기가 줄어든 경우도 증가 없음으로 취급된다")
     func negativeGrowthIsIdle() {
         let text = RunawayTempScanner.detail(growth: -Int64(Self.oneMB), over: .seconds(3))
-        #expect(text == "증가 없음 — 남겨진 임시 파일")
+        #expect(text == "쓰다 남긴 임시 파일이에요. 크기는 늘지 않아요")
     }
 
     // TC-4
@@ -101,7 +101,7 @@ struct RunawayTempScannerTests {
 
         #expect(items.count == 1)
         #expect(items.first?.safety == .safe)
-        #expect(items.first?.detail.contains("증가 없음") == true)
+        #expect(items.first?.detail.contains("크기는 늘지 않아요") == true)
     }
 
     // TC-7

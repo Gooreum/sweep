@@ -55,18 +55,18 @@
         }
       }
     },
-    "%@ · %@ — 설치한 앱과 설정이 사라집니다": {
+    "%@ · %@. 설치한 앱과 설정이 사라져요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@ — installed apps and settings will be removed"
+            "value": "%1$@ · %2$@. Installed apps and settings will be removed"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@ — 설치한 앱과 설정이 사라집니다"
+            "value": "%1$@ · %2$@. 설치한 앱과 설정이 사라져요"
           }
         }
       }
@@ -109,6 +109,22 @@
         }
       }
     },
+    "%@ 검색 중…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanning %@…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 검색 중…"
+          }
+        }
+      }
+    },
     "%@ 만듦": {
       "localizations": {
         "en": {
@@ -141,22 +157,6 @@
         }
       }
     },
-    "%@ 오프라인 자산 — 다시 내려받습니다": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ offline assets — downloaded again"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ 오프라인 자산 — 다시 내려받습니다"
-          }
-        }
-      }
-    },
     "%@ 외 %lld개": {
       "localizations": {
         "en": {
@@ -169,6 +169,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ 외 %2$lld개"
+          }
+        }
+      }
+    },
+    "%@ 인터넷 없이 쓰는 파일이에요. 다시 내려받아요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ files for use without internet. They'll be downloaded again"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 인터넷 없이 쓰는 파일이에요. 다시 내려받아요"
           }
         }
       }
@@ -189,34 +205,18 @@
         }
       }
     },
-    "%@ 훑는 중…": {
+    "%@ 휴지통이에요. 비우면 되돌릴 수 없어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scanning %@…"
+            "value": "%@ Trash. Emptying it can't be undone"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ 훑는 중…"
-          }
-        }
-      }
-    },
-    "%@ 휴지통 — 비우면 되돌릴 수 없습니다": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ Trash — can't be restored once emptied"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ 휴지통 — 비우면 되돌릴 수 없습니다"
+            "value": "%@ 휴지통이에요. 비우면 되돌릴 수 없어요"
           }
         }
       }
@@ -253,50 +253,50 @@
         }
       }
     },
-    "%@에는 더 나눌 항목이 없습니다": {
+    "%@에는 더 나눌 항목이 없어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ has nothing more to break down"
+            "value": "No more items to break down in %@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@에는 더 나눌 항목이 없습니다"
+            "value": "%@에는 더 나눌 항목이 없어요"
           }
         }
       }
     },
-    "%@와 내용이 같습니다": {
+    "%@와 내용이 같아요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Same content as %@"
+            "value": "Same contents as %@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@와 내용이 같습니다"
+            "value": "%@와 내용이 같아요"
           }
         }
       }
     },
-    "%@이(가) 다시 만듭니다": {
+    "%@이(가) 다시 만들어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ will recreate it"
+            "value": "%@ will create these again"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@이(가) 다시 만듭니다"
+            "value": "%@이(가) 다시 만들어요"
           }
         }
       }
@@ -399,98 +399,6 @@
         }
       }
     },
-    "%lld개 · %@를 영구 삭제했습니다": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Permanently deleted %1$lld items · %2$@"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$lld개 · %2$@를 영구 삭제했습니다"
-          }
-        }
-      }
-    },
-    "%lld개 · %@를 원래 자리로 되돌렸습니다": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Put back %#@items@ · %2$@ to their original location"
-          },
-          "substitutions": {
-            "items": {
-              "argNum": 1,
-              "formatSpecifier": "lld",
-              "variations": {
-                "plural": {
-                  "one": {
-                    "stringUnit": {
-                      "state": "translated",
-                      "value": "%arg item"
-                    }
-                  },
-                  "other": {
-                    "stringUnit": {
-                      "state": "translated",
-                      "value": "%arg items"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$lld개 · %2$@를 원래 자리로 되돌렸습니다"
-          }
-        }
-      }
-    },
-    "%lld개 · %@를 휴지통으로 옮겼습니다": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Moved %#@items@ · %2$@ to the Trash"
-          },
-          "substitutions": {
-            "items": {
-              "argNum": 1,
-              "formatSpecifier": "lld",
-              "variations": {
-                "plural": {
-                  "one": {
-                    "stringUnit": {
-                      "state": "translated",
-                      "value": "%arg item"
-                    }
-                  },
-                  "other": {
-                    "stringUnit": {
-                      "state": "translated",
-                      "value": "%arg items"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$lld개 · %2$@를 휴지통으로 옮겼습니다"
-          }
-        }
-      }
-    },
     "%lld개 항목": {
       "localizations": {
         "en": {
@@ -519,254 +427,194 @@
         }
       }
     },
-    "%lld개 항목을 영구 삭제합니다": {
+    "%lld개 항목을 영구 삭제해요": {
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Permanently delete %lld item"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Permanently delete %lld items"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permanently delete %lld items"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld개 항목을 영구 삭제합니다"
+            "value": "%lld개 항목을 영구 삭제해요"
           }
         }
       }
     },
-    "%lld개 항목을 옮기지 못했습니다": {
+    "%lld개 항목을 옮기지 못했어요": {
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Couldn't move %lld item"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Couldn't move %lld items"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't move %lld items"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld개 항목을 옮기지 못했습니다"
+            "value": "%lld개 항목을 옮기지 못했어요"
           }
         }
       }
     },
-    "%lld개 항목을 휴지통으로 옮깁니다": {
+    "%lld개 항목을 휴지통으로 옮겨요": {
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Move %lld item to the Trash"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Move %lld items to the Trash"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move %lld items to Trash"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld개 항목을 휴지통으로 옮깁니다"
+            "value": "%lld개 항목을 휴지통으로 옮겨요"
           }
         }
       }
     },
-    "%lld개는 되돌리지 못했습니다 — 자세히 보기": {
+    "%lld개, %@를 영구 삭제했어요": {
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld item couldn't be restored — see details"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld items couldn't be restored — see details"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permanently deleted %1$lld items, %2$@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld개는 되돌리지 못했습니다 — 자세히 보기"
+            "value": "%1$lld개, %2$@를 영구 삭제했어요"
           }
         }
       }
     },
-    "%lld개는 삭제하지 못했습니다 — 자세히 보기": {
+    "%lld개, %@를 원래 자리로 되돌렸어요": {
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld item couldn't be deleted — see details"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld items couldn't be deleted — see details"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put back %1$lld items, %2$@, in their original locations"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld개는 삭제하지 못했습니다 — 자세히 보기"
+            "value": "%1$lld개, %2$@를 원래 자리로 되돌렸어요"
           }
         }
       }
     },
-    "%lld개는 옮기지 못했습니다 — 자세히 보기": {
+    "%lld개, %@를 휴지통으로 옮겼어요": {
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld item couldn't be moved — see details"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld items couldn't be moved — see details"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moved %1$lld items, %2$@, to Trash"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld개는 옮기지 못했습니다 — 자세히 보기"
+            "value": "%1$lld개, %2$@를 휴지통으로 옮겼어요"
           }
         }
       }
     },
-    "%lld개를 되돌리지 못했습니다": {
+    "%lld개는 되돌리지 못했어요. 이유 보기": {
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Couldn't restore %lld item"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Couldn't restore %lld items"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't put back %lld items. See why"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld개를 되돌리지 못했습니다"
+            "value": "%lld개는 되돌리지 못했어요. 이유 보기"
           }
         }
       }
     },
-    "%lld개를 삭제하지 못했습니다": {
+    "%lld개는 삭제하지 못했어요. 이유 보기": {
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Couldn't delete %lld item"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Couldn't delete %lld items"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't delete %lld items. See why"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld개를 삭제하지 못했습니다"
+            "value": "%lld개는 삭제하지 못했어요. 이유 보기"
           }
         }
       }
     },
-    "%lld개를 휴지통으로 옮기지 못했습니다": {
+    "%lld개는 옮기지 못했어요. 이유 보기": {
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Couldn't move %lld item to the Trash"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Couldn't move %lld items to the Trash"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't move %lld items. See why"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld개를 휴지통으로 옮기지 못했습니다"
+            "value": "%lld개는 옮기지 못했어요. 이유 보기"
+          }
+        }
+      }
+    },
+    "%lld개를 되돌리지 못했어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't put back %lld items"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개를 되돌리지 못했어요"
+          }
+        }
+      }
+    },
+    "%lld개를 삭제하지 못했어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't delete %lld items"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개를 삭제하지 못했어요"
+          }
+        }
+      }
+    },
+    "%lld개를 휴지통으로 옮기지 못했어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't move %lld items to Trash"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld개를 휴지통으로 옮기지 못했어요"
           }
         }
       }
@@ -855,58 +703,34 @@
         }
       }
     },
-    "%lld개월 전에 받았습니다": {
+    "%lld개월 전에 받았어요": {
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Downloaded %lld month ago"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Downloaded %lld months ago"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaded %lld months ago"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld개월 전에 받았습니다"
+            "value": "%lld개월 전에 받았어요"
           }
         }
       }
     },
-    "%lld개월 전에 수정했습니다": {
+    "%lld개월 전에 수정했어요": {
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Modified %lld month ago"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Modified %lld months ago"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modified %lld months ago"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld개월 전에 수정했습니다"
+            "value": "%lld개월 전에 수정했어요"
           }
         }
       }
@@ -983,30 +807,18 @@
         }
       }
     },
-    "%lld일 동안 쓰이지 않았습니다": {
+    "%lld일 동안 쓰이지 않았어요": {
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Unused for %lld day"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Unused for %lld days"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not used for %lld days"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld일 동안 쓰이지 않았습니다"
+            "value": "%lld일 동안 쓰이지 않았어요"
           }
         }
       }
@@ -1095,58 +907,34 @@
         }
       }
     },
-    "%lld일 전에 받았습니다": {
+    "%lld일 전에 받았어요": {
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Downloaded %lld day ago"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Downloaded %lld days ago"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaded %lld days ago"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld일 전에 받았습니다"
+            "value": "%lld일 전에 받았어요"
           }
         }
       }
     },
-    "%lld일 전에 수정했습니다": {
+    "%lld일 전에 수정했어요": {
       "localizations": {
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Modified %lld day ago"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Modified %lld days ago"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modified %lld days ago"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld일 전에 수정했습니다"
+            "value": "%lld일 전에 수정했어요"
           }
         }
       }
@@ -1167,130 +955,162 @@
         }
       }
     },
-    "App Store 버전은 macOS 샌드박스 안에서 동작해서, 폴더를 열려면 한 번 허락이 필요해요.": {
+    "App Store 앱은 보안 때문에 폴더를 마음대로 열 수 없어요. 처음 한 번 접근을 허용해 주세요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The App Store version runs inside the macOS sandbox, so it needs your permission once to open a folder."
+            "value": "For security, App Store apps need permission to open folders. Allow access once to get started."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "App Store 버전은 macOS 샌드박스 안에서 동작해서, 폴더를 열려면 한 번 허락이 필요해요."
+            "value": "App Store 앱은 보안 때문에 폴더를 마음대로 열 수 없어요. 처음 한 번 접근을 허용해 주세요."
           }
         }
       }
     },
-    "Bazelisk 캐시": {
+    "Bazelisk 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bazelisk cache"
+            "value": "Bazelisk temporary files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bazelisk 캐시"
+            "value": "Bazelisk 임시 파일"
           }
         }
       }
     },
-    "CPU 부하": {
+    "CPU 사용량": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "CPU Load"
+            "value": "CPU Usage"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "CPU 부하"
+            "value": "CPU 사용량"
           }
         }
       }
     },
-    "Cargo 레지스트리 캐시": {
+    "CPU 안에는 계산을 나눠 하는 코어가 %lld개 있어요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cargo registry cache"
+            "value": "The CPU has %lld cores that share the work."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cargo 레지스트리 캐시"
+            "value": "CPU 안에는 계산을 나눠 하는 코어가 %lld개 있어요."
           }
         }
       }
     },
-    "Carthage 캐시": {
+    "CPU 안에는 계산을 나눠 하는 코어가 %lld개 있어요. 빠른 계산용 %lld개와 전기를 덜 쓰는 %lld개예요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Carthage cache"
+            "value": "The CPU has %1$lld cores that share the work: %2$lld for faster work and %3$lld that use less power."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Carthage 캐시"
+            "value": "CPU 안에는 계산을 나눠 하는 코어가 %1$lld개 있어요. 빠른 계산용 %2$lld개와 전기를 덜 쓰는 %3$lld개예요."
           }
         }
       }
     },
-    "CocoaPods 캐시": {
+    "Cargo 내려받기 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "CocoaPods cache"
+            "value": "Cargo temporary downloads"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "CocoaPods 캐시"
+            "value": "Cargo 내려받기 임시 파일"
           }
         }
       }
     },
-    "Cypress 바이너리 캐시": {
+    "Carthage 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cypress binary cache"
+            "value": "Carthage temporary files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cypress 바이너리 캐시"
+            "value": "Carthage 임시 파일"
           }
         }
       }
     },
-    "Deno 캐시": {
+    "CocoaPods 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deno cache"
+            "value": "CocoaPods temporary files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deno 캐시"
+            "value": "CocoaPods 임시 파일"
+          }
+        }
+      }
+    },
+    "Cypress 실행 파일 사본": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cypress program copies"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cypress 실행 파일 사본"
+          }
+        }
+      }
+    },
+    "Deno 임시 파일": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deno temporary files"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deno 임시 파일"
           }
         }
       }
@@ -1311,162 +1131,130 @@
         }
       }
     },
-    "Dock의 휴지통을 열어 '되돌려 놓기'를 쓰세요.": {
+    "Electron 내려받기 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open the Trash in the Dock and use “Put Back”."
+            "value": "Electron temporary downloads"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dock의 휴지통을 열어 '되돌려 놓기'를 쓰세요."
+            "value": "Electron 내려받기 임시 파일"
           }
         }
       }
     },
-    "Dock의 휴지통을 열어 비워 주세요.": {
+    "Expo Go 내려받기 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open the Trash in the Dock and empty it."
+            "value": "Expo Go temporary downloads"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dock의 휴지통을 열어 비워 주세요."
+            "value": "Expo Go 내려받기 임시 파일"
           }
         }
       }
     },
-    "Electron 내려받기 캐시": {
+    "Expo 버전 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Electron download cache"
+            "value": "Expo version temporary files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Electron 내려받기 캐시"
+            "value": "Expo 버전 임시 파일"
           }
         }
       }
     },
-    "Expo Go 내려받기 캐시": {
+    "Expo 설정 형식 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Expo Go download cache"
+            "value": "Expo settings format temporary files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Expo Go 내려받기 캐시"
+            "value": "Expo 설정 형식 임시 파일"
           }
         }
       }
     },
-    "Expo 네이티브 모듈 캐시": {
+    "Expo 앱 구성 파일 사본": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Expo native modules cache"
+            "value": "Expo app setup file copies"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Expo 네이티브 모듈 캐시"
+            "value": "Expo 앱 구성 파일 사본"
           }
         }
       }
     },
-    "Expo 버전 캐시": {
+    "Expo 앱 시험용 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Expo versions cache"
+            "value": "Expo app testing temporary files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Expo 버전 캐시"
+            "value": "Expo 앱 시험용 임시 파일"
           }
         }
       }
     },
-    "Expo 스키마 캐시": {
+    "Expo 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Expo schema cache"
+            "value": "Expo temporary files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Expo 스키마 캐시"
+            "value": "Expo 임시 파일"
           }
         }
       }
     },
-    "Expo 시뮬레이터 앱 캐시": {
+    "Expo 임시 파일이에요. 앱을 만들 때 다시 받아요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Expo simulator app cache"
+            "value": "Expo temporary files. Downloaded again when you build an app."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Expo 시뮬레이터 앱 캐시"
-          }
-        }
-      }
-    },
-    "Expo 캐시": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expo cache"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expo 캐시"
-          }
-        }
-      }
-    },
-    "Expo 캐시입니다. 빌드할 때 다시 받습니다.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expo cache. Re-downloaded on build."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expo 캐시입니다. 빌드할 때 다시 받습니다."
+            "value": "Expo 임시 파일이에요. 앱을 만들 때 다시 받아요."
           }
         }
       }
@@ -1487,119 +1275,167 @@
         }
       }
     },
-    "Finder에서 휴지통을 비우면 Mac 암호를 묻고 지웁니다.": {
+    "Finder에서 휴지통을 비우면 Mac 암호를 물은 뒤 지워요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Empty the Trash in Finder — it asks for your Mac password and deletes them."
+            "value": "Emptying Trash in Finder asks for your Mac password before deleting the items."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finder에서 휴지통을 비우면 Mac 암호를 묻고 지웁니다."
+            "value": "Finder에서 휴지통을 비우면 Mac 암호를 물은 뒤 지워요."
           }
         }
       }
     },
-    "Go 빌드 캐시": {
+    "Go 앱 생성 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Go build cache"
+            "value": "Go app build temporary files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Go 빌드 캐시"
+            "value": "Go 앱 생성 임시 파일"
           }
         }
       }
     },
-    "Gradle 캐시": {
+    "Gradle 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gradle cache"
+            "value": "Gradle temporary files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gradle 캐시"
+            "value": "Gradle 임시 파일"
           }
         }
       }
     },
-    "Homebrew 내려받기 캐시": {
+    "Homebrew 내려받기 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Homebrew download cache"
+            "value": "Homebrew temporary downloads"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Homebrew 내려받기 캐시"
+            "value": "Homebrew 내려받기 임시 파일"
           }
         }
       }
     },
-    "JetBrains IDE 캐시": {
+    "JetBrains 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "JetBrains IDE cache"
+            "value": "JetBrains temporary files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "JetBrains IDE 캐시"
+            "value": "JetBrains 임시 파일"
           }
         }
       }
     },
-    "Library 안은 추가할 수 없습니다. 앱 데이터라 정크 검사가 따로 봅니다.": {
+    "Library 안은 추가할 수 없어요. 앱 데이터는 정크 파일 기능에서 따로 살펴봐요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You can't add folders inside Library. That's app data, and the junk scan checks it separately."
+            "value": "You can't add folders inside Library. Junk Files checks app data separately."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Library 안은 추가할 수 없습니다. 앱 데이터라 정크 검사가 따로 봅니다."
+            "value": "Library 안은 추가할 수 없어요. 앱 데이터는 정크 파일 기능에서 따로 살펴봐요."
           }
         }
       }
     },
-    "Mac 전체 부하를 읽지 못했습니다.": {
+    "Mac 시스템 계정으로 실행되거나 잠깐 실행됐다 끝난 프로그램의 합계예요. App Store 앱은 보안 때문에 각각의 사용량을 볼 수 없어요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn't read the Mac's overall load."
+            "value": "Total for programs run by Mac system accounts or programs that ran briefly and finished. For security, App Store apps can't see their individual usage."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mac 전체 부하를 읽지 못했습니다."
+            "value": "Mac 시스템 계정으로 실행되거나 잠깐 실행됐다 끝난 프로그램의 합계예요. App Store 앱은 보안 때문에 각각의 사용량을 볼 수 없어요."
           }
         }
       }
     },
-    "Mac 전체를 한 번에 훑습니다": {
+    "Mac 작동": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac Operations"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac 작동"
+          }
+        }
+      }
+    },
+    "Mac 전체 CPU 사용량을 읽지 못했어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't read total CPU usage for this Mac."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac 전체 CPU 사용량을 읽지 못했어요."
+          }
+        }
+      }
+    },
+    "Mac 전체를 검색하는 중…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanning your whole Mac…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac 전체를 검색하는 중…"
+          }
+        }
+      }
+    },
+    "Mac 전체를 한 번에 검색해요": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1610,71 +1446,39 @@
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mac 전체를 한 번에 훑습니다"
+            "value": "Mac 전체를 한 번에 검색해요"
           }
         }
       }
     },
-    "Mac 전체를 훑는 중…": {
+    "Maven 내려받기 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scanning the whole Mac…"
+            "value": "Maven temporary downloads"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mac 전체를 훑는 중…"
+            "value": "Maven 내려받기 임시 파일"
           }
         }
       }
     },
-    "Maven 저장소 캐시": {
+    "Playwright 브라우저 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Maven repository cache"
+            "value": "Playwright browser temporary files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Maven 저장소 캐시"
-          }
-        }
-      }
-    },
-    "PID": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PID"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PID"
-          }
-        }
-      }
-    },
-    "Playwright 브라우저 캐시": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Playwright browser cache"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Playwright 브라우저 캐시"
+            "value": "Playwright 브라우저 임시 파일"
           }
         }
       }
@@ -1743,162 +1547,162 @@
         }
       }
     },
-    "Swift Package Manager 캐시": {
+    "Swift Package Manager 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Swift Package Manager cache"
+            "value": "Swift Package Manager temporary files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Swift Package Manager 캐시"
+            "value": "Swift Package Manager 임시 파일"
           }
         }
       }
     },
-    "TypeScript 캐시": {
+    "TypeScript 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "TypeScript cache"
+            "value": "TypeScript temporary files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "TypeScript 캐시"
+            "value": "TypeScript 임시 파일"
           }
         }
       }
     },
-    "Xcode · 시뮬레이터": {
+    "Xcode · 앱 시험 도구": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Xcode · Simulators"
+            "value": "Xcode · App Testing Tools"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Xcode · 시뮬레이터"
+            "value": "Xcode · 앱 시험 도구"
           }
         }
       }
     },
-    "Xcode 빌드 산출물·시뮬레이터 파일을 찾아 디스크 공간을 확보합니다.": {
+    "Xcode 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finds Xcode build products and simulator files to free up disk space."
+            "value": "Xcode temporary files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Xcode 빌드 산출물·시뮬레이터 파일을 찾아 디스크 공간을 확보합니다."
+            "value": "Xcode 임시 파일"
           }
         }
       }
     },
-    "Xcode 산출물 · 시뮬레이터": {
+    "Xcode가 내려받은 구성요소예요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Xcode build products · Simulators"
+            "value": "Components downloaded by Xcode"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Xcode 산출물 · 시뮬레이터"
+            "value": "Xcode가 내려받은 구성요소예요"
           }
         }
       }
     },
-    "Xcode 산출물 · 시뮬레이터 · DerivedData": {
+    "Xcode가 앱을 만들 때 다시 생겨요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Xcode build products · Simulators · DerivedData"
+            "value": "Xcode creates these again when you build an app"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Xcode 산출물 · 시뮬레이터 · DerivedData"
+            "value": "Xcode가 앱을 만들 때 다시 생겨요"
           }
         }
       }
     },
-    "Xcode 산출물 · 캐시 · 큰 파일 · 중복 파일을 찾아 기능별로 나눠 보여줍니다.": {
+    "Xcode가 앱을 만들 때 생긴 파일, 임시 파일, 큰 파일, 중복 파일을 기능별로 보여줘요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finds Xcode output, caches, large files and duplicates, sorted by feature."
+            "value": "See files created when Xcode builds apps, temporary files, large files, and duplicates, grouped by feature."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Xcode 산출물 · 캐시 · 큰 파일 · 중복 파일을 찾아 기능별로 나눠 보여줍니다."
+            "value": "Xcode가 앱을 만들 때 생긴 파일, 임시 파일, 큰 파일, 중복 파일을 기능별로 보여줘요."
           }
         }
       }
     },
-    "Xcode 캐시": {
+    "Xcode가 앱을 만들거나 시험할 때 생긴 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Xcode cache"
+            "value": "Files created when Xcode builds or tests apps"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Xcode 캐시"
+            "value": "Xcode가 앱을 만들거나 시험할 때 생긴 파일"
           }
         }
       }
     },
-    "Xcode가 내려받은 구성요소입니다": {
+    "Xcode가 앱을 만들거나 시험할 때 생긴 파일을 찾아 공간을 비워요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Component downloaded by Xcode"
+            "value": "Free up space by finding files created when Xcode builds or tests apps."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Xcode가 내려받은 구성요소입니다"
+            "value": "Xcode가 앱을 만들거나 시험할 때 생긴 파일을 찾아 공간을 비워요."
           }
         }
       }
     },
-    "Yarn 캐시": {
+    "Yarn 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yarn cache"
+            "value": "Yarn temporary files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yarn 캐시"
+            "value": "Yarn 임시 파일"
           }
         }
       }
@@ -1935,18 +1739,18 @@
         }
       }
     },
-    "electron-builder 캐시": {
+    "electron-builder 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "electron-builder cache"
+            "value": "electron-builder temporary files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "electron-builder 캐시"
+            "value": "electron-builder 임시 파일"
           }
         }
       }
@@ -1967,34 +1771,34 @@
         }
       }
     },
-    "iCloud Drive 휴지통 — 비우면 다른 기기에서도 사라집니다": {
+    "iCloud Drive 휴지통이에요. 비우면 다른 기기에서도 사라져요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "iCloud Drive Trash — emptying also removes it from your other devices"
+            "value": "iCloud Drive Trash. Emptying it also removes the items from other devices"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "iCloud Drive 휴지통 — 비우면 다른 기기에서도 사라집니다"
+            "value": "iCloud Drive 휴지통이에요. 비우면 다른 기기에서도 사라져요"
           }
         }
       }
     },
-    "iCloud에만 있음 — 지우면 iCloud 공간만 비워집니다": {
+    "iCloud에만 있어요. 지우면 iCloud 공간만 비워져요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Only in iCloud — deleting frees iCloud storage only"
+            "value": "iCloud only. Deleting this only frees up iCloud space"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "iCloud에만 있음 — 지우면 iCloud 공간만 비워집니다"
+            "value": "iCloud에만 있어요. 지우면 iCloud 공간만 비워져요"
           }
         }
       }
@@ -2015,114 +1819,114 @@
         }
       }
     },
-    "kernel_task·WindowServer 등 목록 밖 합계": {
+    "kernel_task, WindowServer 등 목록 밖 합계": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "kernel_task, WindowServer & other unlisted (total)"
+            "value": "Total for kernel_task, WindowServer, and others outside this list"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "kernel_task·WindowServer 등 목록 밖 합계"
+            "value": "kernel_task, WindowServer 등 목록 밖 합계"
           }
         }
       }
     },
-    "node-gyp 캐시": {
+    "node-gyp 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "node-gyp cache"
+            "value": "node-gyp temporary files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "node-gyp 캐시"
+            "value": "node-gyp 임시 파일"
           }
         }
       }
     },
-    "npm 내려받기 캐시": {
+    "npm 내려받기 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "npm download cache"
+            "value": "npm temporary downloads"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "npm 내려받기 캐시"
+            "value": "npm 내려받기 임시 파일"
           }
         }
       }
     },
-    "npm 캐시입니다. 설치할 때 다시 받습니다.": {
+    "npm 임시 파일이에요. 설치할 때 다시 받아요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "npm cache. Re-downloaded on install."
+            "value": "npm temporary files. Downloaded again when you install packages."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "npm 캐시입니다. 설치할 때 다시 받습니다."
+            "value": "npm 임시 파일이에요. 설치할 때 다시 받아요."
           }
         }
       }
     },
-    "npx 실행 캐시": {
+    "npx 실행 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "npx cache"
+            "value": "npx temporary program files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "npx 실행 캐시"
+            "value": "npx 실행 임시 파일"
           }
         }
       }
     },
-    "pip 내려받기 캐시": {
+    "pip 내려받기 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "pip download cache"
+            "value": "pip temporary downloads"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "pip 내려받기 캐시"
+            "value": "pip 내려받기 임시 파일"
           }
         }
       }
     },
-    "pnpm 스토어 캐시": {
+    "pnpm 내려받기 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "pnpm store cache"
+            "value": "pnpm temporary downloads"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "pnpm 스토어 캐시"
+            "value": "pnpm 내려받기 임시 파일"
           }
         }
       }
@@ -2143,50 +1947,50 @@
         }
       }
     },
-    "uv 패키지 캐시": {
+    "uv 내려받기 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "uv package cache"
+            "value": "uv temporary downloads"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "uv 패키지 캐시"
+            "value": "uv 내려받기 임시 파일"
           }
         }
       }
     },
-    "~ 홈 폴더": {
+    "~ 내 사용자 폴더": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "~ Home folders"
+            "value": "~ My Home Folder"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "~ 홈 폴더"
+            "value": "~ 내 사용자 폴더"
           }
         }
       }
     },
-    "개발 캐시": {
+    "개발 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Developer Caches"
+            "value": "Developer Temporary Files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "개발 캐시"
+            "value": "개발 임시 파일"
           }
         }
       }
@@ -2271,66 +2075,66 @@
         }
       }
     },
-    "경로 복사": {
+    "검색을 멈췄어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy Path"
+            "value": "Scan stopped"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "경로 복사"
+            "value": "검색을 멈췄어요"
           }
         }
       }
     },
-    "고른 항목은 바로 지워져 되돌릴 수 없습니다.": {
+    "고른 항목은 바로 지워져 되돌릴 수 없어요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selected items are deleted right away and can't be restored."
+            "value": "Selected items will be deleted immediately. This can't be undone."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "고른 항목은 바로 지워져 되돌릴 수 없습니다."
+            "value": "고른 항목은 바로 지워져 되돌릴 수 없어요."
           }
         }
       }
     },
-    "고른 항목은 휴지통에서 바로 지워져 되돌릴 수 없습니다.": {
+    "고른 항목은 휴지통에서 바로 지워져 되돌릴 수 없어요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selected items are deleted from the Trash right away and can't be restored."
+            "value": "Selected items will be deleted from Trash immediately. This can't be undone."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "고른 항목은 휴지통에서 바로 지워져 되돌릴 수 없습니다."
+            "value": "고른 항목은 휴지통에서 바로 지워져 되돌릴 수 없어요."
           }
         }
       }
     },
-    "관리자 소유 항목 %lld개(%@)는 Sweep이 지울 수 없습니다": {
+    "관리자 소유 항목 %lld개(%@)는 Sweep이 지울 수 없어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sweep can't delete %lld administrator-owned item(s) (%@)"
+            "value": "Sweep can't delete %1$lld administrator-owned items (%2$@)"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "관리자 소유 항목 %1$lld개(%2$@)는 Sweep이 지울 수 없습니다"
+            "value": "관리자 소유 항목 %1$lld개(%2$@)는 Sweep이 지울 수 없어요"
           }
         }
       }
@@ -2367,66 +2171,18 @@
         }
       }
     },
-    "권한이 막혀 못 읽는 폴더가 있어요": {
+    "급증한 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Some folders can't be read because of permissions"
+            "value": "Fast-Growing Temporary Files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "권한이 막혀 못 읽는 폴더가 있어요"
-          }
-        }
-      }
-    },
-    "권한이 막혀 안을 볼 수 없습니다": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Can't look inside because of permissions"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "권한이 막혀 안을 볼 수 없습니다"
-          }
-        }
-      }
-    },
-    "권한이 막혀 읽을 수 없습니다": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Can't read because of permissions"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "권한이 막혀 읽을 수 없습니다"
-          }
-        }
-      }
-    },
-    "권한이 막힌 폴더가 있어요": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Some folders are blocked by permissions"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "권한이 막힌 폴더가 있어요"
+            "value": "급증한 임시 파일"
           }
         }
       }
@@ -2447,7 +2203,7 @@
         }
       }
     },
-    "기기를 다시 연결하면 내려받습니다": {
+    "기기를 다시 연결하면 내려받아요": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -2458,7 +2214,7 @@
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "기기를 다시 연결하면 내려받습니다"
+            "value": "기기를 다시 연결하면 내려받아요"
           }
         }
       }
@@ -2479,18 +2235,18 @@
         }
       }
     },
-    "기능별로 나눠 두었습니다. 잠긴 항목은 되돌릴 수 없어 선택할 수 없습니다.": {
+    "기능별로 나눠 뒀어요. 잠긴 항목은 되돌릴 수 없어 선택할 수 없어요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Grouped by feature. Locked items can't be recovered, so they can't be selected."
+            "value": "Grouped by feature. Locked items can't be recovered, so you can't select them."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "기능별로 나눠 두었습니다. 잠긴 항목은 되돌릴 수 없어 선택할 수 없습니다."
+            "value": "기능별로 나눠 뒀어요. 잠긴 항목은 되돌릴 수 없어 선택할 수 없어요."
           }
         }
       }
@@ -2511,50 +2267,162 @@
         }
       }
     },
-    "내 파일입니다. 휴지통으로 가지만 비우면 되돌릴 수 없습니다.": {
+    "내 사용자 폴더": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your file. It goes to the Trash, but emptying it is final."
+            "value": "My Home Folder"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "내 파일입니다. 휴지통으로 가지만 비우면 되돌릴 수 없습니다."
+            "value": "내 사용자 폴더"
           }
         }
       }
     },
-    "내려받은 파일 · 중복본": {
+    "내 사용자 폴더 밖에 있는 내 소유 항목이에요. 어떤 프로그램이 쓰는지 확인하고 지우세요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Downloads · Duplicates"
+            "value": "Items you own outside your home folder. Check which program uses them before deleting."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "내려받은 파일 · 중복본"
+            "value": "내 사용자 폴더 밖에 있는 내 소유 항목이에요. 어떤 프로그램이 쓰는지 확인하고 지우세요."
           }
         }
       }
     },
-    "내려받은 파일입니다. 다시 받을 수 있으면 지워도 됩니다.": {
+    "내 사용자 폴더 안": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A download. Fine to delete if you can get it again."
+            "value": "Inside My Home Folder"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "내려받은 파일입니다. 다시 받을 수 있으면 지워도 됩니다."
+            "value": "내 사용자 폴더 안"
+          }
+        }
+      }
+    },
+    "내 사용자 폴더 자체나 이를 포함하는 폴더는 추가할 수 없어요. 그 안에 보이는 폴더는 이미 모두 살펴봐요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can't add your home folder itself or a folder that contains it. All visible folders inside it are already checked."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내 사용자 폴더 자체나 이를 포함하는 폴더는 추가할 수 없어요. 그 안에 보이는 폴더는 이미 모두 살펴봐요."
+          }
+        }
+      }
+    },
+    "내 사용자 폴더, 디스크 전체, 응용 프로그램도 살펴볼 수 있어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can also check your home folder, entire disks, and Applications."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내 사용자 폴더, 디스크 전체, 응용 프로그램도 살펴볼 수 있어요."
+          }
+        }
+      }
+    },
+    "내 사용자 폴더와 추가한 폴더에서 큰 파일을 찾아요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find large files in your home folder and folders you've added."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내 사용자 폴더와 추가한 폴더에서 큰 파일을 찾아요."
+          }
+        }
+      }
+    },
+    "내 사용자 폴더의 기본 폴더나 계정 데이터라 지울 수 없어요: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can't delete a standard home folder or account data: %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내 사용자 폴더의 기본 폴더나 계정 데이터라 지울 수 없어요: %@"
+          }
+        }
+      }
+    },
+    "내 파일이에요. 휴지통으로 가지만 비우면 되돌릴 수 없어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your files. They'll go to Trash, but emptying it can't be undone."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내 파일이에요. 휴지통으로 가지만 비우면 되돌릴 수 없어요."
+          }
+        }
+      }
+    },
+    "내려받은 파일 · 중복 파일": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloads · Duplicate Files"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내려받은 파일 · 중복 파일"
+          }
+        }
+      }
+    },
+    "내려받은 파일이에요. 다시 받을 수 있으면 지워도 돼요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaded files. You can delete them if you can download them again."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "내려받은 파일이에요. 다시 받을 수 있으면 지워도 돼요."
           }
         }
       }
@@ -2575,50 +2443,66 @@
         }
       }
     },
-    "내용이 같은 파일을 찾아 한 벌만 남깁니다.": {
+    "내용이 같은 파일을 찾아 하나만 남겨요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finds files with identical content and keeps just one copy."
+            "value": "Find files with the same contents and keep just one copy."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "내용이 같은 파일을 찾아 한 벌만 남깁니다."
+            "value": "내용이 같은 파일을 찾아 하나만 남겨요."
           }
         }
       }
     },
-    "다른 사용자·시스템 소유라 정리할 수 없습니다: %@": {
+    "다른 사용자나 시스템 소유라 정리할 수 없어요: %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Owned by another user or the system, so it can't be cleaned up: %@"
+            "value": "Can't clean up items owned by another user or the system: %@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "다른 사용자·시스템 소유라 정리할 수 없습니다: %@"
+            "value": "다른 사용자나 시스템 소유라 정리할 수 없어요: %@"
           }
         }
       }
     },
-    "다른 폴더를 골랐습니다": {
+    "다른 위치로 연결된 항목이 정리 허용 범위 밖을 가리켜요: %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A different folder was chosen"
+            "value": "An item links to a location outside the allowed cleanup area: %@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "다른 폴더를 골랐습니다"
+            "value": "다른 위치로 연결된 항목이 정리 허용 범위 밖을 가리켜요: %@"
+          }
+        }
+      }
+    },
+    "다른 폴더를 골랐어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You chose a different folder"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다른 폴더를 골랐어요"
           }
         }
       }
@@ -2635,6 +2519,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "다시 검색"
+          }
+        }
+      }
+    },
+    "다시 검색하면 처음부터 세요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scanning again starts the count over."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다시 검색하면 처음부터 세요."
           }
         }
       }
@@ -2687,38 +2587,6 @@
         }
       }
     },
-    "다시 훑기": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scan Again"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "다시 훑기"
-          }
-        }
-      }
-    },
-    "다시 훑으면 이어서가 아니라 처음부터 셉니다.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scanning again starts over from the beginning instead of resuming."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "다시 훑으면 이어서가 아니라 처음부터 셉니다."
-          }
-        }
-      }
-    },
     "닫기": {
       "localizations": {
         "en": {
@@ -2735,34 +2603,18 @@
         }
       }
     },
-    "대부분 빌드하면 다시 생깁니다. 되돌릴 수 없는 심사 제출본은 잠가 두었습니다.": {
+    "대부분 앱을 만들면 다시 생겨요. 복구할 수 없는 앱 심사 제출본은 선택할 수 없게 잠가 뒀어요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Most of these come back when you build. App Store submission archives can't be recovered, so they're locked."
+            "value": "Most files are created again when you build an app. App review submissions can't be recovered, so they're locked to prevent selection."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "대부분 빌드하면 다시 생깁니다. 되돌릴 수 없는 심사 제출본은 잠가 두었습니다."
-          }
-        }
-      }
-    },
-    "대용량 파일": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Large Files"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "대용량 파일"
+            "value": "대부분 앱을 만들면 다시 생겨요. 복구할 수 없는 앱 심사 제출본은 선택할 수 없게 잠가 뒀어요."
           }
         }
       }
@@ -2831,18 +2683,18 @@
         }
       }
     },
-    "되돌리지 못했습니다": {
+    "되돌리지 못했어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn't restore"
+            "value": "Couldn't Put Back"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "되돌리지 못했습니다"
+            "value": "되돌리지 못했어요"
           }
         }
       }
@@ -2859,22 +2711,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "되돌릴 수 없음"
-          }
-        }
-      }
-    },
-    "두 번 재야 사용률이 나옵니다.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usage appears after two samples."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "두 번 재야 사용률이 나옵니다."
           }
         }
       }
@@ -2911,18 +2747,18 @@
         }
       }
     },
-    "디스크 맵 전체 보기 · 아래 폴더도 한 번에": {
+    "디스크 맵에서 모든 폴더 보기": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "See the whole disk in Disk Map · opens every folder below at once"
+            "value": "Show All Folders in Disk Map"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "디스크 맵 전체 보기 · 아래 폴더도 한 번에"
+            "value": "디스크 맵에서 모든 폴더 보기"
           }
         }
       }
@@ -2939,6 +2775,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "디스크 사용량"
+          }
+        }
+      }
+    },
+    "디스크 접근을 허용하면 내 사용자 폴더와 이 Mac 전체를 볼 수 있어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow disk access to see your home folder and this whole Mac."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스크 접근을 허용하면 내 사용자 폴더와 이 Mac 전체를 볼 수 있어요."
           }
         }
       }
@@ -2975,66 +2827,18 @@
         }
       }
     },
-    "디스크를 한 번 허용하면 홈과 이 Mac 전체를 봅니다.": {
+    "디스크의 최상위 폴더나 내 사용자 폴더 자체는 지울 수 없어요: %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Allow the disk once to see your home folder and all of this Mac."
+            "value": "Can't delete a disk's top-level folder or your home folder itself: %@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "디스크를 한 번 허용하면 홈과 이 Mac 전체를 봅니다."
-          }
-        }
-      }
-    },
-    "로그 파일입니다": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Log file"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그 파일입니다"
-          }
-        }
-      }
-    },
-    "로그 파일입니다. 다시 쌓입니다.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Log files. They build up again."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그 파일입니다. 다시 쌓입니다."
-          }
-        }
-      }
-    },
-    "루트 또는 홈 디렉토리는 삭제할 수 없습니다: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Can't delete the root or home directory: %@"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "루트 또는 홈 디렉토리는 삭제할 수 없습니다: %@"
+            "value": "디스크의 최상위 폴더나 내 사용자 폴더 자체는 지울 수 없어요: %@"
           }
         }
       }
@@ -3055,56 +2859,34 @@
         }
       }
     },
-    "마지막 정리 후 %lld일이 지났습니다. 다시 만들 수 있는 %@를 정리해 보세요": {
+    "마지막 정리 후 %lld일이 지났어요. 다시 만들 수 있는 %@를 정리해 보세요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "It's been %#@days@ since your last cleanup. Try cleaning up %2$@ that can be recreated"
-          },
-          "substitutions": {
-            "days": {
-              "argNum": 1,
-              "formatSpecifier": "lld",
-              "variations": {
-                "plural": {
-                  "one": {
-                    "stringUnit": {
-                      "state": "translated",
-                      "value": "%arg day"
-                    }
-                  },
-                  "other": {
-                    "stringUnit": {
-                      "state": "translated",
-                      "value": "%arg days"
-                    }
-                  }
-                }
-              }
-            }
+            "value": "It's been %1$lld days since your last cleanup. Try cleaning up %2$@ that can be created again"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "마지막 정리 후 %1$lld일이 지났습니다. 다시 만들 수 있는 %2$@를 정리해 보세요"
+            "value": "마지막 정리 후 %1$lld일이 지났어요. 다시 만들 수 있는 %2$@를 정리해 보세요"
           }
         }
       }
     },
-    "막대가 꽉 차면 CPU 코어 하나를 통째로 쓰는 중입니다. 200%면 코어 두 개를 쓰는 것입니다.": {
+    "막대가 꽉 차면 코어 하나 이상을 쓰고 있어요. 100%는 코어 하나, 200%는 두 개를 온전히 쓰는 양이에요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A full bar means the process is using one whole CPU core. 200% means two cores."
+            "value": "A full bar means at least one core is in use. 100% means one full core; 200% means two full cores."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "막대가 꽉 차면 CPU 코어 하나를 통째로 쓰는 중입니다. 200%면 코어 두 개를 쓰는 것입니다."
+            "value": "막대가 꽉 차면 코어 하나 이상을 쓰고 있어요. 100%는 코어 하나, 200%는 두 개를 온전히 쓰는 양이에요."
           }
         }
       }
@@ -3121,6 +2903,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "만든 날 %@"
+          }
+        }
+      }
+    },
+    "많이 쓰는 프로그램": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Programs Using the Most CPU"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "많이 쓰는 프로그램"
           }
         }
       }
@@ -3157,34 +2955,34 @@
         }
       }
     },
-    "메일에서 다시 열면 생깁니다": {
+    "메일에서 다시 열면 생겨요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comes back when you open the attachment in Mail"
+            "value": "Created again when you open it in Mail"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "메일에서 다시 열면 생깁니다"
+            "value": "메일에서 다시 열면 생겨요"
           }
         }
       }
     },
-    "묵은 캐시": {
+    "무엇이 공간을 차지하는지 큰 것부터 살펴봐요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stale Caches"
+            "value": "See what's taking up space, starting with the largest items."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "묵은 캐시"
+            "value": "무엇이 공간을 차지하는지 큰 것부터 살펴봐요."
           }
         }
       }
@@ -3221,34 +3019,66 @@
         }
       }
     },
-    "보호된 경로입니다: %@": {
+    "방금 측정한 동안에는 계산한 일이 없어요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Protected path: %@"
+            "value": "No work was done during the last measurement."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "보호된 경로입니다: %@"
+            "value": "방금 측정한 동안에는 계산한 일이 없어요."
           }
         }
       }
     },
-    "보호된 항목이라 이 앱으로는 지울 수 없습니다": {
+    "번호": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This item is protected and can't be removed by this app"
+            "value": "ID"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "보호된 항목이라 이 앱으로는 지울 수 없습니다"
+            "value": "번호"
+          }
+        }
+      }
+    },
+    "보호된 위치예요: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protected location: %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보호된 위치예요: %@"
+          }
+        }
+      }
+    },
+    "보호된 항목이라 이 앱으로는 지울 수 없어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This app can't delete protected items"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보호된 항목이라 이 앱으로는 지울 수 없어요"
           }
         }
       }
@@ -3285,18 +3115,18 @@
         }
       }
     },
-    "비우면 되돌릴 수 없습니다": {
+    "비우면 되돌릴 수 없어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Emptying this can't be undone"
+            "value": "Emptying it can't be undone"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "비우면 되돌릴 수 없습니다"
+            "value": "비우면 되돌릴 수 없어요"
           }
         }
       }
@@ -3313,22 +3143,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "비율 막대"
-          }
-        }
-      }
-    },
-    "빌드하면 다시 생성됩니다": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recreated when you build"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "빌드하면 다시 생성됩니다"
           }
         }
       }
@@ -3445,98 +3259,50 @@
         }
       }
     },
-    "사용자": {
+    "사용률 ▼": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "User"
+            "value": "Usage ▼"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "사용자"
+            "value": "사용률 ▼"
           }
         }
       }
     },
-    "사유 자세히 보기": {
+    "사용률을 계산하려고 두 번 재고 있어요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "See Details"
+            "value": "Taking two measurements to calculate usage."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "사유 자세히 보기"
+            "value": "사용률을 계산하려고 두 번 재고 있어요."
           }
         }
       }
     },
-    "사유를 확인하고 조치한 뒤 실패한 것만 다시 시도할 수 있습니다.": {
+    "상태·동작": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Check each reason, fix it, then retry just the failed items."
+            "value": "Status · Actions"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "사유를 확인하고 조치한 뒤 실패한 것만 다시 시도할 수 있습니다."
-          }
-        }
-      }
-    },
-    "상위 프로세스": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Top Processes"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "상위 프로세스"
-          }
-        }
-      }
-    },
-    "상태/동작": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Status/Actions"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "상태/동작"
-          }
-        }
-      }
-    },
-    "샌드박스 앱의 데이터입니다. 앱을 지웠다면 찌꺼기지만, 쓰는 앱이면 데이터가 사라집니다.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data of a sandboxed app. Leftover if the app is gone, but a live app loses its data."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "샌드박스 앱의 데이터입니다. 앱을 지웠다면 찌꺼기지만, 쓰는 앱이면 데이터가 사라집니다."
+            "value": "상태·동작"
           }
         }
       }
@@ -3605,18 +3371,18 @@
         }
       }
     },
-    "선택: %lld개 · 전체 %lld개 중": {
+    "선택: %lld개, 전체 %lld개 중": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selected: %1$lld of %2$lld"
+            "value": "Selected: %1$lld of %2$lld items"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "선택: %1$lld개 · 전체 %2$lld개 중"
+            "value": "선택: %1$lld개, 전체 %2$lld개 중"
           }
         }
       }
@@ -3685,18 +3451,34 @@
         }
       }
     },
-    "설치 파일은 다시 받을 수 있습니다. 촬영 원본과 백업은 내용을 확인한 뒤 고르세요.": {
+    "설치 파일은 다시 받을 수 있어요. 촬영 원본과 백업은 내용을 확인한 뒤 고르세요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Installers can be downloaded again. Check original photos, videos and backups before selecting them."
+            "value": "You can download installers again. Check original photos, videos, and backups before selecting them."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "설치 파일은 다시 받을 수 있습니다. 촬영 원본과 백업은 내용을 확인한 뒤 고르세요."
+            "value": "설치 파일은 다시 받을 수 있어요. 촬영 원본과 백업은 내용을 확인한 뒤 고르세요."
+          }
+        }
+      }
+    },
+    "쉬는 중": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idle"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "쉬는 중"
           }
         }
       }
@@ -3713,102 +3495,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "스마트 스캔"
-          }
-        }
-      }
-    },
-    "시뮬레이터 · 앱 웹 캐시 · 브라우저 캐시 · 로그": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Simulators · App web caches · Browser caches · Logs"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "시뮬레이터 · 앱 웹 캐시 · 브라우저 캐시 · 로그"
-          }
-        }
-      }
-    },
-    "시뮬레이터 기기입니다. 안의 앱·데이터가 함께 사라집니다.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A simulator device. Its apps and data go with it."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "시뮬레이터 기기입니다. 안의 앱·데이터가 함께 사라집니다."
-          }
-        }
-      }
-    },
-    "시뮬레이터 임시 파일입니다": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Simulator temporary files"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "시뮬레이터 임시 파일입니다"
-          }
-        }
-      }
-    },
-    "시뮬레이터 캐시입니다": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Simulator cache"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "시뮬레이터 캐시입니다"
-          }
-        }
-      }
-    },
-    "시스템": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "System"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "시스템"
-          }
-        }
-      }
-    },
-    "시스템 계정 프로세스와 잠깐 돌고 끝난 프로세스 몫입니다. App Store 앱은 하나씩 읽을 수 없습니다.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "System-account processes and short-lived ones that already exited. An App Store app can't read them one by one."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "시스템 계정 프로세스와 잠깐 돌고 끝난 프로세스 몫입니다. App Store 앱은 하나씩 읽을 수 없습니다."
           }
         }
       }
@@ -3845,7 +3531,7 @@
         }
       }
     },
-    "시스템 폴더는 추가할 수 없습니다.": {
+    "시스템 폴더는 추가할 수 없어요.": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3856,23 +3542,23 @@
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "시스템 폴더는 추가할 수 없습니다."
+            "value": "시스템 폴더는 추가할 수 없어요."
           }
         }
       }
     },
-    "시스템이 보호 중이라 삭제할 수 없습니다: %@": {
+    "시스템이 보호 중이라 삭제할 수 없어요: %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Protected by the system, so it can't be deleted: %@"
+            "value": "The system protects this item, so it can't be deleted: %@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "시스템이 보호 중이라 삭제할 수 없습니다: %@"
+            "value": "시스템이 보호 중이라 삭제할 수 없어요: %@"
           }
         }
       }
@@ -3909,6 +3595,22 @@
         }
       }
     },
+    "실패 이유 보기": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See Why It Failed"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실패 이유 보기"
+          }
+        }
+      }
+    },
     "실패한 것만 다시 시도": {
       "localizations": {
         "en": {
@@ -3925,7 +3627,23 @@
         }
       }
     },
-    "실행 중인 앱입니다. 종료한 뒤 다시 시도해 주세요: %@": {
+    "실패한 이유를 확인하고 해결한 뒤, 실패한 항목만 다시 시도할 수 있어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check and fix the cause, then retry just the items that failed."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실패한 이유를 확인하고 해결한 뒤, 실패한 항목만 다시 시도할 수 있어요."
+          }
+        }
+      }
+    },
+    "실행 중인 앱이에요. 종료한 뒤 다시 시도해 주세요: %@": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -3936,23 +3654,23 @@
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "실행 중인 앱입니다. 종료한 뒤 다시 시도해 주세요: %@"
+            "value": "실행 중인 앱이에요. 종료한 뒤 다시 시도해 주세요: %@"
           }
         }
       }
     },
-    "심볼릭 링크가 허용 범위 밖을 가리킵니다: %@": {
+    "쓰다 남긴 임시 파일이에요. 크기는 늘지 않아요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Symbolic link points outside the allowed scope: %@"
+            "value": "Leftover temporary files. They aren't growing"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "심볼릭 링크가 허용 범위 밖을 가리킵니다: %@"
+            "value": "쓰다 남긴 임시 파일이에요. 크기는 늘지 않아요"
           }
         }
       }
@@ -3973,18 +3691,18 @@
         }
       }
     },
-    "아직 훑어보지 않았습니다": {
+    "아직 검색하지 않았어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Not scanned yet"
+            "value": "No scan yet"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "아직 훑어보지 않았습니다"
+            "value": "아직 검색하지 않았어요"
           }
         }
       }
@@ -4053,18 +3771,18 @@
         }
       }
     },
-    "알 수 없는 런타임": {
+    "알 수 없는 실행 환경": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unknown runtime"
+            "value": "Unknown app testing environment"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "알 수 없는 런타임"
+            "value": "알 수 없는 실행 환경"
           }
         }
       }
@@ -4085,66 +3803,114 @@
         }
       }
     },
-    "앱 데이터입니다. 지우면 그 앱의 설정·로그인·문서가 사라질 수 있습니다.": {
+    "앱 데이터예요. 지우면 그 앱의 설정, 로그인 정보, 문서가 사라질 수 있어요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "App data. Deleting it may remove that app's settings, logins and documents."
+            "value": "App data. Deleting it may remove the app's settings, sign-in details, and documents."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "앱 데이터입니다. 지우면 그 앱의 설정·로그인·문서가 사라질 수 있습니다."
+            "value": "앱 데이터예요. 지우면 그 앱의 설정, 로그인 정보, 문서가 사라질 수 있어요."
           }
         }
       }
     },
-    "앱 로그": {
+    "앱 시험 도구가 쓰다 남긴 임시 파일이에요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "App logs"
+            "value": "Temporary files left behind by app testing tools"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "앱 로그"
+            "value": "앱 시험 도구가 쓰다 남긴 임시 파일이에요"
           }
         }
       }
     },
-    "앱 심사 제출본 — 지우면 복구할 수 없습니다": {
+    "앱 시험 도구의 임시 파일이에요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "App Store submission archive — can't be recovered once deleted"
+            "value": "Temporary files used by app testing tools"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "앱 심사 제출본 — 지우면 복구할 수 없습니다"
+            "value": "앱 시험 도구의 임시 파일이에요"
           }
         }
       }
     },
-    "앱 웹 캐시": {
+    "앱 시험용 가상 기기예요. 안의 앱과 데이터가 함께 사라져요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "App Web Caches"
+            "value": "A virtual device for testing apps. Its apps and data will also be removed."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "앱 웹 캐시"
+            "value": "앱 시험용 가상 기기예요. 안의 앱과 데이터가 함께 사라져요."
+          }
+        }
+      }
+    },
+    "앱 시험용 파일 · 앱과 브라우저의 임시 파일 · 활동 기록": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Testing Files · App and Browser Temporary Files · Activity Records"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱 시험용 파일 · 앱과 브라우저의 임시 파일 · 활동 기록"
+          }
+        }
+      }
+    },
+    "앱 심사 제출본이에요. 지우면 복구할 수 없어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An app review submission. Deleting it can't be undone"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱 심사 제출본이에요. 지우면 복구할 수 없어요"
+          }
+        }
+      }
+    },
+    "앱 웹 임시 파일": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Web Temporary Files"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱 웹 임시 파일"
           }
         }
       }
@@ -4165,34 +3931,82 @@
         }
       }
     },
-    "앱 캐시입니다. 앱이 필요하면 다시 만듭니다.": {
+    "앱 활동 기록": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "App cache. The app rebuilds it when needed."
+            "value": "App Activity Records"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "앱 캐시입니다. 앱이 필요하면 다시 만듭니다."
+            "value": "앱 활동 기록"
           }
         }
       }
     },
-    "앱·시스템 설정 데이터입니다. 무엇인지 확실할 때만 지우세요.": {
+    "앱 활동 기록이에요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "App or system settings data. Delete only if you know what it is."
+            "value": "App activity records"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "앱·시스템 설정 데이터입니다. 무엇인지 확실할 때만 지우세요."
+            "value": "앱 활동 기록이에요"
+          }
+        }
+      }
+    },
+    "앱 활동 기록이에요. 다시 쌓여요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App activity records. They build up again."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱 활동 기록이에요. 다시 쌓여요."
+          }
+        }
+      }
+    },
+    "앱과 시스템의 설정 정보예요. 무엇인지 확실할 때만 지우세요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App and system settings. Only delete these if you're sure what they are."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱과 시스템의 설정 정보예요. 무엇인지 확실할 때만 지우세요."
+          }
+        }
+      }
+    },
+    "앱을 시험하는 데 쓰는 가상 기기예요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A virtual device used to test apps"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱을 시험하는 데 쓰는 가상 기기예요"
           }
         }
       }
@@ -4213,18 +4027,50 @@
         }
       }
     },
-    "앱이 다시 만들 수 있는 캐시": {
+    "앱의 임시 파일이에요. 필요하면 앱이 다시 만들어요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Caches apps can recreate"
+            "value": "App temporary files. The app creates them again if needed."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "앱이 다시 만들 수 있는 캐시"
+            "value": "앱의 임시 파일이에요. 필요하면 앱이 다시 만들어요."
+          }
+        }
+      }
+    },
+    "앱이 다시 만들 수 있는 임시 파일": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Temporary files apps can create again"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱이 다시 만들 수 있는 임시 파일"
+          }
+        }
+      }
+    },
+    "앱이 따로 보관하는 데이터예요. 앱을 지웠다면 남은 파일이지만, 쓰는 앱이면 데이터가 사라져요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Data stored separately by an app. If you removed the app, these are leftover files. If you still use it, deleting these removes its data."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱이 따로 보관하는 데이터예요. 앱을 지웠다면 남은 파일이지만, 쓰는 앱이면 데이터가 사라져요."
           }
         }
       }
@@ -4245,18 +4091,18 @@
         }
       }
     },
-    "어디가 용량을 차지하는지 크기순으로 훑어봅니다.": {
+    "앱이에요. 지우면 앱이 사라지고, 설정은 ~/Library 폴더에 남아요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shows what takes up space, sorted by size."
+            "value": "An app. Deleting it removes the app, but its settings stay in ~/Library."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "어디가 용량을 차지하는지 크기순으로 훑어봅니다."
+            "value": "앱이에요. 지우면 앱이 사라지고, 설정은 ~/Library 폴더에 남아요."
           }
         }
       }
@@ -4325,7 +4171,7 @@
         }
       }
     },
-    "오늘 받았습니다": {
+    "오늘 받았어요": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -4336,7 +4182,7 @@
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "오늘 받았습니다"
+            "value": "오늘 받았어요"
           }
         }
       }
@@ -4373,7 +4219,7 @@
         }
       }
     },
-    "오늘 수정했습니다": {
+    "오늘 수정했어요": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -4384,7 +4230,23 @@
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "오늘 수정했습니다"
+            "value": "오늘 수정했어요"
+          }
+        }
+      }
+    },
+    "오래된 임시 파일": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Old Temporary Files"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오래된 임시 파일"
           }
         }
       }
@@ -4405,18 +4267,18 @@
         }
       }
     },
-    "옮기지 못했습니다": {
+    "옮기지 못했어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn't move"
+            "value": "Couldn't Move"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "옮기지 못했습니다"
+            "value": "옮기지 못했어요"
           }
         }
       }
@@ -4469,34 +4331,34 @@
         }
       }
     },
-    "외장 디스크 같은 다른 폴더에서도 큰 파일·중복 파일을 찾습니다": {
+    "외장 디스크 같은 다른 폴더에서도 큰 파일과 중복 파일을 찾아요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Also look for large files and duplicates in other folders, like external drives"
+            "value": "Find large files and duplicates in other folders, including external disks"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "외장 디스크 같은 다른 폴더에서도 큰 파일·중복 파일을 찾습니다"
+            "value": "외장 디스크 같은 다른 폴더에서도 큰 파일과 중복 파일을 찾아요"
           }
         }
       }
     },
-    "왼쪽 위 사용자·시스템·유휴는 Mac 전체를 100%로 본 값입니다.": {
+    "왼쪽은 Mac 전체를 100%로 봐요. 프로그램 실행, Mac 기본 작동, 쉬는 몫을 나눠 보여줘요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "User, System and Idle at top left treat the whole Mac as 100%."
+            "value": "On the left, 100% means the whole Mac. Usage is split between running programs, basic Mac operations, and idle time."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "왼쪽 위 사용자·시스템·유휴는 Mac 전체를 100%로 본 값입니다."
+            "value": "왼쪽은 Mac 전체를 100%로 봐요. 프로그램 실행, Mac 기본 작동, 쉬는 몫을 나눠 보여줘요."
           }
         }
       }
@@ -4549,18 +4411,18 @@
         }
       }
     },
-    "원래 자리에 같은 이름이 있습니다": {
+    "원래 자리에 같은 이름이 있어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "An item with the same name is already at the original location"
+            "value": "An item with the same name is already in the original location"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "원래 자리에 같은 이름이 있습니다"
+            "value": "원래 자리에 같은 이름이 있어요"
           }
         }
       }
@@ -4581,34 +4443,34 @@
         }
       }
     },
-    "원래 폴더가 사라졌습니다": {
+    "원래 폴더가 사라졌어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The original folder no longer exists"
+            "value": "The original folder is gone"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "원래 폴더가 사라졌습니다"
+            "value": "원래 폴더가 사라졌어요"
           }
         }
       }
     },
-    "원본은 항상 남깁니다. 아래는 지워도 같은 파일이 그대로 남아 있는 사본입니다.": {
+    "원본은 항상 남겨요. 아래 파일을 지워도 내용이 같은 파일은 그대로 남아요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The original is always kept. The items below are copies — the same file remains after you delete them."
+            "value": "The original always stays. Deleting the files below leaves a copy with the same contents."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "원본은 항상 남깁니다. 아래는 지워도 같은 파일이 그대로 남아 있는 사본입니다."
+            "value": "원본은 항상 남겨요. 아래 파일을 지워도 내용이 같은 파일은 그대로 남아요."
           }
         }
       }
@@ -4629,18 +4491,34 @@
         }
       }
     },
-    "위치 / 복사": {
+    "위치 복사": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reveal / Copy"
+            "value": "Copy Location"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "위치 / 복사"
+            "value": "위치 복사"
+          }
+        }
+      }
+    },
+    "위치·복사": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Location · Copy"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "위치·복사"
           }
         }
       }
@@ -4661,22 +4539,6 @@
         }
       }
     },
-    "유휴": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Idle"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "유휴"
-          }
-        }
-      }
-    },
     "응용 프로그램": {
       "localizations": {
         "en": {
@@ -4689,22 +4551,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "응용 프로그램"
-          }
-        }
-      }
-    },
-    "응용 프로그램입니다. 지우면 앱이 사라집니다. 설정은 ~/Library에 남습니다.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "An application. Deleting removes the app; its settings stay in ~/Library."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "응용 프로그램입니다. 지우면 앱이 사라집니다. 설정은 ~/Library에 남습니다."
           }
         }
       }
@@ -4725,126 +4571,82 @@
         }
       }
     },
-    "이 Mac의 CPU 코어는 %lld개입니다 (성능 %lld + 효율 %lld).": {
+    "이 묶음 모두 선택하거나 해제하기": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This Mac has %1$lld CPU cores (%2$lld performance + %3$lld efficiency)."
+            "value": "Select or deselect this whole group"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이 Mac의 CPU 코어는 %1$lld개입니다 (성능 %2$lld + 효율 %3$lld)."
+            "value": "이 묶음 모두 선택하거나 해제하기"
           }
         }
       }
     },
-    "이 Mac의 CPU 코어는 %lld개입니다.": {
+    "이 밖은 건드리지 않아요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This Mac has %lld CPU cores."
+            "value": "Nothing outside this area is changed"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이 Mac의 CPU 코어는 %lld개입니다."
+            "value": "이 밖은 건드리지 않아요"
           }
         }
       }
     },
-    "이 묶음 전체 선택 / 해제": {
+    "이 중 %lld개는 iCloud Drive 항목이라 다른 기기에서도 지워져요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Select / deselect this group"
+            "value": "%lld of these items are in iCloud Drive. They'll also be deleted from other devices."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이 묶음 전체 선택 / 해제"
+            "value": "이 중 %lld개는 iCloud Drive 항목이라 다른 기기에서도 지워져요."
           }
         }
       }
     },
-    "이 밖은 건드리지 않습니다": {
+    "이 중 %lld개는 다시 만들 수 없어요. 휴지통을 비우면 처음부터 다시 받아야 해요. 비우기 전까지는 모두 되돌릴 수 있어요. 휴지통을 비워야 공간이 늘어나요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nothing outside these is touched"
+            "value": "%lld of these items can't be created again. After emptying Trash, you'll need to download them again from scratch. You can put all items back until you empty Trash. Empty Trash to free up space."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이 밖은 건드리지 않습니다"
+            "value": "이 중 %lld개는 다시 만들 수 없어요. 휴지통을 비우면 처음부터 다시 받아야 해요. 비우기 전까지는 모두 되돌릴 수 있어요. 휴지통을 비워야 공간이 늘어나요."
           }
         }
       }
     },
-    "이 중 %lld개는 iCloud Drive 항목이라 다른 기기에서도 지워집니다.": {
+    "이 폴더는 추가할 수 없어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld of these are iCloud Drive items and will also be deleted from your other devices."
+            "value": "You can't add this folder"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이 중 %lld개는 iCloud Drive 항목이라 다른 기기에서도 지워집니다."
-          }
-        }
-      }
-    },
-    "이 중 %lld개는 다시 만들 수 없습니다 — 휴지통을 비우면 처음부터 받아야 합니다. 휴지통을 비우기 전까지는 모두 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다.": {
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld of these can't be recreated — once you empty the Trash, it has to be downloaded again from scratch. Everything can be restored until you empty the Trash. Space is freed only when you empty the Trash."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld of these can't be recreated — once you empty the Trash, they have to be downloaded again from scratch. Everything can be restored until you empty the Trash. Space is freed only when you empty the Trash."
-                }
-              }
-            }
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "이 중 %lld개는 다시 만들 수 없습니다 — 휴지통을 비우면 처음부터 받아야 합니다. 휴지통을 비우기 전까지는 모두 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다."
-          }
-        }
-      }
-    },
-    "이 폴더는 추가할 수 없습니다": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This folder can't be added"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "이 폴더는 추가할 수 없습니다"
+            "value": "이 폴더는 추가할 수 없어요"
           }
         }
       }
@@ -4865,82 +4667,82 @@
         }
       }
     },
-    "이미 보고 있는 폴더입니다: %@": {
+    "이미 보고 있는 폴더예요: %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sweep already looks in this folder: %@"
+            "value": "This folder is already being checked: %@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이미 보고 있는 폴더입니다: %@"
+            "value": "이미 보고 있는 폴더예요: %@"
           }
         }
       }
     },
-    "일부만 되돌렸습니다": {
+    "일부만 되돌렸어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Partially restored"
+            "value": "Some Items Couldn't Be Put Back"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "일부만 되돌렸습니다"
+            "value": "일부만 되돌렸어요"
           }
         }
       }
     },
-    "일부만 정리했습니다": {
+    "일부만 정리했어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Partially cleaned up"
+            "value": "Some Items Couldn't Be Cleaned Up"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "일부만 정리했습니다"
+            "value": "일부만 정리했어요"
           }
         }
       }
     },
-    "임시 파일·빌드 산출물·개발 캐시·기기 백업을 찾아 디스크 공간을 확보합니다.": {
+    "임시 파일, 앱을 만들 때 생긴 파일, 개발 도구의 임시 파일, 기기 백업을 찾아 공간을 비워요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finds temporary files, build products, developer caches, and device backups to free up disk space."
+            "value": "Free up space by finding temporary files, files created when building apps, developer tool temporary files, and device backups."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "임시 파일·빌드 산출물·개발 캐시·기기 백업을 찾아 디스크 공간을 확보합니다."
+            "value": "임시 파일, 앱을 만들 때 생긴 파일, 개발 도구의 임시 파일, 기기 백업을 찾아 공간을 비워요."
           }
         }
       }
     },
-    "임시 파일입니다. 재부팅하면 비워집니다.": {
+    "임시 파일이에요. Mac을 재시동하면 비워져요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Temporary files. Cleared on reboot."
+            "value": "Temporary files. Cleared when you restart your Mac."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "임시 파일입니다. 재부팅하면 비워집니다."
+            "value": "임시 파일이에요. Mac을 재시동하면 비워져요."
           }
         }
       }
@@ -4961,18 +4763,18 @@
         }
       }
     },
-    "재는 중에는 바꿀 수 없습니다. 중단하면 고를 수 있습니다.": {
+    "재는 중에는 바꿀 수 없어요. 중단하면 고를 수 있어요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Can't change while measuring. Stop to choose another."
+            "value": "You can't change this while measuring. Stop to choose another option."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "재는 중에는 바꿀 수 없습니다. 중단하면 고를 수 있습니다."
+            "value": "재는 중에는 바꿀 수 없어요. 중단하면 고를 수 있어요."
           }
         }
       }
@@ -5025,23 +4827,23 @@
         }
       }
     },
-    "전체 디스크 접근을 켜면 옮길 수 있습니다": {
+    "전체 디스크 접근을 켜면 옮길 수 있어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turn on Full Disk Access to move it"
+            "value": "Turn on Full Disk Access to move this"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "전체 디스크 접근을 켜면 옮길 수 있습니다"
+            "value": "전체 디스크 접근을 켜면 옮길 수 있어요"
           }
         }
       }
     },
-    "전체 디스크 접근이 꺼져 있습니다": {
+    "전체 디스크 접근이 꺼져 있어요": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5052,23 +4854,55 @@
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "전체 디스크 접근이 꺼져 있습니다"
+            "value": "전체 디스크 접근이 꺼져 있어요"
           }
         }
       }
     },
-    "점유율 ▼": {
+    "접근이 허용되지 않아 안을 볼 수 없어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Share ▼"
+            "value": "Permission is needed to see inside"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "점유율 ▼"
+            "value": "접근이 허용되지 않아 안을 볼 수 없어요"
+          }
+        }
+      }
+    },
+    "접근이 허용되지 않아 읽을 수 없어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permission is needed to read this"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "접근이 허용되지 않아 읽을 수 없어요"
+          }
+        }
+      }
+    },
+    "접근이 허용되지 않은 폴더가 있어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some folders need access permission"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "접근이 허용되지 않은 폴더가 있어요"
           }
         }
       }
@@ -5105,6 +4939,38 @@
         }
       }
     },
+    "정리 가능": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available to Clean Up"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정리 가능"
+          }
+        }
+      }
+    },
+    "정리 가능 %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ available to clean up"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정리 가능 %@"
+          }
+        }
+      }
+    },
     "정리 대상": {
       "localizations": {
         "en": {
@@ -5121,34 +4987,18 @@
         }
       }
     },
-    "정리 대상 범위 밖입니다: %@": {
+    "정리 대상의 기준 폴더 자체는 지울 수 없어요: %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Outside the cleanup scope: %@"
+            "value": "Can't delete the cleanup area's base folder itself: %@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "정리 대상 범위 밖입니다: %@"
-          }
-        }
-      }
-    },
-    "정리 루트 자체는 삭제할 수 없습니다: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Can't delete a cleanup root itself: %@"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "정리 루트 자체는 삭제할 수 없습니다: %@"
+            "value": "정리 대상의 기준 폴더 자체는 지울 수 없어요: %@"
           }
         }
       }
@@ -5249,18 +5099,50 @@
         }
       }
     },
-    "정리하지 못했습니다": {
+    "정리하지 못했어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn't clean up"
+            "value": "Couldn't Clean Up"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "정리하지 못했습니다"
+            "value": "정리하지 못했어요"
+          }
+        }
+      }
+    },
+    "정리할 만큼 큰 항목을 찾지 못했어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No items large enough to clean up were found."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정리할 만큼 큰 항목을 찾지 못했어요."
+          }
+        }
+      }
+    },
+    "정리할 수 있는 범위 밖이에요: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outside the allowed cleanup area: %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "정리할 수 있는 범위 밖이에요: %@"
           }
         }
       }
@@ -5281,7 +5163,7 @@
         }
       }
     },
-    "정리할 항목이 없음": {
+    "정리할 항목이 없어요": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -5292,7 +5174,7 @@
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "정리할 항목이 없음"
+            "value": "정리할 항목이 없어요"
           }
         }
       }
@@ -5377,22 +5259,6 @@
         }
       }
     },
-    "증가 없음 — 남겨진 임시 파일": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not growing — leftover temporary files"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "증가 없음 — 남겨진 임시 파일"
-          }
-        }
-      }
-    },
     "증가 중": {
       "localizations": {
         "en": {
@@ -5409,66 +5275,66 @@
         }
       }
     },
-    "지금 CPU를 쓰는 프로세스가 없습니다.": {
+    "지금 CPU를 쓰는 프로그램이 없어요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No processes are using the CPU right now."
+            "value": "No programs are using the CPU right now."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "지금 CPU를 쓰는 프로세스가 없습니다."
+            "value": "지금 CPU를 쓰는 프로그램이 없어요."
           }
         }
       }
     },
-    "지금 어떤 프로세스가 CPU를 쓰고 있는지 보여줍니다.": {
+    "지금 어떤 프로그램이 CPU를 쓰는지 보여줘요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shows which processes are using the CPU right now."
+            "value": "See which programs are using the CPU right now."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "지금 어떤 프로세스가 CPU를 쓰고 있는지 보여줍니다."
+            "value": "지금 어떤 프로그램이 CPU를 쓰는지 보여줘요."
           }
         }
       }
     },
-    "지금까지 %@를 휴지통으로 옮김 · 마지막 정리 %@": {
+    "지금까지 %@를 휴지통으로 옮겼어요. 마지막 정리는 %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ moved to the Trash so far · Last cleanup %2$@"
+            "value": "Moved %1$@ to Trash so far. Last cleanup: %2$@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "지금까지 %1$@를 휴지통으로 옮김 · 마지막 정리 %2$@"
+            "value": "지금까지 %1$@를 휴지통으로 옮겼어요. 마지막 정리는 %2$@"
           }
         }
       }
     },
-    "지금은 다운로드 폴더만 보입니다": {
+    "지금은 다운로드 폴더만 볼 수 있어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Only your Downloads folder is visible right now"
+            "value": "Only Downloads is visible right now"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "지금은 다운로드 폴더만 보입니다"
+            "value": "지금은 다운로드 폴더만 볼 수 있어요"
           }
         }
       }
@@ -5521,34 +5387,18 @@
         }
       }
     },
-    "지워도 됨: 캐시·로그처럼 다시 만들어지는 것 · 확인 필요: 내 파일·앱 데이터 · 보호됨: 시스템·계정 데이터": {
+    "지워도 됨: 다시 생기는 임시 파일과 앱 활동 기록. 확인 필요: 내 파일과 앱 데이터. 보호됨: 시스템과 계정 데이터.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deletable: caches and logs that rebuild · Review: your files and app data · Protected: system and account data"
+            "value": "Safe to delete: temporary files and app activity records that are created again. Check first: your files and app data. Protected: system and account data."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "지워도 됨: 캐시·로그처럼 다시 만들어지는 것 · 확인 필요: 내 파일·앱 데이터 · 보호됨: 시스템·계정 데이터"
-          }
-        }
-      }
-    },
-    "직전 구간 동안 아무것도 계산하지 않았습니다.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nothing was computing during the last interval."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "직전 구간 동안 아무것도 계산하지 않았습니다."
+            "value": "지워도 됨: 다시 생기는 임시 파일과 앱 활동 기록. 확인 필요: 내 파일과 앱 데이터. 보호됨: 시스템과 계정 데이터."
           }
         }
       }
@@ -5649,34 +5499,34 @@
         }
       }
     },
-    "켜면 앱 캐시까지 찾고, ‘다른 앱의 데이터’ 물음이 더 뜨지 않습니다.": {
+    "켜면 앱 임시 파일까지 찾을 수 있어요. ‘다른 앱의 데이터’에 접근할지 더는 묻지 않아요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turn it on to find app caches too and stop the “data from other apps” prompts."
+            "value": "Turn this on to find app temporary files and stop repeated requests to access “data from other apps.”"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "켜면 앱 캐시까지 찾고, ‘다른 앱의 데이터’ 물음이 더 뜨지 않습니다."
+            "value": "켜면 앱 임시 파일까지 찾을 수 있어요. ‘다른 앱의 데이터’에 접근할지 더는 묻지 않아요."
           }
         }
       }
     },
-    "켜야 휴지통 안을 볼 수 있습니다. 꺼져 있으면 비어 있는 것처럼 보입니다.": {
+    "켜야 휴지통 안을 볼 수 있어요. 꺼져 있으면 비어 있는 것처럼 보여요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turn it on to see inside the Trash. While it's off, the Trash looks empty."
+            "value": "Turn this on to see inside Trash. When it's off, Trash may look empty."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "켜야 휴지통 안을 볼 수 있습니다. 꺼져 있으면 비어 있는 것처럼 보입니다."
+            "value": "켜야 휴지통 안을 볼 수 있어요. 꺼져 있으면 비어 있는 것처럼 보여요."
           }
         }
       }
@@ -5745,130 +5595,98 @@
         }
       }
     },
-    "큰 파일 · 중복 파일 · 직접 추가함": {
+    "큰 파일 · 중복 파일 · 내가 추가한 폴더": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Large files · Duplicates · Added by you"
+            "value": "Large Files · Duplicate Files · Folders You Added"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "큰 파일 · 중복 파일 · 직접 추가함"
+            "value": "큰 파일 · 중복 파일 · 내가 추가한 폴더"
           }
         }
       }
     },
-    "큰 파일 · 중복 파일 · 휴지통 · 개발 도구 캐시": {
+    "큰 파일 · 중복 파일 · 휴지통 · 개발 도구 임시 파일": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Large files · Duplicates · Trash · Developer tool caches"
+            "value": "Large Files · Duplicate Files · Trash · Developer Tool Temporary Files"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "큰 파일 · 중복 파일 · 휴지통 · 개발 도구 캐시"
+            "value": "큰 파일 · 중복 파일 · 휴지통 · 개발 도구 임시 파일"
           }
         }
       }
     },
-    "큰 파일 · 중복 파일 — %@": {
+    "큰 파일 · 중복 파일: %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Large files · Duplicates — %@"
+            "value": "Large Files · Duplicate Files: %@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "큰 파일 · 중복 파일 — %@"
+            "value": "큰 파일 · 중복 파일: %@"
           }
         }
       }
     },
-    "큰 파일 · 중복 파일 — %@ 외 %lld곳": {
+    "큰 파일 · 중복 파일: %@ 외 %lld곳": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Large files · Duplicates — %1$@ and %2$lld more"
+            "value": "Large Files · Duplicate Files: %1$@ and %2$lld other locations"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "큰 파일 · 중복 파일 — %@ 외 %lld곳"
+            "value": "큰 파일 · 중복 파일: %1$@ 외 %2$lld곳"
           }
         }
       }
     },
-    "큰 파일·중복 파일을 찾을 폴더를 고르세요.": {
+    "큰 파일과 중복 파일을 찾을 폴더를 고르세요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choose a folder to search for large files and duplicates."
+            "value": "Choose a folder to find large files and duplicates."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "큰 파일·중복 파일을 찾을 폴더를 고르세요."
+            "value": "큰 파일과 중복 파일을 찾을 폴더를 고르세요."
           }
         }
       }
     },
-    "테스트용 시뮬레이터 기기입니다": {
+    "폴더 접근 권한을 저장하지 못했어요: %@": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Simulator device for testing"
+            "value": "Couldn't save permission to access the folder: %@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "테스트용 시뮬레이터 기기입니다"
-          }
-        }
-      }
-    },
-    "폭주 임시 파일": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Runaway Temp Files"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "폭주 임시 파일"
-          }
-        }
-      }
-    },
-    "폴더 접근 권한을 저장하지 못했습니다: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't save folder access: %@"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "폴더 접근 권한을 저장하지 못했습니다: %@"
+            "value": "폴더 접근 권한을 저장하지 못했어요: %@"
           }
         }
       }
@@ -5889,18 +5707,18 @@
         }
       }
     },
-    "폴더 허락 필요": {
+    "폴더 허용 필요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Folder access needed"
+            "value": "Folder Access Needed"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "폴더 허락 필요"
+            "value": "폴더 허용 필요"
           }
         }
       }
@@ -5921,66 +5739,82 @@
         }
       }
     },
-    "프로세스 / 실행 경로": {
+    "프로그램": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Process / Executable Path"
+            "value": "Programs"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "프로세스 / 실행 경로"
+            "value": "프로그램"
           }
         }
       }
     },
-    "프로세스 · 점유율순": {
+    "프로그램 사용률순": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Processes · by Share"
+            "value": "Programs by CPU Usage"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "프로세스 · 점유율순"
+            "value": "프로그램 사용률순"
           }
         }
       }
     },
-    "프로세스 점유율은 활성 상태 보기와 같이 코어 하나를 100%%로 셉니다. 여러 코어를 쓰면 100%%를 넘고, 전부 합치면 최대 %lld%%입니다.": {
+    "프로그램 사용률은 활성 상태 보기처럼 코어 하나를 100%%로 세요. 여러 코어를 함께 쓰면 100%%를 넘고, 모두 합치면 최대 %lld%%예요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Like Activity Monitor, process usage counts one core as 100%%. A process using several cores goes over 100%%, and everything together can reach %lld%%."
+            "value": "Like Activity Monitor, program usage counts one core as 100%%. Using several cores can exceed 100%%, up to %1$lld%% in total."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "프로세스 점유율은 활성 상태 보기와 같이 코어 하나를 100%%로 셉니다. 여러 코어를 쓰면 100%%를 넘고, 전부 합치면 최대 %lld%%입니다."
+            "value": "프로그램 사용률은 활성 상태 보기처럼 코어 하나를 100%%로 세요. 여러 코어를 함께 쓰면 100%%를 넘고, 모두 합치면 최대 %lld%%예요."
           }
         }
       }
     },
-    "한 번에 전체를 점검하고 회수할 수 있는 용량을 알려줍니다.": {
+    "프로그램과 위치": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Checks everything at once and shows how much space you can reclaim."
+            "value": "Program and Location"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "한 번에 전체를 점검하고 회수할 수 있는 용량을 알려줍니다."
+            "value": "프로그램과 위치"
+          }
+        }
+      }
+    },
+    "한 번에 전체를 살펴보고 정리할 수 있는 용량을 알려줘요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check everything at once to see how much space you can clean up."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "한 번에 전체를 살펴보고 정리할 수 있는 용량을 알려줘요."
           }
         }
       }
@@ -6093,114 +5927,34 @@
         }
       }
     },
-    "홈": {
+    "화면 아래 Dock에서 휴지통을 열고 ‘되돌려 놓기’를 선택하세요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Home"
+            "value": "Open Trash in the Dock at the bottom of the screen and choose “Put Back.”"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "홈"
+            "value": "화면 아래 Dock에서 휴지통을 열고 ‘되돌려 놓기’를 선택하세요."
           }
         }
       }
     },
-    "홈 기본 폴더·계정 데이터라 삭제할 수 없습니다: %@": {
+    "화면 아래 Dock에서 휴지통을 열어 비워 주세요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Can't delete a home folder or account data: %@"
+            "value": "Open Trash in the Dock at the bottom of the screen and empty it."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "홈 기본 폴더·계정 데이터라 삭제할 수 없습니다: %@"
-          }
-        }
-      }
-    },
-    "홈 밖의 내 소유 항목입니다. 어떤 프로그램이 쓰는지 확인하고 지우세요.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Yours, but outside your home. Check which program uses it first."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "홈 밖의 내 소유 항목입니다. 어떤 프로그램이 쓰는지 확인하고 지우세요."
-          }
-        }
-      }
-    },
-    "홈 안": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Inside Home"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "홈 안"
-          }
-        }
-      }
-    },
-    "홈 폴더나 그 위는 추가할 수 없습니다. 홈 아래 보이는 폴더는 이미 모두 봅니다.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You can't add your home folder or anything above it. Sweep already looks in every visible folder in your home."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "홈 폴더나 그 위는 추가할 수 없습니다. 홈 아래 보이는 폴더는 이미 모두 봅니다."
-          }
-        }
-      }
-    },
-    "홈 폴더와 추가한 폴더에서 유난히 큰 파일을 찾습니다.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finds unusually large files in your home folders and the folders you add."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "홈 폴더와 추가한 폴더에서 유난히 큰 파일을 찾습니다."
-          }
-        }
-      }
-    },
-    "홈·볼륨 전체·응용 프로그램까지 살펴봅니다.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Explore your home folder, the whole volume, or Applications."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "홈·볼륨 전체·응용 프로그램까지 살펴봅니다."
+            "value": "화면 아래 Dock에서 휴지통을 열어 비워 주세요."
           }
         }
       }
@@ -6237,18 +5991,18 @@
         }
       }
     },
-    "확인 필요 — 휴지통으로 이동할까요?": {
+    "확인 필요. 휴지통으로 옮길까요?": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Review — move to Trash?"
+            "value": "Check first. Move to Trash?"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "확인 필요 — 휴지통으로 이동할까요?"
+            "value": "확인 필요. 휴지통으로 옮길까요?"
           }
         }
       }
@@ -6269,86 +6023,6 @@
         }
       }
     },
-    "회수 가능": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reclaimable"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "회수 가능"
-          }
-        }
-      }
-    },
-    "회수 가능 %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ reclaimable"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "회수 가능 %@"
-          }
-        }
-      }
-    },
-    "회수할 만한 크기의 항목을 찾지 못했습니다.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No items large enough to be worth reclaiming were found."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "회수할 만한 크기의 항목을 찾지 못했습니다."
-          }
-        }
-      }
-    },
-    "훑기를 멈췄습니다": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scan stopped"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "훑기를 멈췄습니다"
-          }
-        }
-      }
-    },
-    "훑는 중": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scanning"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "훑는 중"
-          }
-        }
-      }
-    },
     "휴지통": {
       "localizations": {
         "en": {
@@ -6361,22 +6035,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "휴지통"
-          }
-        }
-      }
-    },
-    "휴지통 — 비우면 되돌릴 수 없습니다": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Trash — emptying it can't be undone"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "휴지통 — 비우면 되돌릴 수 없습니다"
           }
         }
       }
@@ -6397,66 +6055,66 @@
         }
       }
     },
-    "휴지통에 남아 있습니다. Finder 휴지통에서 직접 '되돌려 놓기'를 할 수 있습니다.": {
+    "휴지통에 남아 있어요. Finder의 휴지통에서 직접 ‘되돌려 놓기’를 할 수 있어요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "They're still in the Trash. You can use “Put Back” in the Finder Trash yourself."
+            "value": "Still in Trash. You can choose “Put Back” in Finder's Trash."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "휴지통에 남아 있습니다. Finder 휴지통에서 직접 '되돌려 놓기'를 할 수 있습니다."
+            "value": "휴지통에 남아 있어요. Finder의 휴지통에서 직접 ‘되돌려 놓기’를 할 수 있어요."
           }
         }
       }
     },
-    "휴지통에 든 것을 크기순으로 보고 골라서 비웁니다. 비우면 되돌릴 수 없습니다.": {
+    "휴지통에 든 것을 크기순으로 보고 골라서 비워요. 비우면 되돌릴 수 없어요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shows what's in the Trash by size so you can choose what to empty. Emptying can't be undone."
+            "value": "See items in Trash by size and choose which to delete. Emptying Trash can't be undone."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "휴지통에 든 것을 크기순으로 보고 골라서 비웁니다. 비우면 되돌릴 수 없습니다."
+            "value": "휴지통에 든 것을 크기순으로 보고 골라서 비워요. 비우면 되돌릴 수 없어요."
           }
         }
       }
     },
-    "휴지통에서 바로 지워져 되돌릴 수 없습니다. 지운 만큼 공간이 바로 확보됩니다.": {
+    "휴지통에서 바로 지워져 되돌릴 수 없어요. 지운 만큼 공간이 바로 늘어나요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "These are deleted from the Trash right away and can't be restored. The space is freed immediately."
+            "value": "Items are deleted from Trash immediately and can't be recovered. The space is freed up right away."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "휴지통에서 바로 지워져 되돌릴 수 없습니다. 지운 만큼 공간이 바로 확보됩니다."
+            "value": "휴지통에서 바로 지워져 되돌릴 수 없어요. 지운 만큼 공간이 바로 늘어나요."
           }
         }
       }
     },
-    "휴지통에서 찾을 수 없습니다": {
+    "휴지통에서 찾을 수 없어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Not found in the Trash"
+            "value": "Can't find this in Trash"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "휴지통에서 찾을 수 없습니다"
+            "value": "휴지통에서 찾을 수 없어요"
           }
         }
       }
@@ -6493,23 +6151,7 @@
         }
       }
     },
-    "휴지통으로 이동": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Move to Trash"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "휴지통으로 이동"
-          }
-        }
-      }
-    },
-    "휴지통으로 이동할까요?": {
+    "휴지통으로 옮길까요?": {
       "localizations": {
         "en": {
           "stringUnit": {
@@ -6520,103 +6162,119 @@
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "휴지통으로 이동할까요?"
+            "value": "휴지통으로 옮길까요?"
           }
         }
       }
     },
-    "휴지통을 비우기 전까지 복원할 수 있습니다.": {
+    "휴지통을 비우기 전까지 되돌릴 수 있어요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You can restore items until you empty the Trash."
+            "value": "You can put items back until you empty Trash."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "휴지통을 비우기 전까지 복원할 수 있습니다."
+            "value": "휴지통을 비우기 전까지 되돌릴 수 있어요."
           }
         }
       }
     },
-    "휴지통을 비우기 전까지 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다.": {
+    "휴지통을 비우기 전까지 되돌릴 수 있어요. 휴지통을 비워야 공간이 늘어나요.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You can restore items until you empty the Trash. Space is freed only when you empty the Trash."
+            "value": "You can put items back until you empty Trash. Empty Trash to free up space."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "휴지통을 비우기 전까지 복원할 수 있습니다. 휴지통을 비워야 공간이 확보됩니다."
+            "value": "휴지통을 비우기 전까지 되돌릴 수 있어요. 휴지통을 비워야 공간이 늘어나요."
           }
         }
       }
     },
-    "휴지통을 비우면 %@가 실제로 확보됩니다": {
+    "휴지통을 비우면 %@가 실제로 확보돼요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Empty the Trash to actually free up %@"
+            "value": "Empty Trash to free up %@"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "휴지통을 비우면 %@가 실제로 확보됩니다"
+            "value": "휴지통을 비우면 %@가 실제로 확보돼요"
           }
         }
       }
     },
-    "휴지통을 비워야 디스크 공간이 늘어납니다": {
+    "휴지통을 비워야 디스크 공간이 늘어나요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Empty the Trash to free up disk space"
+            "value": "Empty Trash to free up disk space"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "휴지통을 비워야 디스크 공간이 늘어납니다"
+            "value": "휴지통을 비워야 디스크 공간이 늘어나요"
           }
         }
       }
     },
-    "휴지통을 비웠거나 이미 옮겨져 되돌릴 수 없습니다": {
+    "휴지통을 비웠거나 이미 옮겨져 되돌릴 수 없어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The Trash was emptied or the item was already moved, so it can't be restored"
+            "value": "Trash was emptied or the item was already moved, so it can't be put back"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "휴지통을 비웠거나 이미 옮겨져 되돌릴 수 없습니다"
+            "value": "휴지통을 비웠거나 이미 옮겨져 되돌릴 수 없어요"
           }
         }
       }
     },
-    "휴지통을 열지 못했습니다": {
+    "휴지통을 열지 못했어요": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Couldn't open the Trash"
+            "value": "Couldn't Open Trash"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "휴지통을 열지 못했습니다"
+            "value": "휴지통을 열지 못했어요"
+          }
+        }
+      }
+    },
+    "휴지통이에요. 비우면 되돌릴 수 없어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trash. Emptying it can't be undone"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통이에요. 비우면 되돌릴 수 없어요"
           }
         }
       }

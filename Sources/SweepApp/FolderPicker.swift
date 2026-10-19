@@ -34,7 +34,7 @@ enum FolderPicker {
         panel.allowsMultipleSelection = false
         panel.directoryURL = URL(filePath: "/Volumes")
         panel.prompt = String(localized: "추가")
-        panel.message = String(localized: "큰 파일·중복 파일을 찾을 폴더를 고르세요.")
+        panel.message = String(localized: "큰 파일과 중복 파일을 찾을 폴더를 고르세요.")
 
         guard panel.runModal() == .OK else { return nil }
         return panel.url

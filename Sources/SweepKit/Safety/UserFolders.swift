@@ -25,15 +25,15 @@ public enum UserFolders {
         public var message: String {
             switch self {
             case .tooWide:
-                String(localized: "홈 폴더나 그 위는 추가할 수 없습니다. 홈 아래 보이는 폴더는 이미 모두 봅니다.")
+                String(localized: "내 사용자 폴더 자체나 이를 포함하는 폴더는 추가할 수 없어요. 그 안에 보이는 폴더는 이미 모두 살펴봐요.")
             case .insideLibrary:
-                String(localized: "Library 안은 추가할 수 없습니다. 앱 데이터라 정크 검사가 따로 봅니다.")
+                String(localized: "Library 안은 추가할 수 없어요. 앱 데이터는 정크 파일 기능에서 따로 살펴봐요.")
             case .systemFolder:
-                String(localized: "시스템 폴더는 추가할 수 없습니다.")
+                String(localized: "시스템 폴더는 추가할 수 없어요.")
             case .alreadyCovered(let url):
-                String(localized: "이미 보고 있는 폴더입니다: \(CleanupItem.abbreviating(url.path, home: Sandbox.userHome.path))")
+                String(localized: "이미 보고 있는 폴더예요: \(CleanupItem.abbreviating(url.path, home: Sandbox.userHome.path))")
             case .bookmark(let reason):
-                String(localized: "폴더 접근 권한을 저장하지 못했습니다: \(reason)")
+                String(localized: "폴더 접근 권한을 저장하지 못했어요: \(reason)")
             }
         }
     }

@@ -78,13 +78,13 @@ struct DiskMapView: View {
             // 확인 필요 항목은 제목부터 다르다 — 캐시를 지울 때와 내 문서를 지울 때가
             // 같은 얼굴이면 배지를 세 갈래로 나눈 뜻이 없다.
             pendingDelete.flatMap { model.verdict(for: $0) }?.level == .caution
-                ? Text("확인 필요 — 휴지통으로 이동할까요?")
-                : Text("휴지통으로 이동할까요?"),
+                ? Text("확인 필요. 휴지통으로 옮길까요?")
+                : Text("휴지통으로 옮길까요?"),
             isPresented: Binding(get: { pendingDelete != nil },
                                  set: { if !$0 { pendingDelete = nil } }),
             presenting: pendingDelete
         ) { node in
-            Button("휴지통으로 이동", role: .destructive) {
+            Button("휴지통으로 옮기기", role: .destructive) {
                 Task { await model.remove(node) }
             }
             Button("취소", role: .cancel) {}
@@ -96,16 +96,16 @@ struct DiskMapView: View {
             // 크기가 앞이다. "지울까?"에 답하려면 그 숫자가 먼저 필요하다.
             // 그 뒤에 왜 그 판정인지 — 무엇이 사라지는지 — 를 같은 줄에 잇는다.
             let line = "\(node.formattedSize) · \(node.url.path)"
-            Text(verbatim: model.verdict(for: node).map { "\(line) — \($0.reason)" } ?? line)
+            Text(verbatim: model.verdict(for: node).map { "\(line). \($0.reason)" } ?? line)
         }
-        .alert("옮기지 못했습니다",
+        .alert("옮기지 못했어요",
                isPresented: Binding(get: { model.removalFailure != nil },
                                     set: { if !$0 { model.clearRemovalFailure() } })) {
             Button("확인") { model.clearRemovalFailure() }
         } message: {
             Text(model.removalFailure ?? "")
         }
-        .alert("다른 폴더를 골랐습니다",
+        .alert("다른 폴더를 골랐어요",
                isPresented: Binding(get: { grantFailure != nil },
                                     set: { if !$0 { grantFailure = nil } })) {
             Button("확인") { grantFailure = nil }
@@ -142,10 +142,10 @@ struct DiskMapView: View {
                 PixelIcon(art: .pieChart, size: 24)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("지금은 다운로드 폴더만 보입니다")
+                    Text("지금은 다운로드 폴더만 볼 수 있어요")
                         .font(Theme.bodyText)
                         .foregroundStyle(Theme.textPrimary)
-                    Text("디스크를 한 번 허용하면 홈과 이 Mac 전체를 봅니다.")
+                    Text("디스크 접근을 허용하면 내 사용자 폴더와 이 Mac 전체를 볼 수 있어요.")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.textSecondary)
                 }
@@ -222,7 +222,7 @@ struct DiskMapView: View {
             .accessibilityLabel("시작 지점")
             // 회색으로만 바뀌면 왜 안 열리는지 모른다.
             .help(model.isScanning
-                  ? String(localized: "재는 중에는 바꿀 수 없습니다. 중단하면 고를 수 있습니다.")
+                  ? String(localized: "재는 중에는 바꿀 수 없어요. 중단하면 고를 수 있어요.")
                   : "")
             // 도는 중에 다른 곳을 고르면 순회 두 개가 동시에 돌아
             // 나중에 끝난 쪽이 앞선 결과를 덮는다.
@@ -299,24 +299,24 @@ struct DiskMapView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if let current = model.current {
             if model.tiles.isEmpty {
-                placeholder(String(localized: "\(current.name)에는 더 나눌 항목이 없습니다"),
+                placeholder(String(localized: "\(current.name)에는 더 나눌 항목이 없어요"),
                             detail: current.formattedSize)
             } else {
                 usageList
             }
         } else if model.selectedRoot != nil {
             // 중단했거나 아직 못 읽은 상태. 고른 곳은 있으니 다시 훑을 길을 준다.
-            Retro95Dialog(title: String(localized: "훑기를 멈췄습니다"), icon: .pieChart) {
-                Text("다시 훑으면 이어서가 아니라 처음부터 셉니다.")
+            Retro95Dialog(title: String(localized: "검색을 멈췄어요"), icon: .pieChart) {
+                Text("다시 검색하면 처음부터 세요.")
             } buttons: {
-                Button("다시 훑기") { Task { await model.reload() } }
+                Button("다시 검색") { Task { await model.reload() } }
                     .buttonStyle(Retro95ButtonStyle(isDefault: true))
             }
             .frame(maxWidth: R95.dialogWidth)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             placeholder(String(localized: "시작 지점을 고르세요"),
-                        detail: String(localized: "홈·볼륨 전체·응용 프로그램까지 살펴봅니다."))
+                        detail: String(localized: "내 사용자 폴더, 디스크 전체, 응용 프로그램도 살펴볼 수 있어요."))
         }
     }
 
@@ -365,13 +365,13 @@ struct DiskMapView: View {
         return HStack(spacing: 8) {
             if let target, let verdict {
                 Retro95StatusChip(title: verdict.title, icon: chipIcon(verdict.level), level: verdict.level)
-                Text(verbatim: "\(target.name) — \(verdict.reason)")
+                Text(verbatim: "\(target.name). \(verdict.reason)")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(1)
                     .truncationMode(.middle)
             } else {
-                Text("지워도 됨: 캐시·로그처럼 다시 만들어지는 것 · 확인 필요: 내 파일·앱 데이터 · 보호됨: 시스템·계정 데이터")
+                Text("지워도 됨: 다시 생기는 임시 파일과 앱 활동 기록. 확인 필요: 내 파일과 앱 데이터. 보호됨: 시스템과 계정 데이터.")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.textSecondary)
                     .lineLimit(1)
@@ -393,7 +393,7 @@ struct DiskMapView: View {
             Retro95Separator()
 
             HStack(spacing: 12) {
-                Text("권한이 막혀 못 읽는 폴더가 있어요")
+                Text("접근이 허용되지 않은 폴더가 있어요")
                     .font(Theme.caption)
                     .foregroundStyle(SafetyLevel.caution.tint)
                 Spacer(minLength: 12)
@@ -472,12 +472,12 @@ struct DiskMapView: View {
                 }
                 .frame(width: DiskMapColumns.open)
                 iconButton(.folder, String(localized: "Finder에서 보기")) { ItemActions.reveal(node.url) }
-                iconButton(.documents, String(localized: "경로 복사")) { ItemActions.copyPath(node.url) }
+                iconButton(.documents, String(localized: "위치 복사")) { ItemActions.copyPath(node.url) }
                 // 왜 못 지우는지는 눌러 보고 알 일이 아니다. 사유를 미리 붙인다.
                 // 못 읽는 폴더는 안을 못 봤으니 "확인"할 수가 없다. 열어서 본 뒤에 지운다.
                 iconButton(.trash, !node.isReadable
-                           ? String(localized: "권한이 막혀 안을 볼 수 없습니다")
-                           : verdict?.veto?.message ?? String(localized: "휴지통으로 이동")) {
+                           ? String(localized: "접근이 허용되지 않아 안을 볼 수 없어요")
+                           : verdict?.veto?.message ?? String(localized: "휴지통으로 옮기기")) {
                     pendingDelete = node
                 }
                 .disabled(!node.isReadable || verdict?.allowsRemoval == false)
@@ -498,13 +498,13 @@ struct DiskMapView: View {
         }
         .contextMenu {
             Button("Finder에서 보기") { ItemActions.reveal(node.url) }
-            Button("경로 복사") { ItemActions.copyPath(node.url) }
+            Button("위치 복사") { ItemActions.copyPath(node.url) }
             Divider()
             // 바로 지우지 않는다. 확인 대화에서 경로와 크기를 다시 보여준다.
             //
             // 옆의 휴지통 아이콘과 **같은 조건**으로 잠근다. 예전엔 메뉴에만 검사가
             // 없어서, 아이콘은 비활성인데 메뉴에서는 눌리고 조용히 실패했다.
-            Button("휴지통으로 이동", role: .destructive) { pendingDelete = node }
+            Button("휴지통으로 옮기기", role: .destructive) { pendingDelete = node }
                 .disabled(!node.isReadable || verdict?.allowsRemoval == false)
         }
         .help(node.url.path)
@@ -525,7 +525,7 @@ struct DiskMapView: View {
     private func statusBadge(_ node: DiskUsageNode, verdict: RemovalVerdict?) -> some View {
         if !node.isReadable {
             Retro95StatusChip(title: String(localized: "권한 없음"), icon: .warning, level: .caution)
-                .help("권한이 막혀 안을 볼 수 없습니다")
+                .help("접근이 허용되지 않아 안을 볼 수 없어요")
         } else if let verdict {
             Retro95StatusChip(title: verdict.title, icon: chipIcon(verdict.level), level: verdict.level)
                 .help(verdict.reason)

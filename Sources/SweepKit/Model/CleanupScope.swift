@@ -72,7 +72,7 @@ extension CleanupScope {
             let components = FolderAccess.components(of: url)
             if known.isEmpty, customFolders.contains(components) {
                 customScopes.append(CleanupScope(url: url, label: label,
-                                                 detail: String(localized: "큰 파일 · 중복 파일 · 직접 추가함"),
+                                                 detail: String(localized: "큰 파일 · 중복 파일 · 내가 추가한 폴더"),
                                                  isCustom: true))
                 return nil
             }
@@ -85,7 +85,7 @@ extension CleanupScope {
 
         guard !homeFolders.isEmpty else { return fixed + customScopes }
         let grouped = CleanupScope(url: Sandbox.userHome,
-                                   label: String(localized: "~ 홈 폴더"),
+                                   label: String(localized: "~ 내 사용자 폴더"),
                                    detail: homeFoldersDetail(homeFolders.map(\.lastPathComponent)))
         return fixed + [grouped] + customScopes
     }
@@ -96,26 +96,26 @@ extension CleanupScope {
         let shown = names.prefix(limit).joined(separator: " · ")
         let rest = names.count - limit
         return rest > 0
-            ? String(localized: "큰 파일 · 중복 파일 — \(shown) 외 \(rest)곳")
-            : String(localized: "큰 파일 · 중복 파일 — \(shown)")
+            ? String(localized: "큰 파일 · 중복 파일: \(shown) 외 \(rest)곳")
+            : String(localized: "큰 파일 · 중복 파일: \(shown)")
     }
 
     private static func detail(for label: String) -> String {
         switch label {
-        case "~/Library/Developer": String(localized: "Xcode 산출물 · 시뮬레이터 · DerivedData")
-        case "~/Library/Caches": String(localized: "앱이 다시 만들 수 있는 캐시")
-        case "~/Library/Logs": String(localized: "앱 로그")
-        case "~/Downloads": String(localized: "내려받은 파일 · 중복본")
+        case "~/Library/Developer": String(localized: "Xcode가 앱을 만들거나 시험할 때 생긴 파일")
+        case "~/Library/Caches": String(localized: "앱이 다시 만들 수 있는 임시 파일")
+        case "~/Library/Logs": String(localized: "앱 활동 기록")
+        case "~/Downloads": String(localized: "내려받은 파일 · 중복 파일")
         case "/private/tmp": String(localized: "시스템 임시 파일")
         // 폴더 전체가 아니라 안의 캐시만 본다. 설정과 인증 정보는 건드리지 않는다.
-        case "~/.npm": String(localized: "npm 내려받기 캐시")
-        case "~/.expo": String(localized: "Expo 캐시")
-        case "~/.gradle/caches": String(localized: "Gradle 캐시")
-        case "~/.cargo/registry": String(localized: "Cargo 레지스트리 캐시")
-        case "~/.m2/repository": String(localized: "Maven 저장소 캐시")
-        case "~/.Trash": String(localized: "휴지통 — 비우면 되돌릴 수 없습니다")
+        case "~/.npm": String(localized: "npm 내려받기 임시 파일")
+        case "~/.expo": String(localized: "Expo 임시 파일")
+        case "~/.gradle/caches": String(localized: "Gradle 임시 파일")
+        case "~/.cargo/registry": String(localized: "Cargo 내려받기 임시 파일")
+        case "~/.m2/repository": String(localized: "Maven 내려받기 임시 파일")
+        case "~/.Trash": String(localized: "휴지통이에요. 비우면 되돌릴 수 없어요")
         case "~/Library/Mobile Documents/.Trash":
-            String(localized: "iCloud Drive 휴지통 — 비우면 다른 기기에서도 사라집니다")
+            String(localized: "iCloud Drive 휴지통이에요. 비우면 다른 기기에서도 사라져요")
         case "~/Library/Application Support/MobileSync/Backup": String(localized: "iOS 기기 백업")
         case "~/Library/Containers/com.apple.mail/Data/Library/Mail Downloads":
             String(localized: "메일 첨부 사본")

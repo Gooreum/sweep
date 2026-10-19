@@ -26,15 +26,15 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
 
     public var displayName: String {
         switch self {
-        case .runawayTemp: String(localized: "폭주 임시 파일")
-        case .xcode: String(localized: "Xcode · 시뮬레이터")
-        case .devCache: String(localized: "개발 캐시")
-        case .appCache: String(localized: "앱 웹 캐시")
-        case .staleCache: String(localized: "묵은 캐시")
+        case .runawayTemp: String(localized: "급증한 임시 파일")
+        case .xcode: String(localized: "Xcode · 앱 시험 도구")
+        case .devCache: String(localized: "개발 임시 파일")
+        case .appCache: String(localized: "앱 웹 임시 파일")
+        case .staleCache: String(localized: "오래된 임시 파일")
         case .mailAttachment: String(localized: "메일 첨부 사본")
         case .trash: String(localized: "휴지통")
         case .deviceBackup: String(localized: "기기 백업")
-        case .largeFile: String(localized: "대용량 파일")
+        case .largeFile: String(localized: "큰 파일")
         case .duplicate: String(localized: "중복 파일")
         }
     }

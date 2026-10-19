@@ -447,7 +447,7 @@ public struct StatusLine: Equatable, Sendable {
         return StatusLine(
             status: status,
             count: model.map { String(localized: "항목 \($0.items.count)개") } ?? empty,
-            size: model.flatMap { $0.items.isEmpty ? nil : String(localized: "회수 가능 \($0.formattedTotalSize)") } ?? empty)
+            size: model.flatMap { $0.items.isEmpty ? nil : String(localized: "정리 가능 \($0.formattedTotalSize)") } ?? empty)
     }
 
     static func diskMap(loadPhase: DiskMapModel.LoadPhase?, current: DiskUsageNode?) -> StatusLine {
@@ -475,7 +475,7 @@ extension AppModel {
         case .diskMap:
             StatusLine.diskMap(loadPhase: diskMapModel?.loadPhase, current: diskMapModel?.current)
         case .junk where needsFolderAccess:
-            StatusLine(status: String(localized: "폴더 허락 필요"), count: StatusLine.empty, size: StatusLine.empty)
+            StatusLine(status: String(localized: "폴더 허용 필요"), count: StatusLine.empty, size: StatusLine.empty)
         default:
             StatusLine.scan(currentModel)
         }

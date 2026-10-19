@@ -19,7 +19,7 @@ struct FolderAccessView: View {
         Retro95Dialog(title: String(localized: "정리할 폴더 열기"), icon: .folder) {
             VStack(alignment: .leading, spacing: 12) {
                 VStack(spacing: 6) {
-                    Text("App Store 버전은 macOS 샌드박스 안에서 동작해서, 폴더를 열려면 한 번 허락이 필요해요.")
+                    Text("App Store 앱은 보안 때문에 폴더를 마음대로 열 수 없어요. 처음 한 번 접근을 허용해 주세요.")
                     Text("맨 위 하나만 허용해도 대부분 찾을 수 있어요.")
                 }
                 .font(R95.ui())
@@ -38,7 +38,7 @@ struct FolderAccessView: View {
             }
         }
         .frame(maxWidth: R95.dialogWidth)
-        .alert("다른 폴더를 골랐습니다",
+        .alert("다른 폴더를 골랐어요",
                isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) {
             Button("확인") { failure = nil }
         } message: {

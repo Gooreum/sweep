@@ -400,7 +400,7 @@ struct DiskMapModelTests {
 
         await model.remove(child)
 
-        #expect(model.removalFailure?.contains("삭제할 수 없습니다") == true)
+        #expect(model.removalFailure?.contains("지울 수 없어요") == true)
         // 실패했는데 화면에서 사라지면 사용자는 지워진 줄 안다
         #expect(model.path == before)
     }

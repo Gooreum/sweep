@@ -56,7 +56,7 @@ struct StatusLineTests {
                            needsFolderAccess: true)
         app.selected = .junk
 
-        #expect(app.statusLine == StatusLine(status: "폴더 허락 필요", count: "—", size: "—"))
+        #expect(app.statusLine == StatusLine(status: "폴더 허용 필요", count: "—", size: "—"))
     }
 
     // TC-6
