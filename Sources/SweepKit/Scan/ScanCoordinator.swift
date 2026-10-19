@@ -157,7 +157,7 @@ public struct ScanCoordinator: Sendable {
     static func normalize(_ items: [CleanupItem]) -> [CleanupItem] {
         var seen: Set<URL> = []
         return items
-            .filter { $0.size > 0 && ProtectedPaths.isRemovable($0.url) }
+            .filter { $0.size > 0 && ProtectedPaths.isRemovable($0.url, scope: $0.category.removalScope) }
             .sorted { lhs, rhs in
                 // 위험한 카테고리가 위로, 같은 카테고리 안에서는 큰 것부터
                 lhs.category.sortOrder == rhs.category.sortOrder

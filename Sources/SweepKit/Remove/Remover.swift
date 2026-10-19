@@ -23,8 +23,12 @@ public struct Remover: Sendable {
     }
 
     /// 한 항목만 처리한다. UI가 항목 단위 진행률을 그리려면 이 입구가 필요하다.
+    ///
+    /// 정리 범위로 만든 Remover는 **항목의 분류**가 정하는 범위로 검사한다 —
+    /// 큰 파일·중복 파일은 사용자 폴더에 있다(`ScanCategory.removalScope`).
     public func removeOne(_ item: CleanupItem) -> RemovalOutcome {
-        let (trashed, failure) = perform(at: item.url)
+        let itemScope = scope == .cleanup ? item.category.removalScope : scope
+        let (trashed, failure) = perform(at: item.url, scope: itemScope)
         return RemovalOutcome(item: item, failure: failure, trashedURL: trashed)
     }
 
@@ -41,12 +45,13 @@ public struct Remover: Sendable {
     /// `removeFile(at:)`과 같은 관문·같은 삭제. 실패하면 문장과 함께 **종류**를 돌려준다 —
     /// 화면이 사유마다 다른 다음 행동을 보여주려면 종류가 필요하다.
     public func attempt(at url: URL) -> RemovalFailure? {
-        perform(at: url).failure
+        perform(at: url, scope: scope).failure
     }
 
     /// 관문 → 삭제. 휴지통으로 옮겼으면 **휴지통 안의 새 위치**도 돌려준다 —
     /// 예전엔 버렸는데, 그러면 앱이 되돌릴 길이 없어 사용자가 Finder 휴지통을 뒤져야 했다.
-    private func perform(at url: URL) -> (trashed: URL?, failure: RemovalFailure?) {
+    private func perform(at url: URL,
+                         scope: RemovalScope) -> (trashed: URL?, failure: RemovalFailure?) {
         do {
             // 관문이 먼저다. 예외 없음.
             try ProtectedPaths.validate(url, scope: scope)

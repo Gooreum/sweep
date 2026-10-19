@@ -137,9 +137,15 @@ struct SandboxTests {
         #expect(!paths.contains(home.appending(path: "Library/Caches").path))
     }
 
-    @Test("샌드박스 밖에서는 지금 허용 루트가 시작 때 루트와 같다")
+    @Test("샌드박스 밖에서는 지금 허용 루트가 시작 때 루트로 시작하고 사용자 폴더가 뒤따른다")
     func currentRootsOutsideSandbox() {
-        #expect(ProtectedPaths.currentRoots == ProtectedPaths.allowedRoots)
+        let current = ProtectedPaths.currentRoots
+        #expect(Array(current.prefix(ProtectedPaths.allowedRoots.count)) == ProtectedPaths.allowedRoots)
+        // 뒤에 붙는 것은 큰 파일·중복 파일을 찾는 사용자 폴더뿐이다
+        let userRoots = Set(UserFolders.roots().map(FolderAccess.components(of:)))
+        for extra in current.dropFirst(ProtectedPaths.allowedRoots.count) {
+            #expect(userRoots.contains(FolderAccess.components(of: extra)), "\(extra.path)")
+        }
     }
 
     @Test("보호 목록은 진짜 홈의 Xcode UserData를 가리킨다")

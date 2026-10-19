@@ -23,8 +23,12 @@ extension CleanupScope {
     public static var all: [CleanupScope] { scopes(roots: ProtectedPaths.currentRoots) }
 
     /// 루트를 주입할 수 있게 연다 — 샌드박스 쪽 목록은 테스트 프로세스에서 만들 수 없다.
-    static func scopes(roots: [URL]) -> [CleanupScope] {
+    ///
+    /// `userRoots`는 큰 파일·중복 파일을 찾는 사용자 폴더다. 이름이 기계마다 달라
+    /// (`~/Code`, `~/katamari`) 경로로 설명을 고를 수 없으니 목록으로 알아본다.
+    static func scopes(roots: [URL], userRoots: [URL] = UserFolders.roots()) -> [CleanupScope] {
         let home = Sandbox.userHome.path
+        let userFolders = Set(userRoots.map(FolderAccess.components(of:)))
 
         /// 임시 컨테이너는 `/private/var/folders/<해시>/C` 같은 경로라
         /// 화면에 그대로 쓰면 읽히지 않는다. 하나로 묶는다.
@@ -46,7 +50,11 @@ extension CleanupScope {
                 ? "~" + path.dropFirst(home.count)
                 : path
 
-            return CleanupScope(url: url, label: label, detail: Self.detail(for: label))
+            let known = Self.detail(for: label)
+            let detail = known.isEmpty && userFolders.contains(FolderAccess.components(of: url))
+                ? String(localized: "큰 파일 · 중복 파일")
+                : known
+            return CleanupScope(url: url, label: label, detail: detail)
         }
     }
 
@@ -60,6 +68,13 @@ extension CleanupScope {
         // 폴더 전체가 아니라 안의 캐시만 본다. 설정과 인증 정보는 건드리지 않는다.
         case "~/.npm": String(localized: "npm 내려받기 캐시")
         case "~/.expo": String(localized: "Expo 캐시")
+        case "~/.gradle/caches": String(localized: "Gradle 캐시")
+        case "~/.cargo/registry": String(localized: "Cargo 레지스트리 캐시")
+        case "~/.m2/repository": String(localized: "Maven 저장소 캐시")
+        case "~/.Trash": String(localized: "휴지통 — 비우면 되돌릴 수 없습니다")
+        case "~/Library/Application Support/MobileSync/Backup": String(localized: "iOS 기기 백업")
+        case "~/Library/Containers/com.apple.mail/Data/Library/Mail Downloads":
+            String(localized: "메일 첨부 사본")
         default: ""
         }
     }

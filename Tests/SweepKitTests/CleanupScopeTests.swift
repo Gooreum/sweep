@@ -5,10 +5,10 @@ import Foundation
 @Suite("CleanupScope")
 struct CleanupScopeTests {
 
-    @Test("보는 곳 목록이 안전 게이트의 허용 루트에서 나온다")
+    @Test("보는 곳 목록이 안전 게이트의 허용 루트와 사용자 폴더에서 나온다")
     func derivedFromAllowedRoots() {
         let scopes = CleanupScope.all
-        let roots = Set(ProtectedPaths.allowedRoots.map(\.path))
+        let roots = Set((ProtectedPaths.allowedRoots + UserFolders.roots()).map(\.path))
 
         #expect(!scopes.isEmpty)
         // 손으로 적은 경로가 섞이면 화면이 안전 게이트와 어긋난다

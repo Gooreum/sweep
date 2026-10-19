@@ -44,6 +44,17 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
         }
     }
 
+    /// 이 분류의 항목을 어느 관문 범위로 검사할지.
+    ///
+    /// 큰 파일·중복 파일만 사용자 폴더(`~/Documents` 등)를 연다. 나머지가 그 폴더 경로를
+    /// 내면 버그이고, 관문이 막아야 한다.
+    public var removalScope: RemovalScope {
+        switch self {
+        case .largeFile, .duplicate: .userFiles
+        default: .cleanup
+        }
+    }
+
     public var systemImageName: String {
         switch self {
         case .runawayTemp: "exclamationmark.triangle.fill"

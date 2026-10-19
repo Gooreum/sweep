@@ -43,6 +43,11 @@ public enum RemovalScope: Sendable {
     /// 디스크 맵. 사용자가 보고 고른 항목이라 **내 소유면 어디든** 연다.
     /// 홈의 기본 폴더 자체와 계정 데이터만 막는다. 시스템은 소유권·플래그 검사가 지킨다.
     case diskMap
+    /// 큰 파일·중복 파일. 정리 범위에 **사용자 폴더**(`UserFolders`)를 더한다.
+    ///
+    /// 정리 범위 자체를 넓히지 않는 이유: 정크 스캐너가 버그로 `~/Documents` 경로를 내도
+    /// 관문이 막아야 한다. 내 파일을 후보로 내는 스캐너에게만 그 폴더들을 연다.
+    case userFiles
 }
 
 /// 모든 삭제가 반드시 통과해야 하는 관문.
@@ -89,7 +94,16 @@ public enum ProtectedPaths {
     ///
     /// `~/.expo`는 루트로 두되 스캐너가 하위 캐시 폴더만 고른다. 같은 층에
     /// `ngrok.yml`(인증 토큰)과 `state.json`(로그인 상태)이 있어 통째로 올리면 안 된다.
-    static let homeToolRoots: [String] = [".npm", ".expo"]
+    ///
+    /// Gradle·Cargo·Maven은 도구 폴더가 아니라 **캐시 하위 폴더**를 루트로 둔다.
+    /// 바로 위층에 `~/.gradle/gradle.properties`·`~/.m2/settings.xml`(인증 정보)과
+    /// `~/.cargo/bin`(실행 파일)이 있다. 루트 자체는 지울 수 없으니 스캐너가 하위를 하나씩 올린다.
+    static let homeToolRoots: [String] = [
+        ".npm", ".expo", ".gradle/caches", ".cargo/registry", ".m2/repository",
+    ]
+
+    /// 휴지통. 바로 아래 항목만 지울 수 있고 휴지통 자체는 루트라 막힌다.
+    static var trashFolder: URL { inHome(".Trash") }
 
     static func roots(sandboxed: Bool, granted: [URL] = []) -> [URL] {
         let downloads = inHome("Downloads")
@@ -99,6 +113,11 @@ public enum ProtectedPaths {
             inHome("Library/Logs"),
             downloads,
             URL(filePath: "/private/tmp"),
+            trashFolder,
+            // iOS 기기 백업. 기기마다 UDID 폴더 하나다.
+            inHome("Library/Application Support/MobileSync/Backup"),
+            // Mail이 미리보기로 내려받은 첨부 사본. 원본은 메일 안에 남는다.
+            inHome("Library/Containers/com.apple.mail/Data/Library/Mail Downloads"),
         ] + homeToolRoots.map(inHome) + userTemporaryRoots
 
         guard sandboxed else { return all }
@@ -130,10 +149,16 @@ public enum ProtectedPaths {
 
     /// 지금 이 순간의 허용 루트. 허락은 실행 중에 생기므로 시작할 때 고정되는
     /// `allowedRoots`와 따로 둔다. 화면(보는 곳 목록)이 이것을 본다.
+    ///
+    /// 큰 파일·중복 파일을 찾는 사용자 폴더도 함께 보여준다. 지울 수 있는 범위는
+    /// 그 항목들에만 열리지만(`RemovalScope.userFiles`), 사용자에게는 둘 다 "보는 곳"이다.
     public static var currentRoots: [URL] {
-        Sandbox.isActive
+        let fixed = Sandbox.isActive
             ? roots(sandboxed: true, granted: FolderAccess.shared.urls)
             : allowedRoots
+        // Downloads가 양쪽에 다 있다. 경로 구성요소로 걸러 한 번만 보인다.
+        let seen = Set(fixed.map(FolderAccess.components(of:)))
+        return fixed + UserFolders.roots().filter { !seen.contains(FolderAccess.components(of: $0)) }
     }
 
     /// Electron·Chromium 앱이 공통으로 쓰는 캐시 폴더 이름.
@@ -281,7 +306,7 @@ public enum ProtectedPaths {
 
         // 구성요소는 한 번만 쪼갠다. 아래에서 12번 넘게 비교하기 때문이다.
         let resolvedComponents = resolved.standardizedFileURL.pathComponents
-        let roots = rootComponents()
+        let roots = rootComponents(scope: scope)
 
         // 2. 허용 루트 자체를 통째로 지우는 것도 거부 (하위만 허용)
         if roots.contains(resolvedComponents) {
@@ -492,12 +517,20 @@ public enum ProtectedPaths {
     ///
     /// 허락받은 폴더 자체가 아니라 **그 안에서 켜진 루트**를 붙인다.
     /// `~/Library`를 열어 줬다고 `~/Library/Safari`까지 지울 수 있으면 안 된다.
-    private static func rootComponents() -> [[String]] {
-        guard Sandbox.isActive else { return cachedRootComponents }
+    ///
+    /// `.userFiles`면 사용자 폴더(`UserFolders`)를 더한다. 실행 중에 바뀌므로(폴더 추가,
+    /// 홈에 새 폴더) 캐시된 고정 루트에 넣지 않고 여기서 붙인다.
+    private static func rootComponents(scope: RemovalScope) -> [[String]] {
+        let fixed: [[String]]
         let granted = FolderAccess.shared.urls
-        guard !granted.isEmpty else { return cachedRootComponents }
-        return roots(sandboxed: true, granted: granted)
-            .map { canonical($0).standardizedFileURL.pathComponents }
+        if Sandbox.isActive, !granted.isEmpty {
+            fixed = roots(sandboxed: true, granted: granted)
+                .map { canonical($0).standardizedFileURL.pathComponents }
+        } else {
+            fixed = cachedRootComponents
+        }
+        guard scope == .userFiles else { return fixed }
+        return fixed + UserFolders.cachedRootComponents()
     }
 
     /// 경로 구성요소 단위 하위 판정. URL을 다시 정규화하지 않아 값싸다.
@@ -523,7 +556,8 @@ public enum ProtectedPaths {
     private static func isInsideArea(_ components: [String], roots: [[String]],
                                      scope: RemovalScope) -> Bool {
         switch scope {
-        case .cleanup:
+        case .cleanup, .userFiles:
+            // `.userFiles`는 `roots`에 사용자 폴더가 이미 붙어 온다(`rootComponents`).
             isInsideAllowedArea(components, roots: roots)
         case .diskMap:
             diskMapReachable(components, sandboxed: Sandbox.isActive,

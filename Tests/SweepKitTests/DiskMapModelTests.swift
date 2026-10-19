@@ -120,7 +120,9 @@ struct DiskMapModelTests {
         func isTemporary(_ path: String) -> Bool {
             path.hasPrefix("/var/folders/") || path.hasPrefix("/private/var/folders/")
         }
-        for root in ProtectedPaths.allowedRoots where !isTemporary(root.path) {
+        // 없는 폴더는 시작점이 될 수 없다(`add`가 거른다). `~/.m2`처럼 도구를 안 쓰는 기계에는 없다.
+        for root in ProtectedPaths.allowedRoots
+        where !isTemporary(root.path) && FileManager.default.fileExists(atPath: root.path) {
             #expect(paths.contains(root.standardizedFileURL.path),
                     "정리 루트가 빠졌다: \(root.path)")
         }
