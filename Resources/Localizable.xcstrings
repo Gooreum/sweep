@@ -3093,18 +3093,18 @@
         }
       }
     },
-    "막대 끝 = 코어 1개를 꽉 채움": {
+    "막대가 꽉 차면 CPU 코어 하나를 통째로 쓰는 중입니다. 200%면 코어 두 개를 쓰는 것입니다.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Full bar = one core fully used"
+            "value": "A full bar means the process is using one whole CPU core. 200% means two cores."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "막대 끝 = 코어 1개를 꽉 채움"
+            "value": "막대가 꽉 차면 CPU 코어 하나를 통째로 쓰는 중입니다. 200%면 코어 두 개를 쓰는 것입니다."
           }
         }
       }

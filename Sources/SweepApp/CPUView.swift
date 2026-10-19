@@ -76,9 +76,10 @@ struct CPUView: View {
             }
             Retro95GroupBox(title: String(localized: "상위 프로세스")) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("막대 끝 = 코어 1개를 꽉 채움")
+                    Text("막대가 꽉 차면 CPU 코어 하나를 통째로 쓰는 중입니다. 200%면 코어 두 개를 쓰는 것입니다.")
                         .font(R95.ui(11))
                         .foregroundStyle(R95.deep)
+                        .fixedSize(horizontal: false, vertical: true)
                     if !model.isWarmingUp {
                         // 창이 낮으면 넘친 만큼 화면 전체가 밀려 제목·상태 막대가 창 밖으로 나갔다.
                         // 이 목록만 스크롤시켜 높이를 창 안에 가둔다.
