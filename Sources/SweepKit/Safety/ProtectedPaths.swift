@@ -105,6 +105,33 @@ public enum ProtectedPaths {
     /// 휴지통. 바로 아래 항목만 지울 수 있고 휴지통 자체는 루트라 막힌다.
     static var trashFolder: URL { inHome(".Trash") }
 
+    /// iCloud Drive 휴지통. Finder 휴지통에 합쳐 보인다. 비우면 iCloud에서도 지워진다.
+    ///
+    /// `Library/Mobile Documents`는 디스크 맵에서 막는 계정 데이터지만(`userDataFolders`),
+    /// 정리 범위는 이 휴지통 하위만 연다.
+    static var iCloudTrashFolder: URL { inHome("Library/Mobile Documents/.Trash") }
+
+    /// 홈에 있는 휴지통 둘. 고정 루트에 들어간다.
+    static var homeTrashFolders: [URL] { [trashFolder, iCloudTrashFolder] }
+
+    /// 외장 디스크의 내 휴지통 `/Volumes/<디스크>/.Trashes/<uid>` **안의** 항목인가.
+    ///
+    /// 디스크는 실행 중에 꽂혔다 빠진다. 시작할 때 고정하는 `allowedRoots`에 넣을 수 없어
+    /// 앱 번들처럼 모양으로 연다. 휴지통 자체(깊이 5)는 막는다 — 하위만 후보다.
+    static func isVolumeTrashItem(_ components: [String], uid: uid_t = getuid()) -> Bool {
+        components.count > 5 && components[1] == "Volumes"
+            && components[3] == ".Trashes" && components[4] == String(uid)
+    }
+
+    /// 휴지통 안의 항목인가. 홈·iCloud·외장 디스크 어느 휴지통이든.
+    /// `Remover`가 영구 삭제를 가를 때 쓴다 — 휴지통 안의 것은 다시 옮길 곳이 없다.
+    static func isInsideTrash(_ url: URL, homeTrashes: [URL] = homeTrashFolders) -> Bool {
+        let components = canonical(url).standardizedFileURL.pathComponents
+        return isVolumeTrashItem(components) || homeTrashes.contains {
+            isDescendant(components, of: canonical($0).standardizedFileURL.pathComponents)
+        }
+    }
+
     static func roots(sandboxed: Bool, granted: [URL] = []) -> [URL] {
         let downloads = inHome("Downloads")
         let all = [
@@ -114,6 +141,7 @@ public enum ProtectedPaths {
             downloads,
             URL(filePath: "/private/tmp"),
             trashFolder,
+            iCloudTrashFolder,
             // iOS 기기 백업. 기기마다 UDID 폴더 하나다.
             inHome("Library/Application Support/MobileSync/Backup"),
             // Mail이 미리보기로 내려받은 첨부 사본. 원본은 메일 안에 남는다.
@@ -580,6 +608,8 @@ public enum ProtectedPaths {
     /// 허용 루트의 하위이거나, 이름으로 열어 준 앱 캐시 폴더인가. 정리 범위의 판정이다.
     private static func isInsideAllowedArea(_ components: [String], roots: [[String]]) -> Bool {
         if roots.contains(where: { isDescendant(components, of: $0) }) { return true }
+        // 외장 디스크 휴지통. 샌드박스에서는 `/Volumes`에 쓸 수 없다.
+        if !Sandbox.isActive, isVolumeTrashItem(components) { return true }
         // 앱 번들은 루트 없이 모양으로 연다. 앱 폴더 바로 아래 `.app` 하나뿐이다.
         if isApplicationsRemovable,
            isApplicationBundle(components, folders: cachedApplicationComponents) {

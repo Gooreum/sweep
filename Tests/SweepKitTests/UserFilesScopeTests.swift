@@ -66,6 +66,48 @@ struct UserFilesScopeTests {
         }
     }
 
+    @Test("iCloud Drive 휴지통은 하위만 열리고 나머지 iCloud 데이터는 막힌다")
+    func iCloudTrashRoot() {
+        #expect(veto("Library/Mobile Documents/.Trash/sweep-없는-파일", .cleanup) == nil)
+        guard case .allowedRootItself = veto("Library/Mobile Documents/.Trash", .cleanup) else {
+            Issue.record("iCloud 휴지통 자체가 allowedRootItself가 아니다"); return
+        }
+        guard case .outsideAllowedRoots = veto("Library/Mobile Documents/com~apple~CloudDocs/sweep-없는-파일", .cleanup) else {
+            Issue.record("iCloud Drive 파일이 열렸다"); return
+        }
+    }
+
+    @Test("외장 디스크 휴지통은 내 uid 폴더의 하위만 모양으로 연다")
+    func volumeTrashShape() {
+        let me = String(getuid())
+        func shape(_ path: String) -> Bool {
+            ProtectedPaths.isVolumeTrashItem(URL(filePath: path).pathComponents)
+        }
+        #expect(shape("/Volumes/Ext/.Trashes/\(me)/a.mov"))
+        #expect(shape("/Volumes/Ext/.Trashes/\(me)/폴더/b"))
+        #expect(!shape("/Volumes/Ext/.Trashes/\(me)"))      // 휴지통 자체
+        #expect(!shape("/Volumes/Ext/.Trashes/99999/a.mov")) // 남의 휴지통
+        #expect(!shape("/Volumes/Ext/a.mov"))                // 디스크의 그냥 파일
+        #expect(!shape("/Users/x/.Trashes/\(me)/a/b"))
+
+        // 관문도 같은 모양을 연다 — 디스크가 없어도 경로만으로 판정된다
+        #expect(ProtectedPaths.veto(for: URL(filePath: "/Volumes/sweep-없는-디스크/.Trashes/\(me)/a.mov"),
+                                    scope: .cleanup) == nil)
+        guard case .outsideAllowedRoots = ProtectedPaths.veto(for: URL(filePath: "/Volumes/sweep-없는-디스크/a.mov"),
+                                                              scope: .cleanup) else {
+            Issue.record("외장 디스크의 그냥 파일이 열렸다"); return
+        }
+    }
+
+    @Test("isInsideTrash는 세 휴지통 안에서만 참이다")
+    func insideTrash() {
+        #expect(ProtectedPaths.isInsideTrash(home.appending(path: ".Trash/a")))
+        #expect(ProtectedPaths.isInsideTrash(home.appending(path: "Library/Mobile Documents/.Trash/a")))
+        #expect(ProtectedPaths.isInsideTrash(URL(filePath: "/Volumes/Ext/.Trashes/\(getuid())/a")))
+        #expect(!ProtectedPaths.isInsideTrash(home.appending(path: ".Trash")))
+        #expect(!ProtectedPaths.isInsideTrash(home.appending(path: "Downloads/a")))
+    }
+
     @Test("normalize는 분류마다 다른 범위로 거른다")
     func normalizeUsesCategoryScope() {
         let url = home.appending(path: "Documents/sweep-없는-영상.mov")

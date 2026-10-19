@@ -293,12 +293,29 @@ struct RemoverTests {
         let file = trash.appending(path: "버린것.zip")
         try Data(repeating: 0x41, count: 4096).write(to: file)
 
-        let remover = Remover(movesToTrash: true, scope: .cleanup, trashFolder: trash)
+        let remover = Remover(movesToTrash: true, scope: .cleanup, trashFolders: [trash])
         let outcome = remover.removeOne(CleanupItem(url: file, size: 4096, category: .trash, safety: .caution))
 
         #expect(outcome.failure == nil)
         #expect(!fm.fileExists(atPath: file.path))
         // 되돌릴 자리가 없다
+        #expect(outcome.trashedURL == nil)
+    }
+
+    @Test("두 번째 휴지통(iCloud Drive 역할) 안의 항목도 바로 지운다")
+    func emptiesSecondTrashPermanently() throws {
+        let home = URL(filePath: "/private/tmp").appending(path: "sweep-trash-\(UUID().uuidString)")
+        let iCloud = URL(filePath: "/private/tmp").appending(path: "sweep-icloud-trash-\(UUID().uuidString)")
+        try fm.createDirectory(at: iCloud, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: iCloud) }
+        let file = iCloud.appending(path: "스크린샷.png")
+        try Data(repeating: 0x41, count: 4096).write(to: file)
+
+        let remover = Remover(movesToTrash: true, scope: .cleanup, trashFolders: [home, iCloud])
+        let outcome = remover.removeOne(CleanupItem(url: file, size: 4096, category: .trash, safety: .caution))
+
+        #expect(outcome.failure == nil)
+        #expect(!fm.fileExists(atPath: file.path))
         #expect(outcome.trashedURL == nil)
     }
 
@@ -308,7 +325,7 @@ struct RemoverTests {
         defer { try? fm.removeItem(at: file.deletingLastPathComponent()) }
         let elsewhere = URL(filePath: "/private/tmp").appending(path: "sweep-not-trash-\(UUID().uuidString)")
 
-        let remover = Remover(movesToTrash: true, scope: .cleanup, trashFolder: elsewhere)
+        let remover = Remover(movesToTrash: true, scope: .cleanup, trashFolders: [elsewhere])
         let outcome = remover.removeOne(item(file))
 
         #expect(outcome.failure == nil)

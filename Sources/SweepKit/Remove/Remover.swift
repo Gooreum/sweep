@@ -13,18 +13,19 @@ public struct Remover: Sendable {
     /// 디스크 맵만 `.diskMap`을 넘긴다.
     public let scope: RemovalScope
 
-    /// 휴지통. 이 안의 항목은 휴지통으로 옮길 곳이 없어 바로 지운다.
-    let trashFolder: URL
+    /// 홈의 휴지통들(`~/.Trash`, iCloud Drive). 이 안의 항목은 휴지통으로 옮길 곳이 없어
+    /// 바로 지운다. 외장 디스크 휴지통은 모양으로 본다(`ProtectedPaths.isVolumeTrashItem`).
+    let trashFolders: [URL]
 
     public init(movesToTrash: Bool = true, scope: RemovalScope = .cleanup) {
-        self.init(movesToTrash: movesToTrash, scope: scope, trashFolder: ProtectedPaths.trashFolder)
+        self.init(movesToTrash: movesToTrash, scope: scope, trashFolders: ProtectedPaths.homeTrashFolders)
     }
 
     /// 휴지통 위치를 갈아끼운다 — 테스트가 진짜 휴지통을 비우면 안 된다.
-    init(movesToTrash: Bool, scope: RemovalScope, trashFolder: URL) {
+    init(movesToTrash: Bool, scope: RemovalScope, trashFolders: [URL]) {
         self.movesToTrash = movesToTrash
         self.scope = scope
-        self.trashFolder = trashFolder
+        self.trashFolders = trashFolders
     }
 
     public func remove(_ items: [CleanupItem]) -> RemovalReport {
@@ -68,7 +69,7 @@ public struct Remover: Sendable {
             // 휴지통 안의 항목은 휴지통으로 다시 옮길 곳이 없다. 비우는 것만 뜻이 있다 —
             // `trashItem`에 맡기면 휴지통 안에서 이름만 바뀐 채 용량이 그대로 남는다.
             // 되돌릴 위치(`trashed`)가 없으니 되돌리기 목록에서도 자연히 빠진다.
-            if movesToTrash, !ProtectedPaths.canonical(url).isDescendant(of: ProtectedPaths.canonical(trashFolder)) {
+            if movesToTrash, !ProtectedPaths.isInsideTrash(url, homeTrashes: trashFolders) {
                 var resulting: NSURL?
                 try FileManager.default.trashItem(at: url, resultingItemURL: &resulting)
                 return (resulting as URL?, nil)
