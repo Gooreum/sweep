@@ -51,11 +51,19 @@ struct StageHarness: View {
                 } else {
                     Text("준비 중").font(Theme.bodyText)
                 }
+            } else if stage == "trash-confirm" {
+                // 확인 시트도 창 캡처에 잡히지 않는다. 시트 뷰를 그대로 그린다.
+                if let model {
+                    CleanupConfirmSheet(model: model, permanent: true, onConfirm: {}, onCancel: {})
+                } else {
+                    Text("준비 중").font(Theme.bodyText)
+                }
             } else if let model {
                 if stage.hasPrefix("smart-") {
                     SmartScanView(app: app, model: model)
                 } else {
-                    FeatureScreen(feature: .junk, model: model)
+                    // `trash-`로 시작하면 휴지통 기능 화면이다. 영구 삭제 문구를 확인한다.
+                    FeatureScreen(feature: stage.hasPrefix("trash-") ? .trash : .junk, model: model)
                 }
             } else {
                 Text("준비 중").font(Theme.bodyText)
@@ -95,6 +103,21 @@ struct StageHarness: View {
             let created = ScanModel(scan: { Self.finishing(items) })
             model = created
             await created.scan()
+
+        case "trash-results", "trash-confirm", "trash-cleaned":
+            // 가짜 휴지통 항목. 지우는 흉내만 낸다 — 실제 휴지통을 건드리지 않는다.
+            let trash = [
+                CleanupItem(url: URL(filePath: "/Users/me/.Trash/옛날 설치본.dmg"), size: 3_221_225_472,
+                            category: .trash, safety: .caution, detail: "비우면 되돌릴 수 없습니다"),
+                CleanupItem(url: URL(filePath: "/Users/me/.Trash/프로젝트 사본"), size: 838_860_800,
+                            category: .trash, safety: .caution, detail: "비우면 되돌릴 수 없습니다"),
+            ]
+            let created = ScanModel(scan: { Self.finishing(trash) },
+                                    removeOne: { RemovalOutcome(item: $0, failureReason: nil) })
+            model = created
+            await created.scan()
+            created.selection = Set(trash.map(\.url))
+            if stage == "trash-cleaned" { await created.removeSelected() }
 
         case "cleaned":
             let created = ScanModel(scan: { Self.finishing(items) },
