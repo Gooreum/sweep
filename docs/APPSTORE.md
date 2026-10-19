@@ -33,9 +33,13 @@ CleanMyMac이 App Store에 없고 DaisyDisk는 있는 이유가 이것이다 —
 
 | 허락 폴더 | 켜지는 정리 루트 | 회수량(실측) |
 |---|---|---:|
-| `~/Library` | `Library/Developer` · `Library/Caches` · `Library/Logs` + 앱 웹 캐시 | ~25 GB |
+| `~` (홈 폴더) | 아래 전부 + `.Trash` · `.gradle/caches` · `.cargo/registry` · `.m2/repository` + 큰 파일·중복 파일용 홈의 보이는 폴더 | 미측정 |
+| `~/Library` | `Library/Developer` · `Library/Caches` · `Library/Logs` + 앱 웹 캐시 + iOS 백업(`MobileSync/Backup`) · 메일 첨부 사본(`Mail Downloads`) | ~25 GB |
 | `~/.npm` | `.npm` | ~7.7 GB |
 | `~/.expo` | `.expo` | ~0.3 GB |
+| 직접 추가한 폴더 | 그 폴더(큰 파일·중복 파일만, `RemovalScope.userFiles`) | — |
+
+iOS 백업·메일 첨부·휴지통은 허락과 별개로 TCC가 막아 **전체 디스크 접근**이 있어야 읽힌다.
 
 `~/Library`는 Finder에서 숨김이지만 `NSOpenPanel.directoryURL`로 지정하면 그 폴더가
 선택된 채 열려서, 사용자는 "허용"만 누르면 된다. **맨 위 하나면 대부분 된다.**
