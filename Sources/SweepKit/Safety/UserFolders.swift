@@ -19,6 +19,8 @@ public enum UserFolders {
         case systemFolder(URL)
         /// 이미 보는 곳이거나 그 안이다.
         case alreadyCovered(URL)
+        /// 샌드박스에서 접근 권한(북마크)을 저장하지 못했다.
+        case bookmark(String)
 
         public var message: String {
             switch self {
@@ -30,6 +32,8 @@ public enum UserFolders {
                 String(localized: "시스템 폴더는 추가할 수 없습니다.")
             case .alreadyCovered(let url):
                 String(localized: "이미 보고 있는 폴더입니다: \(CleanupItem.abbreviating(url.path, home: Sandbox.userHome.path))")
+            case .bookmark(let reason):
+                String(localized: "폴더 접근 권한을 저장하지 못했습니다: \(reason)")
             }
         }
     }

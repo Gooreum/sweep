@@ -31,6 +31,11 @@ public final class AppModel {
     public private(set) var grantedFolderCount: Int = 0
     private let folderAccess: FolderAccess.Registry
 
+    /// 사용자가 스마트 스캔에 추가한 폴더 수. "보는 곳" 카드가 다시 읽을 시점이다 —
+    /// `grantedFolderCount`는 샌드박스 밖에서 늘 0이라 이걸 따로 둔다.
+    public private(set) var scanFolderCount: Int = 0
+    private let userFolders: UserFolders.Registry
+
     /// 이 앱이 폴더 허락을 요구하는 환경인가(= 샌드박스인가).
     ///
     /// 허락을 거둘 때 다시 물어야 하므로 판정을 기억해 둔다. 그때마다
@@ -58,17 +63,55 @@ public final class AppModel {
                 makeDiskMap: @escaping @MainActor () -> DiskMapModel
                     = { DiskMapModel() },
                 folderAccess: FolderAccess.Registry = FolderAccess.shared,
+                userFolders: UserFolders.Registry = UserFolders.shared,
                 history: CleanupHistory = .shared,
                 needsFolderAccess: Bool? = nil) {
         self.makeModel = makeModel
         self.makeDiskMap = makeDiskMap
         self.folderAccess = folderAccess
+        self.userFolders = userFolders
         self.history = history
         self.cleanupSummary = history.summary
         // 주입값이 있으면 그것이 "허락을 요구하는 환경인가"를 대신한다 — 테스트·데모용.
         self.requiresFolderAccess = needsFolderAccess ?? Sandbox.isActive
         self.needsFolderAccess = self.requiresFolderAccess && !folderAccess.hasAny
         self.grantedFolderCount = folderAccess.urls.count
+        self.scanFolderCount = userFolders.custom.count
+    }
+
+    /// 큰 파일·중복 파일을 찾을 폴더를 더한다. 안 되는 폴더면 이유를 던지고 상태는 그대로다.
+    ///
+    /// 샌드박스에서는 열기 대화상자로 고른 그 폴더의 북마크도 함께 저장한다 —
+    /// 목록에만 넣으면 다음 실행에서 읽지 못한다. 저장에 실패하면 목록에서도 뺀다.
+    public func addScanFolder(_ url: URL) throws(UserFolders.Rejection) {
+        let current = UserFolders.roots(custom: [], sandboxed: requiresFolderAccess,
+                                        granted: folderAccess.urls)
+        try userFolders.add(url, existing: current)
+        if requiresFolderAccess {
+            do {
+                try folderAccess.grant(url, as: UserFolders.grantable(for: url))
+            } catch {
+                userFolders.remove(url)
+                throw .bookmark(error.message)
+            }
+        }
+        refreshFolderState()
+    }
+
+    /// 추가했던 폴더를 뺀다. 샌드박스에서는 그 폴더의 북마크도 거둔다.
+    public func removeScanFolder(_ url: URL) {
+        userFolders.remove(url)
+        if requiresFolderAccess {
+            folderAccess.revoke(UserFolders.grantable(for: url))
+        }
+        refreshFolderState()
+    }
+
+    private func refreshFolderState() {
+        grantedFolderCount = folderAccess.urls.count
+        scanFolderCount = userFolders.custom.count
+        needsFolderAccess = requiresFolderAccess && !folderAccess.hasAny
+        forgetScans()
     }
 
     /// 열기 대화상자에서 고른 폴더로 허락을 받는다. 틀린 폴더면 던지고 상태는 그대로다.

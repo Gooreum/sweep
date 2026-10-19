@@ -9,6 +9,15 @@ public struct CleanupScope: Identifiable, Sendable, Hashable {
     /// 화면에 쓰는 짧은 경로. 홈은 `~`로 줄인다.
     public let label: String
     public let detail: String
+    /// 사용자가 직접 추가한 폴더인가. 화면이 "빼기" 버튼을 붙인다.
+    public let isCustom: Bool
+
+    public init(url: URL, label: String, detail: String, isCustom: Bool = false) {
+        self.url = url
+        self.label = label
+        self.detail = detail
+        self.isCustom = isCustom
+    }
 
     public var id: String { url.path }
 }
@@ -26,15 +35,24 @@ extension CleanupScope {
     ///
     /// `userRoots`는 큰 파일·중복 파일을 찾는 사용자 폴더다. 이름이 기계마다 달라
     /// (`~/Code`, `~/katamari`) 경로로 설명을 고를 수 없으니 목록으로 알아본다.
-    static func scopes(roots: [URL], userRoots: [URL] = UserFolders.roots()) -> [CleanupScope] {
+    ///
+    /// 홈 바로 아래 사용자 폴더는 **한 줄로 묶는다.** 실측 이 기계에서 17곳이라
+    /// 한 줄씩 두면 카드가 창을 다 차지한다. 사용자가 추가한 폴더만 따로 둔다 —
+    /// 그것은 뺄 수 있어야 해서 줄마다 버튼이 붙는다.
+    static func scopes(roots: [URL],
+                       userRoots: [URL] = UserFolders.roots(),
+                       custom: [URL] = UserFolders.shared.custom) -> [CleanupScope] {
         let home = Sandbox.userHome.path
         let userFolders = Set(userRoots.map(FolderAccess.components(of:)))
+        let customFolders = Set(custom.map(FolderAccess.components(of:)))
+        var homeFolders: [URL] = []
+        var customScopes: [CleanupScope] = []
 
         /// 임시 컨테이너는 `/private/var/folders/<해시>/C` 같은 경로라
         /// 화면에 그대로 쓰면 읽히지 않는다. 하나로 묶는다.
         var sawTemporary = false
 
-        return roots.compactMap { url -> CleanupScope? in
+        let fixed = roots.compactMap { url -> CleanupScope? in
             let path = url.path
 
             // `/private/var/folders/...`와 `/var/folders/...` 둘 다 나온다.
@@ -51,11 +69,35 @@ extension CleanupScope {
                 : path
 
             let known = Self.detail(for: label)
-            let detail = known.isEmpty && userFolders.contains(FolderAccess.components(of: url))
-                ? String(localized: "큰 파일 · 중복 파일")
-                : known
-            return CleanupScope(url: url, label: label, detail: detail)
+            let components = FolderAccess.components(of: url)
+            if known.isEmpty, customFolders.contains(components) {
+                customScopes.append(CleanupScope(url: url, label: label,
+                                                 detail: String(localized: "큰 파일 · 중복 파일 · 직접 추가함"),
+                                                 isCustom: true))
+                return nil
+            }
+            if known.isEmpty, userFolders.contains(components) {
+                homeFolders.append(url)
+                return nil
+            }
+            return CleanupScope(url: url, label: label, detail: known)
         }
+
+        guard !homeFolders.isEmpty else { return fixed + customScopes }
+        let grouped = CleanupScope(url: Sandbox.userHome,
+                                   label: String(localized: "~ 홈 폴더"),
+                                   detail: homeFoldersDetail(homeFolders.map(\.lastPathComponent)))
+        return fixed + [grouped] + customScopes
+    }
+
+    /// "큰 파일 · 중복 파일 — Desktop · Documents 외 15곳". 셋까지는 이름을 다 쓴다.
+    static func homeFoldersDetail(_ names: [String]) -> String {
+        let limit = names.count <= 3 ? names.count : 2
+        let shown = names.prefix(limit).joined(separator: " · ")
+        let rest = names.count - limit
+        return rest > 0
+            ? String(localized: "큰 파일 · 중복 파일 — \(shown) 외 \(rest)곳")
+            : String(localized: "큰 파일 · 중복 파일 — \(shown)")
     }
 
     private static func detail(for label: String) -> String {
