@@ -67,6 +67,10 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
         }
     }
 
+    /// 정리하면 휴지통으로 가지 않고 바로 지워지는가. 휴지통 안의 것뿐이다(`Remover`).
+    /// 정리 합계("휴지통으로 옮김")에서 이것을 뺀다.
+    public var removesPermanently: Bool { self == .trash }
+
     public var systemImageName: String {
         switch self {
         case .runawayTemp: "exclamationmark.triangle.fill"

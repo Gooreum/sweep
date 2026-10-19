@@ -205,13 +205,17 @@ struct SandboxTests {
     @Test("샌드박스 밖 스캐너는 허락과 무관하게 그대로다")
     func unsandboxedScannersUnchanged() {
         #expect(Feature.smartScan.scanners(sandboxed: false, granted: []).count == 10)
-        #expect(Feature.junk.scanners(sandboxed: false, granted: []).count == 8)
+        #expect(Feature.junk.scanners(sandboxed: false, granted: []).count == 7)
+        #expect(Feature.trash.scanners(sandboxed: false, granted: []).count == 1)
     }
 
-    @Test("홈을 허락하면 휴지통까지 정크 스캐너가 전부 붙는다")
+    @Test("홈을 허락하면 정크 스캐너가 전부 붙고 휴지통 기능도 열린다")
     func sandboxedScannersWithHome() {
         let junk = Feature.junk.scanners(sandboxed: true, granted: [Sandbox.userHome]).map(\.category)
-        #expect(junk == [.xcode, .devCache, .appCache, .staleCache, .mailAttachment, .trash, .deviceBackup])
+        #expect(junk == [.xcode, .devCache, .appCache, .staleCache, .mailAttachment, .deviceBackup])
+        #expect(Feature.trash.scanners(sandboxed: true, granted: [Sandbox.userHome]).map(\.category) == [.trash])
+        // 홈을 열지 않으면 휴지통은 훑을 수 없다
+        #expect(Feature.trash.scanners(sandboxed: true, granted: []).isEmpty)
     }
 
     @Test("샌드박스의 디스크 맵 시작 지점은 허락 전 Downloads, 허락 후 개발 폴더까지")

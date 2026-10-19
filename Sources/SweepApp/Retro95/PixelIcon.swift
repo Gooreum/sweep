@@ -507,6 +507,7 @@ extension Feature {
         case .junk: .broom
         case .largeFile: .folder
         case .duplicate: .documents
+        case .trash: .trash
         case .diskMap: .pieChart
         }
     }

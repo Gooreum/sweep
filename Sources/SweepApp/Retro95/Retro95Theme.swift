@@ -113,6 +113,7 @@ extension R95 {
         case .junk: teal
         case .largeFile: olive
         case .duplicate: purple
+        case .trash: danger
         case .diskMap: navy
         }
     }

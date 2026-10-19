@@ -6,25 +6,27 @@ import Foundation
 struct FeatureTests {
 
     // TC-1
-    @Test("5개 기능 전부 표시명·아이콘·설명을 가진다")
+    @Test("6개 기능 전부 표시명·아이콘·설명을 가진다")
     func everyFeatureIsPresentable() {
-        #expect(Feature.allCases.count == 5)
+        #expect(Feature.allCases.count == 6)
         for feature in Feature.allCases {
             #expect(!feature.displayName.isEmpty)
             #expect(!feature.systemImageName.isEmpty)
             #expect(!feature.summary.isEmpty)
         }
         // 표시명이 겹치면 사이드바에서 같은 줄이 두 번 보인다
-        #expect(Set(Feature.allCases.map(\.displayName)).count == 5)
+        #expect(Set(Feature.allCases.map(\.displayName)).count == 6)
     }
 
     // TC-2
-    @Test("정크 파일은 임시·Xcode·개발 캐시·앱 웹 캐시·묵은 캐시·메일 첨부·휴지통·기기 백업 8종을 돌린다")
-    func junkRunsEightScanners() {
+    @Test("정크 파일은 임시·Xcode·개발 캐시·앱 웹 캐시·묵은 캐시·메일 첨부·기기 백업 7종을 돌린다")
+    func junkRunsSevenScanners() {
         let categories = Feature.junk.categories
-        #expect(Feature.junk.scanners.count == 8)
+        #expect(Feature.junk.scanners.count == 7)
         #expect(Set(categories) == [.runawayTemp, .xcode, .devCache, .appCache, .staleCache,
-                                    .mailAttachment, .trash, .deviceBackup])
+                                    .mailAttachment, .deviceBackup])
+        // 휴지통은 영구 삭제라 따로 둔다
+        #expect(!categories.contains(.trash))
         // 큰 파일·중복은 별도 기능이므로 정크에 섞이면 안 된다
         #expect(!categories.contains(.largeFile))
         #expect(!categories.contains(.duplicate))
@@ -96,7 +98,7 @@ struct FeatureTests {
 
         #expect(!cards.contains(.smartScan))   // 자기를 가리키는 카드는 뜻이 없다
         #expect(!cards.contains(.diskMap))     // 스캔하지 않으니 발견량도 없다
-        #expect(cards == [.junk, .largeFile, .duplicate])
+        #expect(cards == [.junk, .largeFile, .duplicate, .trash])
         // 손으로 나열하지 않았으므로 스캔 가능한 기능 수와 맞아야 한다
         #expect(cards.count == Feature.allCases.filter(\.isScannable).count - 1)
     }
@@ -198,10 +200,11 @@ struct FeatureTests {
     @Test("기능 색끼리 색상각이 충분히 벌어져 있다")
     func featureTintsAreDistinguishable() {
         let hues = Feature.allCases.compactMap { $0.tintHex }.map { hue(rgb($0.dark)) }.sorted()
-        #expect(hues.count == 4, "고유색을 가진 기능이 4개여야 한다")
+        #expect(hues.count == 5, "고유색을 가진 기능이 5개여야 한다")
 
-        // 색상각이 붙어 있으면 사이드바에서 두 기능이 같은 색으로 읽힌다
-        for (a, b) in zip(hues, hues.dropFirst()) {
+        // 색상각이 붙어 있으면 사이드바에서 두 기능이 같은 색으로 읽힌다.
+        // 색상환은 돈다 — 맨 끝(보라·빨강)과 맨 앞(빨강)도 이웃이다.
+        for (a, b) in zip(hues, hues.dropFirst() + [hues[0] + 360]) {
             #expect(b - a >= 30, "색상각 간격 \(b - a)°가 너무 좁다")
         }
     }
@@ -213,5 +216,22 @@ struct FeatureTests {
         for feature in Feature.allCases where feature != .smartScan {
             #expect(feature.tintHex != nil, "\(feature)에 색이 없다")
         }
+    }
+
+    // MARK: - 휴지통
+
+    @Test("휴지통은 자기 스캐너 하나만 갖고, 이 기능만 영구 삭제다")
+    func trashIsItsOwnPermanentFeature() {
+        #expect(Feature.trash.scanners.count == 1)
+        #expect(Feature.trash.categories == [.trash])
+        #expect(Feature.allCases.filter(\.removesPermanently) == [.trash])
+        #expect(ScanCategory.allCases.filter(\.removesPermanently) == [.trash])
+        #expect(Feature.summaryCards.contains(.trash))
+        #expect(!Feature.trash.reviewHint.isEmpty)
+    }
+
+    @Test("휴지통은 사이드바에서 중복 파일 다음, 디스크 맵 앞에 온다")
+    func trashSitsBeforeDiskMap() {
+        #expect(Feature.allCases.suffix(3) == [.duplicate, .trash, .diskMap])
     }
 }
