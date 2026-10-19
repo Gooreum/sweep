@@ -37,6 +37,14 @@ private func climbing(pids: [pid_t], step: UInt64, counter: Counter)
     }
 }
 
+/// 부를 때마다 사용자 30·시스템 20·유휴 50틱씩 오르는 가짜 커널.
+private func climbingLoad(counter: Counter) -> @Sendable () -> CPULoadTicks? {
+    {
+        let round = UInt32(counter.bump())
+        return CPULoadTicks(user: round * 30, system: round * 20, idle: round * 50, nice: 0)
+    }
+}
+
 @Suite("CPUModel")
 @MainActor
 struct CPUModelTests {
@@ -166,5 +174,53 @@ struct CPUModelTests {
         #expect(model.usage.isEmpty)
         // 쟀는데 없는 것과 아직 안 잰 것은 다르다
         #expect(!model.isWarmingUp)
+    }
+
+    @Test("기계 전체 부하를 같은 주기에 커널 값으로 채운다")
+    func loadComesFromKernelTicks() async {
+        let model = CPUModel(
+            interval: .milliseconds(10), cores: 1,
+            sample: climbing(pids: [1], step: 1_000_000, counter: Counter()),
+            loadSample: climbingLoad(counter: Counter()))
+
+        let task = Task { await model.run() }
+        await waitForUsage(model)
+        task.cancel()
+
+        // 프로세스 합에서 셈하지 않는다 — 주입한 틱 그대로의 비율이어야 한다
+        #expect(model.load == SystemCPULoad(user: 30, system: 20, idle: 50))
+    }
+
+    @Test("커널 값을 못 읽으면 부하는 nil이다")
+    func missingKernelLoadStaysNil() async {
+        // 프로세스 합으로 지어내면 root 프로세스 몫이 유휴로 둔갑한다
+        let model = CPUModel(
+            interval: .milliseconds(10), cores: 1,
+            sample: climbing(pids: [1], step: 1_000_000, counter: Counter()),
+            loadSample: { nil })
+
+        let task = Task { await model.run() }
+        await waitForUsage(model)
+        task.cancel()
+
+        #expect(!model.isWarmingUp)
+        #expect(model.load == nil)
+    }
+
+    @Test("목록 합계는 상한으로 자르기 전 전부를 코어 수로 나눈다")
+    func ownTotalCountsEveryProcess() async {
+        // 상위 1개만 보여줘도 합계에는 둘 다 들어가야 "목록에 없는 몫"이 부풀지 않는다
+        let model = CPUModel(
+            interval: .milliseconds(10), limit: 1, cores: 2,
+            sample: climbing(pids: [1, 2], step: 1_000_000, counter: Counter()),
+            loadSample: { nil })
+
+        let task = Task { await model.run() }
+        await waitForUsage(model)
+        task.cancel()
+
+        let shown = model.usage.reduce(0) { $0 + $1.percent }
+        #expect(model.usage.count == 1)
+        #expect(model.ownTotal * 2 > shown)
     }
 }

@@ -22,6 +22,22 @@ public enum ProcessCPUSampler {
     /// 효율 코어는 느리지만 일을 하고 있고, 분모에서 빼면 합이 100을 넘는다.
     public static var coreCount: Int { ProcessInfo.processInfo.activeProcessorCount }
 
+    /// 성능 코어 수. 화면이 "코어 8개(성능 4 + 효율 4)"라고 풀어 쓸 때 쓴다.
+    /// 인텔 맥은 코어 종류가 하나라 이 값이 없다 — nil이면 총수만 말한다.
+    public static var performanceCores: Int? { logicalCPUs(perfLevel: 0) }
+
+    /// 효율 코어 수. `performanceCores`와 짝이다.
+    public static var efficiencyCores: Int? { logicalCPUs(perfLevel: 1) }
+
+    /// `hw.perflevelN.logicalcpu`. 샌드박스도 `sysctl-read`를 열어 둔다(목록과 같은 근거).
+    private static func logicalCPUs(perfLevel: Int) -> Int? {
+        var value: Int32 = 0
+        var size = MemoryLayout<Int32>.size
+        guard sysctlbyname("hw.perflevel\(perfLevel).logicalcpu", &value, &size, nil, 0) == 0,
+              value > 0 else { return nil }
+        return Int(value)
+    }
+
     /// 읽을 수 있는 프로세스 전부의 누적 CPU 시간.
     ///
     /// 이 값만으로는 사용률을 알 수 없다. 두 번 불러
