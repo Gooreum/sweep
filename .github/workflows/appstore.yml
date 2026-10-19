@@ -54,7 +54,7 @@ jobs:
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       ASC_KEY_PATH: ${{ github.workspace }}/../AuthKey.p8
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -88,7 +88,10 @@ jobs:
         if: steps.plan.outputs.build == 'true'
         run: |
           xcodebuild -version
-          brew tap tuist/tuist && brew install tuist@4.152.0
+          brew tap tuist/tuist
+          # 새 Homebrew는 서드파티 탭 formula를 명시적으로 신뢰해야 설치한다
+          brew trust tuist/tuist
+          brew install tuist@4.152.0
           bash scripts/make-archive.sh
 
       - name: 업로드
