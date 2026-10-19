@@ -10,6 +10,8 @@
 #
 #   ASC_KEY_ID=<키 ID> ASC_ISSUER_ID=<Issuer ID> ASC_KEY_PATH=<AuthKey_*.p8> bash scripts/upload-archive.sh
 #
+# DESTINATION=export면 올리지 않고 서명된 .pkg만 만든다 — 서명이 되는지만 볼 때.
+#
 # 업로드 후 App Store Connect가 처리를 마쳐야 빌드가 보인다. 심사 제출은 사람이 한다.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -27,12 +29,19 @@ fi
 
 bash scripts/make-archive.sh --verify-only
 
-echo "── 업로드 ──"
+echo "── 내보내기 (${DESTINATION:-upload}) ──"
 rm -rf "$EXPORT"
+OPTIONS=scripts/ExportOptions.plist
+if [ "${DESTINATION:-upload}" != upload ]; then
+  OPTIONS="$(mktemp -d)/ExportOptions.plist"
+  cp scripts/ExportOptions.plist "$OPTIONS"
+  plutil -replace destination -string "$DESTINATION" "$OPTIONS"
+fi
+
 LOG="$EXPORT.log"
 mkdir -p "$(dirname "$LOG")"
 if ! xcodebuild -exportArchive -archivePath "$ARCHIVE" \
-     -exportOptionsPlist scripts/ExportOptions.plist -exportPath "$EXPORT" \
+     -exportOptionsPlist "$OPTIONS" -exportPath "$EXPORT" \
      -allowProvisioningUpdates ${AUTH[@]+"${AUTH[@]}"} > "$LOG" 2>&1; then
   tail -30 "$LOG" >&2
   echo "업로드 실패 — 전체 로그: $LOG" >&2
