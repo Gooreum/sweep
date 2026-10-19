@@ -22,4 +22,21 @@ enum FolderPicker {
         guard panel.runModal() == .OK else { return nil }
         return panel.url
     }
+
+    /// 스마트 스캔에 더할 폴더를 아무 곳에서나 고른다. 취소하면 nil.
+    ///
+    /// `ask(for:)`와 달리 정해진 폴더가 없다. 홈 아래는 이미 다 보므로
+    /// 홈 밖(외장 디스크)이 흔한 답이라 `/Volumes`에서 연다.
+    static func askAnyFolder() -> URL? {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.directoryURL = URL(filePath: "/Volumes")
+        panel.prompt = String(localized: "추가")
+        panel.message = String(localized: "큰 파일·중복 파일을 찾을 폴더를 고르세요.")
+
+        guard panel.runModal() == .OK else { return nil }
+        return panel.url
+    }
 }

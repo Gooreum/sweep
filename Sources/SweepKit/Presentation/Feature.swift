@@ -9,6 +9,9 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
     case junk
     case largeFile
     case duplicate
+    /// 휴지통 비우기. 정크와 나눠 둔다 — 다른 정리는 휴지통으로 옮겨 되살릴 수 있는데
+    /// 이것만은 바로 지워진다. 같은 화면·같은 문구에 섞으면 그 차이가 가려진다.
+    case trash
     case diskMap
 
     public var id: Self { self }
@@ -19,6 +22,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         case .junk: String(localized: "정크 파일")
         case .largeFile: String(localized: "큰 파일")
         case .duplicate: String(localized: "중복 파일")
+        case .trash: String(localized: "휴지통")
         case .diskMap: String(localized: "디스크 맵")
         }
     }
@@ -29,6 +33,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         case .junk: "trash"
         case .largeFile: "arrow.down.doc"
         case .duplicate: "doc.on.doc"
+        case .trash: "trash"
         case .diskMap: "chart.pie"
         }
     }
@@ -40,9 +45,10 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         // 샌드박스에서는 사용자가 연 개발 폴더만 본다. 임시 파일·캐시라고 쓰면 과장이다.
         case .junk: Sandbox.isActive
             ? String(localized: "Xcode 빌드 산출물·시뮬레이터 파일을 찾아 디스크 공간을 확보합니다.")
-            : String(localized: "임시 파일·빌드 산출물·개발 캐시를 찾아 디스크 공간을 확보합니다.")
-        case .largeFile: String(localized: "허용된 범위 안에서 유난히 큰 파일을 찾습니다.")
+            : String(localized: "임시 파일·빌드 산출물·개발 캐시·기기 백업을 찾아 디스크 공간을 확보합니다.")
+        case .largeFile: String(localized: "홈 폴더와 추가한 폴더에서 유난히 큰 파일을 찾습니다.")
         case .duplicate: String(localized: "내용이 같은 파일을 찾아 한 벌만 남깁니다.")
+        case .trash: String(localized: "휴지통에 든 것을 크기순으로 보고 골라서 비웁니다. 비우면 되돌릴 수 없습니다.")
         case .diskMap: String(localized: "어디가 용량을 차지하는지 크기순으로 훑어봅니다.")
         }
     }
@@ -60,6 +66,8 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
             String(localized: "설치 파일은 다시 받을 수 있습니다. 촬영 원본과 백업은 내용을 확인한 뒤 고르세요.")
         case .duplicate:
             String(localized: "원본은 항상 남깁니다. 아래는 지워도 같은 파일이 그대로 남아 있는 사본입니다.")
+        case .trash:
+            String(localized: "고른 항목은 휴지통에서 바로 지워져 되돌릴 수 없습니다.")
         case .smartScan:
             String(localized: "기능별로 나눠 두었습니다. 잠긴 항목은 되돌릴 수 없어 선택할 수 없습니다.")
         case .diskMap:
@@ -106,18 +114,24 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
             AppCacheScanner()
         }
         let staleCache = ifReadable(["Library/Caches"]) { StaleCacheScanner() }
-        let devCache = ifReadable(["Library/Caches", "Library/Logs", ".npm", ".expo"]) {
+        let devCache = ifReadable(["Library/Caches", "Library/Logs", ".npm", ".expo",
+                                   ".gradle", ".cargo", ".m2"]) {
             DevCacheScanner()
         }
+        let mail = ifReadable(["Library/Containers/com.apple.mail"]) { MailDownloadsScanner() }
+        let trash = ifReadable([".Trash", "Library/Mobile Documents"]) { TrashScanner() }
+        let backup = ifReadable(["Library/Application Support/MobileSync"]) { DeviceBackupScanner() }
         // 폭주 임시 파일은 샌드박스에서 살릴 방법이 없다.
         let runaway: [any CleanupScanner] = sandboxed ? [] : [RunawayTempScanner()]
+        let junk = runaway + xcode + devCache + appCache + staleCache + mail + backup
 
         switch self {
         case .smartScan:
-            return runaway + xcode + devCache + appCache + staleCache
-                + [LargeFileScanner(), DuplicateScanner()]
+            return junk + trash + [LargeFileScanner(), DuplicateScanner()]
         case .junk:
-            return runaway + xcode + devCache + appCache + staleCache
+            return junk
+        case .trash:
+            return trash
         case .largeFile:
             return [LargeFileScanner()]
         case .duplicate:
@@ -155,6 +169,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         case .junk:      (0x74B4FF, 0x0A5FD1)
         case .largeFile: (0xB69BFF, 0x5B33C4)
         case .duplicate: (0x5FD3C4, 0x0C6558)
+        case .trash:     (0xFF8A70, 0xB42318)
         case .diskMap:   (0x7ED88F, 0x186628)
         }
     }
@@ -174,6 +189,9 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         let mine = Set(categories)
         return items.filter { mine.contains($0.category) }
     }
+
+    /// 이 기능의 정리는 휴지통으로 옮기지 않고 **바로 지운다.** 확인 창·완료 화면 문구가 이것으로 갈린다.
+    public var removesPermanently: Bool { self == .trash }
 
     public var coordinator: ScanCoordinator { ScanCoordinator(scanners: scanners) }
 }

@@ -68,8 +68,15 @@ public enum FolderAccess {
         folder: URL(filePath: "/"), label: String(localized: "이 Mac"),
         purpose: String(localized: "디스크 맵 전체 보기 · 아래 폴더도 한 번에"))
 
+    /// 홈 폴더. 큰 파일·중복 파일은 홈 아래 보이는 폴더를 다 보고(`UserFolders`),
+    /// 휴지통·Gradle·Cargo·Maven 캐시도 홈 바로 아래 숨김 폴더라 이것 하나로 열린다.
+    public static let home = Grantable(
+        folder: Sandbox.userHome, label: "~",
+        purpose: String(localized: "큰 파일 · 중복 파일 · 휴지통 · 개발 도구 캐시"))
+
     public static let grantables: [Grantable] = [
         wholeDisk,
+        home,
         .init(folder: inHome("Library"), label: "~/Library",
               purpose: String(localized: "시뮬레이터 · 앱 웹 캐시 · 브라우저 캐시 · 로그")),
         .init(folder: inHome(".npm"), label: "~/.npm",
@@ -163,11 +170,14 @@ public enum FolderAccess {
         /// 낡았으면(폴더가 옮겨졌다 돌아온 경우 등) 새로 저장한다. 못 풀거나 엉뚱한 곳을
         /// 가리키면 북마크를 지운다 — 남겨 두면 매 실행 같은 실패를 되풀이하고,
         /// 사용자는 허락 화면을 다시 볼 기회도 없이 빈 정크 탭만 본다.
-        public func restoreAll() {
+        ///
+        /// 사용자가 스마트 스캔에 추가한 폴더(`UserFolders`)도 같은 북마크 방식으로 연다.
+        /// 목록은 그쪽이 기억하고, 여기서는 접근만 되살린다.
+        public func restoreAll(custom: [URL] = UserFolders.shared.custom) {
             migrateLegacyBookmark()
             // `legacyGrantable`도 함께 돈다. 새로 허락받을 목록(`grantables`)에는 없지만
             // 이전 버전에서 그것만 허락한 사용자의 접근을 열어야 한다.
-            for grantable in FolderAccess.grantables + [legacy] {
+            for grantable in FolderAccess.grantables + [legacy] + custom.map(UserFolders.grantable(for:)) {
                 restore(grantable)
             }
         }

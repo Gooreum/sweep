@@ -285,4 +285,47 @@ struct FolderAccessTests {
         #expect(registry.urls.isEmpty)
         #expect(defaults.data(forKey: library.key) == nil)
     }
+
+    // MARK: - 홈 폴더 · 사용자가 추가한 폴더
+
+    @Test("홈 폴더가 디스크 전체 바로 다음에 있다")
+    func homeIsSecondGrantable() {
+        #expect(FolderAccess.grantables.count > 1)
+        #expect(FolderAccess.grantables[1] == FolderAccess.home)
+        #expect(FolderAccess.matches(Sandbox.userHome, folder: FolderAccess.home.folder))
+    }
+
+    @Test("홈을 허락하면 Library와 홈 바로 아래 도구 폴더가 함께 열린다")
+    func homeGrantOpensItsDescendants() throws {
+        let (registry, _, _, cleanup) = try makeRegistry()
+        defer { cleanup() }
+
+        try registry.grant(Sandbox.userHome, as: FolderAccess.home)
+
+        for grantable in FolderAccess.grantables where grantable != FolderAccess.wholeDisk
+            && grantable.folder.isSameOrDescendant(of: Sandbox.userHome) {
+            #expect(registry.isGranted(grantable), "\(grantable.label)이 닫혀 있다")
+        }
+        // 홈 밖은 열리지 않는다
+        #expect(!registry.isGranted(FolderAccess.wholeDisk))
+    }
+
+    @Test("사용자가 추가한 폴더의 북마크도 다음 실행에 복원된다")
+    func customFolderBookmarkIsRestored() throws {
+        let (registry, base, defaults, cleanup) = try makeRegistry()
+        defer { cleanup() }
+        let folder = base.appending(path: "외장/사진")
+        try fm.createDirectory(at: folder, withIntermediateDirectories: true)
+
+        try registry.grant(folder, as: UserFolders.grantable(for: folder))
+
+        let next = FolderAccess.Registry(defaults: defaults)
+        next.restoreAll(custom: [folder])
+        #expect(next.isGranted(UserFolders.grantable(for: folder)))
+
+        // 목록에서 빠진 폴더는 복원하지 않는다
+        let other = FolderAccess.Registry(defaults: defaults)
+        other.restoreAll(custom: [])
+        #expect(!other.isGranted(UserFolders.grantable(for: folder)))
+    }
 }

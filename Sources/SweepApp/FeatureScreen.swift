@@ -22,26 +22,50 @@ struct FeatureScreen: View {
     @AppStorage("itemTable.columns") private var columns = ItemColumnLayout()
     /// 이름 열의 실제 폭을 구하려고 표 전체 폭을 잰다.
     @State private var tableWidth: CGFloat = 0
+    /// 휴지통에 남은 관리자 소유 항목. 스캔이 끝나거나 비운 뒤에 다시 센다.
+    @State private var adminLeftovers: [URL] = []
 
     var body: some View {
         VStack(spacing: 8) {
+            // 휴지통은 전체 디스크 접근 없이는 읽히지 않는다. 그때 결과는 "비어 있음"이라
+            // 휴지통이 빈 것과 구분되지 않는다 — 화면 위에 이유를 먼저 둔다.
+            if feature == .trash, FullDiskAccessBanner.isNeeded {
+                FullDiskAccessBanner(message: String(localized: "켜야 휴지통 안을 볼 수 있습니다. 꺼져 있으면 비어 있는 것처럼 보입니다."))
+            }
+
+            if feature == .trash, showsLeftovers, !adminLeftovers.isEmpty {
+                TrashLeftoverNotice(leftovers: adminLeftovers)
+            }
+
             stage
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // 결과 목록일 때만 독이 붙는다. 시작·검색 중에는 고를 것이 없고,
             // 완료 화면에서는 같은 항목을 다시 정리할 수 있게 되므로 내린다.
             if showsDock {
-                SelectionDock(model: model) { showsConfirm = true }
+                SelectionDock(model: model, permanent: feature.removesPermanently) { showsConfirm = true }
             }
         }
         .background(R95.gray)
+        .task(id: model.phase) {
+            guard feature == .trash, showsLeftovers else { return }
+            adminLeftovers = TrashScanner().adminOwnedLeftovers()
+        }
         .sheet(isPresented: $showsConfirm) {
-            CleanupConfirmSheet(model: model) {
+            CleanupConfirmSheet(model: model, permanent: feature.removesPermanently) {
                 showsConfirm = false
                 Task { await model.removeSelected() }
             } onCancel: {
                 showsConfirm = false
             }
+        }
+    }
+
+    /// 결과를 보거나 비운 직후에만. 시작·검색 중에는 아직 휴지통을 보지 않았다.
+    private var showsLeftovers: Bool {
+        switch model.phase {
+        case .results, .cleaned: true
+        default: false
         }
     }
 
@@ -57,8 +81,8 @@ struct FeatureScreen: View {
         switch model.phase {
         case .idle:
             welcome
-        case let .scanning(percent, remaining):
-            scanning(percent: percent, remaining: remaining)
+        case let .scanning(percent, _):
+            scanning(percent: percent)
         case .results:
             if model.items.isEmpty { emptyResult } else { resultList }
         case let .removing(done, total):
@@ -83,7 +107,7 @@ struct FeatureScreen: View {
         .frame(maxWidth: R95.dialogWidth)
     }
 
-    private func scanning(percent: Int, remaining: Int?) -> some View {
+    private func scanning(percent: Int) -> some View {
         VStack(spacing: 0) {
             // 다 끝나기 전에도 성과가 보여야 기다릴 만하다
             Retro95ScanPanel(
@@ -93,7 +117,8 @@ struct FeatureScreen: View {
                 fraction: Double(percent) / 100,
                 percentText: "\(percent)%",
                 leftFooter: model.items.isEmpty ? nil : String(localized: "\(model.items.count)개 · \(model.formattedTotalSize) 발견"),
-                rightFooter: remaining.map { String(localized: "약 \(ProgressDisplay.readable(seconds: $0)) 남음") })
+                // 남은 시간은 넣지 않는다. 스캐너마다 속도가 달라 어림값이 크게 틀렸다.
+                rightFooter: nil)
             Spacer()
         }
     }
@@ -102,7 +127,9 @@ struct FeatureScreen: View {
         VStack(spacing: 0) {
             Retro95ScanPanel(
                 title: String(localized: "정리 중"),
-                headline: String(localized: "휴지통으로 옮기는 중…"),
+                headline: feature.removesPermanently
+                    ? String(localized: "영구 삭제하는 중…")
+                    : String(localized: "휴지통으로 옮기는 중…"),
                 detail: nil,
                 fraction: total > 0 ? Double(done) / Double(total) : nil,
                 percentText: total > 0 ? "\(done * 100 / total)%" : nil,
@@ -193,15 +220,23 @@ struct FeatureScreen: View {
                 : (String(localized: "정리 완료"), .check)
             Retro95Dialog(title: title, icon: icon) {
                 VStack(alignment: .leading, spacing: 10) {
-                    // 지운 것이 아니라 휴지통으로 옮긴 것이다.
-                    Text(moved == 0
-                         ? "\(failed)개를 휴지통으로 옮기지 못했습니다"
-                         : "\(moved)개 · \(report.formattedReclaimed)를 휴지통으로 옮겼습니다")
+                    // 지운 것이 아니라 휴지통으로 옮긴 것이다. 휴지통 기능만은 정말 지운 것이다.
+                    Group {
+                        if feature.removesPermanently {
+                            Text(moved == 0
+                                 ? "\(failed)개를 삭제하지 못했습니다"
+                                 : "\(moved)개 · \(report.formattedReclaimed)를 영구 삭제했습니다")
+                        } else {
+                            Text(moved == 0
+                                 ? "\(failed)개를 휴지통으로 옮기지 못했습니다"
+                                 : "\(moved)개 · \(report.formattedReclaimed)를 휴지통으로 옮겼습니다")
+                        }
+                    }
                         .font(R95.ui(13, bold: true))
                         .monospacedDigit()
 
                     // 옮겼을 뿐 공간은 아직이다. 이걸 안 말하면 디스크 게이지가 그대로라 앱을 의심한다.
-                    if let notice = report.trashNotice {
+                    if !feature.removesPermanently, let notice = report.trashNotice {
                         Text(notice)
                             .font(R95.ui(12))
                             .foregroundStyle(R95.deep)
@@ -219,6 +254,7 @@ struct FeatureScreen: View {
                                 PixelIcon(art: .warning, size: 16)
                                 // 전부 실패면 윗줄이 이미 개수를 말했다. 같은 말을 두 번 하지 않는다.
                                 Text(moved == 0 ? "사유 자세히 보기"
+                                     : feature.removesPermanently ? "\(failed)개는 삭제하지 못했습니다 — 자세히 보기"
                                      : "\(failed)개는 옮기지 못했습니다 — 자세히 보기")
                                     .underline()
                             }
@@ -233,7 +269,8 @@ struct FeatureScreen: View {
                     Button("되돌리기") { Task { await model.undoLastCleanup() } }
                         .buttonStyle(Retro95ButtonStyle())
                 }
-                if moved > 0 {
+                // 휴지통에서 지운 것은 휴지통에 없다. 열어 봐야 보여 줄 것이 없다.
+                if moved > 0, !feature.removesPermanently {
                     // 열어 주기만 한다. 비우는 것은 영구 삭제라 사용자가 Finder에서 직접 한다.
                     Button("휴지통 열기") { trashOpenFailed = !ItemActions.openTrash() }
                         .buttonStyle(Retro95ButtonStyle())
@@ -285,7 +322,9 @@ struct FeatureScreen: View {
 
                     VStack(spacing: 0) {
                         Retro95TableHeader(columns: ItemTableColumns.headers(
-                            layout: columns, showsDates: showsDates, onDrag: { column, delta in
+                            layout: columns, showsDates: showsDates,
+                            sort: model.sort, onSort: { model.toggleSort($0) },
+                            onDrag: { column, delta in
                                 let visible = ItemTableColumns.visible(showsDates: showsDates)
                                 let fixed = visible.reduce(ItemTableColumns.check + ItemTableColumns.icon) {
                                     $0 + CGFloat(columns.width($1))

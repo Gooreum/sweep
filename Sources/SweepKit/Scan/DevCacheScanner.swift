@@ -56,11 +56,22 @@ public struct DevCacheScanner: CleanupScanner {
         (".expo/expo-go", String(localized: "Expo Go 내려받기 캐시")),
     ]
 
+    /// 홈 바로 아래 도구의 캐시 폴더. 이 폴더들은 관문의 **루트**라 통째로 지울 수 없다
+    /// (`ProtectedPaths.homeToolRoots`) — 바로 아래 항목을 하나씩 올린다.
+    ///
+    /// 도구 폴더(`~/.gradle`)가 아니라 캐시 폴더를 짚는 이유는 `homeCaches`와 같다.
+    /// 같은 층에 `gradle.properties`·`settings.xml`(인증 정보)과 `~/.cargo/bin`(실행 파일)이 있다.
+    static let homeCacheRoots: [(path: String, detail: String)] = [
+        (".gradle/caches", String(localized: "Gradle 캐시")),
+        (".cargo/registry", String(localized: "Cargo 레지스트리 캐시")),
+        (".m2/repository", String(localized: "Maven 저장소 캐시")),
+    ]
+
     /// 실측 0.01초. 1초 안에 끝나므로 중간 보고 없이 완료 시점만 알린다.
     public var progressWeight: Double { 0.05 }
 
     public func scan() async -> [CleanupItem] {
-        cacheItems() + homeCacheItems() + logItems()
+        cacheItems() + homeCacheItems() + homeCacheRootItems() + logItems()
     }
 
     private func homeCacheItems() -> [CleanupItem] {
@@ -71,6 +82,17 @@ public struct DevCacheScanner: CleanupScanner {
             guard found.bytes > 0 else { return nil }
             return CleanupItem(url: url, size: found.bytes, category: .devCache,
                                safety: .safe, detail: known.detail, dates: found.dates)
+        }
+    }
+
+    private func homeCacheRootItems() -> [CleanupItem] {
+        Self.homeCacheRoots.flatMap { known in
+            children(of: home.appending(path: known.path)).compactMap { url -> CleanupItem? in
+                let found = DirectorySize.summary(at: url)
+                guard found.bytes > 0 else { return nil }
+                return CleanupItem(url: url, size: found.bytes, category: .devCache,
+                                   safety: .safe, detail: known.detail, dates: found.dates)
+            }
         }
     }
 

@@ -8,11 +8,6 @@ struct SmartScanView: View {
     @Bindable var app: AppModel
     @Bindable var model: ScanModel
 
-    /// 볼륨 용량은 스캔과 무관하고 화면을 보는 동안 거의 변하지 않는다.
-    /// body 안에서 부르면 스캔 진행률이 바뀔 때마다 볼륨을 다시 조회한다 —
-    /// `Sidebar`·`MenuBarPanel`이 이미 저장 프로퍼티로 쓰고 있다.
-    private let usage = VolumeUsage.current()
-
     /// 샌드박스에서는 폴더를 **여러 번** 허락할 수 있다. 생성 때 한 번만 읽으면
     /// 두 번째 허락이 목록에 반영되지 않는다 — 예전에는 허락이 한 번뿐이라
     /// `let`으로 두고 부모가 다시 그리는 것에 기댔다.
@@ -23,6 +18,9 @@ struct SmartScanView: View {
 
     /// 틀린 폴더를 골랐을 때 알려줄 말. nil이면 닫혀 있다.
     @State private var grantFailure: String?
+
+    /// 추가할 수 없는 폴더를 골랐을 때 알려줄 말. 허락 실패와 제목이 달라 따로 둔다.
+    @State private var addFailure: String?
 
     /// 보는 곳마다 지금 읽을 수 있는지. 줄마다 디스크를 두드리지 않도록 한 번에 만든다.
     ///
@@ -35,8 +33,8 @@ struct SmartScanView: View {
             switch model.phase {
             case .idle:
                 welcome
-            case let .scanning(percent, remaining):
-                scanning(percent: percent, remaining: remaining)
+            case let .scanning(percent, _):
+                scanning(percent: percent)
             case let .removing(done, total):
                 Retro95ScanPanel(
                     title: String(localized: "정리 중"), headline: String(localized: "정리하는 중"), detail: nil,
@@ -59,6 +57,7 @@ struct SmartScanView: View {
         .foregroundStyle(R95.black)
         // 폴더를 새로 허락하면 "보는 곳" 목록이 늘고, 읽기 상태도 달라진다.
         .onChange(of: app.grantedFolderCount) { refreshReadability() }
+        .onChange(of: app.scanFolderCount) { refreshReadability() }
     }
 
 
@@ -120,7 +119,9 @@ struct SmartScanView: View {
     /// 전체 디스크는 작은 미터로 보여줘 권한 목록과 결과에 공간을 남긴다.
     @ViewBuilder
     private var diskCard: some View {
-        if let usage {
+        // 디스크 용량은 `AppModel`이 들고 있다가 정리·되돌리기 직후 다시 읽는다.
+        // 여기서 볼륨을 조회하지 않는다 — body는 스캔 진행률마다 다시 돈다.
+        if let usage = app.volumeUsage {
             Retro95GroupBox(title: String(localized: "디스크 정보")) {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 16) {
@@ -189,6 +190,8 @@ struct SmartScanView: View {
 
                         if blocked {
                             Button("열기…") { unblock(scope) }
+                        } else if scope.isCustom {
+                            Button("빼기") { app.removeScanFolder(scope.url) }
                         }
                     }
                     .padding(.horizontal, 8)
@@ -199,6 +202,7 @@ struct SmartScanView: View {
                     }
                 }
 
+                addFolderRow
                 folderAccessRows
                 blockedFooter
 
@@ -221,6 +225,48 @@ struct SmartScanView: View {
             Button("확인") { grantFailure = nil }
         } message: {
             Text(grantFailure ?? "")
+        }
+        .alert("이 폴더는 추가할 수 없습니다",
+               isPresented: Binding(get: { addFailure != nil },
+                                    set: { if !$0 { addFailure = nil } })) {
+            Button("확인") { addFailure = nil }
+        } message: {
+            Text(addFailure ?? "")
+        }
+    }
+
+    /// 큰 파일·중복 파일을 찾을 폴더를 더하는 줄. 홈 아래 보이는 폴더는 이미 다 보므로
+    /// 외장 디스크처럼 홈 밖을 더하는 입구다 — 샌드박스에서는 홈 안 폴더를 여는 길도 된다.
+    private var addFolderRow: some View {
+        VStack(spacing: 0) {
+            Divider().overlay(Theme.border)
+
+            HStack(spacing: 12) {
+                PixelIcon(art: .folder, size: 16)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("폴더 추가")
+                        .font(Theme.bodyText)
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("외장 디스크 같은 다른 폴더에서도 큰 파일·중복 파일을 찾습니다")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                Spacer(minLength: 12)
+
+                Button("추가…") { addFolder() }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 8)
+        }
+    }
+
+    private func addFolder() {
+        guard let picked = FolderPicker.askAnyFolder() else { return }
+        do {
+            try app.addScanFolder(picked)
+        } catch {
+            addFailure = error.message
         }
     }
 
@@ -301,7 +347,8 @@ struct SmartScanView: View {
     /// TCC 거부는 "앱이 알아서 여는 것"을 막는 것이라, 사용자가 명시적으로 고른
     /// 폴더는 보안 범위 접근이 따로 부여된다. 그것으로도 안 풀리면 시스템 설정이 남는다.
     private func unblock(_ scope: CleanupScope) {
-        let grantable = FolderAccess.Grantable(folder: scope.url,
+        // 홈 묶음 줄은 홈 허락과 같은 것이다. 같은 키로 저장해야 다음 실행에 복원된다.
+        let grantable = scope.url.path == Sandbox.userHome.path ? FolderAccess.home : FolderAccess.Grantable(folder: scope.url,
                                                label: scope.label,
                                                purpose: scope.detail.isEmpty
                                                    ? String(localized: "정리 대상") : scope.detail)
@@ -323,13 +370,14 @@ struct SmartScanView: View {
         readability = CleanupScope.readabilityMap(of: scopes)
     }
 
-    private func scanning(percent: Int, remaining: Int?) -> some View {
+    private func scanning(percent: Int) -> some View {
         VStack(spacing: 0) {
             Retro95ScanPanel(
                 title: String(localized: "검색 중"), headline: String(localized: "Mac 전체를 훑는 중…"), detail: nil,
                 fraction: Double(percent) / 100, percentText: "\(percent)%",
                 leftFooter: model.items.isEmpty ? nil : String(localized: "\(model.items.count)개 · \(model.formattedTotalSize) 발견"),
-                rightFooter: remaining.map { String(localized: "약 \(ProgressDisplay.readable(seconds: $0)) 남음") })
+                // 남은 시간은 넣지 않는다. 스캐너마다 속도가 달라 어림값이 크게 틀렸다.
+                rightFooter: nil)
             Spacer()
         }
         .padding(10)

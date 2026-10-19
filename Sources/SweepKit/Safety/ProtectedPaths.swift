@@ -18,6 +18,8 @@ public enum RemovalVeto: Error, Equatable, Sendable {
     case systemProtected(URL)
     /// 지금 실행 중인 앱이다.
     case applicationRunning(URL)
+    /// 홈의 기본 폴더 자체이거나 계정 데이터(키체인·메일·iCloud Drive)다. 디스크 맵 범위에서만 나온다.
+    case essentialFolder(URL)
 
     public var message: String {
         switch self {
@@ -29,8 +31,23 @@ public enum RemovalVeto: Error, Equatable, Sendable {
         case .notOwnedByCurrentUser(let u): String(localized: "다른 사용자·시스템 소유라 정리할 수 없습니다: \(u.path)")
         case .systemProtected(let u): String(localized: "시스템이 보호 중이라 삭제할 수 없습니다: \(u.path)")
         case .applicationRunning(let u): String(localized: "실행 중인 앱입니다. 종료한 뒤 다시 시도해 주세요: \(u.path)")
+        case .essentialFolder(let u): String(localized: "홈 기본 폴더·계정 데이터라 삭제할 수 없습니다: \(u.path)")
         }
     }
+}
+
+/// 관문을 지나는 길. 어디까지 열어 주는지가 다르다.
+public enum RemovalScope: Sendable {
+    /// 스캐너 결과. 정리 루트 하위·앱 캐시·앱 번들만 연다 — 화이트리스트.
+    case cleanup
+    /// 디스크 맵. 사용자가 보고 고른 항목이라 **내 소유면 어디든** 연다.
+    /// 홈의 기본 폴더 자체와 계정 데이터만 막는다. 시스템은 소유권·플래그 검사가 지킨다.
+    case diskMap
+    /// 큰 파일·중복 파일. 정리 범위에 **사용자 폴더**(`UserFolders`)를 더한다.
+    ///
+    /// 정리 범위 자체를 넓히지 않는 이유: 정크 스캐너가 버그로 `~/Documents` 경로를 내도
+    /// 관문이 막아야 한다. 내 파일을 후보로 내는 스캐너에게만 그 폴더들을 연다.
+    case userFiles
 }
 
 /// 모든 삭제가 반드시 통과해야 하는 관문.
@@ -77,7 +94,43 @@ public enum ProtectedPaths {
     ///
     /// `~/.expo`는 루트로 두되 스캐너가 하위 캐시 폴더만 고른다. 같은 층에
     /// `ngrok.yml`(인증 토큰)과 `state.json`(로그인 상태)이 있어 통째로 올리면 안 된다.
-    static let homeToolRoots: [String] = [".npm", ".expo"]
+    ///
+    /// Gradle·Cargo·Maven은 도구 폴더가 아니라 **캐시 하위 폴더**를 루트로 둔다.
+    /// 바로 위층에 `~/.gradle/gradle.properties`·`~/.m2/settings.xml`(인증 정보)과
+    /// `~/.cargo/bin`(실행 파일)이 있다. 루트 자체는 지울 수 없으니 스캐너가 하위를 하나씩 올린다.
+    static let homeToolRoots: [String] = [
+        ".npm", ".expo", ".gradle/caches", ".cargo/registry", ".m2/repository",
+    ]
+
+    /// 휴지통. 바로 아래 항목만 지울 수 있고 휴지통 자체는 루트라 막힌다.
+    static var trashFolder: URL { inHome(".Trash") }
+
+    /// iCloud Drive 휴지통. Finder 휴지통에 합쳐 보인다. 비우면 iCloud에서도 지워진다.
+    ///
+    /// `Library/Mobile Documents`는 디스크 맵에서 막는 계정 데이터지만(`userDataFolders`),
+    /// 정리 범위는 이 휴지통 하위만 연다.
+    static var iCloudTrashFolder: URL { inHome("Library/Mobile Documents/.Trash") }
+
+    /// 홈에 있는 휴지통 둘. 고정 루트에 들어간다.
+    static var homeTrashFolders: [URL] { [trashFolder, iCloudTrashFolder] }
+
+    /// 외장 디스크의 내 휴지통 `/Volumes/<디스크>/.Trashes/<uid>` **안의** 항목인가.
+    ///
+    /// 디스크는 실행 중에 꽂혔다 빠진다. 시작할 때 고정하는 `allowedRoots`에 넣을 수 없어
+    /// 앱 번들처럼 모양으로 연다. 휴지통 자체(깊이 5)는 막는다 — 하위만 후보다.
+    static func isVolumeTrashItem(_ components: [String], uid: uid_t = getuid()) -> Bool {
+        components.count > 5 && components[1] == "Volumes"
+            && components[3] == ".Trashes" && components[4] == String(uid)
+    }
+
+    /// 휴지통 안의 항목인가. 홈·iCloud·외장 디스크 어느 휴지통이든.
+    /// `Remover`가 영구 삭제를 가를 때 쓴다 — 휴지통 안의 것은 다시 옮길 곳이 없다.
+    static func isInsideTrash(_ url: URL, homeTrashes: [URL] = homeTrashFolders) -> Bool {
+        let components = canonical(url).standardizedFileURL.pathComponents
+        return isVolumeTrashItem(components) || homeTrashes.contains {
+            isDescendant(components, of: canonical($0).standardizedFileURL.pathComponents)
+        }
+    }
 
     static func roots(sandboxed: Bool, granted: [URL] = []) -> [URL] {
         let downloads = inHome("Downloads")
@@ -87,6 +140,12 @@ public enum ProtectedPaths {
             inHome("Library/Logs"),
             downloads,
             URL(filePath: "/private/tmp"),
+            trashFolder,
+            iCloudTrashFolder,
+            // iOS 기기 백업. 기기마다 UDID 폴더 하나다.
+            inHome("Library/Application Support/MobileSync/Backup"),
+            // Mail이 미리보기로 내려받은 첨부 사본. 원본은 메일 안에 남는다.
+            inHome("Library/Containers/com.apple.mail/Data/Library/Mail Downloads"),
         ] + homeToolRoots.map(inHome) + userTemporaryRoots
 
         guard sandboxed else { return all }
@@ -118,10 +177,16 @@ public enum ProtectedPaths {
 
     /// 지금 이 순간의 허용 루트. 허락은 실행 중에 생기므로 시작할 때 고정되는
     /// `allowedRoots`와 따로 둔다. 화면(보는 곳 목록)이 이것을 본다.
+    ///
+    /// 큰 파일·중복 파일을 찾는 사용자 폴더도 함께 보여준다. 지울 수 있는 범위는
+    /// 그 항목들에만 열리지만(`RemovalScope.userFiles`), 사용자에게는 둘 다 "보는 곳"이다.
     public static var currentRoots: [URL] {
-        Sandbox.isActive
+        let fixed = Sandbox.isActive
             ? roots(sandboxed: true, granted: FolderAccess.shared.urls)
             : allowedRoots
+        // Downloads가 양쪽에 다 있다. 경로 구성요소로 걸러 한 번만 보인다.
+        let seen = Set(fixed.map(FolderAccess.components(of:)))
+        return fixed + UserFolders.roots().filter { !seen.contains(FolderAccess.components(of: $0)) }
     }
 
     /// Electron·Chromium 앱이 공통으로 쓰는 캐시 폴더 이름.
@@ -235,12 +300,28 @@ public enum ProtectedPaths {
         inHome("Library/Developer/Xcode/UserData/Capabilities"),
     ]
 
+    /// 디스크 맵에서도 **통째로는** 지울 수 없는 홈의 기본 폴더. 자체만 막는다 —
+    /// 안의 항목은 사용자가 보고 고른 것이다.
+    static let homeEssentialFolders: [String] = [
+        "Library", "Desktop", "Documents", "Downloads", "Movies", "Music", "Pictures",
+        "Public", "Applications",
+        "Library/Application Support", "Library/Containers", "Library/Group Containers",
+        "Library/Preferences",
+    ]
+
+    /// 계정 데이터. 자체와 **그 아래 전부** 막는다 — 지우면 되살릴 수 없고,
+    /// Finder에서 보이는 "내 파일"도 아니다.
+    static let userDataFolders: [String] = [
+        "Library/Keychains", "Library/Mail", "Library/Messages", "Library/Accounts",
+        "Library/Mobile Documents", "Library/Safari", "Library/Cookies",
+    ]
+
     /// 삭제해도 되는 경로인지 검사한다. 통과하지 못하면 던진다.
     /// `RemovalVeto`만 던진다 — 타입으로 고정한다.
     ///
     /// 예전엔 `throws`라 부르는 쪽마다 "그 밖의 오류"를 상상해 분기를 뒀는데,
     /// 그 분기는 도달할 수 없어 테스트로 고정할 수도 없었다.
-    public static func validate(_ url: URL) throws(RemovalVeto) {
+    public static func validate(_ url: URL, scope: RemovalScope = .cleanup) throws(RemovalVeto) {
         let requested = url.standardizedFileURL
         let resolved = canonical(requested)
 
@@ -253,23 +334,34 @@ public enum ProtectedPaths {
 
         // 구성요소는 한 번만 쪼갠다. 아래에서 12번 넘게 비교하기 때문이다.
         let resolvedComponents = resolved.standardizedFileURL.pathComponents
-        let roots = rootComponents()
+        let roots = rootComponents(scope: scope)
 
         // 2. 허용 루트 자체를 통째로 지우는 것도 거부 (하위만 허용)
         if roots.contains(resolvedComponents) {
             throw RemovalVeto.allowedRootItself(resolved)
         }
 
-        // 3. deny-list 우선 — 허용 루트 안이어도 막는다
+        // 3. deny-list 우선 — 허용 루트 안이어도, 어느 범위에서도 막는다
         if cachedDenyComponents.contains(where: {
             resolvedComponents == $0 || Self.isDescendant(resolvedComponents, of: $0)
         }) {
             throw RemovalVeto.protectedPath(resolved)
         }
 
-        // 4. 실경로가 허용 루트 하위이거나, 이름으로 열어 준 앱 캐시 폴더여야 한다.
+        // 3-b. 디스크 맵은 넓게 열리는 대신 홈의 기본 폴더 자체와 계정 데이터를 막는다.
+        //      기본 폴더는 자체만, 계정 데이터는 그 아래까지.
+        if scope == .diskMap,
+           cachedEssentialComponents.contains(resolvedComponents)
+            || cachedUserDataComponents.contains(where: {
+                resolvedComponents == $0 || Self.isDescendant(resolvedComponents, of: $0)
+            }) {
+            throw RemovalVeto.essentialFolder(resolved)
+        }
+
+        // 4. 실경로가 이 범위에서 손댈 수 있는 곳이어야 한다 — 정리 범위는 허용 루트
+        //    하위이거나 이름으로 열어 준 앱 캐시 폴더, 디스크 맵은 닿을 수 있는 곳 전부.
         //    허용 루트 안의 심볼릭 링크가 바깥을 가리키면 여기서 걸린다.
-        guard Self.isInsideAllowedArea(resolvedComponents, roots: roots) else {
+        guard Self.isInsideArea(resolvedComponents, roots: roots, scope: scope) else {
             throw RemovalVeto.outsideAllowedRoots(resolved)
         }
 
@@ -280,7 +372,7 @@ public enum ProtectedPaths {
             .appending(path: requested.lastPathComponent)
         if resolved != requestedLocation {
             let locationComponents = requestedLocation.standardizedFileURL.pathComponents
-            guard Self.isInsideAllowedArea(locationComponents, roots: roots) else {
+            guard Self.isInsideArea(locationComponents, roots: roots, scope: scope) else {
                 throw RemovalVeto.symlinkEscape(requested)
             }
         }
@@ -405,9 +497,9 @@ public enum ProtectedPaths {
     ///
     /// 화면이 "왜 못 지우는지"를 말할 수 있어야 한다 — 눌러 보고 실패해야
     /// 아는 것은 알려준 것이 아니다.
-    public static func veto(for url: URL) -> RemovalVeto? {
+    public static func veto(for url: URL, scope: RemovalScope = .cleanup) -> RemovalVeto? {
         do {
-            try validate(url)
+            try validate(url, scope: scope)
             return nil
         } catch {
             // 타입이 `RemovalVeto`로 고정돼 있어 다른 오류가 올 수 없다.
@@ -417,7 +509,9 @@ public enum ProtectedPaths {
 
     /// 목록을 거를 때 쓴다. **판정 로직을 두 벌로 두지 않는다** —
     /// 화면이 보여주는 것과 실제 삭제 판정이 갈라지면 안 된다.
-    public static func isRemovable(_ url: URL) -> Bool { veto(for: url) == nil }
+    public static func isRemovable(_ url: URL, scope: RemovalScope = .cleanup) -> Bool {
+        veto(for: url, scope: scope) == nil
+    }
 
     // 심볼릭 링크가 섞인 실제 경로(예: /tmp → /private/tmp)로 정규화해 둔다.
     //
@@ -434,6 +528,11 @@ public enum ProtectedPaths {
         cachedRoots.map { $0.standardizedFileURL.pathComponents }
     private static let cachedDenyComponents: [[String]] =
         cachedDenyList.map { $0.standardizedFileURL.pathComponents }
+    /// 디스크 맵 보호 목록도 같은 이유로 미리 쪼개 둔다.
+    private static let cachedEssentialComponents: [[String]] =
+        homeEssentialFolders.map { canonical(inHome($0)).standardizedFileURL.pathComponents }
+    private static let cachedUserDataComponents: [[String]] =
+        userDataFolders.map { canonical(inHome($0)).standardizedFileURL.pathComponents }
     /// 홈은 프로세스 수명 동안 바뀌지 않는다.
     private static let cachedHome: URL = canonical(
         Sandbox.userHome)
@@ -446,12 +545,20 @@ public enum ProtectedPaths {
     ///
     /// 허락받은 폴더 자체가 아니라 **그 안에서 켜진 루트**를 붙인다.
     /// `~/Library`를 열어 줬다고 `~/Library/Safari`까지 지울 수 있으면 안 된다.
-    private static func rootComponents() -> [[String]] {
-        guard Sandbox.isActive else { return cachedRootComponents }
+    ///
+    /// `.userFiles`면 사용자 폴더(`UserFolders`)를 더한다. 실행 중에 바뀌므로(폴더 추가,
+    /// 홈에 새 폴더) 캐시된 고정 루트에 넣지 않고 여기서 붙인다.
+    private static func rootComponents(scope: RemovalScope) -> [[String]] {
+        let fixed: [[String]]
         let granted = FolderAccess.shared.urls
-        guard !granted.isEmpty else { return cachedRootComponents }
-        return roots(sandboxed: true, granted: granted)
-            .map { canonical($0).standardizedFileURL.pathComponents }
+        if Sandbox.isActive, !granted.isEmpty {
+            fixed = roots(sandboxed: true, granted: granted)
+                .map { canonical($0).standardizedFileURL.pathComponents }
+        } else {
+            fixed = cachedRootComponents
+        }
+        guard scope == .userFiles else { return fixed }
+        return fixed + UserFolders.cachedRootComponents()
     }
 
     /// 경로 구성요소 단위 하위 판정. URL을 다시 정규화하지 않아 값싸다.
@@ -472,11 +579,37 @@ public enum ProtectedPaths {
         applicationsRemovable(sandboxed: Sandbox.isActive, granted: FolderAccess.shared.urls)
     }
 
-    /// 허용 루트의 하위이거나, 이름으로 열어 준 앱 캐시 폴더인가.
+    /// 범위에 따라 다른 영역 판정. `validate`의 4단계(실경로)와 5단계(링크를 타고 온
+    /// 요청 경로)가 함께 쓴다 — 두 벌로 두면 언젠가 갈라진다.
+    private static func isInsideArea(_ components: [String], roots: [[String]],
+                                     scope: RemovalScope) -> Bool {
+        switch scope {
+        case .cleanup, .userFiles:
+            // `.userFiles`는 `roots`에 사용자 폴더가 이미 붙어 온다(`rootComponents`).
+            isInsideAllowedArea(components, roots: roots)
+        case .diskMap:
+            diskMapReachable(components, sandboxed: Sandbox.isActive,
+                             granted: FolderAccess.shared.urls)
+        }
+    }
+
+    /// 디스크 맵이 손댈 수 있는 곳. 샌드박스 밖에서는 어디든 — 시스템은 소유권·플래그
+    /// 검사가 지킨다. 샌드박스에서는 Downloads와 허락받은 폴더 안뿐이다. 그 밖은
+    /// 쓸 수 없어 어차피 실패한다.
     ///
-    /// `validate`의 4단계(실경로)와 5단계(링크를 타고 온 요청 경로)가 같은 판정을 쓴다.
+    /// 순수 함수로 둔다 — `roots(sandboxed:granted:)`와 같은 이유.
+    static func diskMapReachable(_ components: [String], sandboxed: Bool, granted: [URL]) -> Bool {
+        guard sandboxed else { return true }
+        return ([inHome("Downloads")] + granted).contains {
+            isDescendant(components, of: canonical($0).standardizedFileURL.pathComponents)
+        }
+    }
+
+    /// 허용 루트의 하위이거나, 이름으로 열어 준 앱 캐시 폴더인가. 정리 범위의 판정이다.
     private static func isInsideAllowedArea(_ components: [String], roots: [[String]]) -> Bool {
         if roots.contains(where: { isDescendant(components, of: $0) }) { return true }
+        // 외장 디스크 휴지통. 샌드박스에서는 `/Volumes`에 쓸 수 없다.
+        if !Sandbox.isActive, isVolumeTrashItem(components) { return true }
         // 앱 번들은 루트 없이 모양으로 연다. 앱 폴더 바로 아래 `.app` 하나뿐이다.
         if isApplicationsRemovable,
            isApplicationBundle(components, folders: cachedApplicationComponents) {

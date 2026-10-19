@@ -5,10 +5,6 @@ import SweepKit
 struct Sidebar: View {
     @Bindable var app: AppModel
 
-    /// 볼륨 용량은 스캔과 무관하고 화면을 보는 동안 거의 변하지 않는다.
-    /// 매 렌더마다 읽으면 디스크를 두드리는 값이라 한 번만 읽어 둔다.
-    private let usage = VolumeUsage.current()
-
     var body: some View {
         // 배지를 한 번만 계산해 행으로 내려보낸다. 행마다 물으면 같은 항목
         // 목록을 기능 수만큼 훑는다.
@@ -84,7 +80,9 @@ struct Sidebar: View {
     /// "0바이트 중 0바이트"라는 거짓말이 된다.
     @ViewBuilder
     private var diskGauge: some View {
-        if let usage {
+        // 디스크 용량은 `AppModel`이 들고 있다가 정리·되돌리기 직후 다시 읽는다.
+        // 여기서 볼륨을 조회하지 않는다 — body는 스캔 진행률마다 다시 돈다.
+        if let usage = app.volumeUsage {
             VStack(alignment: .leading, spacing: 8) {
                 Retro95Separator()
                 HStack(spacing: 4) {

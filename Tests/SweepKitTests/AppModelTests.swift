@@ -293,7 +293,8 @@ struct AppModelTests {
         [categorized("정크.bin", .devCache),
          categorized("임시", .runawayTemp),
          categorized("큰영상.mov", .largeFile),
-         categorized("사본.zip", .duplicate)]
+         categorized("사본.zip", .duplicate),
+         categorized("버린것.dmg", .trash)]
     }
 
     /// 지우지 않는 테스트용 기록 저장소. 한 번도 쓰지 않으므로 디스크에 남는 것이 없다.
@@ -631,5 +632,105 @@ struct AppModelTests {
 
         #expect(app.cleanupSummary.totalReclaimedBytes == 0)
         #expect(history.records.map(\.kind) == [.cleanup, .restore])
+    }
+
+    // MARK: - 휴지통 비우기는 합계에 넣지 않는다
+
+    @Test("휴지통 항목을 지운 양은 '휴지통으로 옮김' 합계에 더해지지 않는다")
+    func emptyingTrashIsNotCounted() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let found = [
+            CleanupItem(url: URL(filePath: "/Users/x/.Trash/a.zip"), size: 2_000, category: .trash, safety: .caution),
+            CleanupItem(url: URL(filePath: "/Users/x/.Trash/b.zip"), size: 3_000, category: .trash, safety: .caution),
+        ]
+        let app = app(scanning: .trash, finds: found, history: history)
+        let trash = app.model(for: .trash)
+        await trash.scan()
+        trash.selection = Set(found.map(\.url))
+        await trash.removeSelected()
+
+        #expect(trash.report?.succeeded.count == 2, "지우기 자체는 성공해야 한다")
+        #expect(app.cleanupSummary.totalReclaimedBytes == 0)
+        #expect(history.records.isEmpty)
+    }
+
+    @Test("섞인 회차에서는 휴지통 몫만 빼고 기록한다")
+    func mixedReportRecordsOnlyMovedItems() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let found = [
+            CleanupItem(url: URL(filePath: "/Users/x/.Trash/a.zip"), size: 2_000, category: .trash, safety: .caution),
+            CleanupItem(url: URL(filePath: "/Users/x/Library/Caches/pip"), size: 500, category: .devCache, safety: .safe),
+        ]
+        let app = app(scanning: .smartScan, finds: found, history: history)
+        let smart = app.model(for: .smartScan)
+        await smart.scan()
+        smart.selection = Set(found.map(\.url))
+        await smart.removeSelected()
+
+        #expect(app.cleanupSummary.totalReclaimedBytes == 500)
+    }
+
+    // MARK: - 디스크 사용량
+
+    /// 읽을 때마다 사용 가능 용량이 1000씩 느는 가짜 볼륨.
+    private final class GrowingVolume: @unchecked Sendable {
+        private let lock = NSLock()
+        private var reads = 0
+        func read() -> VolumeUsage? {
+            lock.lock(); defer { lock.unlock() }
+            reads += 1
+            return VolumeUsage(total: 100_000, available: Int64(reads) * 1_000)
+        }
+    }
+
+    private func volumeApp(_ volume: GrowingVolume, history: CleanupHistory) -> AppModel {
+        AppModel(makeModel: { f in
+            ScanModel(scan: f == .smartScan ? self.finishing(self.mixed) : self.finishing([]),
+                      removeOne: { RemovalOutcome(item: $0, failureReason: nil,
+                                                  trashedURL: URL(filePath: "/Users/x/.Trash/\($0.displayName)")) },
+                      restoreOne: { RemovalOutcome(item: $0.item, failure: nil) })
+        }, history: history, readVolumeUsage: { volume.read() })
+    }
+
+    @Test("디스크 사용량은 처음 한 번 읽어 둔다")
+    func readsVolumeUsageOnce() throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let app = volumeApp(GrowingVolume(), history: history)
+        #expect(app.volumeUsage?.available == 1_000)
+        // 다시 묻지 않으면 그대로다 — 화면이 그릴 때마다 볼륨을 조회하지 않는다
+        #expect(app.volumeUsage?.available == 1_000)
+    }
+
+    @Test("지우거나 되돌리면 디스크 사용량을 바로 다시 읽는다")
+    func refreshesVolumeUsageAfterRemovalAndRestore() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let app = volumeApp(GrowingVolume(), history: history)
+        await app.model(for: .smartScan).scan()
+        // 스캔만으로는 다시 읽지 않는다
+        #expect(app.volumeUsage?.available == 1_000)
+
+        let junk = app.model(for: .junk)
+        let target = try #require(junk.items.first)
+        junk.selection = [target.url]
+        await junk.removeSelected()
+        let afterRemoval = try #require(app.volumeUsage?.available)
+        #expect(afterRemoval > 1_000)
+
+        await junk.undoLastCleanup()
+        #expect(try #require(app.volumeUsage?.available) > afterRemoval)
+    }
+
+    @Test("디스크를 읽지 못하면 nil이다 — 0을 지어내지 않는다")
+    func unreadableVolumeIsNil() throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let app = AppModel(history: history, readVolumeUsage: { nil })
+        #expect(app.volumeUsage == nil)
+        app.refreshVolumeUsage()
+        #expect(app.volumeUsage == nil)
     }
 }

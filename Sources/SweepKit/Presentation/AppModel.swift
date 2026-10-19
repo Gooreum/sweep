@@ -31,6 +31,11 @@ public final class AppModel {
     public private(set) var grantedFolderCount: Int = 0
     private let folderAccess: FolderAccess.Registry
 
+    /// 사용자가 스마트 스캔에 추가한 폴더 수. "보는 곳" 카드가 다시 읽을 시점이다 —
+    /// `grantedFolderCount`는 샌드박스 밖에서 늘 0이라 이걸 따로 둔다.
+    public private(set) var scanFolderCount: Int = 0
+    private let userFolders: UserFolders.Registry
+
     /// 이 앱이 폴더 허락을 요구하는 환경인가(= 샌드박스인가).
     ///
     /// 허락을 거둘 때 다시 물어야 하므로 판정을 기억해 둔다. 그때마다
@@ -43,6 +48,15 @@ public final class AppModel {
     /// 저장소(`CleanupHistory`)는 관찰되지 않으므로 화면이 따라오려면
     /// 여기 관찰되는 값이 하나 있어야 한다 — `needsFolderAccess`와 같은 이유다.
     public private(set) var cleanupSummary: CleanupSummary
+
+    /// 홈 볼륨의 사용량. 화면 셋(사이드바·스마트 스캔·메뉴바)이 이것 하나를 본다.
+    ///
+    /// 예전엔 화면마다 만들어질 때 한 번 읽어 두어, 휴지통을 비워도 숫자가 그대로였다.
+    /// 정리·되돌리기 직후 다시 읽는다 — 파일을 다시 훑는 게 아니라 볼륨에 한 번 묻는 것이다.
+    public private(set) var volumeUsage: VolumeUsage?
+
+    /// 테스트가 갈아끼운다 — 진짜 디스크 용량은 테스트에서 바꿀 수 없다.
+    private let readVolumeUsage: @Sendable () -> VolumeUsage?
     private let history: CleanupHistory
 
     /// 기능 모델을 만드는 방법을 주입할 수 있게 열어 둔다.
@@ -58,17 +72,58 @@ public final class AppModel {
                 makeDiskMap: @escaping @MainActor () -> DiskMapModel
                     = { DiskMapModel() },
                 folderAccess: FolderAccess.Registry = FolderAccess.shared,
+                userFolders: UserFolders.Registry = UserFolders.shared,
                 history: CleanupHistory = .shared,
-                needsFolderAccess: Bool? = nil) {
+                needsFolderAccess: Bool? = nil,
+                readVolumeUsage: @escaping @Sendable () -> VolumeUsage? = { VolumeUsage.current() }) {
         self.makeModel = makeModel
         self.makeDiskMap = makeDiskMap
         self.folderAccess = folderAccess
+        self.userFolders = userFolders
         self.history = history
         self.cleanupSummary = history.summary
+        self.readVolumeUsage = readVolumeUsage
+        self.volumeUsage = readVolumeUsage()
         // 주입값이 있으면 그것이 "허락을 요구하는 환경인가"를 대신한다 — 테스트·데모용.
         self.requiresFolderAccess = needsFolderAccess ?? Sandbox.isActive
         self.needsFolderAccess = self.requiresFolderAccess && !folderAccess.hasAny
         self.grantedFolderCount = folderAccess.urls.count
+        self.scanFolderCount = userFolders.custom.count
+    }
+
+    /// 큰 파일·중복 파일을 찾을 폴더를 더한다. 안 되는 폴더면 이유를 던지고 상태는 그대로다.
+    ///
+    /// 샌드박스에서는 열기 대화상자로 고른 그 폴더의 북마크도 함께 저장한다 —
+    /// 목록에만 넣으면 다음 실행에서 읽지 못한다. 저장에 실패하면 목록에서도 뺀다.
+    public func addScanFolder(_ url: URL) throws(UserFolders.Rejection) {
+        let current = UserFolders.roots(custom: [], sandboxed: requiresFolderAccess,
+                                        granted: folderAccess.urls)
+        try userFolders.add(url, existing: current)
+        if requiresFolderAccess {
+            do {
+                try folderAccess.grant(url, as: UserFolders.grantable(for: url))
+            } catch {
+                userFolders.remove(url)
+                throw .bookmark(error.message)
+            }
+        }
+        refreshFolderState()
+    }
+
+    /// 추가했던 폴더를 뺀다. 샌드박스에서는 그 폴더의 북마크도 거둔다.
+    public func removeScanFolder(_ url: URL) {
+        userFolders.remove(url)
+        if requiresFolderAccess {
+            folderAccess.revoke(UserFolders.grantable(for: url))
+        }
+        refreshFolderState()
+    }
+
+    private func refreshFolderState() {
+        grantedFolderCount = folderAccess.urls.count
+        scanFolderCount = userFolders.custom.count
+        needsFolderAccess = requiresFolderAccess && !folderAccess.hasAny
+        forgetScans()
     }
 
     /// 열기 대화상자에서 고른 폴더로 허락을 받는다. 틀린 폴더면 던지고 상태는 그대로다.
@@ -137,12 +192,28 @@ public final class AppModel {
         }
         model.onRemoved = { [weak self] urls in
             self?.forget(urls, except: feature)
+            self?.refreshVolumeUsageAfterChange()
         }
         model.onReport = { [weak self] report in
             self?.record(report)
         }
         model.onRestored = { [weak self] report in
             self?.recordRestore(report)
+            self?.refreshVolumeUsageAfterChange()
+        }
+    }
+
+    /// 디스크 사용량을 지금 값으로 다시 읽는다. 메뉴바 패널이 열릴 때도 부른다.
+    public func refreshVolumeUsage() {
+        volumeUsage = readVolumeUsage()
+    }
+
+    /// 지운 직후 한 번, 잠시 뒤 한 번 더. APFS는 돌려받은 공간을 몇 초 늦게 반영하기도 한다.
+    private func refreshVolumeUsageAfterChange() {
+        refreshVolumeUsage()
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(2))
+            self?.refreshVolumeUsage()
         }
     }
 
@@ -156,8 +227,13 @@ public final class AppModel {
     ///
     /// 어느 기능 모델에서 지웠든 한 곳에 쌓인다. 모델 안에 두면 폴더 허락이
     /// 바뀔 때 `forgetScans()`가 모델과 함께 기록도 버린다.
+    ///
+    /// 휴지통 비우기는 기록하지 않는다. 합계 문구가 "휴지통으로 옮김"이라 이미 휴지통에 있던 것을
+    /// 지운 양을 더하면 거짓말이 되고, 되돌릴 수도 없다. 남는 성공분이 없으면 기록이 건너뛴다.
     private func record(_ report: RemovalReport) {
-        history.record(report)
+        history.record(RemovalReport(outcomes: report.outcomes.filter {
+            !$0.item.category.removesPermanently
+        }))
         cleanupSummary = history.summary
     }
 

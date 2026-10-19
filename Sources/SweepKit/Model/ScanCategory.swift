@@ -13,6 +13,12 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
     /// 오래 손대지 않은 캐시.
     /// 주인이 사라졌는지는 알 수 없으므로 "묵었다"고만 말한다.
     case staleCache
+    /// Mail이 미리보기로 내려받은 첨부 사본. 원본은 메일 안에 남는다.
+    case mailAttachment
+    /// 휴지통에 든 것. 이미 버린 것이지만 비우면 되돌릴 수 없다.
+    case trash
+    /// iOS 기기 백업. 크지만 기기를 잃으면 이것뿐일 수 있다.
+    case deviceBackup
     /// 허용 루트 안의 크고 독립적인 파일.
     case largeFile
     /// 내용이 같은 중복 파일.
@@ -25,6 +31,9 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
         case .devCache: String(localized: "개발 캐시")
         case .appCache: String(localized: "앱 웹 캐시")
         case .staleCache: String(localized: "묵은 캐시")
+        case .mailAttachment: String(localized: "메일 첨부 사본")
+        case .trash: String(localized: "휴지통")
+        case .deviceBackup: String(localized: "기기 백업")
         case .largeFile: String(localized: "대용량 파일")
         case .duplicate: String(localized: "중복 파일")
         }
@@ -39,10 +48,28 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
         case .devCache: 2
         case .appCache: 3
         case .staleCache: 4
-        case .largeFile: 5
-        case .duplicate: 6
+        case .mailAttachment: 5
+        case .trash: 6
+        case .deviceBackup: 7
+        case .largeFile: 8
+        case .duplicate: 9
         }
     }
+
+    /// 이 분류의 항목을 어느 관문 범위로 검사할지.
+    ///
+    /// 큰 파일·중복 파일만 사용자 폴더(`~/Documents` 등)를 연다. 나머지가 그 폴더 경로를
+    /// 내면 버그이고, 관문이 막아야 한다.
+    public var removalScope: RemovalScope {
+        switch self {
+        case .largeFile, .duplicate: .userFiles
+        default: .cleanup
+        }
+    }
+
+    /// 정리하면 휴지통으로 가지 않고 바로 지워지는가. 휴지통 안의 것뿐이다(`Remover`).
+    /// 정리 합계("휴지통으로 옮김")에서 이것을 뺀다.
+    public var removesPermanently: Bool { self == .trash }
 
     public var systemImageName: String {
         switch self {
@@ -51,6 +78,9 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
         case .devCache: "shippingbox.fill"
         case .appCache: "globe"
         case .staleCache: "clock.arrow.circlepath"
+        case .mailAttachment: "paperclip"
+        case .trash: "trash.fill"
+        case .deviceBackup: "iphone"
         case .largeFile: "arrow.down.doc.fill"
         case .duplicate: "doc.on.doc.fill"
         }

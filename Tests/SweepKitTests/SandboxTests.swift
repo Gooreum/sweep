@@ -94,7 +94,7 @@ struct SandboxTests {
         #expect(ProtectedPaths.appSupportReadable(sandboxed: true, granted: [granted]))
 
         let junk = Feature.junk.scanners(sandboxed: true, granted: [granted]).map(\.category)
-        #expect(junk == [.xcode, .devCache, .appCache, .staleCache])
+        #expect(junk == [.xcode, .devCache, .appCache, .staleCache, .mailAttachment, .deviceBackup])
     }
 
     @Test("허락한 폴더 자신도 열린 것으로 본다")
@@ -137,9 +137,15 @@ struct SandboxTests {
         #expect(!paths.contains(home.appending(path: "Library/Caches").path))
     }
 
-    @Test("샌드박스 밖에서는 지금 허용 루트가 시작 때 루트와 같다")
+    @Test("샌드박스 밖에서는 지금 허용 루트가 시작 때 루트로 시작하고 사용자 폴더가 뒤따른다")
     func currentRootsOutsideSandbox() {
-        #expect(ProtectedPaths.currentRoots == ProtectedPaths.allowedRoots)
+        let current = ProtectedPaths.currentRoots
+        #expect(Array(current.prefix(ProtectedPaths.allowedRoots.count)) == ProtectedPaths.allowedRoots)
+        // 뒤에 붙는 것은 큰 파일·중복 파일을 찾는 사용자 폴더뿐이다
+        let userRoots = Set(UserFolders.roots().map(FolderAccess.components(of:)))
+        for extra in current.dropFirst(ProtectedPaths.allowedRoots.count) {
+            #expect(userRoots.contains(FolderAccess.components(of: extra)), "\(extra.path)")
+        }
     }
 
     @Test("보호 목록은 진짜 홈의 Xcode UserData를 가리킨다")
@@ -185,7 +191,8 @@ struct SandboxTests {
         let junk = Feature.junk.scanners(sandboxed: true, granted: [library]).map(\.category)
 
         // 폭주 임시 파일은 고를 수 없는 경로라 샌드박스에서는 빠진다.
-        #expect(junk == [.xcode, .devCache, .appCache, .staleCache])
+        // 휴지통은 Library 밖(`~/.Trash`)이라 홈을 허락해야 붙는다.
+        #expect(junk == [.xcode, .devCache, .appCache, .staleCache, .mailAttachment, .deviceBackup])
     }
 
     @Test("홈 직속 도구 폴더만 허락하면 개발 캐시만 붙는다")
@@ -197,8 +204,18 @@ struct SandboxTests {
 
     @Test("샌드박스 밖 스캐너는 허락과 무관하게 그대로다")
     func unsandboxedScannersUnchanged() {
-        #expect(Feature.smartScan.scanners(sandboxed: false, granted: []).count == 7)
-        #expect(Feature.junk.scanners(sandboxed: false, granted: []).count == 5)
+        #expect(Feature.smartScan.scanners(sandboxed: false, granted: []).count == 10)
+        #expect(Feature.junk.scanners(sandboxed: false, granted: []).count == 7)
+        #expect(Feature.trash.scanners(sandboxed: false, granted: []).count == 1)
+    }
+
+    @Test("홈을 허락하면 정크 스캐너가 전부 붙고 휴지통 기능도 열린다")
+    func sandboxedScannersWithHome() {
+        let junk = Feature.junk.scanners(sandboxed: true, granted: [Sandbox.userHome]).map(\.category)
+        #expect(junk == [.xcode, .devCache, .appCache, .staleCache, .mailAttachment, .deviceBackup])
+        #expect(Feature.trash.scanners(sandboxed: true, granted: [Sandbox.userHome]).map(\.category) == [.trash])
+        // 홈을 열지 않으면 휴지통은 훑을 수 없다
+        #expect(Feature.trash.scanners(sandboxed: true, granted: []).isEmpty)
     }
 
     @Test("샌드박스의 디스크 맵 시작 지점은 허락 전 Downloads, 허락 후 개발 폴더까지")

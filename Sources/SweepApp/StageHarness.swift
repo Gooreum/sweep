@@ -51,11 +51,19 @@ struct StageHarness: View {
                 } else {
                     Text("준비 중").font(Theme.bodyText)
                 }
+            } else if stage == "trash-confirm" {
+                // 확인 시트도 창 캡처에 잡히지 않는다. 시트 뷰를 그대로 그린다.
+                if let model {
+                    CleanupConfirmSheet(model: model, permanent: true, onConfirm: {}, onCancel: {})
+                } else {
+                    Text("준비 중").font(Theme.bodyText)
+                }
             } else if let model {
                 if stage.hasPrefix("smart-") {
                     SmartScanView(app: app, model: model)
                 } else {
-                    FeatureScreen(feature: .junk, model: model)
+                    // `trash-`로 시작하면 휴지통 기능 화면이다. 영구 삭제 문구를 확인한다.
+                    FeatureScreen(feature: stage.hasPrefix("trash-") ? .trash : .junk, model: model)
                 }
             } else {
                 Text("준비 중").font(Theme.bodyText)
@@ -95,6 +103,24 @@ struct StageHarness: View {
             let created = ScanModel(scan: { Self.finishing(items) })
             model = created
             await created.scan()
+
+        case "trash-results", "trash-confirm", "trash-cleaned":
+            // 가짜 휴지통 항목. 지우는 흉내만 낸다 — 실제 휴지통을 건드리지 않는다.
+            let trash = [
+                CleanupItem(url: URL(filePath: "/Users/me/.Trash/옛날 설치본.dmg"), size: 3_221_225_472,
+                            category: .trash, safety: .caution, detail: "비우면 되돌릴 수 없습니다"),
+                CleanupItem(url: URL(filePath: "/Users/me/.Trash/프로젝트 사본"), size: 838_860_800,
+                            category: .trash, safety: .caution, detail: "비우면 되돌릴 수 없습니다"),
+                CleanupItem(url: Sandbox.userHome.appending(path: "Library/Mobile Documents/.Trash/스크린샷 모음.zip"),
+                            size: 524_288_000, category: .trash, safety: .caution,
+                            detail: "iCloud Drive 휴지통 — 비우면 다른 기기에서도 사라집니다"),
+            ]
+            let created = ScanModel(scan: { Self.finishing(trash) },
+                                    removeOne: { RemovalOutcome(item: $0, failureReason: nil) })
+            model = created
+            await created.scan()
+            created.selection = Set(trash.map(\.url))
+            if stage == "trash-cleaned" { await created.removeSelected() }
 
         case "cleaned":
             let created = ScanModel(scan: { Self.finishing(items) },
@@ -218,12 +244,15 @@ struct StageHarness: View {
             -> DiskUsageNode {
             DiskUsageNode(url: preview.appending(path: name), size: size, children: kids)
         }
-        // 정리 범위 밖(보호됨)과 못 읽는 폴더도 섞는다. 한 상태만 보이면
-        // 배지가 실제로 갈라지는지 눈으로 확인할 수 없다.
+        // 내 문서(확인 필요)·계정 데이터(보호됨)·못 읽는 폴더도 섞는다. 한 상태만
+        // 보이면 배지가 실제로 세 갈래로 갈라지는지 눈으로 확인할 수 없다.
         let home = FileManager.default.homeDirectoryForCurrentUser
-        let outside = DiskUsageNode(
-            url: home.appending(path: "Documents/sweep-harness-preview/보호된폴더"),
+        let mine = DiskUsageNode(
+            url: home.appending(path: "Documents/sweep-harness-preview/내문서"),
             size: 2_147_483_648)
+        let protected = DiskUsageNode(
+            url: home.appending(path: "Library/Keychains/sweep-harness-preview/보호된폴더"),
+            size: 268_435_456)
         let locked = DiskUsageNode(
             url: home.appending(path: "Documents/sweep-harness-preview/잠긴폴더"),
             size: 0, isReadable: false)
@@ -231,9 +260,10 @@ struct StageHarness: View {
         let model = DiskMapModel()
         model.seed(DiskUsageNode(url: caches, size: 9_663_676_416, children: [
             child("Homebrew", 5_368_709_120, [child("downloads", 4_294_967_296)]),
-            outside,
+            mine,
             child("com.apple.dt.Xcode", 1_610_612_736),
             child("org.swift.swiftpm", 419_430_400),
+            protected,
             child("Google", 117_440_512),
             locked,
         ]))
