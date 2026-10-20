@@ -162,9 +162,14 @@ gh run watch "$RUN" --exit-status
   빌드는 업로드 뒤 처리에 몇 분~수십 분 걸린다.
 - 실패: `gh run view "$RUN" --log-failed | tail -60`을 읽고 원인을 요약한다. 고칠 수 있으면 고치고,
   같은 빌드 번호로 다시 올리지 않도록 확인한 뒤 `gh workflow run appstore.yml -f build=true`처럼 수동 실행한다.
-- **스크린샷 교체가 `Failed to delete screenshot ... APP_DESKTOP`로 실패하면**: 이미 올라간 스크린샷을 API로 못 지우는
-  것이다(빌드 업로드는 끝나 있다). 같은 명령을 반복하지 말고 사용자에게 **App Store Connect 웹에서 해당 버전의 기존
-  스크린샷을 지워 달라**고 부탁한다. 지운 뒤 `gh workflow run appstore.yml -f metadata=true -f screenshots=true`.
+- **이전 버전이 심사에 제출돼 있으면(`WAITING_FOR_REVIEW`) 앱 정보·스크린샷을 올릴 수 없다.** deliver가 제출된
+  버전을 수정 대상으로 잡아 이름을 새 버전으로 바꾸고, 스크린샷은 제출 뒤라 API로 못 지운다
+  (`Can't Delete Screenshot After Submit for review`). 이제 워크플로의 `release_guard`가 deliver 전에 이걸 막고
+  한국어 오류로 멈춘다. 손으로 지울 필요 없다:
+  1. 0단계에서 `gh workflow run appstore.yml -f status=true`로 상태를 읽는다(로그에 버전별 상태가 나온다).
+  2. 제출된 버전이 있으면 첫 질문 탭에 보기로 둔다: "심사 중인 X를 철회하고 올릴까요? (심사 순서를 잃어요)".
+  3. 철회를 고르면 `gh workflow run appstore.yml -f metadata=true -f screenshots=true -f cancel_review=true`.
+     철회는 사용자가 고를 때만 한다. 심사가 이미 진행 중(`IN_REVIEW`)이면 철회할 수 없으니 끝날 때까지 기다린다.
 - 빌드 없이 수동 실행(`build=false`)하면 태그가 안 생긴다. 빌드가 이미 올라가 있으면
   `git tag v<버전>-<빌드> <릴리스 커밋> && git push origin v<버전>-<빌드>`로 직접 찍는다.
 
