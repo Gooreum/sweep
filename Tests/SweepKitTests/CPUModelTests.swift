@@ -259,4 +259,73 @@ struct CPUModelTests {
 
         #expect(try #require(model.unlistedPercent) == 0)
     }
+
+    // 선택과 자세한 정보
+    @Test("행을 누르면 그 프로그램의 자세한 정보가 채워진다")
+    func selectFillsDetails() {
+        let model = CPUModel(detailsReader: { fakeDetailsSendable($0) })
+        model.select(42)
+        #expect(model.selectedPID == 42)
+        #expect(model.details?.pid == 42)
+    }
+
+    @Test("같은 행을 다시 누르면 선택이 풀린다")
+    func selectTwiceClears() {
+        let model = CPUModel(detailsReader: { fakeDetailsSendable($0) })
+        model.select(42)
+        model.select(42)
+        #expect(model.selectedPID == nil)
+        #expect(model.details == nil)
+    }
+
+    @Test("다른 행을 누르면 선택이 옮겨 간다")
+    func selectOtherMoves() {
+        let model = CPUModel(detailsReader: { fakeDetailsSendable($0) })
+        model.select(1)
+        model.select(2)
+        #expect(model.selectedPID == 2)
+        #expect(model.details?.pid == 2)
+    }
+
+    @Test("고른 프로그램이 끝나면 선택은 남고 정보만 비어 '끝났다'를 말할 수 있다")
+    func vanishedProcessKeepsSelection() {
+        let model = CPUModel(detailsReader: { _ in nil })
+        model.select(7)
+        #expect(model.selectedPID == 7)
+        #expect(model.details == nil)
+    }
+
+    @Test("주기마다 고른 프로그램의 정보를 다시 읽는다")
+    func refreshesDetailsEachRound() async {
+        let counter = Counter()
+        let model = CPUModel(
+            interval: .milliseconds(10), cores: 1,
+            sample: climbing(pids: [1], step: 1_000_000, counter: counter),
+            detailsReader: { pid in fakeDetailsSendable(pid, memory: UInt64(counter.bump())) })
+        model.select(1)
+        let first = model.details?.memoryBytes
+
+        let task = Task { await model.run() }
+        await waitForUsage(model)
+        task.cancel()
+
+        #expect(model.details?.memoryBytes != first)
+    }
+
+    @Test("고른 게 없으면 정보를 읽지 않는다")
+    func noSelectionNoRead() async {
+        let reads = Counter()
+        let model = CPUModel(
+            interval: .milliseconds(10), cores: 1,
+            sample: climbing(pids: [1], step: 1_000_000, counter: Counter()),
+            detailsReader: { pid in _ = reads.bump(); return fakeDetailsSendable(pid) })
+        let task = Task { await model.run() }
+        await waitForUsage(model)
+        task.cancel()
+        #expect(reads.count == 0)
+    }
+}
+
+private func fakeDetailsSendable(_ pid: pid_t, memory: UInt64 = 100) -> ProcessDetails {
+    ProcessDetails(pid: pid, name: "fileproviderd", isMine: true, memoryBytes: memory)
 }

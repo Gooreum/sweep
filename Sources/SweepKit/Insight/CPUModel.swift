@@ -50,10 +50,20 @@ public final class CPUModel {
     /// 테스트·데모에서 화면 문구와 실제 분모가 어긋난다.
     public let cores: Int
 
+    /// 표에서 고른 프로그램. 합계 행은 고를 수 없다.
+    ///
+    /// 고른 뒤 그 프로그램이 끝나도 유지한다 — `details`만 nil이 되어 화면이
+    /// "이 프로그램은 끝났어요"라고 말한다. 선택이 말없이 풀리면 사용자가 방금 누른 것이 사라진다.
+    public private(set) var selectedPID: pid_t?
+
+    /// 고른 프로그램의 자세한 정보. 못 찾으면 nil.
+    public private(set) var details: ProcessDetails?
+
     private let interval: Duration
     private let limit: Int
     private let sample: @Sendable () -> [ProcessCPUTick]
     private let loadSample: @Sendable () -> CPULoadTicks?
+    private let detailsReader: @Sendable (pid_t) -> ProcessDetails?
 
     /// `sample`을 갈아끼울 수 있게 뒀다 — 실제 프로세스를 띄우지 않고
     /// 주기·상한·취소를 검사하기 위해서다. `ItemActions`가 Finder 호출을
@@ -63,13 +73,22 @@ public final class CPUModel {
         limit: Int = 20,
         cores: Int = ProcessCPUSampler.coreCount,
         sample: @escaping @Sendable () -> [ProcessCPUTick] = ProcessCPUSampler.tick,
-        loadSample: @escaping @Sendable () -> CPULoadTicks? = SystemCPULoad.tick
+        loadSample: @escaping @Sendable () -> CPULoadTicks? = SystemCPULoad.tick,
+        detailsReader: @escaping @Sendable (pid_t) -> ProcessDetails? = ProcessDetailsReader.read(pid:)
     ) {
         self.interval = interval
         self.limit = limit
         self.cores = cores
         self.sample = sample
         self.loadSample = loadSample
+        self.detailsReader = detailsReader
+    }
+
+    /// 행을 눌렀을 때. 같은 행을 다시 누르면 선택을 푼다. 읽는 건 프로세스 한 개와
+    /// 목록 한 번이라 메인에서 바로 읽어도 화면이 멈추지 않는다.
+    public func select(_ pid: pid_t?) {
+        selectedPID = (pid == selectedPID) ? nil : pid
+        details = selectedPID.flatMap(detailsReader)
     }
 
     /// 뷰의 `.task`가 붙잡는다. 탭을 떠나면 SwiftUI가 취소하므로 따로 멈출 필요가 없다 —
@@ -105,6 +124,11 @@ public final class CPUModel {
                 currentLoad.flatMap { SystemCPULoad.compute(from: before, to: $0) }
             }
             isWarmingUp = false
+            // 메모리 같은 값은 흘러가므로 주기마다 다시 읽는다. 고른 게 없으면 읽지 않는다.
+            if let pid = selectedPID {
+                let reader = detailsReader
+                details = await Task.detached(priority: .utility) { reader(pid) }.value
+            }
             previous = current
             previousLoad = currentLoad
             previousAt = now

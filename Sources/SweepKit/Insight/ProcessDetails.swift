@@ -47,6 +47,9 @@ public struct ProcessDetails: Sendable, Equatable {
     public let executablePath: String?
     public let app: AppIdentity?
 
+    /// 사전에 있는 프로그램이면 쉬운 설명. 없으면 nil — 설명을 지어내지 않는다.
+    public var known: KnownProcess? { KnownProcess.match(name: name) }
+
     public init(
         pid: pid_t, name: String, isMine: Bool, startedAt: Date? = nil,
         launchedBy: [ProcessAncestor] = [], memoryBytes: UInt64? = nil, threads: Int? = nil,
