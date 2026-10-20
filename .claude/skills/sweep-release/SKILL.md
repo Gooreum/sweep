@@ -34,6 +34,11 @@ BASE=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null \
 git log --no-merges --format='%h %s' "$BASE"..HEAD
 ```
 
+**설명문의 이름도 확인한다.** 이번 변경으로 사이드바 이름이 바뀌었거나 새 탭이 생겼으면
+`grep -n "스마트 스캔\|정크\|디스크 맵\|Smart Scan\|Junk\|Disk Map" fastlane/metadata/*/description.txt`로 옛 이름이
+남았는지 본다. 남았으면 앱 정보 탭 설명에 적어 사용자가 고르게 한다(스크린샷과 설명의 이름이 앱과 다르면
+심사에서 지적받는다).
+
 **업데이트 내용 초안을 여기서 미리 쓴다** (탭 미리보기에 넣어야 해서다).
 사용자에게 보이는 변화만 고른다. 리팩터·테스트·문서·CI·빌드 번호 커밋은 뺀다.
 `fastlane/metadata/{ko,en-US}/release_notes.txt`의 이전 문체(첫 줄 한 문장 + `• 제목 — 설명` 목록)를 따라
@@ -114,6 +119,13 @@ bash scripts/make-archive.sh --check-only
 1. 현재 소스로 앱을 빌드한다: `bash scripts/make-app.sh`
 2. 원본을 찍는다. Sweep 창이 잠깐씩 앞으로 뜬다고 먼저 말한다.
    `bash scripts/capture-store-shots.sh <장면...>` → `.build/store-captures/{ko,en}/`
+   Stage Manager 때문에 `could not create image from window`나 썸네일 크기로 실패하면
+   `.build/store-captures`를 지우고 **최대 3번까지** 다시 돌린다.
+   en 캡처에 한국어가 남았으면 `StoreDemo.swift`의 가짜 데이터 문구가 실제 스캐너 문구와 다른 것이다 —
+   같은 `String(localized:)` 키를 쓰게 고친다(`scripts/l10n.sh`는 StoreDemo를 번역 대상에서 빼서 이걸 못 잡는다).
+   새 기능 탭이 생겼으면 `StoreDemo`에 가짜 데이터 장면(`store-<이름>`)을 더하고
+   `scripts/capture-store-shots.sh`의 `ALL`과 `scripts/store-screenshots.json`에도 넣는다. 진짜 데이터를 쓰면
+   이 Mac의 실제 프로그램·파일 이름이 스토어에 나간다.
 3. **합성은 Codex에 맡긴다** (`codex` 스킬의 `codex exec` 패턴, `-s workspace-write`).
    프롬프트에 담을 것:
    - 원본 경로와 장면 목록
@@ -150,6 +162,11 @@ gh run watch "$RUN" --exit-status
   빌드는 업로드 뒤 처리에 몇 분~수십 분 걸린다.
 - 실패: `gh run view "$RUN" --log-failed | tail -60`을 읽고 원인을 요약한다. 고칠 수 있으면 고치고,
   같은 빌드 번호로 다시 올리지 않도록 확인한 뒤 `gh workflow run appstore.yml -f build=true`처럼 수동 실행한다.
+- **스크린샷 교체가 `Failed to delete screenshot ... APP_DESKTOP`로 실패하면**: 이미 올라간 스크린샷을 API로 못 지우는
+  것이다(빌드 업로드는 끝나 있다). 같은 명령을 반복하지 말고 사용자에게 **App Store Connect 웹에서 해당 버전의 기존
+  스크린샷을 지워 달라**고 부탁한다. 지운 뒤 `gh workflow run appstore.yml -f metadata=true -f screenshots=true`.
+- 빌드 없이 수동 실행(`build=false`)하면 태그가 안 생긴다. 빌드가 이미 올라가 있으면
+  `git tag v<버전>-<빌드> <릴리스 커밋> && git push origin v<버전>-<빌드>`로 직접 찍는다.
 
 ## 참고
 
