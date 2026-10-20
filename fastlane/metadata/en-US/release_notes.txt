@@ -1,8 +1,6 @@
-Sweep now looks further and tells you more.
+See what is slowing your Mac down, and every message is easier to understand.
 
-• Trash — See what's in the Trash by size and empty only what you choose, including iCloud Drive and external drive trash.
-• Wider search — Find large and duplicate files across your home folder and folders you add, plus iOS device backups, Mail attachments and Gradle, Cargo and Maven caches.
-• Disk Map verdicts — Every item is marked Safe to delete, Needs review or Protected, with the reason.
-• Sortable lists — Click a column header to sort by name, size, date or safety.
-• Live free space — Available space updates right after you clean up or undo.
-• Fixes — Files deleted from another tab no longer reappear in results, and more.
+• CPU tab — See which programs keep your Mac busy, using the same numbers as Activity Monitor.
+• Program details — Click a program to see what it is, who started it, how long it has been running, its memory and the command it was started with.
+• Plainer wording — Every message in the app was rewritten so anyone can follow it.
+• New menu names — Smart Scan is now “Search All”, Junk Files is “Files to Clean” and Disk Map is “Space View”.
