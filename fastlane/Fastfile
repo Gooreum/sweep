@@ -20,6 +20,46 @@ platform :mac do
     versions.each { |version, state| UI.message("#{version}  #{state}") }
   end
 
+  # 이전 버전이 심사에 제출돼 있으면 deliver가 올바로 일하지 못한다.
+  #
+  # deliver는 심사 대기(`WAITING_FOR_REVIEW`) 버전을 "수정할 버전"으로 잡는다. 그러면 제출된 버전의
+  # 이름을 새 버전으로 **바꿔 버리고**(1.0.3이 1.0.4가 됐다), 스크린샷은 제출 뒤라 API로 못 지운다
+  # ("Can't Delete Screenshot After Submit for review"). 사람이 웹에서 심사를 철회하고 지워야만 통과했다.
+  #
+  # 그래서 deliver를 부르기 전에 상태를 본다. 철회는 심사 순서를 잃는 일이라 `cancel_review:true`를
+  # 명시했을 때만 한다. 심사가 이미 진행 중(`IN_REVIEW`)이면 철회할 수 없다.
+  private_lane :release_guard do |options|
+    app = Spaceship::ConnectAPI::App.find(CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier))
+    UI.user_error!("App Store Connect에서 앱을 찾지 못했다") unless app
+
+    submitted = lambda do
+      app.get_app_store_versions(
+        filter: { platform: "MAC_OS", appVersionState: "WAITING_FOR_REVIEW,IN_REVIEW" }, limit: 10)
+    end
+    pending = submitted.call
+    next if pending.empty?
+
+    names = pending.map { |v| "#{v.version_string} (#{v.app_version_state})" }.join(", ")
+    if pending.any? { |v| v.app_version_state == "IN_REVIEW" }
+      UI.user_error!("#{names} — 심사가 진행 중이라 철회할 수 없어요. 심사가 끝난 뒤 다시 실행하세요.")
+    end
+    unless options[:cancel_review].to_s == "true"
+      UI.user_error!("#{names} — 심사에 제출돼 있어서 앱 정보·스크린샷을 올릴 수 없어요. " \
+                     "제출을 철회하고 올리려면 cancel_review=true로 다시 실행하세요(심사 순서를 잃어요).")
+    end
+
+    app.get_review_submissions(filter: { platform: "MAC_OS", state: "WAITING_FOR_REVIEW" }).each do |submission|
+      UI.important("심사 제출을 철회한다: #{names}")
+      submission.cancel_submission
+    end
+    # 철회가 반영될 때까지 기다린다. 반영 전에 deliver가 돌면 같은 오류가 난다.
+    24.times do
+      break if submitted.call.empty?
+      sleep(5)
+    end
+    UI.user_error!("심사 철회가 2분 안에 반영되지 않았어요. App Store Connect에서 상태를 확인하세요.") unless submitted.call.empty?
+  end
+
   # [버전 문자열, 상태] 목록. 최근 것부터.
   private_lane :versions do
     app = Spaceship::ConnectAPI::App.find(CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier))
@@ -31,6 +71,7 @@ platform :mac do
 
   lane :metadata do |options|
     api_key
+    release_guard(options)
     deliver(
       platform: "osx",
       app_version: options[:version],
