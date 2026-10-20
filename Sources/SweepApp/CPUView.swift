@@ -24,7 +24,10 @@ struct CPUView: View {
             header
             HStack(alignment: .top, spacing: 10) {
                 chart.frame(width: 272)
-                processTable
+                VStack(spacing: 10) {
+                    processTable
+                    detailPanel
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
@@ -209,17 +212,19 @@ struct CPUView: View {
     }
 
     private func row(_ item: CPURow) -> some View {
-        HStack(spacing: 0) {
+        let selected = item.pid != nil && item.pid == model.selectedPID
+        return HStack(spacing: 0) {
             Text(item.formattedPercent)
-                .font(R95.mono(12)).foregroundStyle(R95.navy)
+                .font(R95.mono(12)).foregroundStyle(selected ? R95.white : R95.navy)
                 .padding(.horizontal, 6)
                 .frame(width: Columns.percent, alignment: .trailing)
             VStack(alignment: .leading, spacing: 2) {
                 Text(name(of: item)).font(R95.ui(12, bold: true))
-                    .foregroundStyle(R95.black)
+                    .foregroundStyle(selected ? R95.white : R95.black)
                     .lineLimit(1).truncationMode(.middle)
                 if let detail = detail(of: item) {
-                    Text(detail).font(R95.ui(10)).foregroundStyle(R95.deep)
+                    Text(detail).font(R95.ui(10))
+                        .foregroundStyle(selected ? R95.white : R95.deep)
                         .lineLimit(1).truncationMode(.middle)
                 }
             }
@@ -227,7 +232,8 @@ struct CPUView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             // 열 머리가 이미 PID라 "pid " 접두어를 빼야 좁은 칸에서 줄이 꺾이지 않는다.
             // 합계 행은 여러 프로세스라 pid가 없다.
-            Text(verbatim: item.pidText).font(R95.mono(10)).foregroundStyle(R95.deep)
+            Text(verbatim: item.pidText).font(R95.mono(10))
+                .foregroundStyle(selected ? R95.white : R95.deep)
                 .padding(.horizontal, 6)
                 .frame(width: Columns.pid, alignment: .trailing)
             HStack(spacing: 4) {
@@ -240,6 +246,9 @@ struct CPUView: View {
             .frame(width: Columns.actions)
         }
         .frame(minHeight: R95.tableRowHeight)
+        .background(selected ? R95.navy : Color.clear)
+        .contentShape(Rectangle())
+        .onTapGesture { if let pid = item.pid { model.select(pid) } }
     }
 
     private func detail(of row: CPURow) -> String? {
@@ -248,6 +257,105 @@ struct CPUView: View {
         case .unlisted:
             String(localized: "Mac을 움직이는 프로그램과 잠깐 실행된 프로그램을 합친 값이에요. App Store 버전에서는 각각 나눠 볼 수 없어요.")
         }
+    }
+
+
+    // MARK: - 자세히
+
+    private var detailPanel: some View {
+        Retro95GroupBox(title: String(localized: "자세히")) {
+            Group {
+                if let details = model.details {
+                    detailContent(details)
+                } else if model.selectedPID != nil {
+                    Text("이 프로그램은 이미 끝났어요. 다른 프로그램을 눌러 보세요.")
+                        .font(R95.ui(12)).foregroundStyle(R95.deep)
+                } else {
+                    Text("프로그램을 누르면 어떤 일을 하고 누가 켰는지 알려 드려요.")
+                        .font(R95.ui(12)).foregroundStyle(R95.deep)
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func detailContent(_ details: ProcessDetails) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                if let app = details.app {
+                    Image(nsImage: NSWorkspace.shared.icon(forFile: app.path))
+                        .resizable().frame(width: 24, height: 24)
+                }
+                Text(details.name).font(R95.ui(13, bold: true)).foregroundStyle(R95.black)
+                if let app = details.app {
+                    Text(appLine(app)).font(R95.ui(11)).foregroundStyle(R95.deep)
+                } else if !details.isMine {
+                    Text("Mac이 켠 프로그램이에요").font(R95.ui(11)).foregroundStyle(R95.deep)
+                }
+            }
+            if let known = details.known {
+                Text(known.summary).font(R95.ui(12)).foregroundStyle(R95.black)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("\(known.whenBusy) \(adviceText(known.advice))")
+                    .font(R95.ui(12)).foregroundStyle(R95.deep)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Rectangle().fill(R95.light).frame(height: 1)
+            fact(String(localized: "누가 켰나요"), details.launchedByText
+                ?? (details.launchedBy.isEmpty ? String(localized: "macOS가 직접 켰어요") : nil))
+            fact(String(localized: "켜진 지"), details.runningText())
+            fact(String(localized: "메모리"), details.memoryText)
+            fact(String(localized: "실행한 명령"), details.commandLineText, copy: details.arguments)
+            fact(String(localized: "파일 위치"), details.executablePath.map(displayPath), reveal: details.executablePath)
+        }
+    }
+
+    /// 한 줄. 값이 없으면(못 읽었으면) 줄을 그리지 않는다 — "알 수 없음"으로 채우지 않는다.
+    @ViewBuilder
+    private func fact(_ label: String, _ value: String?, copy: [String]? = nil, reveal: String? = nil) -> some View {
+        if let value {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(label).font(R95.ui(11, bold: true)).foregroundStyle(R95.deep)
+                    .frame(width: 92, alignment: .leading)
+                Text(verbatim: value).font(R95.ui(11)).foregroundStyle(R95.black)
+                    .lineLimit(2).truncationMode(.middle)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if copy != nil {
+                    Button("복사") { ItemActions.copyText(value) }
+                        .buttonStyle(Retro95ButtonStyle()).fixedSize()
+                }
+                if let reveal {
+                    iconButton(.folder, String(localized: "Finder에서 보기")) {
+                        ItemActions.reveal(URL(filePath: reveal))
+                    }
+                    iconButton(.documents, String(localized: "위치 복사")) {
+                        ItemActions.copyPath(URL(filePath: reveal))
+                    }
+                }
+            }
+        }
+    }
+
+    private func appLine(_ app: AppIdentity) -> String {
+        if let version = app.version {
+            String(localized: "\(app.name) \(version)에 들어 있어요")
+        } else {
+            String(localized: "\(app.name)에 들어 있어요")
+        }
+    }
+
+    private func adviceText(_ advice: KnownProcess.Advice) -> String {
+        switch advice {
+        case .leaveIt: String(localized: "끄지 마세요. Mac에 꼭 필요해요.")
+        case .safeToQuit: String(localized: "끝내도 괜찮아요. 하던 일만 멈춰요.")
+        case .quitInApp: String(localized: "그 프로그램을 열어서 끝내 주세요.")
+        }
+    }
+
+    private func displayPath(_ path: String) -> String {
+        let home = NSHomeDirectory()
+        return path.hasPrefix(home) ? "~" + path.dropFirst(home.count) : path
     }
 
     /// 활성 상태 보기를 연다. **샌드박스에서도 된다** — 실측으로 확인했다.
@@ -280,6 +388,11 @@ struct CPUView: View {
 }
 
 private extension CPURow {
+    /// 합계 행은 프로세스 하나가 아니라 고를 수 없다.
+    var pid: pid_t? {
+        if case .process(let usage) = self { usage.pid } else { nil }
+    }
+
     var pidText: String {
         switch self {
         case .process(let usage): "\(usage.pid)"

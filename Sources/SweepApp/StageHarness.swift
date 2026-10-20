@@ -38,6 +38,14 @@ struct StageHarness: View {
                 // 가짜 데이터를 넣지 않는다. 실제 수집이 2초면 끝나므로
                 // 진짜 프로세스로 확인하는 편이 화면을 더 정확히 보여준다.
                 CPUView(model: cpu)
+                    // 확인용: `--cpu-select <pid>`로 행을 누른 상태를 재현한다.
+                    .onAppear {
+                        let args = CommandLine.arguments
+                        if let flag = args.firstIndex(of: "--cpu-select"),
+                           args.indices.contains(flag + 1), let pid = pid_t(args[flag + 1]) {
+                            cpu.select(pid)
+                        }
+                    }
             } else if stage == "diskmap" {
                 if let diskMap {
                     DiskMapView(model: diskMap, app: app)

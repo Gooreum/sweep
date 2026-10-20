@@ -99,3 +99,47 @@ struct ProcessDetailsTests {
         #expect(app.version != nil)
     }
 }
+
+@Suite("ProcessDetails 표시")
+struct ProcessDetailsTextTests {
+    private let now = Date(timeIntervalSince1970: 1_800_000_000)
+
+    private func details(startedAgo seconds: TimeInterval?, args: [String]? = nil,
+                         parents: [String] = [], memory: UInt64? = nil) -> ProcessDetails {
+        ProcessDetails(
+            pid: 5, name: "x", isMine: true,
+            startedAt: seconds.map { now.addingTimeInterval(-$0) },
+            launchedBy: parents.enumerated().map { ProcessAncestor(pid: pid_t($0.offset + 10), name: $0.element) },
+            memoryBytes: memory, arguments: args)
+    }
+
+    @Test("켜진 시간은 일·시간, 시간·분, 분, 방금 순으로 말한다")
+    func runningText() {
+        #expect(details(startedAgo: 11 * 86_400 + 11 * 3_600).runningText(now: now)?.contains("11일 11시간") == true)
+        #expect(details(startedAgo: 3 * 3_600 + 20 * 60).runningText(now: now)?.contains("3시간 20분") == true)
+        #expect(details(startedAgo: 5 * 60).runningText(now: now)?.contains("5분") == true)
+        #expect(details(startedAgo: 10).runningText(now: now) != nil)
+        #expect(details(startedAgo: nil).runningText(now: now) == nil)
+    }
+
+    @Test("부모 사슬은 먼 쪽부터 가까운 쪽 순서로 잇는다")
+    func launchedByOrder() {
+        #expect(details(startedAgo: 1, parents: ["zsh", "터미널"]).launchedByText == "터미널 › zsh")
+        #expect(details(startedAgo: 1).launchedByText == nil)
+    }
+
+    @Test("실행 명령의 사용자 폴더는 ~로 줄인다")
+    func commandLineTilde() {
+        let home = NSHomeDirectory()
+        #expect(details(startedAgo: 1, args: ["node", "\(home)/app/server.js"]).commandLineText
+            == "node ~/app/server.js")
+        #expect(details(startedAgo: 1, args: []).commandLineText == nil)
+        #expect(details(startedAgo: 1, args: nil).commandLineText == nil)
+    }
+
+    @Test("메모리는 사람이 읽는 단위로, 모르면 nil")
+    func memoryText() {
+        #expect(details(startedAgo: 1, memory: 200 * 1_048_576).memoryText != nil)
+        #expect(details(startedAgo: 1, memory: nil).memoryText == nil)
+    }
+}

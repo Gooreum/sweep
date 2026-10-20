@@ -68,6 +68,39 @@ public struct ProcessDetails: Sendable, Equatable {
     }
 }
 
+extension ProcessDetails {
+
+    /// "11일 11시간째", "3시간 20분째", "5분째", "방금 켜졌어요". 모르면 nil.
+    public func runningText(now: Date = Date()) -> String? {
+        guard let startedAt else { return nil }
+        let minutes = max(0, Int(now.timeIntervalSince(startedAt) / 60))
+        let days = minutes / 1440, hours = minutes % 1440 / 60, rest = minutes % 60
+        if days > 0 { return String(localized: "\(days)일 \(hours)시간째") }
+        if hours > 0 { return String(localized: "\(hours)시간 \(rest)분째") }
+        if rest > 0 { return String(localized: "\(rest)분째") }
+        return String(localized: "방금 켜졌어요")
+    }
+
+    /// "182.5 MB". 모르면 nil.
+    public var memoryText: String? {
+        memoryBytes.map { ByteCountFormatter.string(fromByteCount: Int64($0), countStyle: .memory) }
+    }
+
+    /// 가까운 부모부터 먼 부모 순서를 사람이 읽는 순서(먼 쪽 › 가까운 쪽)로 뒤집는다.
+    /// "터미널 › zsh › xcodebuild". 부모가 launchd뿐이면 nil.
+    public var launchedByText: String? {
+        launchedBy.isEmpty ? nil : launchedBy.reversed().map(\.name).joined(separator: " › ")
+    }
+
+    /// 실행할 때 준 명령 한 줄. 사용자 폴더는 `~`로 줄인다.
+    public var commandLineText: String? {
+        guard let arguments, !arguments.isEmpty else { return nil }
+        let home = NSHomeDirectory()
+        return arguments.map { $0.hasPrefix(home) ? "~" + $0.dropFirst(home.count) : $0 }
+            .joined(separator: " ")
+    }
+}
+
 public enum ProcessDetailsReader {
 
     /// 부모를 몇 단계까지 거슬러 오를지. 터미널 › zsh › xcodebuild 정도면 충분하고,
