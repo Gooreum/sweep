@@ -31,7 +31,7 @@ struct DevCacheScannerTests {
         #expect(items.count == 1)
         #expect(items.first?.category == .devCache)
         #expect(items.first?.safety == .safe)
-        #expect(items.first?.detail == "Swift Package Manager 캐시")
+        #expect(items.first?.detail == "Swift Package Manager 임시 파일")
     }
 
     // TC-2
@@ -157,7 +157,7 @@ struct DevCacheScannerTests {
         #expect(items.count == 1)
         #expect(items.first?.category == .devCache)
         #expect(items.first?.safety == .safe)
-        #expect(items.first?.detail == "로그 파일입니다")
+        #expect(items.first?.detail == "앱을 쓰면서 쌓인 기록이에요")
         #expect(items.first?.displayName == "MyApp")
     }
 
@@ -173,8 +173,8 @@ struct DevCacheScannerTests {
         let byName = Dictionary(uniqueKeysWithValues: items.map { ($0.displayName, $0) })
 
         #expect(items.count == 2)
-        #expect(byName["pnpm"]?.detail == "pnpm 스토어 캐시")
-        #expect(byName["Simulator"]?.detail == "로그 파일입니다")
+        #expect(byName["pnpm"]?.detail == "pnpm 설치 임시 파일")
+        #expect(byName["Simulator"]?.detail == "앱을 쓰면서 쌓인 기록이에요")
     }
 
     // TC-5
@@ -239,8 +239,8 @@ struct DevCacheScannerTests {
         let byDetail = Dictionary(uniqueKeysWithValues: items.map { ($0.detail, $0) })
 
         #expect(items.count == 2)
-        #expect(byDetail["npm 내려받기 캐시"]?.safety == .safe)
-        #expect(byDetail["npx 실행 캐시"] != nil)
+        #expect(byDetail["npm 설치 임시 파일"]?.safety == .safe)
+        #expect(byDetail["npx 실행 임시 파일"] != nil)
         #expect(items.allSatisfy { $0.category == .devCache })
     }
 
@@ -260,7 +260,7 @@ struct DevCacheScannerTests {
         let items = await DevCacheScanner(home: home).scan()
 
         #expect(items.count == 1)
-        #expect(items.first?.detail == "Expo 버전 캐시")
+        #expect(items.first?.detail == "Expo 버전 임시 파일")
         #expect(!items.contains { $0.url.lastPathComponent == "ngrok.yml" })
         #expect(!items.contains { $0.url.lastPathComponent == "state.json" })
     }
@@ -304,6 +304,6 @@ struct DevCacheScannerTests {
         #expect(paths == [".gradle/caches/modules-2", ".gradle/caches/8.5",
                           ".cargo/registry/cache", ".m2/repository/org"])
         #expect(items.allSatisfy { $0.safety == .safe })
-        #expect(items.first { $0.displayName == "cache" }?.detail == "Cargo 레지스트리 캐시")
+        #expect(items.first { $0.displayName == "cache" }?.detail == "Cargo 설치 임시 파일")
     }
 }

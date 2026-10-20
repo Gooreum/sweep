@@ -92,10 +92,10 @@ public struct RunawayTempScanner: CleanupScanner {
 
     /// "33.0 MB/분 증가 중"처럼 사람이 판단할 수 있는 속도로 환산한다.
     static func detail(growth: Int64, over interval: Duration) -> String {
-        guard growth > 0 else { return String(localized: "증가 없음 — 남겨진 임시 파일") }
+        guard growth > 0 else { return String(localized: "더 커지지 않는 임시 파일이에요") }
         let seconds = Double(interval.components.seconds)
-        guard seconds > 0 else { return String(localized: "증가 중") }
+        guard seconds > 0 else { return String(localized: "커지는 중") }
         let perMinute = Int64(Double(growth) / seconds * 60)
-        return String(localized: "\(ByteCountFormatter.string(fromByteCount: perMinute, countStyle: .file))/분 증가 중")
+        return String(localized: "1분에 \(ByteCountFormatter.string(fromByteCount: perMinute, countStyle: .file))씩 커져요")
     }
 }

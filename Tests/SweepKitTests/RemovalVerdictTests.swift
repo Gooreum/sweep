@@ -38,14 +38,14 @@ struct RemovalVerdictTests {
     @Test("내 파일·앱 데이터는 확인 필요이고 위치마다 사유가 다르다")
     func userContentIsCautionWithLocationReason() {
         let cases: [(String, String)] = [
-            ("Documents/a.mov", "내 파일"),
-            ("Downloads/x.dmg", "내려받은"),
-            ("Library/Application Support/Notion", "앱 데이터"),
-            ("Library/Containers/com.example.app", "샌드박스 앱"),
-            ("Library/Developer/Xcode/Archives/a.xcarchive", "심사 제출본"),
-            ("Applications/Foo.app", "응용 프로그램"),
-            ("Library/Fonts/x.ttf", "설정 데이터"),
-            ("Library/Developer/CoreSimulator/Devices/ABC", "시뮬레이터 기기"),
+            ("Documents/a.mov", "개인 파일"),
+            ("Downloads/x.dmg", "다시 구할 수 있는 파일"),
+            ("Library/Application Support/Notion", "앱이 보관하는 파일"),
+            ("Library/Containers/com.example.app", "삭제한 앱이 남긴 파일"),
+            ("Library/Developer/Xcode/Archives/a.xcarchive", "심사에 낸 앱"),
+            ("Applications/Foo.app", "이 앱을 삭제해요"),
+            ("Library/Fonts/x.ttf", "컴퓨터나 앱의 설정"),
+            ("Library/Developer/CoreSimulator/Devices/ABC", "앱을 실행해 보는 가상 기기"),
         ]
         for (path, keyword) in cases {
             let verdict = classify(path)
@@ -61,7 +61,7 @@ struct RemovalVerdictTests {
     func outsideHomeIsCaution() {
         let verdict = RemovalVerdict.classify(URL(filePath: "/opt/homebrew/Cellar/node"), home: home)
         #expect(isCaution(verdict))
-        #expect(verdict.reason.contains("홈 밖"))
+        #expect(verdict.reason.contains("내 폴더 바깥"))
     }
 
     // TC-4
@@ -103,7 +103,7 @@ struct RemovalVerdictTests {
     @Test("좁은 규칙이 넓은 규칙을 이긴다")
     func narrowRuleWinsOverBroad() {
         // DerivedData는 Library 안이지만 "설정 데이터"가 아니라 "빌드하면 다시 생성"이다
-        #expect(classify("Library/Developer/Xcode/DerivedData/App").reason.contains("빌드"))
+        #expect(classify("Library/Developer/Xcode/DerivedData/App").reason.contains("새로 만들어져요"))
         // Application Support 안이라도 끝 이름이 캐시면 지워도 됨
         #expect(isSafe(classify("Library/Application Support/Figma/DesktopProfile/v39/GPUCache")))
         #expect(isCaution(classify("Library/Application Support/Figma/DesktopProfile/v39")))

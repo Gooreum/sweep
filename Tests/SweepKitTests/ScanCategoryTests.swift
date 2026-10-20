@@ -49,8 +49,8 @@ struct ScanCategoryTests {
     // TC-4
     @Test("신규 두 카테고리의 표시 정보가 의도대로다")
     func newCategoriesAreLabelled() {
-        #expect(ScanCategory.staleCache.displayName == "묵은 캐시")
-        #expect(ScanCategory.largeFile.displayName == "대용량 파일")
+        #expect(ScanCategory.staleCache.displayName == "오래된 임시 파일")
+        #expect(ScanCategory.largeFile.displayName == "큰 파일")
         #expect(ScanCategory.staleCache.systemImageName == "clock.arrow.circlepath")
         #expect(ScanCategory.largeFile.systemImageName == "arrow.down.doc.fill")
     }

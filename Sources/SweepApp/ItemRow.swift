@@ -125,7 +125,7 @@ struct ItemRow: View {
         // 지우기 전에 열어 보고 경로를 복사할 길을 남긴다.
         .contextMenu {
             Button("Finder에서 보기") { ItemActions.reveal(item.url) }
-            Button("경로 복사") { ItemActions.copyPath(item.url) }
+            Button("위치 복사") { ItemActions.copyPath(item.url) }
         }
     }
 }

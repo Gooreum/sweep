@@ -46,4 +46,7 @@ public enum ItemActions {
     /// 경로를 붙임판에 넣는다. 사람이 터미널에 붙여 넣을 값이므로
     /// 퍼센트 인코딩이 아니라 파일 시스템 경로 원문을 준다.
     public static func copyPath(_ url: URL) { writeToPasteboard(url.path) }
+
+    /// 글자 그대로 붙임판에 넣는다. 프로그램을 실행할 때 준 명령처럼 경로가 아닌 값에 쓴다.
+    public static func copyText(_ text: String) { writeToPasteboard(text) }
 }

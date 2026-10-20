@@ -30,10 +30,10 @@ struct MenuBarPanel: View {
         .frame(width: Theme.panelWidth)
         // 패널은 열 때마다 지금 디스크 용량을 보여준다. 마지막 정리 뒤 시간이 지났을 수 있다.
         .onAppear { app.refreshVolumeUsage() }
-        .alert("휴지통을 열지 못했습니다", isPresented: $trashOpenFailed) {
+        .alert("휴지통을 열지 못했어요", isPresented: $trashOpenFailed) {
             Button("확인") {}
         } message: {
-            Text("Dock의 휴지통을 열어 비워 주세요.")
+            Text("화면 아래 휴지통을 직접 열어 주세요. 비우면 되돌릴 수 없으니 안에 있는 파일을 먼저 확인해 주세요.")
         }
         .foregroundStyle(R95.black)
         .background(R95.gray)
@@ -60,7 +60,7 @@ struct MenuBarPanel: View {
 
                 Retro95ProgressBar(fraction: usage.usedFraction)
 
-                Text("사용 가능: \(usage.formattedAvailable)  전체: \(usage.formattedTotal)")
+                Text("남은 공간은 \(usage.formattedAvailable)이에요. 전체는 \(usage.formattedTotal)이에요.")
                     .font(Theme.caption)
                     .foregroundStyle(.secondary)
             }
@@ -73,7 +73,7 @@ struct MenuBarPanel: View {
         VStack(alignment: .leading, spacing: 8) {
             if let percent = summary.scanPercent {
                 HStack {
-                    Text("훑는 중").font(Theme.bodyText)
+                    Text("검색 중").font(Theme.bodyText)
                     Spacer()
                     Text("\(percent)%")
                         .font(Theme.bodyText.monospacedDigit())
@@ -82,7 +82,7 @@ struct MenuBarPanel: View {
                 Retro95ProgressBar(fraction: Double(percent) / 100)
             } else if let reclaimable = summary.reclaimable {
                 HStack {
-                    Text("회수 가능").font(Theme.bodyText.weight(.medium))
+                    Text("정리 후보").font(Theme.bodyText.weight(.medium))
                     Spacer()
                     Text(reclaimable)
                         .font(Theme.headlineMono)
@@ -96,7 +96,7 @@ struct MenuBarPanel: View {
                             .font(Theme.caption)
                             .foregroundStyle(.secondary)
                         Spacer()
-                        Text("\(row.formattedSize) · \(row.count)개")
+                        Text("\(row.count)개, \(row.formattedSize)")
                             .font(Theme.caption)
                             .foregroundStyle(.secondary)
                             .monospacedDigit()
@@ -104,7 +104,7 @@ struct MenuBarPanel: View {
                 }
             } else {
                 // 훑지 않은 것과 훑었는데 없는 것은 다르다. 0을 지어내지 않는다.
-                Text("아직 훑어보지 않았습니다")
+                Text("검색을 눌러 정리할 파일을 찾아보세요")
                     .font(Theme.bodyText)
                     .foregroundStyle(.secondary)
             }

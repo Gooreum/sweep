@@ -30,7 +30,7 @@ struct FeatureScreen: View {
             // 휴지통은 전체 디스크 접근 없이는 읽히지 않는다. 그때 결과는 "비어 있음"이라
             // 휴지통이 빈 것과 구분되지 않는다 — 화면 위에 이유를 먼저 둔다.
             if feature == .trash, FullDiskAccessBanner.isNeeded {
-                FullDiskAccessBanner(message: String(localized: "켜야 휴지통 안을 볼 수 있습니다. 꺼져 있으면 비어 있는 것처럼 보입니다."))
+                FullDiskAccessBanner(message: String(localized: "휴지통이 비어 보이나요? 전체 디스크 접근을 켜야 안에 있는 파일을 확인할 수 있어요."))
             }
 
             if feature == .trash, showsLeftovers, !adminLeftovers.isEmpty {
@@ -112,11 +112,11 @@ struct FeatureScreen: View {
             // 다 끝나기 전에도 성과가 보여야 기다릴 만하다
             Retro95ScanPanel(
                 title: String(localized: "검색 중"),
-                headline: String(localized: "\(feature.displayName) 훑는 중…"),
+                headline: String(localized: "\(feature.displayName) 검색 중…"),
                 detail: feature.summary,
                 fraction: Double(percent) / 100,
                 percentText: "\(percent)%",
-                leftFooter: model.items.isEmpty ? nil : String(localized: "\(model.items.count)개 · \(model.formattedTotalSize) 발견"),
+                leftFooter: model.items.isEmpty ? nil : String(localized: "찾은 파일 \(model.items.count)개, \(model.formattedTotalSize)"),
                 // 남은 시간은 넣지 않는다. 스캐너마다 속도가 달라 어림값이 크게 틀렸다.
                 rightFooter: nil)
             Spacer()
@@ -128,12 +128,12 @@ struct FeatureScreen: View {
             Retro95ScanPanel(
                 title: String(localized: "정리 중"),
                 headline: feature.removesPermanently
-                    ? String(localized: "영구 삭제하는 중…")
+                    ? String(localized: "휴지통에서 완전히 지우고 있어요…")
                     : String(localized: "휴지통으로 옮기는 중…"),
                 detail: nil,
                 fraction: total > 0 ? Double(done) / Double(total) : nil,
                 percentText: total > 0 ? "\(done * 100 / total)%" : nil,
-                leftFooter: "\(done) / \(total)",
+                leftFooter: "\(done)개 완료, 전체 \(total)개",
                 rightFooter: nil)
             Spacer()
         }
@@ -142,12 +142,12 @@ struct FeatureScreen: View {
     private func restoring(done: Int, total: Int) -> some View {
         VStack(spacing: 0) {
             Retro95ScanPanel(
-                title: String(localized: "되돌리는 중"),
-                headline: String(localized: "원래 자리로 되돌리는 중…"),
+                title: String(localized: "복구 중"),
+                headline: String(localized: "파일을 원래 자리에 놓고 있어요…"),
                 detail: nil,
                 fraction: total > 0 ? Double(done) / Double(total) : nil,
                 percentText: total > 0 ? "\(done * 100 / total)%" : nil,
-                leftFooter: "\(done) / \(total)",
+                leftFooter: "\(done)개 완료, 전체 \(total)개",
                 rightFooter: nil)
             Spacer()
         }
@@ -160,14 +160,14 @@ struct FeatureScreen: View {
             let restored = report.succeeded.count
             let failed = report.failed.count
             let (title, icon): (String, PixelArt) =
-                restored == 0 ? (String(localized: "되돌리지 못했습니다"), .warning)
-                : failed > 0 ? (String(localized: "일부만 되돌렸습니다"), .warning)
-                : (String(localized: "되돌리기 완료"), .check)
+                restored == 0 ? (String(localized: "복구 실패"), .warning)
+                : failed > 0 ? (String(localized: "일부 복구"), .warning)
+                : (String(localized: "복구 완료"), .check)
             Retro95Dialog(title: title, icon: icon) {
                 VStack(alignment: .leading, spacing: 10) {
                     Text(restored == 0
-                         ? "\(failed)개를 되돌리지 못했습니다"
-                         : "\(restored)개 · \(report.formattedReclaimed)를 원래 자리로 되돌렸습니다")
+                         ? "\(failed)개는 아직 복구되지 않았어요"
+                         : "원래 자리에 파일 \(restored)개를 다시 놓았어요. 용량은 \(report.formattedReclaimed)예요.")
                         .font(R95.ui(13, bold: true))
                         .monospacedDigit()
 
@@ -177,8 +177,8 @@ struct FeatureScreen: View {
                         } label: {
                             HStack(alignment: .top, spacing: 6) {
                                 PixelIcon(art: .warning, size: 16)
-                                Text(restored == 0 ? "사유 자세히 보기"
-                                     : "\(failed)개는 되돌리지 못했습니다 — 자세히 보기")
+                                Text(restored == 0 ? "실패 이유 보기"
+                                     : "복구되지 않은 \(failed)개 확인하기")
                                     .underline()
                             }
                             .foregroundStyle(R95.danger)
@@ -198,8 +198,8 @@ struct FeatureScreen: View {
     }
 
     private var emptyResult: some View {
-        Retro95Dialog(title: String(localized: "정리할 항목이 없음"), icon: .check) {
-            Text("회수할 만한 크기의 항목을 찾지 못했습니다.")
+        Retro95Dialog(title: String(localized: "이번에는 정리할 파일이 없어요"), icon: .check) {
+            Text("찾아본 곳에는 정리 기준에 맞는 크기의 파일이 없어요.")
         } buttons: {
             Button("다시 검색") { Task { await model.scan() } }
                 .buttonStyle(Retro95ButtonStyle(isDefault: true))
@@ -215,8 +215,8 @@ struct FeatureScreen: View {
             let moved = report.succeeded.count
             let failed = report.failed.count
             let (title, icon): (String, PixelArt) =
-                moved == 0 ? (String(localized: "정리하지 못했습니다"), .warning)
-                : failed > 0 ? (String(localized: "일부만 정리했습니다"), .warning)
+                moved == 0 ? (String(localized: "정리 실패"), .warning)
+                : failed > 0 ? (String(localized: "일부 정리"), .warning)
                 : (String(localized: "정리 완료"), .check)
             Retro95Dialog(title: title, icon: icon) {
                 VStack(alignment: .leading, spacing: 10) {
@@ -224,12 +224,12 @@ struct FeatureScreen: View {
                     Group {
                         if feature.removesPermanently {
                             Text(moved == 0
-                                 ? "\(failed)개를 삭제하지 못했습니다"
-                                 : "\(moved)개 · \(report.formattedReclaimed)를 영구 삭제했습니다")
+                                 ? "\(failed)개는 지워지지 않고 남아 있어요"
+                                 : "파일 \(moved)개를 완전히 지웠어요. \(report.formattedReclaimed)의 공간이 생겼고, 복구할 수 없어요.")
                         } else {
                             Text(moved == 0
-                                 ? "\(failed)개를 휴지통으로 옮기지 못했습니다"
-                                 : "\(moved)개 · \(report.formattedReclaimed)를 휴지통으로 옮겼습니다")
+                                 ? "\(failed)개는 휴지통으로 가지 않았어요"
+                                 : "파일 \(moved)개가 휴지통에 있어요. 옮긴 용량은 \(report.formattedReclaimed)예요.")
                         }
                     }
                         .font(R95.ui(13, bold: true))
@@ -253,9 +253,9 @@ struct FeatureScreen: View {
                             HStack(alignment: .top, spacing: 6) {
                                 PixelIcon(art: .warning, size: 16)
                                 // 전부 실패면 윗줄이 이미 개수를 말했다. 같은 말을 두 번 하지 않는다.
-                                Text(moved == 0 ? "사유 자세히 보기"
-                                     : feature.removesPermanently ? "\(failed)개는 삭제하지 못했습니다 — 자세히 보기"
-                                     : "\(failed)개는 옮기지 못했습니다 — 자세히 보기")
+                                Text(moved == 0 ? "실패 이유 보기"
+                                     : feature.removesPermanently ? "지워지지 않은 \(failed)개 확인하기"
+                                     : "옮겨지지 않은 \(failed)개 확인하기")
                                     .underline()
                             }
                             .foregroundStyle(R95.danger)
@@ -266,7 +266,7 @@ struct FeatureScreen: View {
             } buttons: {
                 // 휴지통 위치를 아는 것이 있을 때만. 확인을 묻지 않는다 — 지우지 않고 원래 자리로 옮기기만 한다.
                 if model.canUndo {
-                    Button("되돌리기") { Task { await model.undoLastCleanup() } }
+                    Button("복구") { Task { await model.undoLastCleanup() } }
                         .buttonStyle(Retro95ButtonStyle())
                 }
                 // 휴지통에서 지운 것은 휴지통에 없다. 열어 봐야 보여 줄 것이 없다.
@@ -279,10 +279,10 @@ struct FeatureScreen: View {
                     .buttonStyle(Retro95ButtonStyle(isDefault: true))
             }
             .frame(maxWidth: R95.dialogWidth)
-            .alert("휴지통을 열지 못했습니다", isPresented: $trashOpenFailed) {
+            .alert("휴지통을 열지 못했어요", isPresented: $trashOpenFailed) {
                 Button("확인") {}
             } message: {
-                Text("Dock의 휴지통을 열어 비워 주세요.")
+                Text("화면 아래 휴지통을 직접 열어 주세요. 비우면 되돌릴 수 없으니 안에 있는 파일을 먼저 확인해 주세요.")
             }
             .sheet(isPresented: $showsFailures) {
                 RemovalFailuresSheet(failed: report.failed) {
@@ -312,7 +312,7 @@ struct FeatureScreen: View {
         // 한 번만 센다. 행 클로저 안에서 프로퍼티를 읽으면 행마다 전체 항목을 다시 훑는다.
         let showsDates = showsDates
         return VStack(spacing: 0) {
-            Retro95GroupBox(title: String(localized: "정리 항목")) {
+            Retro95GroupBox(title: String(localized: "찾은 파일")) {
                 VStack(spacing: 6) {
                     Text(feature.reviewHint)
                         .font(R95.ui(12))
@@ -385,7 +385,7 @@ struct FeatureScreen: View {
                     .frame(width: ItemTableColumns.check, height: ItemTableColumns.sectionHeight)
             }
             .buttonStyle(.plain)
-            .help("이 묶음 전체 선택 / 해제")
+            .help("이 묶음 전체 고르기, 선택 풀기")
 
             Text(group.displayName)
                 .font(R95.ui(12, bold: true))

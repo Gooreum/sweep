@@ -40,14 +40,14 @@ struct SmartScanView: View {
                     title: String(localized: "정리 중"), headline: String(localized: "정리하는 중"), detail: nil,
                     fraction: total > 0 ? Double(done) / Double(total) : nil,
                     percentText: total > 0 ? "\(done * 100 / total)%" : nil,
-                    leftFooter: "\(done) / \(total)", rightFooter: nil)
+                    leftFooter: "\(done)개 완료, 전체 \(total)개", rightFooter: nil)
                     .padding(10)
             case let .restoring(done, total):
                 Retro95ScanPanel(
-                    title: String(localized: "되돌리는 중"), headline: String(localized: "원래 자리로 되돌리는 중"), detail: nil,
+                    title: String(localized: "복구 중"), headline: String(localized: "파일을 원래 자리에 놓고 있어요"), detail: nil,
                     fraction: total > 0 ? Double(done) / Double(total) : nil,
                     percentText: total > 0 ? "\(done * 100 / total)%" : nil,
-                    leftFooter: "\(done) / \(total)", rightFooter: nil)
+                    leftFooter: "\(done)개 완료, 전체 \(total)개", rightFooter: nil)
                     .padding(10)
             case .results, .cleaned, .restored:
                 summary
@@ -100,9 +100,9 @@ struct SmartScanView: View {
         HStack(spacing: 12) {
             PixelIcon(art: .magnifier, size: 48)
             VStack(alignment: .leading, spacing: 4) {
-                Text("Mac 전체를 한 번에 훑습니다")
+                Text("정리할 파일, 여기서 한번에 찾아보세요")
                     .font(R95.ui(14, bold: true))
-                Text("Xcode 산출물 · 캐시 · 큰 파일 · 중복 파일을 찾아 기능별로 나눠 보여줍니다.")
+                Text("개발용 파일과 임시 파일부터 큰 파일과 중복 파일까지 찾아드려요. 결과를 보고 필요한 것만 골라 정리하세요.")
                     .font(R95.ui(11))
                     .foregroundStyle(R95.deep)
                     .fixedSize(horizontal: false, vertical: true)
@@ -152,10 +152,10 @@ struct SmartScanView: View {
 
     /// Sweep이 들여다보는 곳. 목록은 안전 게이트의 허용 루트에서 유도된다.
     private var scopeCard: some View {
-        Retro95GroupBox(title: String(localized: "Sweep이 보는 곳")) {
+        Retro95GroupBox(title: String(localized: "찾아볼 곳")) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Text("이 밖은 건드리지 않습니다")
+                    Text("아래에 있는 곳만 찾아봐요")
                         .font(R95.ui(11))
                         .foregroundStyle(R95.deep)
                 }
@@ -179,7 +179,7 @@ struct SmartScanView: View {
                         // 막혔으면 무엇을 찾는 곳인지보다 왜 비어 있는지가 먼저다.
                         Group {
                             if blocked {
-                                Text("권한이 막혀 읽을 수 없습니다").foregroundStyle(R95.danger)
+                                Text("폴더를 허용하면 여기서도 찾을 수 있어요").foregroundStyle(R95.danger)
                             } else {
                                 Text(scope.detail).foregroundStyle(R95.deep)
                             }
@@ -219,14 +219,14 @@ struct SmartScanView: View {
         }
         .buttonStyle(Retro95ButtonStyle())
         .task { refreshReadability() }
-        .alert("다른 폴더를 골랐습니다",
+        .alert("필요한 폴더와 달라요",
                isPresented: Binding(get: { grantFailure != nil },
                                     set: { if !$0 { grantFailure = nil } })) {
             Button("확인") { grantFailure = nil }
         } message: {
             Text(grantFailure ?? "")
         }
-        .alert("이 폴더는 추가할 수 없습니다",
+        .alert("찾을 곳에 넣지 못했어요",
                isPresented: Binding(get: { addFailure != nil },
                                     set: { if !$0 { addFailure = nil } })) {
             Button("확인") { addFailure = nil }
@@ -248,7 +248,7 @@ struct SmartScanView: View {
                     Text("폴더 추가")
                         .font(Theme.bodyText)
                         .foregroundStyle(Theme.textPrimary)
-                    Text("외장 디스크 같은 다른 폴더에서도 큰 파일·중복 파일을 찾습니다")
+                    Text("찾을 곳이 더 있나요? 폴더를 추가하면 큰 파일과 중복 파일을 함께 찾아요")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.textSecondary)
                 }
@@ -331,7 +331,7 @@ struct SmartScanView: View {
             Divider().overlay(Theme.border)
 
             HStack(spacing: 12) {
-                Text("권한이 막힌 폴더가 있어요")
+                Text("아직 열어 보지 못한 폴더가 있어요")
                     .font(Theme.caption)
                     .foregroundStyle(R95.danger)
                 Spacer(minLength: 12)
@@ -373,9 +373,9 @@ struct SmartScanView: View {
     private func scanning(percent: Int) -> some View {
         VStack(spacing: 0) {
             Retro95ScanPanel(
-                title: String(localized: "검색 중"), headline: String(localized: "Mac 전체를 훑는 중…"), detail: nil,
+                title: String(localized: "검색 중"), headline: String(localized: "정리할 파일을 찾고 있어요…"), detail: nil,
                 fraction: Double(percent) / 100, percentText: "\(percent)%",
-                leftFooter: model.items.isEmpty ? nil : String(localized: "\(model.items.count)개 · \(model.formattedTotalSize) 발견"),
+                leftFooter: model.items.isEmpty ? nil : String(localized: "찾은 파일 \(model.items.count)개, \(model.formattedTotalSize)"),
                 // 남은 시간은 넣지 않는다. 스캐너마다 속도가 달라 어림값이 크게 틀렸다.
                 rightFooter: nil)
             Spacer()
@@ -393,11 +393,11 @@ struct SmartScanView: View {
                 if let line = app.cleanupSummary.statusLine() {
                     Text(line).font(R95.ui(11)).monospacedDigit()
                 }
-                Retro95GroupBox(title: String(localized: "정리 요약")) {
+                Retro95GroupBox(title: String(localized: "찾은 파일")) {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack(alignment: .firstTextBaseline) {
                             Text(model.formattedTotalSize).font(R95.ui(20, bold: true)).monospacedDigit()
-                            Text("회수 가능").font(R95.ui())
+                            Text("정리 후보").font(R95.ui())
                             Spacer()
                             Text("\(summary.breakdown.reduce(0) { $0 + $1.count })개 항목").font(R95.mono())
                         }

@@ -54,7 +54,7 @@ struct RemoverTests {
         let outcome = Remover(movesToTrash: false).removeOne(item(file))
 
         #expect(!outcome.succeeded)
-        #expect(outcome.failureReason?.contains("정리 대상 범위 밖입니다") == true)
+        #expect(outcome.failureReason?.contains("Sweep에서 삭제할 수 없는 위치예요") == true)
         // 이 앱의 핵심 불변식 — 관문이 막았으면 파일은 살아 있어야 한다
         #expect(fm.fileExists(atPath: file.path), "관문이 막았는데 파일이 사라졌다")
     }
@@ -72,7 +72,7 @@ struct RemoverTests {
             try ProtectedPaths.validate(home)
             Issue.record("홈이 관문을 통과했다")
         } catch let veto as RemovalVeto {
-            #expect(veto.message.contains("루트 또는 홈 디렉토리"))
+            #expect(veto.message.contains("디스크 전체나 내 폴더 전체를 삭제할 수는 없어요"))
         } catch {
             Issue.record("예상 밖 오류: \(error)")
         }
@@ -89,7 +89,7 @@ struct RemoverTests {
         let outcome = Remover(movesToTrash: false).removeOne(item(file))
 
         #expect(outcome.failure?.kind == .protected)
-        #expect(outcome.failureReason?.contains("정리 대상 범위 밖입니다") == true)
+        #expect(outcome.failureReason?.contains("Sweep에서 삭제할 수 없는 위치예요") == true)
     }
 
     @Test("실행 중인 앱 거부는 applicationRunning 종류다")
@@ -183,7 +183,7 @@ struct RemoverTests {
             try ProtectedPaths.validate(profiles)
             Issue.record("denyList 경로가 관문을 통과했다")
         } catch let veto as RemovalVeto {
-            #expect(veto.message.contains("보호된 경로입니다"))
+            #expect(veto.message.contains("지우지 못하도록 보호하는 곳이에요"))
         } catch {
             Issue.record("예상 밖 오류: \(error)")
         }

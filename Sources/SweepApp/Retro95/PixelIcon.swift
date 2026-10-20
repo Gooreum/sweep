@@ -509,6 +509,7 @@ extension Feature {
         case .duplicate: .documents
         case .trash: .trash
         case .diskMap: .pieChart
+        case .cpu: .computer
         }
     }
 }

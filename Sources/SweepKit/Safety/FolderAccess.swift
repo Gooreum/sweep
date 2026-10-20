@@ -22,9 +22,9 @@ public enum FolderAccess {
         public var message: String {
             switch self {
             case .wrongFolder(let expected, let picked):
-                String(localized: "\(expected) 폴더를 골라 주세요. (고른 곳: \(picked.path))")
+                String(localized: "지금 고른 곳은 \(picked.path)이에요. \(expected) 폴더를 선택해 주세요.")
             case .bookmark(let reason):
-                String(localized: "폴더 접근 권한을 저장하지 못했습니다: \(reason)")
+                String(localized: "이 폴더를 다시 열 수 있도록 저장하는 데 실패했어요. \(reason)")
             }
         }
     }
@@ -66,27 +66,27 @@ public enum FolderAccess {
     /// 지울 수 있는 범위는 `ProtectedPaths`가 따로 잠그므로 이것으로 넓어지지 않는다.
     public static let wholeDisk = Grantable(
         folder: URL(filePath: "/"), label: String(localized: "이 Mac"),
-        purpose: String(localized: "디스크 맵 전체 보기 · 아래 폴더도 한 번에"))
+        purpose: String(localized: "공간 보기에서 폴더 전체를 살펴봐요"))
 
     /// 홈 폴더. 큰 파일·중복 파일은 홈 아래 보이는 폴더를 다 보고(`UserFolders`),
     /// 휴지통·Gradle·Cargo·Maven 캐시도 홈 바로 아래 숨김 폴더라 이것 하나로 열린다.
     public static let home = Grantable(
         folder: Sandbox.userHome, label: "~",
-        purpose: String(localized: "큰 파일 · 중복 파일 · 휴지통 · 개발 도구 캐시"))
+        purpose: String(localized: "큰 파일과 중복 파일, 휴지통, 개발용 임시 파일을 살펴봐요"))
 
     public static let grantables: [Grantable] = [
         wholeDisk,
         home,
         .init(folder: inHome("Library"), label: "~/Library",
-              purpose: String(localized: "시뮬레이터 · 앱 웹 캐시 · 브라우저 캐시 · 로그")),
+              purpose: String(localized: "개발용 파일과 앱이나 브라우저의 임시 파일, 사용 기록을 찾아요")),
         .init(folder: inHome(".npm"), label: "~/.npm",
-              purpose: String(localized: "npm 내려받기 캐시")),
+              purpose: String(localized: "npm 설치 임시 파일")),
         .init(folder: inHome(".expo"), label: "~/.expo",
-              purpose: String(localized: "Expo 캐시")),
+              purpose: String(localized: "Expo 임시 파일")),
         // 홈 밖이지만 같은 방식으로 열린다 — 열기 대화상자로 고른 폴더는 위치를 가리지 않는다.
         // 이것을 열어도 지울 수 있는 것은 **바로 아래 `.app` 하나씩**뿐이다(`ProtectedPaths`).
         .init(folder: URL(filePath: "/Applications"), label: String(localized: "응용 프로그램"),
-              purpose: String(localized: "쓰지 않는 앱 지우기")),
+              purpose: String(localized: "안 쓰는 앱을 골라 정리해요")),
     ]
 
     /// 앱 전체가 공유하는 허락 상태.
@@ -239,7 +239,7 @@ public enum FolderAccess {
     static let legacyGrantable = Grantable(
         folder: inHome("Library/Developer"),
         label: "~/Library/Developer",
-        purpose: String(localized: "Xcode 산출물 · 시뮬레이터"))
+        purpose: String(localized: "Xcode 개발용 파일을 찾아요"))
 
     /// 고른 곳이 열어야 할 폴더인가. 링크·`..`·끝의 `/`를 풀어 비교한다.
     /// 하위나 상위 폴더는 아니다 — 하위를 받으면 나머지가 막히고, 상위는 필요 이상으로 넓다.

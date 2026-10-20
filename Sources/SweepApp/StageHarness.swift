@@ -21,6 +21,8 @@ struct StageHarness: View {
     /// `body`에서 만들면 렌더마다 새 모델이 되어 트리가 매번 초기화된다.
     @State private var diskMap: DiskMapModel?
     @State private var app = AppModel()
+    /// `body`에서 만들면 렌더마다 새 모델이 되어 측정이 처음부터 다시 시작된다.
+    @State private var cpu = CPUModel()
     /// `store-*` 단계는 사이드바까지 있는 실제 창을 그린다. 스토어 스크린샷용이다.
     @State private var storeApp: AppModel?
 
@@ -32,6 +34,18 @@ struct StageHarness: View {
                 } else {
                     Text("준비 중").font(Theme.bodyText)
                 }
+            } else if stage == "cpu" {
+                // 가짜 데이터를 넣지 않는다. 실제 수집이 2초면 끝나므로
+                // 진짜 프로세스로 확인하는 편이 화면을 더 정확히 보여준다.
+                CPUView(model: cpu)
+                    // 확인용: `--cpu-select <pid>`로 행을 누른 상태를 재현한다.
+                    .onAppear {
+                        let args = CommandLine.arguments
+                        if let flag = args.firstIndex(of: "--cpu-select"),
+                           args.indices.contains(flag + 1), let pid = pid_t(args[flag + 1]) {
+                            cpu.select(pid)
+                        }
+                    }
             } else if stage == "diskmap" {
                 if let diskMap {
                     DiskMapView(model: diskMap, app: app)
@@ -77,9 +91,9 @@ struct StageHarness: View {
     private func build() async {
         let items = [
             CleanupItem(url: URL(filePath: "/private/tmp/큰캐시.bin"), size: 5_368_709_120,
-                        category: .devCache, safety: .safe, detail: "Homebrew 내려받기 캐시"),
+                        category: .devCache, safety: .safe, detail: "Homebrew로 받은 임시 파일이에요. 다시 받을 때 생겨요"),
             CleanupItem(url: URL(filePath: "/private/tmp/보관함"), size: 234_881_024,
-                        category: .xcode, safety: .danger, detail: "다시 만들 수 없음"),
+                        category: .xcode, safety: .danger, detail: "다시 안 생김"),
         ]
 
         switch stage {
@@ -108,12 +122,12 @@ struct StageHarness: View {
             // 가짜 휴지통 항목. 지우는 흉내만 낸다 — 실제 휴지통을 건드리지 않는다.
             let trash = [
                 CleanupItem(url: URL(filePath: "/Users/me/.Trash/옛날 설치본.dmg"), size: 3_221_225_472,
-                            category: .trash, safety: .caution, detail: "비우면 되돌릴 수 없습니다"),
+                            category: .trash, safety: .caution, detail: "휴지통에서 완전히 지워요. 복구할 수 없어요"),
                 CleanupItem(url: URL(filePath: "/Users/me/.Trash/프로젝트 사본"), size: 838_860_800,
-                            category: .trash, safety: .caution, detail: "비우면 되돌릴 수 없습니다"),
+                            category: .trash, safety: .caution, detail: "휴지통에서 완전히 지워요. 복구할 수 없어요"),
                 CleanupItem(url: Sandbox.userHome.appending(path: "Library/Mobile Documents/.Trash/스크린샷 모음.zip"),
                             size: 524_288_000, category: .trash, safety: .caution,
-                            detail: "iCloud Drive 휴지통 — 비우면 다른 기기에서도 사라집니다"),
+                            detail: "iCloud Drive 파일이에요. 휴지통을 비우면 다른 기기에서도 지워져요"),
             ]
             let created = ScanModel(scan: { Self.finishing(trash) },
                                     removeOne: { RemovalOutcome(item: $0, failureReason: nil) })
@@ -141,7 +155,7 @@ struct StageHarness: View {
                         return RemovalOutcome(item: outcome.item, failure: nil)
                     }
                     return RemovalOutcome(item: outcome.item,
-                                          failure: RemovalFailure(reason: "원래 자리에 같은 이름이 있습니다",
+                                          failure: RemovalFailure(reason: "같은 이름의 파일이 이미 있어요. 원래 자리로 옮기지 않았어요",
                                                                   kind: .destinationOccupied),
                                           trashedURL: outcome.trashedURL)
                 })
@@ -156,9 +170,9 @@ struct StageHarness: View {
             let created = ScanModel(scan: { Self.finishing(items) },
                                     removeOne: { item in
                                         let failure = item.safety == .danger
-                                            ? RemovalFailure(reason: "보호된 경로입니다: \(item.url.path)",
+                                            ? RemovalFailure(reason: "이곳은 보호하고 있어요. 파일을 옮기지 않았어요: \(item.url.path)",
                                                              kind: .protected)
-                                            : RemovalFailure(reason: "실행 중인 앱입니다. 종료한 뒤 다시 시도해 주세요: \(item.url.path)",
+                                            : RemovalFailure(reason: "앱이 켜져 있어 옮기지 않았어요. 앱을 종료하고 다시 시도해 주세요: \(item.url.path)",
                                                              kind: .applicationRunning)
                                         return RemovalOutcome(item: item, failure: failure)
                                     })
@@ -172,7 +186,7 @@ struct StageHarness: View {
             // 되돌릴 수 없는 항목만 있으면 기본 선택이 비어 정리 버튼이 잠긴다
             let onlyDanger = [
                 CleanupItem(url: URL(filePath: "/private/tmp/보관함"), size: 234_881_024,
-                            category: .xcode, safety: .danger, detail: "다시 만들 수 없음"),
+                            category: .xcode, safety: .danger, detail: "다시 안 생김"),
             ]
             let created = ScanModel(scan: { Self.finishing(onlyDanger) })
             model = created

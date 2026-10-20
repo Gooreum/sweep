@@ -6,16 +6,16 @@ import Foundation
 struct FeatureTests {
 
     // TC-1
-    @Test("6개 기능 전부 표시명·아이콘·설명을 가진다")
+    @Test("7개 기능 전부 표시명·아이콘·설명을 가진다")
     func everyFeatureIsPresentable() {
-        #expect(Feature.allCases.count == 6)
+        #expect(Feature.allCases.count == 7)
         for feature in Feature.allCases {
             #expect(!feature.displayName.isEmpty)
             #expect(!feature.systemImageName.isEmpty)
             #expect(!feature.summary.isEmpty)
         }
         // 표시명이 겹치면 사이드바에서 같은 줄이 두 번 보인다
-        #expect(Set(Feature.allCases.map(\.displayName)).count == 6)
+        #expect(Set(Feature.allCases.map(\.displayName)).count == 7)
     }
 
     // TC-2
@@ -33,16 +33,34 @@ struct FeatureTests {
     }
 
     // TC-3
-    @Test("디스크 맵은 읽기 전용이라 스캐너가 없다")
-    func diskMapHasNoScanners() {
-        #expect(Feature.diskMap.scanners.isEmpty)
-        #expect(Feature.diskMap.categories.isEmpty)
-        #expect(Feature.diskMap.isScannable == false)
+    @Test("읽기 전용 기능은 스캐너가 없다")
+    func readOnlyFeaturesHaveNoScanners() {
+        // 디스크 맵과 CPU. 둘 다 지울 것을 찾지 않는다.
+        for feature in [Feature.diskMap, .cpu] {
+            #expect(feature.scanners.isEmpty, "\(feature)에 스캐너가 붙어 있다")
+            #expect(feature.categories.isEmpty)
+            #expect(feature.isScannable == false)
+        }
 
-        // 나머지는 전부 스캔 가능해야 한다
-        for feature in Feature.allCases where feature != .diskMap {
+        // 나머지는 전부 스캔 가능해야 한다. 이름을 나열하지 않는다 —
+        // 읽기 전용 기능이 또 늘면 여기가 아니라 위 배열만 고치면 된다.
+        for feature in Feature.allCases where ![.diskMap, .cpu].contains(feature) {
             #expect(feature.isScannable, "\(feature)가 스캔 불가로 나온다")
         }
+    }
+
+    // TC-3b
+    @Test("CPU는 스캔하지 않으므로 요약·배지 경로에서 빠진다")
+    func cpuStaysOutOfScanMachinery() {
+        // `scanners`가 비면 나머지는 공짜로 따라온다 — 손으로 예외를 적지 않는다.
+        #expect(!Feature.summaryCards.contains(.cpu))
+        #expect(Feature.cpu.items(from: []).isEmpty)
+        // 검토 목록이 아니라 관찰 화면이라 고를 기준을 말할 것이 없다
+        #expect(Feature.cpu.reviewHint.isEmpty)
+        // 사이드바·⌘6에 나와야 하므로 표시값은 있어야 한다
+        #expect(Feature.cpu.displayName == "CPU")
+        #expect(!Feature.cpu.systemImageName.isEmpty)
+        #expect(Feature.cpu.tintHex != nil)
     }
 
     // TC-4
@@ -200,7 +218,7 @@ struct FeatureTests {
     @Test("기능 색끼리 색상각이 충분히 벌어져 있다")
     func featureTintsAreDistinguishable() {
         let hues = Feature.allCases.compactMap { $0.tintHex }.map { hue(rgb($0.dark)) }.sorted()
-        #expect(hues.count == 5, "고유색을 가진 기능이 5개여야 한다")
+        #expect(hues.count == 6, "고유색을 가진 기능이 6개여야 한다")
 
         // 색상각이 붙어 있으면 사이드바에서 두 기능이 같은 색으로 읽힌다.
         // 색상환은 돈다 — 맨 끝(보라·빨강)과 맨 앞(빨강)도 이웃이다.
@@ -232,6 +250,7 @@ struct FeatureTests {
 
     @Test("휴지통은 사이드바에서 중복 파일 다음, 디스크 맵 앞에 온다")
     func trashSitsBeforeDiskMap() {
-        #expect(Feature.allCases.suffix(3) == [.duplicate, .trash, .diskMap])
+        // CPU가 맨 뒤에 붙어도 셋의 순서만 본다 — 선언 순서가 ⌘N을 정한다.
+        #expect(Array(Feature.allCases.drop { $0 != .duplicate }.prefix(3)) == [.duplicate, .trash, .diskMap])
     }
 }

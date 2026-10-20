@@ -16,14 +16,14 @@ struct FullDiskAccessBanner: View {
     static var isNeeded: Bool { !Sandbox.isActive && !FullDiskAccess.isGranted }
 
     /// 켜면 무엇이 좋아지는지. 화면마다 얻는 것이 달라 바꿔 끼운다.
-    var message = String(localized: "켜면 앱 캐시까지 찾고, ‘다른 앱의 데이터’ 물음이 더 뜨지 않습니다.")
+    var message = String(localized: "앱의 임시 파일도 찾으려면 설정에서 Sweep을 켜 주세요. 이후에는 다른 앱의 데이터를 열 때마다 허락을 묻지 않아요.")
 
     var body: some View {
         HStack(spacing: 12) {
             PixelIcon(art: .warning, size: 24)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("전체 디스크 접근이 꺼져 있습니다")
+                Text("더 찾으려면 접근을 허용해 주세요")
                     .font(Theme.bodyText)
                     .foregroundStyle(Theme.textPrimary)
                 Text(message)

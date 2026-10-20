@@ -25,15 +25,15 @@ struct ScanFolderTests {
                                          userRoots: [home.appending(path: "Downloads"), desktop, documents, external],
                                          custom: [external])
 
-        #expect(scopes.map(\.label) == ["~/Downloads", "~ 홈 폴더", "/Volumes/외장/사진"])
-        #expect(scopes[1].detail == "큰 파일 · 중복 파일 — Desktop · Documents")
+        #expect(scopes.map(\.label) == ["~/Downloads", "~ 내 폴더", "/Volumes/외장/사진"])
+        #expect(scopes[1].detail == "Desktop, Documents에서 큰 파일과 중복 파일을 찾아요")
         #expect(scopes.map(\.isCustom) == [false, false, true])
     }
 
     @Test("홈 폴더가 많으면 둘만 이름을 쓰고 나머지는 개수로 말한다")
     func manyHomeFoldersAreCounted() {
-        #expect(CleanupScope.homeFoldersDetail(["A", "B", "C"]) == "큰 파일 · 중복 파일 — A · B · C")
-        #expect(CleanupScope.homeFoldersDetail(["A", "B", "C", "D", "E"]) == "큰 파일 · 중복 파일 — A · B 외 3곳")
+        #expect(CleanupScope.homeFoldersDetail(["A", "B", "C"]) == "A, B, C에서 큰 파일과 중복 파일을 찾아요")
+        #expect(CleanupScope.homeFoldersDetail(["A", "B", "C", "D", "E"]) == "A, B 외 3곳에서 큰 파일과 중복 파일을 찾아요")
     }
 
     @Test("사용자 폴더가 없으면 묶음 줄도 없다")

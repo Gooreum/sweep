@@ -93,7 +93,7 @@ struct Sidebar: View {
                     Text(usage.formattedAvailable).font(R95.mono(11))
                 }
                 Retro95ProgressBar(fraction: usage.usedFraction)
-                Text("\(usage.formattedUsed) 사용됨 · 전체 \(usage.formattedTotal)")
+                Text("사용 \(usage.formattedUsed), 전체 \(usage.formattedTotal)")
                     .font(R95.mono(10))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)

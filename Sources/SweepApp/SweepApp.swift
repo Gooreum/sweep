@@ -16,6 +16,17 @@ struct SweepApp: App {
         if CommandLine.arguments.contains("--scan-only") {
             Self.runScanAndExit()
         }
+        // 같은 취지의 입구. CPU 쪽은 **샌드박스에서도 되는지**를 확인하는 수단이기도
+        // 하다 — 서명한 번들 안에서 이 명령을 돌려 목록이 비지 않는지 본다.
+        if CommandLine.arguments.contains("--cpu-only") {
+            Self.runCPUSampleAndExit()
+        }
+        // 고른 프로그램의 자세한 정보. 샌드박스에서 무엇이 읽히는지 서명한 번들로 확인한다.
+        if let flag = CommandLine.arguments.firstIndex(of: "--cpu-details"),
+           CommandLine.arguments.indices.contains(flag + 1),
+           let pid = pid_t(CommandLine.arguments[flag + 1]) {
+            Self.runCPUDetailsAndExit(pid: pid)
+        }
         _app = State(initialValue: AppModel())
         // SPM 실행 파일은 앱 번들이 아니라서 기본이 백그라운드 프로세스다.
         // .regular로 올려야 창이 앞으로 나오고 메뉴 막대가 붙는다.
@@ -82,6 +93,74 @@ struct SweepApp: App {
             ].joined(separator: "\t"))
         }
         print("총 \(items.count)개 · \(items.formattedTotalSize)")
+        exit(0)
+    }
+
+    /// 지금 CPU를 쓰는 프로세스를 탭 구분 텍스트로 찍고 종료한다.
+    ///
+    /// 누적값은 두 번 재야 뜻이 생기므로 구간만큼 멈춘다. 여기서는 `Task.sleep`이
+    /// 아니라 `Thread.sleep`이다 — `init()`이 async가 아니라 await할 자리가 없다.
+    private static func runCPUDetailsAndExit(pid: pid_t) -> Never {
+        guard let details = ProcessDetailsReader.read(pid: pid) else {
+            print("pid \(pid)\t없음")
+            exit(1)
+        }
+        func line(_ label: String, _ value: String?) {
+            print("\(label)\t\(value ?? "읽지 못함")")
+        }
+        line("이름", details.name)
+        line("내 계정", details.isMine ? "예" : "아니오")
+        line("시작", details.startedAt.map { "\($0)" })
+        line("띄운 쪽", details.launchedBy.isEmpty
+            ? nil : details.launchedBy.map { "\($0.name)(\($0.pid))" }.joined(separator: " > "))
+        line("메모리", details.memoryBytes.map { String($0) })
+        line("스레드", details.threads.map { String($0) })
+        line("실행 명령", details.arguments?.joined(separator: " "))
+        line("실행 파일", details.executablePath)
+        line("앱", details.app.map { "\($0.name) \($0.version ?? "-") \($0.path)" })
+        exit(0)
+    }
+
+    private static func runCPUSampleAndExit() -> Never {
+        // 약속한 구간이 아니라 **실제로 흐른 시간**으로 나눈다. `Thread.sleep`은
+        // 최소 시간만 보장해서, 기계가 바쁘면 더 자고 사용률이 부풀려진다.
+        let clock = ContinuousClock()
+        let cores = ProcessCPUSampler.coreCount
+        let before = ProcessCPUSampler.tick()
+        let loadBefore = SystemCPULoad.tick()
+        let start = clock.now
+        Thread.sleep(forTimeInterval: 2)
+        let elapsed = clock.now - start
+        let loadAfter = SystemCPULoad.tick()
+        let usage = ProcessUsage.compute(
+            from: before, to: ProcessCPUSampler.tick(), over: elapsed)
+
+        // 화면과 같은 상한으로 자른다. 전체를 찍으면 검증할 때 눈으로 볼 수 없다.
+        for item in usage.prefix(20) {
+            print([
+                item.formattedPercent,
+                String(item.pid),
+                item.name,
+                item.executablePath ?? "-",
+            ].joined(separator: "\t"))
+        }
+        // 읽은 수와 **그중 쓰고 있는 수**를 따로 적는다. 앞의 것이 0이면 수집이
+        // 막힌 것이고, 뒤의 것만 0이면 정말 아무도 안 쓴 것이다.
+        //
+        // 합계는 위에서 자른 20개가 아니라 **전부** 더한다. 코어 하나가 100이라
+        // 최대 코어 수 × 100까지 간다. 내 계정 것만이라 기계 전체가 아니다 —
+        // 기계 전체는 커널 합계로 따로 찍어 `top`의 CPU usage 줄과 맞춰 볼 수 있게 한다.
+        let total = usage.reduce(0) { $0 + $1.percent }
+        var summary = String(format: "측정 %d개 · 사용 중 %d개 · 목록 합계 %.1f%% (코어 %d개)",
+                             before.count, usage.count, total, cores)
+        if let loadBefore, let loadAfter,
+           let load = SystemCPULoad.compute(from: loadBefore, to: loadAfter) {
+            summary += String(format: " · 기계 전체 사용자 %.1f%% 시스템 %.1f%% 유휴 %.1f%%",
+                              load.user, load.system, load.idle)
+        } else {
+            summary += " · 기계 전체 부하를 읽지 못함"
+        }
+        print(summary)
         exit(0)
     }
 

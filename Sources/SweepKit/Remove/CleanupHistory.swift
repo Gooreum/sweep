@@ -64,13 +64,13 @@ public struct CleanupSummary: Sendable, Hashable {
     public func statusLine(now: Date = Date()) -> String? {
         guard let lastCleanup else { return nil }
         let bytes = ByteCountFormatter.string(fromByteCount: totalReclaimedBytes, countStyle: .file)
-        return String(localized: "지금까지 \(bytes)를 휴지통으로 옮김 · 마지막 정리 \(Self.relative(lastCleanup, now: now))")
+        return String(localized: "휴지통으로 보낸 파일은 모두 \(bytes)예요. 최근 정리한 때는 \(Self.relative(lastCleanup, now: now))")
     }
 
     /// 메뉴바에 붙는 안내. 앱은 휴지통이 비워졌는지 알 수 없어(샌드박스에서 `~/.Trash`를
     /// 못 읽는다) 기록이 하나라도 있으면 늘 보인다.
     public var trashHint: String? {
-        lastCleanup == nil ? nil : String(localized: "휴지통을 비워야 디스크 공간이 늘어납니다")
+        lastCleanup == nil ? nil : String(localized: "옮긴 파일은 아직 공간을 차지해요. 휴지통까지 비워 주세요")
     }
 
     /// 오래 안 했고 지울 만한 safe 항목이 있을 때만. 재방문 유도 문구.
@@ -82,7 +82,7 @@ public struct CleanupSummary: Sendable, Hashable {
         let days = Int(now.timeIntervalSince(lastCleanup) / 86_400)
         guard days >= 14 else { return nil }
         let bytes = ByteCountFormatter.string(fromByteCount: safeBytes, countStyle: .file)
-        return String(localized: "마지막 정리 후 \(days)일이 지났습니다. 다시 만들 수 있는 \(bytes)를 정리해 보세요")
+        return String(localized: "다시 만들 수 있는 파일이 \(bytes) 있어요. \(days)일 만에 다시 정리해 볼까요?")
     }
 
     /// 문구 계단은 `FileDates.lastUsedLabel`과 맞춘다 — 한 화면에 두 말투가 섞이지 않게.

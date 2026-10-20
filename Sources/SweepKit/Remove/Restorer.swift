@@ -23,15 +23,15 @@ public struct Restorer: Sendable {
 
         // 확인 순서가 곧 사유의 우선순위다. 하나라도 걸리면 아무것도 옮기지 않는다.
         guard let trashed = outcome.trashedURL, Self.exists(trashed) else {
-            return fail(String(localized: "휴지통에서 찾을 수 없습니다"), .missingFromTrash)
+            return fail(String(localized: "되살릴 파일이 휴지통에 없어요"), .missingFromTrash)
         }
         // 덮어쓰지 않는다. 그 사이 새로 생긴 것은 사용자의 것이다.
         if Self.exists(target) {
-            return fail(String(localized: "원래 자리에 같은 이름이 있습니다"), .destinationOccupied)
+            return fail(String(localized: "같은 이름의 항목이 있어 되돌려 놓지 못했어요"), .destinationOccupied)
         }
         // 사라진 폴더를 다시 만들지 않는다. 없는 자리를 지어내지 않는다.
         guard Self.exists(target.deletingLastPathComponent()) else {
-            return fail(String(localized: "원래 폴더가 사라졌습니다"), .destinationOccupied)
+            return fail(String(localized: "돌려놓을 폴더가 더는 없어요"), .destinationOccupied)
         }
 
         do {

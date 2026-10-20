@@ -14,9 +14,9 @@ struct SelectionDock: View {
         HStack(spacing: 12) {
             PixelIcon(art: .computerLarge, size: 48)
             VStack(alignment: .leading, spacing: 4) {
-                Text("선택: \(model.selectedItems.count)개 · 전체 \(model.items.count)개 중")
+                Text("고른 항목 \(model.selectedItems.count)개, 찾은 항목 \(model.items.count)개")
                     .font(R95.ui(12))
-                Text("선택 크기: \(model.formattedSelectedSize)")
+                Text("고른 용량: \(model.formattedSelectedSize)")
                     .font(R95.ui(20, bold: true))
                     .monospacedDigit()
                     .lineLimit(1)
@@ -34,8 +34,8 @@ struct SelectionDock: View {
                 }
                 // 되돌릴 수 있다는 것을 버튼 앞에 말한다. 누른 뒤에 알려주면 늦다.
                 // 휴지통을 언제 비우는지는 사용자 설정에 달려 있다. 기간을 약속하지 않는다.
-                Text(permanent ? "고른 항목은 바로 지워져 되돌릴 수 없습니다."
-                               : "휴지통을 비우기 전까지 복원할 수 있습니다.")
+                Text(permanent ? "휴지통에서 완전히 지워요. 복구할 수 없어요."
+                               : "옮긴 파일은 휴지통에 남아요. 비우기 전에는 복구할 수 있어요.")
                     .font(R95.ui(11))
                     .foregroundStyle(R95.deep)
                     .fixedSize(horizontal: false, vertical: true)
@@ -45,8 +45,8 @@ struct SelectionDock: View {
             Button { onClean() } label: {
                 HStack(spacing: 8) {
                     PixelIcon(art: .trash, size: 24)
-                    Text(!model.hasSelection ? "선택한 항목 없음"
-                         : permanent ? "선택 항목 영구 삭제" : "선택 항목 정리")
+                    Text(!model.hasSelection ? "파일을 골라 주세요"
+                         : permanent ? "선택 항목 완전 삭제" : "선택 항목 정리")
                         .font(R95.ui(14, bold: true))
                 }
                 .frame(minWidth: ItemTableColumns.actionButtonWidth - 26,
@@ -85,9 +85,9 @@ extension SafetyLevel {
     /// "안전 4개"보다 "다시 만들 수 있음 4개"가 고를 때 쓸모 있다.
     var dockLabel: String {
         switch self {
-        case .safe: String(localized: "다시 만들 수 있음")
+        case .safe: String(localized: "다시 생김")
         case .caution: String(localized: "확인 필요")
-        case .danger: String(localized: "되돌릴 수 없음")
+        case .danger: String(localized: "복구 불가")
         }
     }
 }

@@ -23,13 +23,13 @@ struct RemovalFailuresSheet: View {
 
     init(failed: [RemovalOutcome],
          title: String? = nil,
-         subtitle: String = String(localized: "사유를 확인하고 조치한 뒤 실패한 것만 다시 시도할 수 있습니다."),
+         subtitle: String = String(localized: "아래 항목은 처리되지 않았어요. 항목마다 안내한 조치를 마친 뒤 이것들만 다시 시도해 주세요."),
          revealURL: @escaping (RemovalOutcome) -> URL = { $0.item.url },
          offersTrash: Bool = false,
          onClose: @escaping () -> Void,
          onRetry: (() -> Void)?) {
         self.failed = failed
-        self.title = title ?? String(localized: "\(failed.count)개 항목을 옮기지 못했습니다")
+        self.title = title ?? String(localized: "정리되지 않은 항목이 \(failed.count)개 있어요")
         self.subtitle = subtitle
         self.revealURL = revealURL
         self.offersTrash = offersTrash
@@ -87,10 +87,10 @@ struct RemovalFailuresSheet: View {
             }
         }
         .frame(width: 560)
-        .alert("휴지통을 열지 못했습니다", isPresented: $trashOpenFailed) {
+        .alert("휴지통을 열지 못했어요", isPresented: $trashOpenFailed) {
             Button("확인") {}
         } message: {
-            Text("Dock의 휴지통을 열어 '되돌려 놓기'를 쓰세요.")
+            Text("화면 아래 휴지통을 직접 열어 주세요. 파일을 고르고 ‘되돌려 놓기’를 누르면 원래 자리로 돌아가요.")
         }
         .background(R95.gray)
     }
@@ -133,8 +133,8 @@ extension RemovalFailuresSheet {
     static func restore(_ failed: [RemovalOutcome], onClose: @escaping () -> Void) -> RemovalFailuresSheet {
         RemovalFailuresSheet(
             failed: failed,
-            title: String(localized: "\(failed.count)개를 되돌리지 못했습니다"),
-            subtitle: String(localized: "휴지통에 남아 있습니다. Finder 휴지통에서 직접 '되돌려 놓기'를 할 수 있습니다."),
+            title: String(localized: "\(failed.count)개는 아직 복구되지 않았어요"),
+            subtitle: String(localized: "파일은 휴지통 안에 그대로 있어요. 휴지통을 열고 파일을 골라 ‘되돌려 놓기’를 눌러 주세요."),
             revealURL: { $0.trashedURL ?? $0.item.url },
             offersTrash: true,
             onClose: onClose,

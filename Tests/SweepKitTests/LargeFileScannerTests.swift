@@ -109,12 +109,12 @@ struct LargeFileScannerTests {
                                     now: now)
         }
 
-        #expect(detail(daysAgo: 0) == "오늘 받았습니다")
-        #expect(detail(daysAgo: 10) == "10일 전에 받았습니다")
-        #expect(detail(daysAgo: 29) == "29일 전에 받았습니다")
+        #expect(detail(daysAgo: 0) == "오늘 받았어요")
+        #expect(detail(daysAgo: 10) == "10일 전에 받았어요")
+        #expect(detail(daysAgo: 29) == "29일 전에 받았어요")
         // 30일이 경계 — 여기서 개월 표기로 넘어간다
-        #expect(detail(daysAgo: 30) == "1개월 전에 받았습니다")
-        #expect(detail(daysAgo: 100) == "3개월 전에 받았습니다")
+        #expect(detail(daysAgo: 30) == "1개월 전에 받았어요")
+        #expect(detail(daysAgo: 100) == "3개월 전에 받았어요")
     }
 
     // TC-11
@@ -153,7 +153,7 @@ struct LargeFileScannerTests {
         let items = await scanner(home).scan()
 
         #expect(Set(items.map(\.displayName)) == ["영상.mov", "에셋.psd"])
-        #expect(items.allSatisfy { $0.detail.hasSuffix("수정했습니다") })
+        #expect(items.allSatisfy { $0.detail.hasSuffix("수정했어요") })
     }
 
     @Test("Library·의존성 폴더·번들 안·숨김 폴더는 훑지 않는다")
@@ -205,11 +205,11 @@ struct LargeFileScannerTests {
     func detailDistinguishesDownloaded() {
         let now = Date()
         let tenDays = now.addingTimeInterval(-10 * 86_400)
-        #expect(LargeFileScanner.detail(modified: tenDays, downloaded: true, now: now) == "10일 전에 받았습니다")
-        #expect(LargeFileScanner.detail(modified: tenDays, downloaded: false, now: now) == "10일 전에 수정했습니다")
-        #expect(LargeFileScanner.detail(modified: now, downloaded: false, now: now) == "오늘 수정했습니다")
+        #expect(LargeFileScanner.detail(modified: tenDays, downloaded: true, now: now) == "10일 전에 받았어요")
+        #expect(LargeFileScanner.detail(modified: tenDays, downloaded: false, now: now) == "10일 전에 수정했어요")
+        #expect(LargeFileScanner.detail(modified: now, downloaded: false, now: now) == "오늘 수정했어요")
         #expect(LargeFileScanner.detail(modified: now.addingTimeInterval(-100 * 86_400),
-                                        downloaded: false, now: now) == "3개월 전에 수정했습니다")
+                                        downloaded: false, now: now) == "3개월 전에 수정했어요")
     }
 }
 
