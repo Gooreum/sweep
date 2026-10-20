@@ -25,15 +25,15 @@ public enum UserFolders {
         public var message: String {
             switch self {
             case .tooWide:
-                String(localized: "내 사용자 폴더 자체나 이를 포함하는 폴더는 추가할 수 없어요. 그 안에 보이는 폴더는 이미 모두 살펴봐요.")
+                String(localized: "내 폴더 안은 이미 모두 찾고 있어요. 내 폴더 전체나 그 상위 폴더는 추가할 수 없어요.")
             case .insideLibrary:
-                String(localized: "Library 안은 추가할 수 없어요. 앱 데이터는 정크 파일 기능에서 따로 살펴봐요.")
+                String(localized: "Library는 여기에 추가할 수 없어요. 앱이 만든 파일은 ‘정리할 파일’에서 확인하세요.")
             case .systemFolder:
-                String(localized: "시스템 폴더는 추가할 수 없어요.")
+                String(localized: "컴퓨터에 필요한 폴더라 추가할 수 없어요.")
             case .alreadyCovered(let url):
-                String(localized: "이미 보고 있는 폴더예요: \(CleanupItem.abbreviating(url.path, home: Sandbox.userHome.path))")
+                String(localized: "따로 추가하지 않아도 찾는 곳이에요: \(CleanupItem.abbreviating(url.path, home: Sandbox.userHome.path))")
             case .bookmark(let reason):
-                String(localized: "폴더 접근 권한을 저장하지 못했어요: \(reason)")
+                String(localized: "이 폴더를 다시 열 수 있도록 저장하는 데 실패했어요. \(reason)")
             }
         }
     }
@@ -133,7 +133,7 @@ public enum UserFolders {
     /// 라벨이 북마크 키가 되므로(`Grantable.key`) 경로 그대로 둔다 — 폴더마다 달라야 한다.
     public static func grantable(for url: URL) -> FolderAccess.Grantable {
         FolderAccess.Grantable(folder: url, label: url.standardizedFileURL.path,
-                               purpose: String(localized: "큰 파일 · 중복 파일"))
+                               purpose: String(localized: "큰 파일과 중복 파일 찾기"))
     }
 
     // MARK: - 관문용 캐시

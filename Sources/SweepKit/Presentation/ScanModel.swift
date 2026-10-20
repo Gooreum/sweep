@@ -40,7 +40,7 @@ extension SafetyLevel {
     /// 묶음 머리에 쓰는 이름. 등급 이름("안전")이 아니라 **무엇을 뜻하는지**를 적는다.
     public var groupLabel: String {
         switch self {
-        case .safe: String(localized: "다시 만들 수 있음")
+        case .safe: String(localized: "다시 생김")
         case .caution: String(localized: "확인 필요")
         case .danger: String(localized: "되돌릴 수 없음")
         }

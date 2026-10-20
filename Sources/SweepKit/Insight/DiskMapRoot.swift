@@ -21,7 +21,7 @@ public struct DiskMapRoot: Identifiable, Sendable, Hashable {
         public var title: String {
             switch self {
             case .whole: String(localized: "diskMap.group.whole", defaultValue: "전체")
-            case .home: String(localized: "내 사용자 폴더 안")
+            case .home: String(localized: "내 폴더 안")
             case .apps: String(localized: "응용 프로그램")
             case .cleanup: String(localized: "정리 대상")
             }
@@ -101,7 +101,7 @@ extension DiskMapRoot {
             result.append(DiskMapRoot(url: url, label: label, group: group))
         }
 
-        add(home, String(localized: "내 사용자 폴더"), .whole)
+        add(home, String(localized: "내 폴더"), .whole)
         add(URL(filePath: "/"), String(localized: "이 Mac"), .whole)
 
         for name in homeFolders {

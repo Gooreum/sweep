@@ -36,14 +36,14 @@ public struct TrashScanner: CleanupScanner {
     /// 읽을 휴지통과 그 안 항목에 붙일 설명. 설명이 곧 출처 표시다.
     func locations() -> [(folder: URL, detail: String)] {
         var found = [
-            (home.appending(path: ".Trash"), String(localized: "비우면 되돌릴 수 없어요")),
+            (home.appending(path: ".Trash"), String(localized: "완전히 삭제해요. 복구는 불가능해요")),
             (Self.iCloudTrash(in: home),
-             String(localized: "iCloud Drive 휴지통이에요. 비우면 다른 기기에서도 사라져요")),
+             String(localized: "iCloud Drive에서 버린 파일이에요. 비우면 연결된 다른 기기에서도 없어져요")),
         ]
         // 시동 디스크는 `/Volumes/Macintosh HD → /`라 홈 휴지통과 겹친다. 실경로가 `/`인 것은 뺀다.
         for volume in children(of: volumes) where volume.resolvingSymlinksInPath().path != "/" {
             found.append((volume.appending(path: ".Trashes/\(getuid())"),
-                          String(localized: "\(volume.lastPathComponent) 휴지통이에요. 비우면 되돌릴 수 없어요")))
+                          String(localized: "\(volume.lastPathComponent)에서 버린 파일이에요. 완전히 지우면 복구할 수 없어요")))
         }
         return found
     }
@@ -58,7 +58,7 @@ public struct TrashScanner: CleanupScanner {
                 guard found.bytes > 0 || cloudOnly else { return nil }
                 return CleanupItem(url: url, size: found.bytes, category: .trash, safety: .caution,
                                    detail: cloudOnly
-                                       ? String(localized: "iCloud에만 있어요. 지우면 iCloud 공간만 비워져요")
+                                       ? String(localized: "Mac에는 없는 파일이에요. 삭제해도 iCloud의 빈 공간만 늘어나요")
                                        : detail,
                                    dates: found.dates)
             }

@@ -50,7 +50,7 @@ public struct StaleCacheScanner: CleanupScanner {
                 category: .staleCache,
                 // 주인이 살아 있을 수 있다. 기본 선택에서 빼 사용자가 직접 고르게 한다.
                 safety: .caution,
-                detail: String(localized: "\(Int(idle / 86_400))일 동안 쓰이지 않았어요"),
+                detail: String(localized: "마지막으로 쓴 뒤 \(Int(idle / 86_400))일이 지났어요"),
                 dates: found.dates)
         }
     }

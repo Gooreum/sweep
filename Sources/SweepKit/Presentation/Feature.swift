@@ -20,12 +20,12 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
 
     public var displayName: String {
         switch self {
-        case .smartScan: String(localized: "스마트 스캔")
-        case .junk: String(localized: "정크 파일")
+        case .smartScan: String(localized: "한번에 찾기")
+        case .junk: String(localized: "정리할 파일")
         case .largeFile: String(localized: "큰 파일")
         case .duplicate: String(localized: "중복 파일")
         case .trash: String(localized: "휴지통")
-        case .diskMap: String(localized: "디스크 맵")
+        case .diskMap: String(localized: "공간 보기")
         case .cpu: "CPU"
         }
     }
@@ -45,18 +45,18 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
     /// 시작 화면에 뜨는 설명 한 줄. 무엇을 하는 화면인지 먼저 말한다.
     public var summary: String {
         switch self {
-        case .smartScan: String(localized: "한 번에 전체를 살펴보고 정리할 수 있는 용량을 알려줘요.")
+        case .smartScan: String(localized: "지울 만한 파일이 얼마나 있는지 한 번에 확인해 보세요.")
         // 샌드박스에서는 사용자가 연 개발 폴더만 본다. 임시 파일·캐시라고 쓰면 과장이다.
         case .junk: Sandbox.isActive
-            ? String(localized: "Xcode가 앱을 만들거나 시험할 때 생긴 파일을 찾아 공간을 비워요.")
-            : String(localized: "임시 파일, 앱을 만들 때 생긴 파일, 개발 도구의 임시 파일, 기기 백업을 찾아 공간을 비워요.")
-        case .largeFile: String(localized: "내 사용자 폴더와 추가한 폴더에서 큰 파일을 찾아요.")
-        case .duplicate: String(localized: "내용이 같은 파일을 찾아 하나만 남겨요.")
-        case .trash: String(localized: "휴지통에 든 것을 크기순으로 보고 골라서 비워요. 비우면 되돌릴 수 없어요.")
-        case .diskMap: String(localized: "무엇이 공간을 차지하는지 큰 것부터 살펴봐요.")
+            ? String(localized: "Xcode 개발용 파일 중에서 정리할 것을 찾아보세요.")
+            : String(localized: "앱이 만든 임시 파일과 개발용 파일, 기기 백업을 모아 보여줘요. 필요 없는 것을 골라 주세요.")
+        case .largeFile: String(localized: "내 폴더에 큰 파일이 있는지 살펴보세요. 직접 추가한 폴더도 함께 찾아요.")
+        case .duplicate: String(localized: "똑같은 파일이 여러 개 있으면 여분을 골라 정리해 보세요.")
+        case .trash: String(localized: "휴지통에서 지울 것을 골라 주세요. 큰 항목부터 보여줘요. 지운 항목은 되살릴 수 없어요.")
+        case .diskMap: String(localized: "큰 폴더부터 열어 보며 어디에 공간을 많이 쓰는지 확인하세요.")
         // 내 계정 소유만 읽힌다는 것을 여기서 미리 말한다. 화면에 들어가서야
         // 알면 "왜 활성 상태 보기와 목록이 다르지"로 읽힌다.
-        case .cpu: String(localized: "지금 어떤 프로그램이 CPU를 쓰는지 보여줘요.")
+        case .cpu: String(localized: "컴퓨터를 바쁘게 하는 프로그램을 확인해 보세요.")
         }
     }
 
@@ -68,15 +68,15 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
     public var reviewHint: String {
         switch self {
         case .junk:
-            String(localized: "대부분 앱을 만들면 다시 생겨요. 복구할 수 없는 앱 심사 제출본은 선택할 수 없게 잠가 뒀어요.")
+            String(localized: "지워도 대부분 개발할 때 다시 생기는 파일이에요. 심사에 낸 앱은 복구할 수 없어 고르지 못하게 했어요.")
         case .largeFile:
-            String(localized: "설치 파일은 다시 받을 수 있어요. 촬영 원본과 백업은 내용을 확인한 뒤 고르세요.")
+            String(localized: "사진이나 영상 원본, 백업은 필요한지 먼저 확인하세요. 앱 설치 파일은 다시 받을 수 있어요.")
         case .duplicate:
-            String(localized: "원본은 항상 남겨요. 아래 파일을 지워도 내용이 같은 파일은 그대로 남아요.")
+            String(localized: "아래는 여분의 파일이에요. 지우더라도 내용이 똑같은 원본 하나는 반드시 남아요.")
         case .trash:
-            String(localized: "고른 항목은 휴지통에서 바로 지워져 되돌릴 수 없어요.")
+            String(localized: "여기서 고르면 휴지통에서도 완전히 없어져요. 다시 되살릴 수 없으니 꼭 확인하세요.")
         case .smartScan:
-            String(localized: "기능별로 나눠 뒀어요. 잠긴 항목은 되돌릴 수 없어 선택할 수 없어요.")
+            String(localized: "종류별로 살펴보고 정리할 것을 고르세요. 복구할 수 없는 항목은 잠가 두었어요.")
         case .diskMap:
             ""
         case .cpu:

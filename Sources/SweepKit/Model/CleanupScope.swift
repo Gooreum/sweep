@@ -61,7 +61,7 @@ extension CleanupScope {
                 guard !sawTemporary else { return nil }
                 sawTemporary = true
                 return CleanupScope(url: url, label: String(localized: "앱 임시 폴더"),
-                                    detail: String(localized: "앱이 쓰다 남긴 임시 파일"))
+                                    detail: String(localized: "앱을 쓰고 남은 임시 파일"))
             }
 
             let label = path.hasPrefix(home)
@@ -72,7 +72,7 @@ extension CleanupScope {
             let components = FolderAccess.components(of: url)
             if known.isEmpty, customFolders.contains(components) {
                 customScopes.append(CleanupScope(url: url, label: label,
-                                                 detail: String(localized: "큰 파일 · 중복 파일 · 내가 추가한 폴더"),
+                                                 detail: String(localized: "직접 추가한 곳에서 큰 파일과 중복 파일을 찾아요"),
                                                  isCustom: true))
                 return nil
             }
@@ -85,7 +85,7 @@ extension CleanupScope {
 
         guard !homeFolders.isEmpty else { return fixed + customScopes }
         let grouped = CleanupScope(url: Sandbox.userHome,
-                                   label: String(localized: "~ 내 사용자 폴더"),
+                                   label: String(localized: "~ 내 폴더"),
                                    detail: homeFoldersDetail(homeFolders.map(\.lastPathComponent)))
         return fixed + [grouped] + customScopes
     }
@@ -93,29 +93,29 @@ extension CleanupScope {
     /// "큰 파일 · 중복 파일 — Desktop · Documents 외 15곳". 셋까지는 이름을 다 쓴다.
     static func homeFoldersDetail(_ names: [String]) -> String {
         let limit = names.count <= 3 ? names.count : 2
-        let shown = names.prefix(limit).joined(separator: " · ")
+        let shown = names.prefix(limit).joined(separator: ", ")
         let rest = names.count - limit
         return rest > 0
-            ? String(localized: "큰 파일 · 중복 파일: \(shown) 외 \(rest)곳")
-            : String(localized: "큰 파일 · 중복 파일: \(shown)")
+            ? String(localized: "\(shown) 외 \(rest)곳에서 큰 파일과 중복 파일을 찾아요")
+            : String(localized: "\(shown)에서 큰 파일과 중복 파일을 찾아요")
     }
 
     private static func detail(for label: String) -> String {
         switch label {
-        case "~/Library/Developer": String(localized: "Xcode가 앱을 만들거나 시험할 때 생긴 파일")
-        case "~/Library/Caches": String(localized: "앱이 다시 만들 수 있는 임시 파일")
-        case "~/Library/Logs": String(localized: "앱 활동 기록")
-        case "~/Downloads": String(localized: "내려받은 파일 · 중복 파일")
-        case "/private/tmp": String(localized: "시스템 임시 파일")
+        case "~/Library/Developer": String(localized: "Xcode 개발용 파일을 찾아요")
+        case "~/Library/Caches": String(localized: "지워도 앱에서 다시 만들 수 있는 파일을 찾아요")
+        case "~/Library/Logs": String(localized: "앱 사용 기록")
+        case "~/Downloads": String(localized: "받아 둔 파일과 중복 파일을 찾아요")
+        case "/private/tmp": String(localized: "macOS 임시 파일")
         // 폴더 전체가 아니라 안의 캐시만 본다. 설정과 인증 정보는 건드리지 않는다.
-        case "~/.npm": String(localized: "npm 내려받기 임시 파일")
+        case "~/.npm": String(localized: "npm 설치 임시 파일")
         case "~/.expo": String(localized: "Expo 임시 파일")
         case "~/.gradle/caches": String(localized: "Gradle 임시 파일")
-        case "~/.cargo/registry": String(localized: "Cargo 내려받기 임시 파일")
-        case "~/.m2/repository": String(localized: "Maven 내려받기 임시 파일")
-        case "~/.Trash": String(localized: "휴지통이에요. 비우면 되돌릴 수 없어요")
+        case "~/.cargo/registry": String(localized: "Cargo 설치 임시 파일")
+        case "~/.m2/repository": String(localized: "Maven 설치 임시 파일")
+        case "~/.Trash": String(localized: "버린 파일이 모여 있어요. 완전히 지우면 복구할 수 없어요")
         case "~/Library/Mobile Documents/.Trash":
-            String(localized: "iCloud Drive 휴지통이에요. 비우면 다른 기기에서도 사라져요")
+            String(localized: "iCloud Drive에서 버린 파일이에요. 비우면 연결된 다른 기기에서도 없어져요")
         case "~/Library/Application Support/MobileSync/Backup": String(localized: "iOS 기기 백업")
         case "~/Library/Containers/com.apple.mail/Data/Library/Mail Downloads":
             String(localized: "메일 첨부 사본")

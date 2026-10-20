@@ -62,7 +62,7 @@ public struct FileDates: Sendable, Hashable {
             lastUsed.flatMap { Self.dateText($0, calendar: calendar) }
                 .map { String(localized: "마지막 사용 \($0)") },
         ].compactMap { $0 }
-        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+        return parts.isEmpty ? nil : parts.joined(separator: ". ")
     }
 
     /// "2026.05.18". `DateFormatter`를 쓰지 않는다 — 로캘에 따라 형식이 흔들리고,
