@@ -10,7 +10,7 @@ Meet Sweep — a disk cleanup utility built for Mac developers.
 
 ■ BUILT FOR DEVELOPER MACHINES
 
-Find space-consuming files across your development environment with a single scan.
+Find space-consuming files across your development environment with a single scan using Search All.
 
 • Xcode DerivedData and build caches
 • iOS simulator caches and device support files
@@ -19,7 +19,7 @@ Find space-consuming files across your development environment with a single sca
 • Large files in Downloads
 • Duplicate files with identical content
 
-See how much space you could reclaim before removing anything.
+Results are grouped into Files to Clean, Large Files, and Duplicates, so you can see how much space you could reclaim before removing anything.
 
 ■ NOT EVERYTHING SHOULD BE DELETED
 
@@ -35,7 +35,7 @@ Only safe items are preselected.
 
 Important development files, including Xcode Archives, are protected from accidental cleanup.
 
-■ FIND FORGOTTEN LARGE FILES
+■ LARGE FILES: FIND WHAT YOU FORGOT
 
 That old DMG. A downloaded video. An archive you opened once.
 
@@ -43,7 +43,7 @@ Sweep finds files larger than 100 MB in your Downloads folder and sorts them by 
 
 Review when files were downloaded and decide what stays.
 
-■ REMOVE DUPLICATES, KEEP THE ORIGINAL
+■ DUPLICATES: KEEP ONE COPY
 
 Different names don't always mean different files.
 
@@ -51,16 +51,24 @@ Sweep compares file contents to identify exact duplicates, excluding the earlies
 
 ■ SEE WHERE YOUR SPACE GOES
 
-Explore your storage with Disk Map.
+Explore your storage with Space View.
 
-Compare file and folder sizes, navigate directories, and quickly open items in Finder, copy paths, or move files to the Trash.
+Compare file and folder sizes, navigate directories, and quickly show items in Finder, copy locations, or move files to the Trash.
+
+■ FIND OUT WHY YOUR MAC IS BUSY
+
+The CPU tab lists the programs keeping your Mac busy, from busiest to quietest, using the same numbers as Activity Monitor.
+
+Click a program to see what it is, who started it, how long it has been running, its memory use, the command it was started with, and where it lives — in plain words. Sweep also tells you which built-in macOS programs you should leave running.
+
+Because of App Store sandbox rules, some programs started by macOS itself cannot be listed one by one and appear as a single combined row.
 
 ■ CLEAN WITHOUT SECOND-GUESSING
 
 Sweep is designed to make cleanup deliberate and reversible.
 
 • Files are moved to the macOS Trash, not permanently erased
-• Undo your most recent cleanup
+• Restore your most recent cleanup
 • Review safety classifications before deleting
 • Keep cleanup operations within defined locations
 • See how much space will be freed after emptying the Trash
