@@ -48,6 +48,13 @@ public enum ProcessCPUSampler {
 
     /// `proc_listpids`가 아니라 `sysctl`이다 — 위 주석의 이유. 바꾸면 샌드박스에서 0개가 된다.
     private static func processIdentifiers() -> [pid_t] {
+        kernelProcessTable().map(\.kp_proc.p_pid).filter { $0 > 0 }
+    }
+
+    /// 읽을 수 있는 프로세스 전부의 `kinfo_proc`. 부모 pid·시작 시각·소유자도 여기서 나온다.
+    ///
+    /// 샌드박스 안에서도 전부 나온다(실측 523개). 실패하면 빈 배열이다.
+    static func kernelProcessTable() -> [kinfo_proc] {
         var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0]
 
         // 크기를 묻고 읽는 사이에 프로세스가 늘면 버퍼가 모자라 실패한다.
@@ -64,9 +71,7 @@ public enum ProcessCPUSampler {
 
             // 두 번째 호출이 처음 물은 것보다 적게 채울 수 있다. 채워진 만큼만 읽는다 —
             // 남은 자리는 0으로 초기화된 껍데기라 pid 0으로 잡힌다.
-            return buffer.prefix(read / stride)
-                .map(\.kp_proc.p_pid)
-                .filter { $0 > 0 }
+            return Array(buffer.prefix(read / stride))
         }
         return []
     }
@@ -116,7 +121,7 @@ public enum ProcessCPUSampler {
     /// 3. `pid 1234` — 둘 다 실패해도 행은 그려야 한다
     ///
     /// `kinfo_proc`의 `p_comm`은 쓰지 않는다. 16자에서 잘려 `qemu-system-aar`가 된다.
-    private static func displayName(of pid: pid_t, path: String?) -> String {
+    static func displayName(of pid: pid_t, path: String?) -> String {
         if let path {
             let last = URL(filePath: path).lastPathComponent
             if !last.isEmpty { return last }
@@ -131,7 +136,7 @@ public enum ProcessCPUSampler {
         return "pid \(pid)"
     }
 
-    private static func executablePath(of pid: pid_t) -> String? {
+    static func executablePath(of pid: pid_t) -> String? {
         // `PROC_PIDPATHINFO_MAXSIZE`는 매크로라 Swift에 넘어오지 않는다.
         // 정의가 `4 * MAXPATHLEN`이므로 그대로 풀어 쓴다 — 더 작게 잡으면
         // `proc_pidpath`가 ENOMEM으로 떨어져 긴 경로의 이름이 통째로 사라진다.
@@ -145,7 +150,7 @@ public enum ProcessCPUSampler {
     ///
     /// `String(cString:)`은 deprecated다. 널 앞까지만 잘라서 UTF-8로 읽으라는 것이
     /// 대체 방법인데, 자르지 않으면 뒤에 남은 0들이 그대로 따라 들어온다.
-    private static func string(from buffer: [CChar]) -> String {
+    static func string(from buffer: [CChar]) -> String {
         String(decoding: buffer.prefix { $0 != 0 }.map(UInt8.init(bitPattern:)), as: UTF8.self)
     }
 }

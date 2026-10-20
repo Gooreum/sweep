@@ -21,6 +21,12 @@ struct SweepApp: App {
         if CommandLine.arguments.contains("--cpu-only") {
             Self.runCPUSampleAndExit()
         }
+        // 고른 프로그램의 자세한 정보. 샌드박스에서 무엇이 읽히는지 서명한 번들로 확인한다.
+        if let flag = CommandLine.arguments.firstIndex(of: "--cpu-details"),
+           CommandLine.arguments.indices.contains(flag + 1),
+           let pid = pid_t(CommandLine.arguments[flag + 1]) {
+            Self.runCPUDetailsAndExit(pid: pid)
+        }
         _app = State(initialValue: AppModel())
         // SPM 실행 파일은 앱 번들이 아니라서 기본이 백그라운드 프로세스다.
         // .regular로 올려야 창이 앞으로 나오고 메뉴 막대가 붙는다.
@@ -94,6 +100,27 @@ struct SweepApp: App {
     ///
     /// 누적값은 두 번 재야 뜻이 생기므로 구간만큼 멈춘다. 여기서는 `Task.sleep`이
     /// 아니라 `Thread.sleep`이다 — `init()`이 async가 아니라 await할 자리가 없다.
+    private static func runCPUDetailsAndExit(pid: pid_t) -> Never {
+        guard let details = ProcessDetailsReader.read(pid: pid) else {
+            print("pid \(pid)\t없음")
+            exit(1)
+        }
+        func line(_ label: String, _ value: String?) {
+            print("\(label)\t\(value ?? "읽지 못함")")
+        }
+        line("이름", details.name)
+        line("내 계정", details.isMine ? "예" : "아니오")
+        line("시작", details.startedAt.map { "\($0)" })
+        line("띄운 쪽", details.launchedBy.isEmpty
+            ? nil : details.launchedBy.map { "\($0.name)(\($0.pid))" }.joined(separator: " > "))
+        line("메모리", details.memoryBytes.map { String($0) })
+        line("스레드", details.threads.map { String($0) })
+        line("실행 명령", details.arguments?.joined(separator: " "))
+        line("실행 파일", details.executablePath)
+        line("앱", details.app.map { "\($0.name) \($0.version ?? "-") \($0.path)" })
+        exit(0)
+    }
+
     private static func runCPUSampleAndExit() -> Never {
         // 약속한 구간이 아니라 **실제로 흐른 시간**으로 나눈다. `Thread.sleep`은
         // 최소 시간만 보장해서, 기계가 바쁘면 더 자고 사용률이 부풀려진다.
