@@ -48,10 +48,10 @@
 	     권한 대화를 띄우지 않고 조용히 빈 결과를 준다.
 	     여기는 기본값(영어)이다. 한국어는 Resources/ko.lproj/InfoPlist.strings. -->
 	<key>NSDesktopFolderUsageDescription</key>
-	<string>Sweep reads your Desktop to find items that take up space.</string>
+	<string>See which files on your Desktop take up the most space.</string>
 	<key>NSDocumentsFolderUsageDescription</key>
-	<string>Sweep reads your Documents folder to find items that take up space.</string>
+	<string>See which files in Documents take up the most space.</string>
 	<key>NSDownloadsFolderUsageDescription</key>
-	<string>Sweep reads your Downloads folder to check what can be cleaned up and how much space it uses.</string>
+	<string>Find files in Downloads to review for cleanup and see how much space they use.</string>
 </dict>
 </plist>

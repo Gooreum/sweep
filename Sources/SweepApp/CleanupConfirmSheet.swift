@@ -29,8 +29,8 @@ struct CleanupConfirmSheet: View {
 
     var body: some View {
         Retro95Dialog(title: permanent
-                        ? String(localized: "\(model.selectedItems.count)개 항목을 영구 삭제해요")
-                        : String(localized: "\(model.selectedItems.count)개 항목을 휴지통으로 옮겨요"),
+                        ? String(localized: "\(model.selectedItems.count)개를 완전히 지울까요?")
+                        : String(localized: "\(model.selectedItems.count)개를 휴지통에 보낼까요?"),
                       icon: .warning) {
             VStack(alignment: .leading, spacing: 12) {
                 Text(bodyText)
@@ -44,7 +44,7 @@ struct CleanupConfirmSheet: View {
                 Button("취소", action: onCancel)
                     .buttonStyle(Retro95ButtonStyle(isDefault: true))
                     .keyboardShortcut(.defaultAction)
-                Button("영구 삭제", action: onConfirm)
+                Button("완전 삭제", action: onConfirm)
                     .buttonStyle(Retro95ButtonStyle())
             } else {
                 Button("취소", action: onCancel)
@@ -62,14 +62,14 @@ struct CleanupConfirmSheet: View {
     /// 위험한 것이 섞였을 때만 그것을 먼저 말한다. 없으면 군더더기가 된다.
     private var bodyText: String {
         if permanent {
-            let base = String(localized: "휴지통에서 바로 지워져 되돌릴 수 없어요. 지운 만큼 공간이 바로 늘어나요.")
+            let base = String(localized: "휴지통 안의 파일을 완전히 지워요. 복구할 수 없어요. 지운 용량만큼 바로 쓸 수 있어요.")
             return iCloudCount > 0
-                ? base + " " + String(localized: "이 중 \(iCloudCount)개는 iCloud Drive 항목이라 다른 기기에서도 지워져요.")
+                ? base + " " + String(localized: "iCloud Drive에 있는 \(iCloudCount)개는 다른 기기에서도 함께 지워져요.")
                 : base
         }
         return riskyCount > 0
-            ? String(localized: "이 중 \(riskyCount)개는 다시 만들 수 없어요. 휴지통을 비우면 처음부터 다시 받아야 해요. 비우기 전까지는 모두 되돌릴 수 있어요. 휴지통을 비워야 공간이 늘어나요.")
-            : String(localized: "휴지통을 비우기 전까지 되돌릴 수 있어요. 휴지통을 비워야 공간이 늘어나요.")
+            ? String(localized: "고른 파일은 휴지통에 보관해요. 비우기 전에는 모두 복구할 수 있어요. 이 중 \(riskyCount)개는 새로 만들 수 없는 파일이에요. 비운 뒤 필요해지면 처음부터 다시 받아야 해요. 빈 공간은 휴지통을 비워야 생겨요.")
+            : String(localized: "파일은 휴지통에 보관해요. 아직은 복구할 수 있어요. 휴지통을 비우면 복구할 수 없고, 그때 빈 공간이 생겨요.")
     }
 
     private var summaryBlock: some View {

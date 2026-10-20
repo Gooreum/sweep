@@ -16,17 +16,17 @@ struct FolderAccessView: View {
     @State private var failure: String?
 
     var body: some View {
-        Retro95Dialog(title: String(localized: "정리할 폴더 열기"), icon: .folder) {
+        Retro95Dialog(title: String(localized: "어디에서 찾을까요?"), icon: .folder) {
             VStack(alignment: .leading, spacing: 12) {
                 VStack(spacing: 6) {
-                    Text("App Store 앱은 보안 때문에 폴더를 마음대로 열 수 없어요. 처음 한 번 접근을 허용해 주세요.")
-                    Text("맨 위 하나만 허용해도 대부분 찾을 수 있어요.")
+                    Text("파일을 찾으려면 폴더를 열 수 있어야 해요. 아래에서 찾을 곳을 허용해 주세요.")
+                    Text("대부분은 맨 위 폴더 안에 있어요. 우선 그곳부터 열어 주세요.")
                 }
                 .font(R95.ui())
                 .foregroundStyle(R95.deep)
                 .multilineTextAlignment(.leading)
 
-                Retro95GroupBox(title: String(localized: "허락할 폴더")) {
+                Retro95GroupBox(title: String(localized: "찾을 폴더")) {
                     VStack(spacing: 0) {
                         ForEach(FolderAccess.grantables) { grantable in
                             row(for: grantable)
@@ -38,7 +38,7 @@ struct FolderAccessView: View {
             }
         }
         .frame(maxWidth: R95.dialogWidth)
-        .alert("다른 폴더를 골랐어요",
+        .alert("필요한 폴더와 달라요",
                isPresented: Binding(get: { failure != nil }, set: { if !$0 { failure = nil } })) {
             Button("확인") { failure = nil }
         } message: {

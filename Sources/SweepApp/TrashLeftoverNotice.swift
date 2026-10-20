@@ -21,10 +21,10 @@ struct TrashLeftoverNotice: View {
             PixelIcon(art: .warning, size: 24)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("관리자 소유 항목 \(leftovers.count)개(\(names))는 Sweep이 지울 수 없어요")
+                Text("\(names), 총 \(leftovers.count)개는 관리자 소유라 남겨 뒀어요")
                     .font(Theme.bodyText)
                     .foregroundStyle(Theme.textPrimary)
-                Text("Finder에서 휴지통을 비우면 Mac 암호를 물은 뒤 지워요.")
+                Text("이 항목은 Finder에서 휴지통을 비워야 지워져요. Mac 암호가 필요해요. 비운 뒤에는 복구할 수 없어요.")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.textSecondary)
             }

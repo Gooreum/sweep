@@ -15,7 +15,7 @@ struct CPUView: View {
             .init(title: String(localized: "사용률 ▼"), width: percent),
             .init(title: String(localized: "프로그램과 위치")),
             .init(title: String(localized: "번호"), width: pid),
-            .init(title: String(localized: "위치·복사"), width: actions)
+            .init(title: String(localized: "파일 위치"), width: actions)
         ]
     }
 
@@ -42,11 +42,11 @@ struct CPUView: View {
                 Text(coreSentence)
                     .font(R95.ui(12, bold: true))
                     .foregroundStyle(R95.black)
-                Text("프로그램 사용률은 활성 상태 보기처럼 코어 하나를 100%로 세요. 여러 코어를 함께 쓰면 100%를 넘고, 모두 합치면 최대 \(model.cores * 100)%예요.")
+                Text("숫자가 클수록 컴퓨터를 많이 쓰고 있어요. 100%를 넘어도 고장은 아니에요. 이 Mac에서는 최대 \(model.cores * 100)%까지 나와요.")
                     .font(R95.ui(11))
                     .foregroundStyle(R95.deep)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("왼쪽은 Mac 전체를 100%로 봐요. 프로그램 실행, Mac 기본 작동, 쉬는 몫을 나눠 보여줘요.")
+                Text("퍼센트 기준은 활성 상태 보기와 같아요. Mac이 느리다면 오른쪽에서 많이 쓰는 프로그램을 확인해 보세요.")
                     .font(R95.ui(11))
                     .foregroundStyle(R95.deep)
             }
@@ -63,9 +63,9 @@ struct CPUView: View {
     private var coreSentence: String {
         if let performance = ProcessCPUSampler.performanceCores,
            let efficiency = ProcessCPUSampler.efficiencyCores {
-            String(localized: "CPU 안에는 계산을 나눠 하는 코어가 \(model.cores)개 있어요. 빠른 계산용 \(performance)개와 전기를 덜 쓰는 \(efficiency)개예요.")
+            String(localized: "어떤 프로그램이 컴퓨터를 바쁘게 하는지 살펴보세요. CPU 정보는 총 \(model.cores)개, 성능 \(performance)개, 효율 \(efficiency)개예요.")
         } else {
-            String(localized: "CPU 안에는 계산을 나눠 하는 코어가 \(model.cores)개 있어요.")
+            String(localized: "어떤 프로그램이 컴퓨터를 바쁘게 하는지 살펴보세요. CPU 정보는 총 \(model.cores)개예요.")
         }
     }
 
@@ -76,7 +76,7 @@ struct CPUView: View {
             }
             Retro95GroupBox(title: String(localized: "많이 쓰는 프로그램")) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("막대가 꽉 차면 코어 하나 이상을 쓰고 있어요. 100%는 코어 하나, 200%는 두 개를 온전히 쓰는 양이에요.")
+                    Text("막대가 길수록 많이 쓰고 있어요. 꽉 찬 막대끼리는 옆의 숫자를 비교해 보세요.")
                         .font(R95.ui(11))
                         .foregroundStyle(R95.deep)
                         .fixedSize(horizontal: false, vertical: true)
@@ -114,9 +114,9 @@ struct CPUView: View {
                     }
                 }
                 loadRow(String(localized: "프로그램"), load.user, fill: R95.navy)
-                loadRow(String(localized: "Mac 작동"), load.system, fill: R95.navy)
+                loadRow(String(localized: "시스템"), load.system, fill: R95.navy)
                 // 유휴는 쓰이지 않은 몫이라 회색으로 물러나게 한다.
-                loadRow(String(localized: "쉬는 중"), load.idle, fill: R95.shadow)
+                loadRow(String(localized: "여유"), load.idle, fill: R95.shadow)
             }
         } else {
             // 준비 중이거나 커널 값을 못 읽었다. 프로세스 합으로 지어내지 않는다 —
@@ -124,7 +124,7 @@ struct CPUView: View {
             VStack(alignment: .leading, spacing: 8) {
                 PixelIcon(art: .computer, size: 32)
                 Text(model.isWarmingUp ? String(localized: "측정 중…")
-                                       : String(localized: "Mac 전체 CPU 사용량을 읽지 못했어요."))
+                                       : String(localized: "지금은 Mac이 얼마나 바쁜지 확인할 수 없어요."))
                     .font(R95.ui(12))
                     .foregroundStyle(R95.deep)
             }
@@ -167,7 +167,7 @@ struct CPUView: View {
         // 활성 상태 보기에서 가장 크게 보이는 두 이름을 앞에 둬야 "kernel_task가 없다"로
         // 읽히지 않는다. 다만 이 줄엔 잠깐 돌고 끝난 프로세스 몫도 섞여 있어(실측: 빌드 중
         // 기계 787% 중 top도 약 390%를 어느 행에도 못 붙였다) "합계"라고 밝힌다.
-        case .unlisted: String(localized: "kernel_task, WindowServer 등 목록 밖 합계")
+        case .unlisted: String(localized: "kernel_task, WindowServer 등 나머지 합계")
         }
     }
 
@@ -188,10 +188,10 @@ struct CPUView: View {
     private var content: some View {
         if model.isWarmingUp {
             placeholder(String(localized: "측정 중…"),
-                        detail: String(localized: "사용률을 계산하려고 두 번 재고 있어요."))
+                        detail: String(localized: "잠시 기다리면 많이 쓰는 프로그램부터 보여드려요."))
         } else if model.rows.isEmpty {
-            placeholder(String(localized: "지금 CPU를 쓰는 프로그램이 없어요."),
-                        detail: String(localized: "방금 측정한 동안에는 계산한 일이 없어요."))
+            placeholder(String(localized: "지금은 표시할 프로그램이 없어요."),
+                        detail: String(localized: "컴퓨터를 쓰기 시작하면 여기에 나타나요."))
         } else {
             // 주기적 갱신이 NSTableView 대리자로 재진입하지 않도록 List 대신 스크롤 뷰를 쓴다.
             ScrollView {
@@ -246,7 +246,7 @@ struct CPUView: View {
         switch row {
         case .process(let usage): usage.displayPath
         case .unlisted:
-            String(localized: "Mac 시스템 계정으로 실행되거나 잠깐 실행됐다 끝난 프로그램의 합계예요. App Store 앱은 보안 때문에 각각의 사용량을 볼 수 없어요.")
+            String(localized: "Mac을 움직이는 프로그램과 잠깐 실행된 프로그램을 합친 값이에요. App Store 버전에서는 각각 나눠 볼 수 없어요.")
         }
     }
 

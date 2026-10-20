@@ -26,7 +26,7 @@ struct SweepCommands: Commands {
         // **빈 껍데기를 남기고 싸우느니 쓸모를 준다** — 마침 "Sweep이 보는 곳"이
         // 첫 화면에 생겼고, 이 앱에서 가장 자주 묻는 질문이 그것이다.
         CommandGroup(replacing: .help) {
-            Button("Sweep이 보는 곳") { app.selected = .smartScan }
+            Button("찾아볼 곳") { app.selected = .smartScan }
         }
 
         // 사이드바를 마우스로만 옮길 수 있으면 키보드 사용자는 갇힌다.
