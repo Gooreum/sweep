@@ -13,6 +13,22 @@
 default_platform(:mac)
 
 platform :mac do
+  # App Store Connect의 버전과 심사 상태를 읽어 로그에 남긴다. **아무것도 바꾸지 않는다.**
+  # 이전 버전이 심사에 제출돼 있으면 `metadata`가 스크린샷을 못 지운다 — 올리기 전에 이걸로 본다.
+  lane :status do
+    api_key
+    versions.each { |version, state| UI.message("#{version}  #{state}") }
+  end
+
+  # [버전 문자열, 상태] 목록. 최근 것부터.
+  private_lane :versions do
+    app = Spaceship::ConnectAPI::App.find(CredentialsManager::AppfileConfig.try_fetch_value(:app_identifier))
+    UI.user_error!("App Store Connect에서 앱을 찾지 못했다") unless app
+    app.get_app_store_versions(filter: { platform: "MAC_OS" }, limit: 10)
+       .sort_by { |v| v.created_date.to_s }.reverse
+       .map { |v| [v.version_string, v.app_version_state] }
+  end
+
   lane :metadata do |options|
     api_key
     deliver(

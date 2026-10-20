@@ -36,6 +36,14 @@ on:
         description: 스크린샷 교체
         type: boolean
         default: false
+      status:
+        description: App Store Connect의 버전·심사 상태만 읽어 로그에 남긴다 (아무것도 바꾸지 않는다)
+        type: boolean
+        default: false
+      cancel_review:
+        description: 심사에 제출된 이전 버전이 있으면 제출을 철회하고 올린다 (심사 순서를 잃는다)
+        type: boolean
+        default: false
 
 # 두 릴리스가 동시에 올라가면 번호·앱 정보가 엇갈린다. 앞의 것을 끝까지 둔다.
 concurrency:
@@ -75,7 +83,7 @@ jobs:
           fi | tee -a "$GITHUB_OUTPUT"
 
       - name: API 키
-        if: steps.plan.outputs.build == 'true' || steps.plan.outputs.metadata == 'true' || steps.plan.outputs.screenshots == 'true'
+        if: steps.plan.outputs.build == 'true' || steps.plan.outputs.metadata == 'true' || steps.plan.outputs.screenshots == 'true' || inputs.status
         env:
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
         run: |
@@ -100,11 +108,17 @@ jobs:
           DESTINATION: ${{ inputs.dry_run && 'export' || 'upload' }}
         run: bash scripts/upload-archive.sh
 
+      - name: 버전 상태
+        if: inputs.status
+        run: |
+          brew install fastlane
+          fastlane mac status
+
       - name: 앱 정보·스크린샷
         if: steps.plan.outputs.metadata == 'true' || steps.plan.outputs.screenshots == 'true'
         run: |
           brew install fastlane
-          fastlane mac metadata screenshots:${{ steps.plan.outputs.screenshots }} version:${{ steps.plan.outputs.version }}
+          fastlane mac metadata screenshots:${{ steps.plan.outputs.screenshots }} version:${{ steps.plan.outputs.version }} cancel_review:${{ inputs.cancel_review || 'false' }}
 
       - name: 태그
         if: steps.plan.outputs.build == 'true' && !inputs.dry_run
