@@ -16,21 +16,21 @@ struct StatusLineTests {
     @Test("디스크 맵이 개수를 세는 중이면 센 개수를 보여주고 숫자 칸은 비운다")
     func diskMapCounting() {
         let line = StatusLine.diskMap(loadPhase: .counting(scanned: 1234), current: sampleTree())
-        #expect(line == StatusLine(status: "\(1234.formatted())개 세는 중…", count: "—", size: "—"))
+        #expect(line == StatusLine(status: "\(1234.formatted())개 확인 중…", count: "—", size: "—"))
     }
 
     // TC-2
     @Test("디스크 맵이 크기를 재는 중이면 퍼센트를 보여준다")
     func diskMapMeasuring() {
         let line = StatusLine.diskMap(loadPhase: .measuring(percent: 42), current: nil)
-        #expect(line == StatusLine(status: "사용량을 재는 중… 42%", count: "—", size: "—"))
+        #expect(line == StatusLine(status: "크기 확인 중… 42%", count: "—", size: "—"))
     }
 
     // TC-3
     @Test("디스크 맵에 아직 아무것도 없으면 준비됨")
     func diskMapEmpty() {
         let line = StatusLine.diskMap(loadPhase: nil, current: nil)
-        #expect(line == StatusLine(status: "준비됨", count: "—", size: "—"))
+        #expect(line == StatusLine(status: "시작 전", count: "—", size: "—"))
     }
 
     // TC-4
@@ -45,7 +45,7 @@ struct StatusLineTests {
         app.selected = .diskMap
         _ = app.diskMap()
 
-        #expect(app.statusLine == StatusLine(status: "표시 완료", count: "항목 2개",
+        #expect(app.statusLine == StatusLine(status: "확인 완료", count: "항목 2개",
                                               size: "크기 \(tree.formattedSize)"))
     }
 
@@ -56,7 +56,7 @@ struct StatusLineTests {
                            needsFolderAccess: true)
         app.selected = .junk
 
-        #expect(app.statusLine == StatusLine(status: "폴더 허용 필요", count: "—", size: "—"))
+        #expect(app.statusLine == StatusLine(status: "폴더 선택 필요", count: "—", size: "—"))
     }
 
     // TC-6
@@ -65,7 +65,7 @@ struct StatusLineTests {
         let app = AppModel(needsFolderAccess: false)
         app.selected = .junk
 
-        #expect(app.statusLine == StatusLine(status: "준비됨", count: "항목 0개", size: "—"))
+        #expect(app.statusLine == StatusLine(status: "시작 전", count: "항목 0개", size: "—"))
     }
 
     // TC-7
@@ -76,7 +76,7 @@ struct StatusLineTests {
                            needsFolderAccess: false)
         app.selected = .diskMap
 
-        #expect(app.statusLine == StatusLine(status: "준비됨", count: "—", size: "—"))
+        #expect(app.statusLine == StatusLine(status: "시작 전", count: "—", size: "—"))
         #expect(created == 0)
     }
 }

@@ -29,7 +29,7 @@ struct ScanGroupTests {
         let group = ScanGroup(kind: .safety(.safe),
                               items: [item("a", size: 1, category: .xcode)])
         // "안전 4개"보다 "다시 만들 수 있음 4개"가 고를 때 쓸모 있다.
-        #expect(group.displayName == "다시 만들 수 있음")
+        #expect(group.displayName == "다시 생김")
         #expect(group.category == nil)
     }
 

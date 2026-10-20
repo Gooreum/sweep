@@ -43,7 +43,7 @@ struct StaleCacheScannerTests {
         #expect(items.count == 1)
         #expect(items.first?.category == .staleCache)
         #expect(items.first?.displayName == "dotslash")
-        #expect(items.first?.detail.contains("일 동안 쓰이지 않았어요") == true)
+        #expect(items.first?.detail.contains("마지막으로 쓴 뒤 200일이 지났어요") == true)
     }
 
     // TC-2

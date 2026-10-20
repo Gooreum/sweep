@@ -106,7 +106,7 @@ struct CleanupHistoryTests {
         let summary = CleanupSummary(totalReclaimedBytes: 12_400_000_000,
                                      lastCleanup: day(3, from: now))
 
-        #expect(summary.statusLine(now: now) == "지금까지 12.4 GB를 휴지통으로 옮겼어요. 마지막 정리는 3일 전")
+        #expect(summary.statusLine(now: now) == "휴지통으로 보낸 파일은 모두 12.4 GB예요. 최근 정리한 때는 3일 전")
     }
 
     // TC-7
@@ -160,7 +160,7 @@ struct CleanupHistoryTests {
     func trashHintOnlyWithHistory() {
         #expect(CleanupSummary.empty.trashHint == nil)
         let summary = CleanupSummary(totalReclaimedBytes: 1, lastCleanup: Date())
-        #expect(summary.trashHint == "휴지통을 비워야 디스크 공간이 늘어나요")
+        #expect(summary.trashHint == "옮긴 파일은 아직 공간을 차지해요. 휴지통까지 비워 주세요")
     }
 
     @Test("kind가 없는 예전 기록은 정리 회차로 읽힌다")

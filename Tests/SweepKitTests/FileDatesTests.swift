@@ -85,7 +85,7 @@ struct FileDatesTests {
 
         let line = FileDates(created: created, lastUsed: used).tooltipLine(calendar: calendar)
 
-        #expect(line == "만든 날 2026.05.18 · 마지막 사용 2026.05.19")
+        #expect(line == "만든 날 2026.05.18. 마지막 사용 2026.05.19")
     }
 
     // TC-8b

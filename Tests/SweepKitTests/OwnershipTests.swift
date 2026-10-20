@@ -98,7 +98,7 @@ struct OwnershipTests {
         let outcome = Remover(movesToTrash: false).removeOne(item)
 
         #expect(!outcome.succeeded)
-        #expect(outcome.failureReason?.contains("다른 사용자나 시스템 소유") == true)
+        #expect(outcome.failureReason?.contains("내 소유가 아닌 항목") == true)
         // 관문이 막았으면 실제로 남아 있어야 한다
         #expect(fm.fileExists(atPath: systemOwnedFile.path), "시스템 파일이 사라졌다")
     }

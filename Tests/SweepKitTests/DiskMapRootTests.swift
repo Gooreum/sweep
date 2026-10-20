@@ -245,6 +245,6 @@ struct DiskMapRootTests {
     @Test("그룹 표시명은 현지화 키를 거치고 번역이 없으면 rawValue와 같다")
     func groupTitlesMatchRawValuesWithoutTranslation() {
         #expect(DiskMapRoot.Group.allCases.map(\.title)
-                == ["전체", "내 사용자 폴더 안", "응용 프로그램", "정리 대상"])
+                == ["전체", "내 폴더 안", "응용 프로그램", "정리 대상"])
     }
 }
