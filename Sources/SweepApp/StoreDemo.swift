@@ -29,9 +29,15 @@ enum StoreDemo {
     private static let projectBackup = name("FinalCut 프로젝트 백업.zip", "FinalCut Project Backup.zip")
     private static let meetingVideo = name("회의 녹화 0612.mp4", "Team Meeting 0612.mp4")
 
+    /// 스캐너와 **같은 문장**이어야 한다. 데모에서만 다른 문구를 쓰면 영어 스크린샷에 한국어가 남고,
+    /// 실제 앱과 다른 화면이 된다.
+    private static func daysAgo(_ days: Int) -> String {
+        String(localized: "\(days)일 전에 받았어요")
+    }
+
     /// 스캐너와 같은 키 — 카탈로그에 번역이 이미 있고, 영어에서는 복수형까지 맞는다.
     private static func monthsAgo(_ months: Int) -> String {
-        String(localized: "받은 지 \(months)개월 된 파일이에요")
+        String(localized: "\(months)개월 전에 받았어요")
     }
 
     /// 실앱과 같은 흐름으로 채운 `AppModel`.
@@ -44,6 +50,7 @@ enum StoreDemo {
                           removeOne: { RemovalOutcome(item: $0, failureReason: nil) })
             },
             makeDiskMap: { diskMap() },
+            makeCPU: { cpu() },
             // 스크린샷용 가짜 삭제가 실제 정리 기록에 쌓이면 안 된다
             history: CleanupHistory(defaults: UserDefaults(suiteName: "sweep-store-demo")!),
             // 허락한 뒤의 화면을 보여준다
@@ -65,6 +72,9 @@ enum StoreDemo {
         case "store-cleaned":
             app.selected = .duplicate
             await app.model(for: .duplicate).removeSelected()
+        case "store-cpu":
+            app.selected = .cpu
+            app.cpu().select(fileprovider)
         default: // store-summary
             app.selected = .smartScan
         }
@@ -82,7 +92,7 @@ enum StoreDemo {
         func dup(_ name: String, _ size: Int64, of original: String) -> CleanupItem {
             CleanupItem(url: preview.appending(path: name), size: size,
                         category: .duplicate, safety: .safe,
-                        detail: String(localized: "남겨 둘 원본은 \(original)이에요. 내용이 같은 여분이에요"))
+                        detail: String(localized: "같은 내용의 원본이 남아요: \(original)"))
         }
         // `XcodeScanner`와 같은 안전도·설명. 목록에는 마지막 경로 이름만 보인다.
         func xcode(_ path: String, _ size: Int64, _ safety: SafetyLevel, _ detail: String)
@@ -110,7 +120,7 @@ enum StoreDemo {
             large(projectBackup, 3_380_000_000, monthsAgo(5)),
             large(meetingVideo, 1_270_000_000, monthsAgo(3)),
             large("Docker.dmg", 524_000_000, monthsAgo(1)),
-            large("Blender-4.2-macos-arm64.dmg", 412_000_000, String(localized: "받은 지 \(12)일 된 파일이에요")),
+            large("Blender-4.2-macos-arm64.dmg", 412_000_000, daysAgo(12)),
             dup("Zoom (1).pkg", 91_800_000, of: "Zoom.pkg"),
             dup(name("KakaoTalk (1).dmg", "Slack (1).dmg"), 74_600_000,
                 of: name("KakaoTalk.dmg", "Slack.dmg")),
@@ -152,5 +162,62 @@ enum StoreDemo {
             node(name("강의자료", "Course Notes"), 318_000_000),
         ]))
         return model
+    }
+
+    // MARK: - CPU 장면
+
+    /// 스크린샷에서 고른 행. 설명·부모·켜진 시간·메모리·명령이 모두 차는 예다.
+    private static let fileprovider: pid_t = 3102
+
+    /// 가짜 프로그램. 샌드박스가 읽을 수 있는 **내 계정** 프로그램만 둔다 —
+    /// 실제 앱에서 이 칸에 올라올 수 없는 것을 보여주면 "실제 앱과 다른 스크린샷"이다.
+    /// 사용률은 코어 하나를 100으로 센다(앱과 같은 기준).
+    private static let cpuDemo: [(pid: pid_t, name: String, path: String, percent: Double)] = [
+        (2210, "Xcode", "/Applications/Xcode.app/Contents/MacOS/Xcode", 142),
+        (4871, "Google Chrome Helper (Renderer)",
+         "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/A/Helpers/Google Chrome Helper (Renderer).app/Contents/MacOS/Google Chrome Helper (Renderer)", 96),
+        (5390, "swift-frontend",
+         "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend", 71),
+        (6644, "node", "/usr/local/bin/node", 38),
+        (3920, "Slack", "/Applications/Slack.app/Contents/MacOS/Slack", 12),
+        (fileprovider, "fileproviderd",
+         "/System/Library/PrivateFrameworks/FileProvider.framework/Support/fileproviderd", 9),
+    ]
+
+    /// 스크린샷용 CPU 모델. 누적값을 **흐른 시간에 비례**해 올려서, 몇 번째 주기에 찍어도
+    /// 같은 사용률이 나온다. 진짜 프로세스를 읽으면 기계 부하에 따라 숫자가 매번 달라지고,
+    /// 이 Mac의 실제 프로그램 이름이 스토어에 나간다.
+    static func cpu() -> CPUModel {
+        let started = ContinuousClock.now
+        @Sendable func seconds() -> Double {
+            let elapsed = ContinuousClock.now - started
+            return Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1e18
+        }
+        let demo = cpuDemo
+        let chosen = fileprovider
+        return CPUModel(
+            cores: 8,
+            sample: {
+                let now = seconds()
+                return demo.map {
+                    ProcessCPUTick(pid: $0.pid, name: $0.name, executablePath: $0.path,
+                                   nanoseconds: UInt64(now * $0.percent / 100 * 1e9))
+                }
+            },
+            // 기계 전체: 프로그램 40% · Mac 12% · 쉬는 중 48% (초당 1000틱 기준)
+            loadSample: {
+                let now = seconds()
+                return CPULoadTicks(user: UInt32(now * 400), system: UInt32(now * 120),
+                                    idle: UInt32(now * 480), nice: 0)
+            },
+            detailsReader: { pid in
+                guard pid == chosen else { return nil }
+                return ProcessDetails(
+                    pid: pid, name: "fileproviderd", isMine: true,
+                    startedAt: Date().addingTimeInterval(-(11 * 86_400 + 11 * 3_600)),
+                    launchedBy: [], memoryBytes: 38 * 1_048_576, threads: 9,
+                    arguments: ["/System/Library/PrivateFrameworks/FileProvider.framework/Support/fileproviderd"],
+                    executablePath: "/System/Library/PrivateFrameworks/FileProvider.framework/Support/fileproviderd")
+            })
     }
 }

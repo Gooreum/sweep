@@ -18,7 +18,7 @@ cd "$(dirname "$0")/.."
 
 APP="${APP:-dist/Sweep.app}"
 OUT="${OUT:-.build/store-captures}"
-ALL=(store-summary store-xcode store-large store-duplicate store-diskmap store-cleaned)
+ALL=(store-summary store-cpu store-xcode store-large store-duplicate store-diskmap store-cleaned)
 STAGES=("$@"); [ ${#STAGES[@]} -eq 0 ] && STAGES=("${ALL[@]}")
 
 for s in "${STAGES[@]}"; do
@@ -56,6 +56,8 @@ for lang in ko en; do
       win=$("$WINID" "$pid" | head -1); [ -n "$win" ] && break; sleep 0.25
     done
     sleep 3   # 데모 데이터가 다 그려질 때까지
+    # CPU는 2초 주기를 두 번 돌아야 표가 찬다. 처음 측정은 '측정 중…'이다.
+    [ "$stage" = store-cpu ] && sleep 5
     win=$("$WINID" "$pid" | head -1)
     screencapture -x -o -l "${win%% *}" "$OUT/$lang/$stage.png"
     kill "$pid"; sleep 0.5

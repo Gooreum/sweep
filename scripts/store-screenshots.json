@@ -11,6 +11,17 @@
     }
   },
   {
+    "stage": "store-cpu",
+    "ko": {
+      "headline": "왜 느린지, 쉬운 말로 알려줘요",
+      "subhead": "바쁜 프로그램이 무엇이고 누가 켰는지까지"
+    },
+    "en": {
+      "headline": "Know why your Mac is busy",
+      "subhead": "What each program is and who started it"
+    }
+  },
+  {
     "stage": "store-xcode",
     "ko": {
       "headline": "왜 지워도 되는지, 적어뒀어요",
