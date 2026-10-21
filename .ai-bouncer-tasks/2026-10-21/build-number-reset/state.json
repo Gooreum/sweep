@@ -1,0 +1,32 @@
+{
+  "workflow_phase": "done",
+  "plan_approved": true,
+  "team_name": "",
+  "current_dev_phase": 1,
+  "current_step": 1,
+  "dev_phases": {
+    "1": {
+      "name": "scripts",
+      "depends_on": [],
+      "steps": {
+        "1": {},
+        "2": {}
+      }
+    },
+    "2": {
+      "name": "docs",
+      "depends_on": [
+        1
+      ],
+      "steps": {
+        "1": {}
+      }
+    }
+  },
+  "verification": {
+    "e2e_passed": false
+  },
+  "task_dir": ".ai-bouncer-tasks/2026-10-21/build-number-reset",
+  "active_file": ".ai-bouncer-tasks/2026-10-21/build-number-reset/.active",
+  "agent_mode": "single"
+}

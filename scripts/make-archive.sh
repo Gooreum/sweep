@@ -90,14 +90,17 @@ for path in glob.glob(f"{root}/*/*.xcarchive/Info.plist"):
         date = event.get("date", "")
         if hasattr(date, "strftime"):
             date = date.strftime("%Y-%m-%dT%H:%M:%SZ")
-        if re.fullmatch(r"\d+(\.\d+){0,2}", number):
-            print(number, date)
+        version = str(app.get("CFBundleShortVersionString", ""))
+        if re.fullmatch(r"\d+(\.\d+){0,2}", number) and version:
+            print(version, number, date)
 PY
 )
 
+# 빌드 번호는 버전마다 1부터 다시 시작한다. 같은 버전으로 올린 것만 비교한다.
 HIGHEST=""; HIGHEST_DATE=""
-while read -r number date; do
+while read -r version number date; do
   [ -z "$number" ] && continue
+  [ "$version" = "$VERSION" ] || continue
   if [ -z "$HIGHEST" ] || version_gt "$number" "$HIGHEST"; then
     HIGHEST=$number; HIGHEST_DATE=$date
   fi
@@ -107,11 +110,11 @@ if [ -n "$HIGHEST" ] && ! version_gt "$BUILD" "$HIGHEST"; then
   NEXT=$(( ${HIGHEST%%.*} + 1 ))
   # 고치는 법으로 PlistBuddy Set을 권하지 않는다 — 파일을 다시 써서 주석을 지우고
   # 키 순서를 바꾼다(실제로 43줄이 바뀌었다). 값 한 줄만 바꾼다.
-  fail "빌드 ${BUILD} — 이미 빌드 ${HIGHEST}까지 올라갔다 (${HIGHEST_DATE}).
-       Mac 앱은 이전에 올린 빌드보다 큰 번호여야 한다. 올리고 다시 돌린다:
+  fail "빌드 ${BUILD} — 버전 ${VERSION}으로 이미 빌드 ${HIGHEST}까지 올라갔다 (${HIGHEST_DATE}).
+       같은 버전을 다시 올릴 때는 빌드 번호를 올려야 한다. 올리고 다시 돌린다:
          sed -i '' '/<key>CFBundleVersion<\/key>/{n;s|<string>[^<]*</string>|<string>${NEXT}</string>|;}' ${PLIST}"
 fi
-echo "  OK   버전 $VERSION 빌드 $BUILD (올라간 최고 빌드: ${HIGHEST:-없음})"
+echo "  OK   버전 $VERSION 빌드 $BUILD (이 버전으로 올라간 최고 빌드: ${HIGHEST:-없음})"
 
 [ "$MODE" = "--check-only" ] && exit 0
 

@@ -108,8 +108,9 @@ Organizer의 Distribute App 단계에서 붙는다. 아카이브 단계에서 �
 > `CFBundleShortVersionString ... must contain a higher version`과
 > `train version '1.0.0' is closed`로 막혔다. 기능을 바꿔 다시 낼 때는 버전부터 올린다.
 >
-> **같은 빌드 번호는 두 번 못 올린다.** App Store Connect는 이미 받은
-> `CFBundleVersion`을 거부한다. 업로드할 때마다 빌드 번호를 올려야 한다.
+> **같은 버전 안에서 같은 빌드 번호는 두 번 못 올린다.** App Store Connect는 이미 받은
+> `CFBundleVersion`을 거부한다. 같은 버전을 다시 올릴 때는 빌드 번호를 올리고,
+> 버전을 올리면 빌드는 1부터 다시 시작한다.
 
 값은 파일을 직접 고친다. `PlistBuddy -c "Set ..."`은 파일을 다시 써서 주석을 지우고
 키 순서를 바꾸므로 쓰지 않는다. 스크립트가 멈추면서 한 줄만 바꾸는 `sed` 명령을 알려준다.
