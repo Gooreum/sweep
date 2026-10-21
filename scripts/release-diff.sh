@@ -10,8 +10,8 @@
 #   screenshots=true|false  fastlane/screenshots가 바뀌었다 → 스크린샷 교체
 #   version=, build_number= 새 커밋의 버전 (태그 이름에 쓴다)
 #
-# 버전과 빌드 번호의 쌍을 기준으로 삼는다. 버전을 올리면 빌드는 1부터 다시 시작하고,
-# 같은 버전을 다시 올리면 빌드를 올린다. 둘 중 하나라도 바뀌면 새 업로드다.
+# 빌드 번호를 기준으로 삼는다. 릴리스 스킬은 버전을 바꾸든 안 바꾸든 빌드 번호를 늘
+# 올리고, App Store Connect는 같은 번호를 두 번 받지 않는다.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -27,12 +27,11 @@ read_key() {
 
 changed() { git diff --quiet "$BASE" "$HEAD" -- "$1" && echo false || echo true; }
 
-old_release="$(read_key "$BASE" CFBundleShortVersionString) $(read_key "$BASE" CFBundleVersion)"
-new_version=$(read_key "$HEAD" CFBundleShortVersionString)
+old_build=$(read_key "$BASE" CFBundleVersion)
 new_build=$(read_key "$HEAD" CFBundleVersion)
 [ -n "$new_build" ] || { echo "새 커밋에서 CFBundleVersion을 읽지 못했다: $HEAD" >&2; exit 1; }
 
-echo "build=$([ "$old_release" != "$new_version $new_build" ] && echo true || echo false)"
+echo "build=$([ "$old_build" != "$new_build" ] && echo true || echo false)"
 echo "metadata=$(changed fastlane/metadata)"
 echo "screenshots=$(changed fastlane/screenshots)"
 echo "version=$(read_key "$HEAD" CFBundleShortVersionString)"
