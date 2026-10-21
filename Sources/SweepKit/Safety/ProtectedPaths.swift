@@ -48,6 +48,11 @@ public enum RemovalScope: Sendable {
     /// 정리 범위 자체를 넓히지 않는 이유: 정크 스캐너가 버그로 `~/Documents` 경로를 내도
     /// 관문이 막아야 한다. 내 파일을 후보로 내는 스캐너에게만 그 폴더들을 연다.
     case userFiles
+    /// 개발 프로젝트 산출물. 등록한 프로젝트 루트(`ProjectFolders`) 하위의,
+    /// 설정 파일과 짝이 맞는 산출물(`ProjectArtifactRule`)만 연다.
+    ///
+    /// 고정 루트(`~/Library/Caches` 등)는 **열지 않는다.** 프로젝트 범위로 캐시를 지울 일이 없다.
+    case projectArtifacts
 }
 
 /// 모든 삭제가 반드시 통과해야 하는 관문.
@@ -557,8 +562,12 @@ public enum ProtectedPaths {
         } else {
             fixed = cachedRootComponents
         }
-        guard scope == .userFiles else { return fixed }
-        return fixed + UserFolders.cachedRootComponents()
+        switch scope {
+        case .userFiles: return fixed + UserFolders.cachedRootComponents()
+        // 프로젝트 범위는 고정 루트 없이 등록한 루트만 쓴다. 루트 자체는 2단계에서 막힌다.
+        case .projectArtifacts: return ProjectFolders.cachedRootComponents()
+        case .cleanup, .diskMap: return fixed
+        }
     }
 
     /// 경로 구성요소 단위 하위 판정. URL을 다시 정규화하지 않아 값싸다.
@@ -590,7 +599,19 @@ public enum ProtectedPaths {
         case .diskMap:
             diskMapReachable(components, sandboxed: Sandbox.isActive,
                              granted: FolderAccess.shared.urls)
+        case .projectArtifacts:
+            projectArtifactAllowed(components, roots: roots)
         }
+    }
+
+    /// 등록한 루트의 하위이고, 설정 파일과 짝이 맞는 산출물인가.
+    ///
+    /// 디스크를 읽는다(짝 검사). 관문이 파일 존재를 보는 것은 이것이 처음이지만,
+    /// 후보가 수백 개 수준이고 경로 판정이 먼저라 루트 밖은 읽지 않는다.
+    /// 샌드박스의 허락 여부는 `roots`가 이미 걸러 온다(`ProjectFolders.roots`).
+    static func projectArtifactAllowed(_ components: [String], roots: [[String]]) -> Bool {
+        guard roots.contains(where: { isDescendant(components, of: $0) }) else { return false }
+        return ProjectArtifactRule.match(URL(filePath: NSString.path(withComponents: components))) != nil
     }
 
     /// 디스크 맵이 손댈 수 있는 곳. 샌드박스 밖에서는 어디든 — 시스템은 소유권·플래그

@@ -7,6 +7,8 @@ import Foundation
 public enum Feature: String, CaseIterable, Identifiable, Sendable {
     case smartScan
     case junk
+    /// 등록한 코드 폴더의 node_modules·빌드 폴더. 폴더를 등록하기 전에는 스캐너가 없다.
+    case projects
     case largeFile
     case duplicate
     /// 휴지통 비우기. 정크와 나눠 둔다 — 다른 정리는 휴지통으로 옮겨 되살릴 수 있는데
@@ -22,6 +24,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .smartScan: String(localized: "한번에 찾기")
         case .junk: String(localized: "정리할 파일")
+        case .projects: String(localized: "개발 프로젝트")
         case .largeFile: String(localized: "큰 파일")
         case .duplicate: String(localized: "중복 파일")
         case .trash: String(localized: "휴지통")
@@ -34,6 +37,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .smartScan: "sparkles"
         case .junk: "trash"
+        case .projects: "folder.badge.gearshape"
         case .largeFile: "arrow.down.doc"
         case .duplicate: "doc.on.doc"
         case .trash: "trash"
@@ -50,6 +54,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         case .junk: Sandbox.isActive
             ? String(localized: "Xcode 개발용 파일 중에서 정리할 것을 찾아보세요.")
             : String(localized: "앱이 만든 임시 파일과 개발용 파일, 기기 백업을 모아 보여줘요. 필요 없는 것을 골라 주세요.")
+        case .projects: String(localized: "코드 폴더에서 다시 설치하면 되살아나는 node_modules·빌드 폴더를 찾아요.")
         case .largeFile: String(localized: "내 폴더에 큰 파일이 있는지 살펴보세요. 직접 추가한 폴더도 함께 찾아요.")
         case .duplicate: String(localized: "똑같은 파일이 여러 개 있으면 여분을 골라 정리해 보세요.")
         case .trash: String(localized: "휴지통에서 지울 것을 골라 주세요. 큰 항목부터 보여줘요. 지운 항목은 되살릴 수 없어요.")
@@ -69,6 +74,8 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .junk:
             String(localized: "지워도 대부분 개발할 때 다시 생기는 파일이에요. 심사에 낸 앱은 복구할 수 없어 고르지 못하게 했어요.")
+        case .projects:
+            String(localized: "설정 파일 짝이 맞는 폴더만 모았어요. 최근에 고친 프로젝트는 확인 필요로 두었어요.")
         case .largeFile:
             String(localized: "사진이나 영상 원본, 백업은 필요한지 먼저 확인하세요. 앱 설치 파일은 다시 받을 수 있어요.")
         case .duplicate:
@@ -133,12 +140,18 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         // 폭주 임시 파일은 샌드박스에서 살릴 방법이 없다.
         let runaway: [any CleanupScanner] = sandboxed ? [] : [RunawayTempScanner()]
         let junk = runaway + xcode + devCache + appCache + staleCache + mail + backup
+        // 등록한 프로젝트 폴더가 없으면 붙이지 않는다 — 정크 탭이 허락 전에 하는 것과 같다.
+        let projectRoots = ProjectFolders.roots(sandboxed: sandboxed, granted: granted)
+        let projects: [any CleanupScanner] = projectRoots.isEmpty
+            ? [] : [ProjectArtifactScanner(roots: projectRoots)]
 
         switch self {
         case .smartScan:
-            return junk + trash + [LargeFileScanner(), DuplicateScanner()]
+            return junk + projects + trash + [LargeFileScanner(), DuplicateScanner()]
         case .junk:
             return junk
+        case .projects:
+            return projects
         case .trash:
             return trash
         case .largeFile:
@@ -180,6 +193,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .smartScan: nil
         case .junk:      (0x74B4FF, 0x0A5FD1)
+        case .projects:  (0xF08AD8, 0x9E1F7E)
         case .largeFile: (0xB69BFF, 0x5B33C4)
         case .duplicate: (0x5FD3C4, 0x0C6558)
         case .trash:     (0xFF8A70, 0xB42318)

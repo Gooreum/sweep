@@ -55,7 +55,10 @@ enum UserFileWalker {
             guard let v = try? url.resourceValues(forKeys: keys) else { continue }
 
             if v.isDirectory == true {
-                if UserFolders.skippedDirectoryNames.contains(url.lastPathComponent) {
+                // 짝이 맞는 프로젝트 산출물(`target`·`build` 등)도 내려가지 않는다 —
+                // 개발 프로젝트 탭이 통째로 보여주므로 한번에 찾기에서 두 번 세지 않게.
+                if UserFolders.skippedDirectoryNames.contains(url.lastPathComponent)
+                    || ProjectArtifactRule.match(url) != nil {
                     walker.skipDescendants()
                 }
                 continue

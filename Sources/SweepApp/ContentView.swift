@@ -56,6 +56,10 @@ struct ContentView: View {
             // 훑을 곳이 없어 늘 "정리할 항목이 없음"이 나온다 — 허락부터 받는다.
             FolderAccessView(app: app)
 
+        case .projects:
+            // 등록한 폴더가 없으면 화면이 등록 입구가 된다. 있으면 「보는 폴더」 줄 아래에 목록.
+            ProjectsScreen(app: app)
+
         case let feature:
             FeatureScreen(feature: feature, model: app.model(for: feature))
                 // 기능을 바꾸면 뷰를 새로 만든다. 안 그러면 이전 기능의

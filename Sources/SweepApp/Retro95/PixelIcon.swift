@@ -505,6 +505,7 @@ extension Feature {
         switch self {
         case .smartScan: .magnifier
         case .junk: .broom
+        case .projects: .box
         case .largeFile: .folder
         case .duplicate: .documents
         case .trash: .trash
@@ -520,6 +521,7 @@ extension ScanCategory {
         case .runawayTemp: .warning
         case .xcode: .hammer
         case .devCache: .box
+        case .projectArtifact: .box
         case .appCache: .globe
         case .staleCache: .clock
         case .mailAttachment: .documents

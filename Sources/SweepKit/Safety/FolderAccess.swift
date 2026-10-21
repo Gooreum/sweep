@@ -33,10 +33,12 @@ public enum FolderAccess {
     public struct Grantable: Sendable, Hashable, Identifiable {
         /// 목록에 없는 폴더로도 만들 수 있다 — 권한이 막힌 곳을 그 자리에서
         /// 다시 열어 달라고 할 때 쓴다(`SmartScanView.unblock`).
-        public init(folder: URL, label: String, purpose: String) {
+        public init(folder: URL, label: String, purpose: String,
+                    keyPrefix: String = "folderBookmark.") {
             self.folder = folder
             self.label = label
             self.purpose = purpose
+            self.keyPrefix = keyPrefix
         }
 
         public let folder: URL
@@ -44,11 +46,14 @@ public enum FolderAccess {
         public let label: String
         /// 이 폴더를 열면 무엇을 찾을 수 있는지. 열기 대화상자 문구에 쓴다.
         public let purpose: String
+        /// 북마크 키 접두사. 같은 폴더를 다른 목적으로 따로 허락받을 때 키가 섞이지 않게 한다
+        /// (`ProjectFolders.grantable`).
+        let keyPrefix: String
 
         public var id: String { label }
 
         /// UserDefaults 키. 폴더마다 따로 저장한다.
-        var key: String { "folderBookmark." + label.replacingOccurrences(of: "/", with: "_") }
+        var key: String { keyPrefix + label.replacingOccurrences(of: "/", with: "_") }
     }
 
     private static func inHome(_ relative: String) -> URL {
@@ -173,11 +178,14 @@ public enum FolderAccess {
         ///
         /// 사용자가 스마트 스캔에 추가한 폴더(`UserFolders`)도 같은 북마크 방식으로 연다.
         /// 목록은 그쪽이 기억하고, 여기서는 접근만 되살린다.
-        public func restoreAll(custom: [URL] = UserFolders.shared.custom) {
+        /// 등록한 프로젝트 폴더(`ProjectFolders`)도 같다.
+        public func restoreAll(custom: [URL] = UserFolders.shared.custom,
+                               projects: [URL] = ProjectFolders.shared.custom) {
             migrateLegacyBookmark()
             // `legacyGrantable`도 함께 돈다. 새로 허락받을 목록(`grantables`)에는 없지만
             // 이전 버전에서 그것만 허락한 사용자의 접근을 열어야 한다.
-            for grantable in FolderAccess.grantables + [legacy] + custom.map(UserFolders.grantable(for:)) {
+            for grantable in FolderAccess.grantables + [legacy] + custom.map(UserFolders.grantable(for:))
+                + projects.map(ProjectFolders.grantable(for:)) {
                 restore(grantable)
             }
         }
