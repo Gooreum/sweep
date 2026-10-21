@@ -412,9 +412,17 @@ public final class AppModel {
     /// (10 이상이면 소수 첫째 자리, 100 이상이면 정수). 그 아래와 "512 bytes"·"Zero KB"는
     /// 포맷터의 말 그대로 둔다 — 다른 화면과 같은 말이어야 한다.
     nonisolated static func compactSize(_ bytes: Int64) -> String {
-        let full = ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
-        guard let space = full.lastIndex(of: " ") else { return full }
-        let numberText = String(full[..<space]), unit = String(full[full.index(after: space)...])
+        compact(ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file))
+    }
+
+    /// 포맷터가 말한 글자("26.88 GB", 한국어는 "26.88GB")에서 숫자 부분만 줄인다.
+    /// 숫자와 단위 사이의 공백은 언어마다 달라서, 글자(단위)가 시작하는 곳을 기준으로 나눈다.
+    nonisolated static func compact(_ full: String) -> String {
+        guard let unitStart = full.firstIndex(where: \.isLetter) else { return full }
+        let numberPart = String(full[..<unitStart])
+        let numberText = numberPart.trimmingCharacters(in: .whitespaces)
+        let separator = numberPart.dropFirst(numberText.count)   // 숫자 뒤의 공백(있으면)
+        let unit = String(full[unitStart...])
 
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
@@ -422,7 +430,7 @@ public final class AppModel {
         formatter.minimumFractionDigits = 0
         formatter.maximumFractionDigits = value >= 100 ? 0 : 1
         guard let short = formatter.string(from: NSNumber(value: value)) else { return full }
-        return "\(short) \(unit)"
+        return "\(short)\(separator)\(unit)"
     }
 
     // MARK: - 상태 아이콘이 물어보는 것

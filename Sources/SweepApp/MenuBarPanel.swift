@@ -77,7 +77,7 @@ struct MenuBarPanel: View {
     /// 옵트인. 권한은 [켜기]를 누를 때만 묻는다 — 앱을 열자마자 묻지 않는다.
     private var diskAlertConsent: some View {
         HStack(spacing: 6) {
-            Text("디스크가 부족해지면 알려 드릴까요?")
+            Text("저장 공간이 얼마 남지 않으면 알림을 받을까요?")
                 .font(Theme.caption)
             Spacer(minLength: 0)
             Button("켜기") { diskAlerts.enable() }

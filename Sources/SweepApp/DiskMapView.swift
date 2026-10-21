@@ -139,7 +139,7 @@ struct DiskMapView: View {
     private var wholeDiskBanner: some View {
         if Sandbox.isActive, !app.isGranted(FolderAccess.wholeDisk) {
             HStack(spacing: 12) {
-                PixelIcon(art: .pieChart, size: 24)
+                PixelIcon(art: .spaceView, size: 24)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("다운로드 폴더부터 보여드려요")
@@ -306,7 +306,7 @@ struct DiskMapView: View {
             }
         } else if model.selectedRoot != nil {
             // 중단했거나 아직 못 읽은 상태. 고른 곳은 있으니 다시 훑을 길을 준다.
-            Retro95Dialog(title: String(localized: "검색을 멈췄어요"), icon: .pieChart) {
+            Retro95Dialog(title: String(localized: "검색을 멈췄어요"), icon: .spaceView) {
                 Text("이 폴더를 보려면 다시 검색해 주세요. 처음부터 확인해요.")
             } buttons: {
                 Button("다시 검색") { Task { await model.reload() } }
@@ -554,7 +554,7 @@ struct DiskMapView: View {
     }
 
     private func placeholder(_ title: String, detail: String) -> some View {
-        Retro95Dialog(title: title, icon: .pieChart) {
+        Retro95Dialog(title: title, icon: .spaceView) {
             Text(detail)
         }
         .frame(maxWidth: R95.dialogWidth)

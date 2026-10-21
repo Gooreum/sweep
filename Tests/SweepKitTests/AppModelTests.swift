@@ -890,4 +890,14 @@ struct CompactSizeTests {
         #expect(AppModel.compactSize(21_000) == "21 KB")
         #expect(AppModel.compactSize(512) == ByteCountFormatter.string(fromByteCount: 512, countStyle: .file))
     }
+
+    @Test("숫자와 단위 사이에 공백이 없는 말(한국어)도 같은 규칙으로 줄인다")
+    func compactHandlesNoSpaceLocales() {
+        #expect(AppModel.compact("26.88GB") == "26.9GB")
+        #expect(AppModel.compact("526.88GB") == "527GB")
+        #expect(AppModel.compact("8.88GB") == "8.88GB")
+        #expect(AppModel.compact("26.88 GB") == "26.9 GB")
+        #expect(AppModel.compact("Zero KB") == "Zero KB")
+        #expect(AppModel.compact("512 bytes") == "512 bytes")
+    }
 }

@@ -183,7 +183,7 @@ public struct ScanCoordinator: Sendable {
             size: item.size,
             category: item.category,
             safety: max(item.safety, .caution),
-            detail: String(localized: "원본도 정리 목록에 있어요. 함께 지우면 같은 내용이 모두 사라져요"),
+            detail: String(localized: "원본도 정리 목록에 있어요. 함께 지우면 같은 내용이 하나도 안 남아요."),
             dates: item.dates,
             originalURL: original)
     }

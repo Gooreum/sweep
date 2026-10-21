@@ -20,11 +20,11 @@ public enum ProjectFolders {
     public static func message(for rejection: UserFolders.Rejection) -> String {
         switch rejection {
         case .tooWide:
-            String(localized: "내 폴더 전체는 너무 넓어요. ~/Code처럼 코드만 모인 폴더를 골라 주세요.")
+            String(localized: "프로젝트가 모인 폴더가 필요해요. 내 폴더 전체 대신 ~/Code 같은 폴더를 골라 주세요.")
         case .insideLibrary:
-            String(localized: "Library 안은 프로젝트 폴더로 등록할 수 없어요.")
+            String(localized: "Library에 있는 폴더는 추가할 수 없어요. 다른 곳에 있는 프로젝트 폴더를 골라 주세요.")
         case .alreadyCovered(let url):
-            String(localized: "이미 보고 있는 폴더 안이에요: \(CleanupItem.abbreviating(url.path, home: Sandbox.userHome.path))")
+            String(localized: "이곳은 이미 찾고 있어요. 추가해 둔 \(CleanupItem.abbreviating(url.path, home: Sandbox.userHome.path)) 안에 있어요.")
         case .systemFolder, .bookmark:
             rejection.message
         }

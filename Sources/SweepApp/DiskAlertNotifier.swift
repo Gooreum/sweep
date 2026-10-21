@@ -63,8 +63,8 @@ final class DiskAlertNotifier: NSObject, UNUserNotificationCenterDelegate {
     private func post(_ usage: VolumeUsage) {
         guard let center else { return }
         let content = UNMutableNotificationContent()
-        content.title = String(localized: "디스크 공간이 부족해요")
-        content.body = String(localized: "남은 공간은 \(usage.formattedAvailable)이에요. 눌러서 정리할 파일을 찾아보세요.")
+        content.title = String(localized: "저장 공간이 얼마 남지 않았어요")
+        content.body = String(localized: "남은 저장 공간은 \(usage.formattedAvailable)예요. 눌러서 정리할 파일을 찾아보세요.")
         let request = UNNotificationRequest(identifier: Self.identifier, content: content, trigger: nil)
         // 전송이 거부되면 감시기에 알린다. 안 그러면 알림이 안 갔는데도 "보냈다"고 쳐서 다시 시도하지 않는다.
         center.add(request) { [weak self] error in

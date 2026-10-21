@@ -193,6 +193,63 @@ extension PixelArt {
         "................",
     ], palette: retroPalette)
 
+    static let chip = PixelArt(rows: [
+        "................",
+        "....k.k.k.k.....",
+        "....g.g.g.g.....",
+        "...kkkkkkkkkk...",
+        ".kgkwwwwwwwdkgk.",
+        "...kwggggggdk...",
+        ".kgkwgkkkkgdkgk.",
+        "...kwgkwwkgdk...",
+        ".kgkwgkddkgdkgk.",
+        "...kwgkkkkgdk...",
+        ".kgkwggggggdkgk.",
+        "...kddddddddk...",
+        "...kkkkkkkkkk...",
+        "....d.d.d.d.....",
+        "....k.k.k.k.....",
+        "................",
+    ], palette: retroPalette)
+
+    static let devProject = PixelArt(rows: [
+        "................",
+        ".kkkkkkkkkkkkkk.",
+        ".kggggggggggggk.",
+        ".kgnnnnnnnnnngk.",
+        ".kgnnnnnnnnwngk.",
+        ".kgkkkkkkkkkkgk.",
+        ".kgkkkkkkkkkkgk.",
+        ".kgkGkkkkkkkkgk.",
+        ".kgkkGkkkkkkkgk.",
+        ".kgkkkGkkkkkkgk.",
+        ".kgkkGkkkkkkkgk.",
+        ".kgkGkkGGGkkkgk.",
+        ".kgkkkkkkkkkkgk.",
+        ".kggggggggggggk.",
+        ".kkkkkkkkkkkkkk.",
+        "................",
+    ], palette: retroPalette)
+
+    static let spaceView = PixelArt(rows: [
+        "................",
+        ".kkkkkkkkkkkkkk.",
+        ".kcccccckyyyyyk.",
+        ".kcccccckyyyyyk.",
+        ".kcccccckyyyyyk.",
+        ".kcccccckyyyyyk.",
+        ".kcccccckyyyyyk.",
+        ".kcccccckkkkkkk.",
+        ".kcccccckRRkGGk.",
+        ".kcccccckRRkGGk.",
+        ".kcccccckRRkGGk.",
+        ".kcccccckRRkGGk.",
+        ".kcccccckRRkGGk.",
+        ".kcccccckRRkGGk.",
+        ".kkkkkkkkkkkkkk.",
+        "................",
+    ], palette: retroPalette)
+
     static let pieChart = PixelArt(rows: [
         "................",
         "................",
@@ -505,12 +562,12 @@ extension Feature {
         switch self {
         case .smartScan: .magnifier
         case .junk: .broom
-        case .projects: .box
+        case .projects: .devProject
         case .largeFile: .folder
         case .duplicate: .documents
         case .trash: .trash
-        case .diskMap: .pieChart
-        case .cpu: .computer
+        case .diskMap: .spaceView
+        case .cpu: .chip
         }
     }
 }
