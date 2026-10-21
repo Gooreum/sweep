@@ -671,6 +671,84 @@ struct AppModelTests {
         #expect(history.records.map(\.kind) == [.cleanup, .restore])
     }
 
+    /// 지우면 휴지통 위치를 남기고 되돌리면 성공하는 앱. 스마트 스캔만 결과를 낸다.
+    private func undoableApp(history: CleanupHistory) -> AppModel {
+        AppModel(makeModel: { f in
+            ScanModel(scan: f == .smartScan ? self.finishing(self.mixed) : self.finishing([]),
+                      removeOne: { RemovalOutcome(item: $0, failureReason: nil,
+                                                  trashedURL: URL(filePath: "/Users/x/.Trash/\($0.displayName)")) },
+                      restoreOne: { RemovalOutcome(item: $0.item, failure: nil) })
+        }, history: history)
+    }
+
+    @Test("스마트 스캔에서 정리한 것을 되돌리면 기능 탭 목록에도 돌아온다")
+    func undoInSmartScanReturnsToFeatureTab() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let app = undoableApp(history: history)
+        let smart = app.model(for: .smartScan)
+        await smart.scan()
+
+        let junk = app.model(for: .junk)
+        let target = try #require(junk.items.first, "정크 탭이 비어 배분이 끊겼다")
+        smart.selection = [target.url]
+        await smart.removeSelected()
+        #expect(!junk.items.contains { $0.url == target.url }, "지운 것이 안 빠져 TC가 공허하다")
+
+        await smart.undoLastCleanup()
+
+        // 파일은 원래 자리에 있는데 탭에서 빠져 있으면 정리 가능한 용량이 틀린다
+        #expect(junk.items.filter { $0.url == target.url }.count == 1)
+        #expect(!junk.isSelected(target), "되돌린 것이 골라져 있으면 다음 정리에 다시 휩쓸린다")
+        // 다른 탭 몫은 끼어들지 않는다
+        #expect(!app.model(for: .largeFile).items.contains { $0.url == target.url })
+    }
+
+    @Test("기능 탭에서 정리한 것을 되돌리면 스마트 스캔과 배지에도 돌아온다")
+    func undoInFeatureTabReturnsToSmartScan() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let app = undoableApp(history: history)
+        let smart = app.model(for: .smartScan)
+        await smart.scan()
+        let badgesBefore = app.badges
+
+        let junk = app.model(for: .junk)
+        let target = try #require(junk.items.first, "정크 탭이 비어 배분이 끊겼다")
+        junk.selection = [target.url]
+        await junk.removeSelected()
+        await junk.undoLastCleanup()
+
+        #expect(smart.items.filter { $0.url == target.url }.count == 1)
+        #expect(app.badges == badgesBefore)
+    }
+
+    @Test("되돌린 항목은 완료 화면을 띄운 탭을 건드리지 않는다")
+    func undoSkipsTabShowingOutcome() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let app = undoableApp(history: history)
+        let smart = app.model(for: .smartScan)
+        await smart.scan()
+
+        let junk = app.model(for: .junk)
+        let target = try #require(junk.items.first, "정크 탭이 비어 배분이 끊겼다")
+        junk.selection = [target.url]
+        await junk.removeSelected()
+        #expect(smart.phase == .results)
+
+        let big = app.model(for: .largeFile)
+        let other = try #require(big.items.first, "큰 파일 탭이 비어 배분이 끊겼다")
+        big.selection = [other.url]
+        await big.removeSelected()
+        #expect(big.phase == .cleaned)
+
+        await junk.undoLastCleanup()
+
+        #expect(big.phase == .cleaned, "완료 화면이 덮였다")
+        #expect(big.canUndo)
+    }
+
     // MARK: - 휴지통 비우기는 합계에 넣지 않는다
 
     @Test("휴지통 항목을 지운 양은 '휴지통으로 옮김' 합계에 더해지지 않는다")

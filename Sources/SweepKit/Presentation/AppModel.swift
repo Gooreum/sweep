@@ -207,6 +207,9 @@ public final class AppModel {
             self?.recordRestore(report)
             self?.refreshVolumeUsageAfterChange()
         }
+        model.onRestoredItems = { [weak self] items in
+            self?.reinstate(items, except: feature)
+        }
     }
 
     /// 디스크 사용량을 지금 값으로 다시 읽는다. 메뉴바 패널이 열릴 때도 부른다.
@@ -270,6 +273,15 @@ public final class AppModel {
     private func forget(_ urls: [URL], except owner: Feature) {
         for (feature, model) in models where feature != owner {
             model.forget(urls)
+        }
+    }
+
+    /// 한 화면에서 되돌린 파일을 나머지 화면의 목록에도 돌려준다. `forget`의 짝이다.
+    ///
+    /// 각 탭에는 `share`와 같은 기준으로 자기 몫만 넣는다.
+    private func reinstate(_ items: [CleanupItem], except owner: Feature) {
+        for (feature, model) in models where feature != owner {
+            model.reinstate(feature.items(from: items))
         }
     }
 

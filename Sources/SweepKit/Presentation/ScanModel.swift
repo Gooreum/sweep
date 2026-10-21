@@ -103,6 +103,10 @@ public final class ScanModel {
     /// 되돌린 회차를 알린다. 누적 용량에서 빼는 일은 앱이 한다 — `onReport`와 같은 이유다.
     public var onRestored: (@MainActor (RemovalReport) -> Void)?
 
+    /// 되돌린 항목을 알린다. `onRemoved`의 짝이다 — 지울 때 다른 화면에서 뺐으니
+    /// 되돌리면 다른 화면에도 돌려줘야 한다.
+    public var onRestoredItems: (@MainActor ([CleanupItem]) -> Void)?
+
     /// 스캔·삭제 동작을 주입할 수 있게 열어 둔다.
     /// 실제 스캔은 17초 이상 걸리고 실제 삭제는 되돌릴 수 없어 테스트에 쓸 수 없다.
     public init(
@@ -377,6 +381,7 @@ public final class ScanModel {
         report = nil
         phase = .restored
         onRestored?(round)
+        onRestoredItems?(round.succeeded.map(\.item))
     }
 
     /// 다른 화면이 이미 찾아낸 결과를 그대로 받는다.
@@ -407,6 +412,20 @@ public final class ScanModel {
         guard items.contains(where: { gone.contains($0.url) }) else { return }
         items.removeAll { gone.contains($0.url) }
         selection.subtract(gone)
+    }
+
+    /// 다른 화면에서 되돌린 파일을 내 목록에 다시 넣는다. `forget`의 짝이다.
+    ///
+    /// 결과 목록을 띄운 탭만 받는다. 스캔 중이면 다음 스냅샷이 실어 오고,
+    /// 완료 화면을 띄운 탭은 덮으면 안 된다. **고르지 않는다** — `undoLastCleanup`과 같은 이유다.
+    public func reinstate(_ restored: [CleanupItem]) {
+        // 스캔 중에 지워졌다 되돌아온 것은 더는 걸러 내면 안 된다
+        removedDuringScan.subtract(restored.map(\.url))
+        guard phase == .results else { return }
+        var known = Set(items.map(\.url))
+        for item in restored where known.insert(item.url).inserted {
+            items.append(item)
+        }
     }
 
     /// 완료 화면을 닫는다.
