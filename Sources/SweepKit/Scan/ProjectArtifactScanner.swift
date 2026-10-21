@@ -81,8 +81,8 @@ public struct ProjectArtifactScanner: CleanupScanner {
     /// 안전도와 설명. 사유가 있으면 설명 맨 앞에 둔다 — 사유는 늘 보이는 자리에 있어야 한다.
     func assess(project: URL, match: ProjectArtifactRule.Match) -> (SafetyLevel, String) {
         let hint = match.rule.rebuildHint
-        if let touched = Self.lastActivity(of: project),
-           touched > now.addingTimeInterval(-Double(recentDays) * 86_400) {
+        let cutoff = now.addingTimeInterval(-Double(recentDays) * 86_400)
+        if let touched = Self.lastActivity(of: project, since: cutoff), touched > cutoff {
             return (.caution, String(localized: "최근 \(recentDays)일 안에 고친 프로젝트예요 · \(hint)"))
         }
         if match.rule.needsLock(in: project) {
@@ -91,15 +91,43 @@ public struct ProjectArtifactScanner: CleanupScanner {
         return (.safe, String(localized: "\(match.manifest) 짝 · \(hint)"))
     }
 
-    /// 프로젝트를 마지막으로 고친 때. 프로젝트 폴더 **바로 아래 항목**의 최신 수정일이다.
-    /// 산출물 폴더는 뺀다 — 빌드만 돌려도 갱신돼 "최근에 고친" 것으로 보인다.
-    static func lastActivity(of project: URL) -> Date? {
-        let children = (try? FileManager.default.contentsOfDirectory(
-            at: project, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
-        return children
-            .filter { !ProjectArtifactRule.names.contains($0.lastPathComponent)
-                && $0.lastPathComponent != ".DS_Store" }
-            .compactMap { try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate }
-            .max()
+    /// 소스 폴더를 몇 단계까지 내려가 볼지. `src/a/b.ts`를 고친 것까지 닿으면 충분하다.
+    static let activityDepth = 3
+
+    /// 프로젝트를 마지막으로 고친 때.
+    ///
+    /// 디렉터리 수정일은 안에 항목이 생기거나 지워질 때만 바뀌므로 바로 아래 항목만 보면
+    /// `src/a/b.ts`를 제자리에서 고친 것을 놓친다. 하위를 `activityDepth`단계까지 보고,
+    /// `.git/index`·`.git/HEAD`도 본다. `cutoff`보다 새 것이 나오면 더 찾지 않고 바로 돌려준다 —
+    /// 최근 작업 여부만 알면 되고, 큰 프로젝트를 끝까지 훑을 이유가 없다.
+    /// 산출물 폴더와 숨김 폴더 안은 뺀다 — 빌드만 돌려도 갱신돼 "최근에 고친" 것으로 보인다.
+    static func lastActivity(of project: URL, since cutoff: Date) -> Date? {
+        var newest: Date?
+        // 기준일보다 새로우면 true — 더 볼 필요가 없다.
+        func consider(_ url: URL) -> Bool {
+            guard let date = try? url.resourceValues(forKeys: [.contentModificationDateKey])
+                .contentModificationDate else { return false }
+            if newest == nil || date > newest! { newest = date }
+            return date > cutoff
+        }
+        for name in [".git/index", ".git/HEAD"] where consider(project.appending(path: name)) {
+            return newest
+        }
+        guard let walker = FileManager.default.enumerator(
+            at: project, includingPropertiesForKeys: [.contentModificationDateKey, .isDirectoryKey],
+            options: [.skipsPackageDescendants]
+        ) else { return newest }
+
+        for case let url as URL in walker {
+            let name = url.lastPathComponent
+            let isDirectory = (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
+            let isArtifact = isDirectory && ProjectArtifactRule.names.contains(name)
+            if isDirectory, isArtifact || name.hasPrefix(".") || walker.level >= activityDepth {
+                walker.skipDescendants()
+            }
+            if isArtifact || name == ".DS_Store" { continue }
+            if consider(url) { return newest }
+        }
+        return newest
     }
 }

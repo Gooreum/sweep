@@ -170,6 +170,14 @@ public enum FolderAccess {
             grantedURLs.removeAll { FolderAccess.components(of: $0) == target }
         }
 
+        /// 저장된 북마크만 지운다. 열려 있는 접근은 닫지 않는다.
+        ///
+        /// 같은 폴더를 다른 곳(큰 파일 폴더, 고정 허락)도 열어 두었으면 `revoke`가 그쪽 접근까지
+        /// 닫아 버린다. 이쪽 북마크만 거두고 접근은 그쪽이 계속 들고 있게 할 때 쓴다.
+        public func forgetBookmark(_ grantable: Grantable) {
+            defaults.removeObject(forKey: grantable.key)
+        }
+
         /// 앱 시작 때 한 번. 저장된 북마크를 전부 풀어 접근을 다시 연다.
         ///
         /// 낡았으면(폴더가 옮겨졌다 돌아온 경우 등) 새로 저장한다. 못 풀거나 엉뚱한 곳을

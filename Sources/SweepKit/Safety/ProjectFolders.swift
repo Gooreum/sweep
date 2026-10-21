@@ -83,6 +83,14 @@ public enum ProjectFolders {
         cached = nil
     }
 
+    /// 등록한 프로젝트 폴더 안(자기 포함)인가. 관문과 같은 캐시를 쓴다.
+    static func contains(_ url: URL, now: Date = Date()) -> Bool {
+        let parts = ProtectedPaths.canonical(url).standardizedFileURL.pathComponents
+        return cachedRootComponents(now: now).contains { root in
+            parts.count >= root.count && Array(parts.prefix(root.count)) == root
+        }
+    }
+
     // MARK: - 등록한 폴더
 
     public static let shared = Registry()

@@ -163,7 +163,8 @@ struct ProjectArtifactTests {
         try age(project, days: 40)
         try file(root, "p/target/new", bytes: 10)   // 방금 빌드
 
-        let last = try #require(ProjectArtifactScanner.lastActivity(of: project))
+        let cutoff = Date().addingTimeInterval(-14 * 86_400)
+        let last = try #require(ProjectArtifactScanner.lastActivity(of: project, since: cutoff))
         #expect(last < Date().addingTimeInterval(-39 * 86_400))
     }
 
@@ -273,8 +274,60 @@ struct ProjectArtifactTests {
         try file(root, "rust/target/big.bin", bytes: 4_096)
         try file(root, "notes/target/big.bin", bytes: 4_096)   // 짝 없는 target은 내 파일이다
 
-        let found = UserFileWalker.files(under: root, minimumSize: 1_024, isDataless: { _ in false })
+        let found = UserFileWalker.files(under: root, minimumSize: 1_024, isDataless: { _ in false },
+                                         inProjectFolder: { _ in true })
         let paths = Set(found.map { $0.url.pathComponents.suffix(3).joined(separator: "/") })
         #expect(paths == ["notes/target/big.bin"])
+    }
+
+    @Test("등록한 프로젝트 폴더 밖의 산출물 안 큰 파일은 큰 파일 탐색이 계속 찾는다")
+    func walkerKeepsArtifactsOutsideProjectFolders() throws {
+        let (root, cleanup) = try makeRoot()
+        defer { cleanup() }
+        try file(root, "rust/Cargo.toml")
+        try file(root, "rust/target/big.bin", bytes: 4_096)
+
+        // 개발 프로젝트 탭이 보여주지 않는 곳이므로 어디서도 안 보이게 되면 안 된다
+        let found = UserFileWalker.files(under: root, minimumSize: 1_024, isDataless: { _ in false },
+                                         inProjectFolder: { _ in false })
+        let paths = Set(found.map { $0.url.pathComponents.suffix(3).joined(separator: "/") })
+        #expect(paths == ["rust/target/big.bin"])
+    }
+
+    // MARK: - 최근 활동
+
+    @Test("하위 파일만 고친 프로젝트도 최근에 고친 것으로 본다")
+    func nestedEditIsActivity() throws {
+        let (root, cleanup) = try makeRoot()
+        defer { cleanup() }
+        let project = try dir(root, "p")
+        try file(root, "p/package.json")
+        try file(root, "p/src/a/b.ts")
+        let old = Date().addingTimeInterval(-60 * 86_400)
+        // 프로젝트 바로 아래 항목과 폴더는 오래됐고, 깊은 파일 하나만 방금 고쳤다
+        for path in ["p/package.json", "p/src", "p/src/a"] {
+            try fm.setAttributes([.modificationDate: old], ofItemAtPath: root.appending(path: path).path)
+        }
+        let cutoff = Date().addingTimeInterval(-14 * 86_400)
+
+        let last = try #require(ProjectArtifactScanner.lastActivity(of: project, since: cutoff))
+        #expect(last > cutoff)
+    }
+
+    @Test(".git/index만 최근이어도 최근에 고친 것으로 본다")
+    func gitIndexIsActivity() throws {
+        let (root, cleanup) = try makeRoot()
+        defer { cleanup() }
+        let project = try dir(root, "p")
+        try file(root, "p/package.json")
+        try file(root, "p/.git/index")
+        let old = Date().addingTimeInterval(-60 * 86_400)
+        for path in ["p", "p/package.json", "p/.git"] {
+            try fm.setAttributes([.modificationDate: old], ofItemAtPath: root.appending(path: path).path)
+        }
+        let cutoff = Date().addingTimeInterval(-14 * 86_400)
+
+        let last = try #require(ProjectArtifactScanner.lastActivity(of: project, since: cutoff))
+        #expect(last > cutoff)
     }
 }

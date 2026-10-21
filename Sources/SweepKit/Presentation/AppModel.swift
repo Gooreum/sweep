@@ -125,12 +125,27 @@ public final class AppModel {
     }
 
     /// 등록한 프로젝트 폴더를 뺀다. 샌드박스에서는 그 폴더의 북마크도 거둔다.
+    ///
+    /// 같은 폴더를 큰 파일 폴더나 고정 허락으로도 열어 두었으면 북마크만 지우고 접근은 둔다 —
+    /// 접근까지 닫으면 그쪽 탭이 앱을 다시 켤 때까지 그 폴더를 못 읽는다.
     public func removeProjectFolder(_ url: URL) {
         projectFolders.remove(url)
         if requiresFolderAccess {
-            folderAccess.revoke(ProjectFolders.grantable(for: url))
+            let grantable = ProjectFolders.grantable(for: url)
+            if isFolderOpenedElsewhere(url) {
+                folderAccess.forgetBookmark(grantable)
+            } else {
+                folderAccess.revoke(grantable)
+            }
         }
         refreshFolderState()
+    }
+
+    /// 프로젝트 폴더 말고 다른 곳(큰 파일 폴더·고정 허락)도 같은 폴더를 열어 두었는가.
+    private func isFolderOpenedElsewhere(_ url: URL) -> Bool {
+        let target = FolderAccess.components(of: url)
+        let others = FolderAccess.grantables.map(\.folder) + userFolders.custom
+        return others.contains { FolderAccess.components(of: $0) == target }
     }
 
     /// 큰 파일·중복 파일을 찾을 폴더를 더한다. 안 되는 폴더면 이유를 던지고 상태는 그대로다.
