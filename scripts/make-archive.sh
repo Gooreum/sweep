@@ -67,6 +67,21 @@ is_version "$VERSION" \
 is_version "$BUILD" \
   || fail "CFBundleVersion '$BUILD' — 정수 1~3개를 점으로 이은 형식이어야 한다 (예: 3)"
 
+# 빌드 번호에 버전을 담는다: 주×10000 + 부×1000 + 패치×100 + 회차(01~99).
+# Mac 앱은 빌드 번호가 버전과 상관없이 계속 커져야 해서(TN2420, 업로드 오류 90061) 1로 돌릴 수 없다.
+# 이 규칙이면 숫자는 늘 커지면서 끝 두 자리는 버전마다 01부터 시작한다(1.0.5 → 10501, 1.0.6 → 10601).
+# 부버전·패치가 10 이상이면 다음 자리와 겹치므로(1.0.10 = 1.1.0) 0~9까지만 쓴다.
+IFS=. read -r MAJ MIN PAT <<< "$VERSION"; MIN=${MIN:-0}; PAT=${PAT:-0}
+[ "$MIN" -le 9 ] && [ "$PAT" -le 9 ] \
+  || fail "버전 $VERSION — 부버전과 패치는 0~9까지다. 다음은 $MAJ.$((MIN + 1)).0으로 올린다"
+BUILD_BASE=$(( MAJ * 10000 + MIN * 1000 + PAT * 100 ))
+if ! { [[ "$BUILD" =~ ^[0-9]+$ ]] && [ "$BUILD" -gt "$BUILD_BASE" ] && [ "$BUILD" -le $((BUILD_BASE + 99)) ]; }; then
+  # 규칙 전에 올라간 번호(1.0.5 (11))는 손으로 확인할 때만 넘긴다. CI는 빌드 번호가 안 바뀌면 아카이브하지 않는다.
+  [ "${ALLOW_LEGACY_BUILD:-}" = 1 ] \
+    || fail "빌드 $BUILD — 버전 ${VERSION}의 빌드는 $((BUILD_BASE + 1))~$((BUILD_BASE + 99))여야 한다 (첫 빌드 $((BUILD_BASE + 1)), 다시 올리면 +1)"
+  echo "  주의 빌드 $BUILD — 규칙 전 번호라 ALLOW_LEGACY_BUILD=1로 넘긴다"
+fi
+
 # Organizer 업로드 기록에서 이 번들의 업로드 성공 건을 모은다.
 # 아카이브의 CFBundleVersion이 아니라 uploadedBuildNumber를 본다 —
 # Organizer가 번호를 자동으로 올려서 올리면 둘이 다르다(실제로 1 → 2였다).
