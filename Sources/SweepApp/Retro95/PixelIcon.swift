@@ -193,6 +193,44 @@ extension PixelArt {
         "................",
     ], palette: retroPalette)
 
+    static let chip = PixelArt(rows: [
+        "................",
+        "....k.k.k.k.....",
+        "....g.g.g.g.....",
+        "...kkkkkkkkkk...",
+        ".kgkwwwwwwwdkgk.",
+        "...kwggggggdk...",
+        ".kgkwgkkkkgdkgk.",
+        "...kwgkwwkgdk...",
+        ".kgkwgkddkgdkgk.",
+        "...kwgkkkkgdk...",
+        ".kgkwggggggdkgk.",
+        "...kddddddddk...",
+        "...kkkkkkkkkk...",
+        "....d.d.d.d.....",
+        "....k.k.k.k.....",
+        "................",
+    ], palette: retroPalette)
+
+    static let spaceView = PixelArt(rows: [
+        "................",
+        ".kkkkkkkkkkkkkk.",
+        ".kwwwwwwwwwwwwk.",
+        ".kwcccccckwwwdk.",
+        ".kwcccccckyyydk.",
+        ".kwcccccckyyydk.",
+        ".kwcccccckddddk.",
+        ".kwcccccckkkkkk.",
+        ".kwcccccckwwkwk.",
+        ".kwcccccckcckwk.",
+        ".kwcccccckcckwk.",
+        ".kwcccccckcckdk.",
+        ".kwddddddkddkdk.",
+        ".kddddddddddddk.",
+        ".kkkkkkkkkkkkkk.",
+        "................",
+    ], palette: retroPalette)
+
     static let pieChart = PixelArt(rows: [
         "................",
         "................",
@@ -509,8 +547,8 @@ extension Feature {
         case .largeFile: .folder
         case .duplicate: .documents
         case .trash: .trash
-        case .diskMap: .pieChart
-        case .cpu: .computer
+        case .diskMap: .spaceView
+        case .cpu: .chip
         }
     }
 }

@@ -275,7 +275,10 @@ struct ProjectArtifactTests {
         }
 
         #expect(item("old")?.safety == .safe)
-        #expect(item("old")?.detail.contains("package.json") == true)
+        // 안전한 줄은 설정 파일 이름이 아니라 "어떻게 다시 생기는지"를 말한다
+        let nodeRule = ProjectArtifactRule.all.first { $0.name == "node_modules" }!
+        #expect(item("old")?.detail == nodeRule.rebuildHint)
+        #expect(item("old")?.detail.contains("package.json") == false)
         #expect(item("new")?.safety == .caution)
         #expect(item("new")?.detail.contains("최근 14일") == true)
         #expect(item("nolock")?.safety == .caution)

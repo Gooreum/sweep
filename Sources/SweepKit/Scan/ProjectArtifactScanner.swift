@@ -78,17 +78,20 @@ public struct ProjectArtifactScanner: CleanupScanner {
         return found
     }
 
-    /// 안전도와 설명. 사유가 있으면 설명 맨 앞에 둔다 — 사유는 늘 보이는 자리에 있어야 한다.
+    /// 안전도와 설명. 설명 칸은 좁아서(안전 한 줄, 주의 두 줄) 줄마다 **한 가지만** 말한다.
+    ///
+    /// - 주의: 왜 조심해야 하는지. 사유는 늘 보이는 자리에 있어야 한다.
+    /// - 안전: 지워도 어떻게 다시 생기는지. 설정 파일 이름은 보여주지 않는다 — "짝이 맞았다"는
+    ///   사용자가 판단하는 데 쓸 말이 아니다.
     func assess(project: URL, match: ProjectArtifactRule.Match) -> (SafetyLevel, String) {
-        let hint = match.rule.rebuildHint
         let cutoff = now.addingTimeInterval(-Double(recentDays) * 86_400)
         if let touched = Self.lastActivity(of: project, since: cutoff), touched > cutoff {
-            return (.caution, String(localized: "최근 \(recentDays)일 안에 고친 프로젝트예요 · \(hint)"))
+            return (.caution, String(localized: "최근 \(recentDays)일 안에 고친 프로젝트예요. 지우기 전에 확인해 보세요."))
         }
         if match.rule.needsLock(in: project) {
-            return (.caution, String(localized: "lock 파일이 없어 다시 설치하면 버전이 달라질 수 있어요 · \(hint)"))
+            return (.caution, String(localized: "버전을 적어 둔 파일(lock)이 없어요. 다시 설치하면 다른 버전이 깔릴 수 있어요."))
         }
-        return (.safe, String(localized: "\(match.manifest) 짝 · \(hint)"))
+        return (.safe, match.rule.rebuildHint)
     }
 
     /// 소스 폴더를 몇 단계까지 내려가 볼지. `src/a/b.ts`를 고친 것까지 닿으면 충분하다.

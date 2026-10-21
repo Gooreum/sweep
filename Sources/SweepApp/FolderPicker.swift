@@ -48,7 +48,7 @@ enum FolderPicker {
         panel.allowsMultipleSelection = false
         panel.directoryURL = Sandbox.userHome
         panel.prompt = String(localized: "추가")
-        panel.message = String(localized: "코드를 모아 둔 폴더(예: ~/Code)를 선택해 주세요.")
+        panel.message = String(localized: "프로젝트를 어디에 보관하나요? ~/Code처럼 프로젝트가 모인 폴더를 골라 주세요.")
 
         guard panel.runModal() == .OK else { return nil }
         return panel.url

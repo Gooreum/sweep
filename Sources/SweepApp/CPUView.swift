@@ -108,7 +108,7 @@ struct CPUView: View {
         if let load = model.load {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .center, spacing: 18) {
-                    PixelIcon(art: .computer, size: 32)
+                    PixelIcon(art: .chip, size: 32)
                     VStack(alignment: .leading, spacing: 0) {
                         Text(verbatim: String(format: "%.0f%%", load.used))
                             .font(R95.mono(30))
@@ -125,7 +125,7 @@ struct CPUView: View {
             // 준비 중이거나 커널 값을 못 읽었다. 프로세스 합으로 지어내지 않는다 —
             // root 프로세스 몫이 유휴로 둔갑한다.
             VStack(alignment: .leading, spacing: 8) {
-                PixelIcon(art: .computer, size: 32)
+                PixelIcon(art: .chip, size: 32)
                 Text(model.isWarmingUp ? String(localized: "측정 중…")
                                        : String(localized: "지금은 Mac이 얼마나 바쁜지 확인할 수 없어요."))
                     .font(R95.ui(12))
@@ -380,7 +380,7 @@ struct CPUView: View {
 
     private func placeholder(_ title: String, detail: String) -> some View {
         VStack(spacing: 8) {
-            PixelIcon(art: .computer, size: 32)
+            PixelIcon(art: .chip, size: 32)
             Text(title).font(R95.ui(13, bold: true)).foregroundStyle(R95.black)
             Text(detail).font(R95.ui(12)).foregroundStyle(R95.deep)
         }

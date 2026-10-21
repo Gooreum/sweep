@@ -191,9 +191,8 @@ struct Retro95TitleStrip: View {
 struct SafetyChip: View {
     let level: SafetyLevel
     var compact = false
-    private var label: String {
-        switch level { case .safe: "SAFE"; case .caution: "REVIEW"; case .danger: "DANGER" }
-    }
+    /// 용어집의 "안전, 주의, 위험"(영어는 Safe, Caution, Danger). 한국어 화면에 영문이 뜨지 않게 한다.
+    private var label: String { level.displayName }
     private var fill: Color {
         switch level { case .safe: R95.safe; case .caution: R95.review; case .danger: R95.danger }
     }
