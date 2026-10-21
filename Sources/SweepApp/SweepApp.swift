@@ -27,7 +27,11 @@ struct SweepApp: App {
            let pid = pid_t(CommandLine.arguments[flag + 1]) {
             Self.runCPUDetailsAndExit(pid: pid)
         }
-        _app = State(initialValue: AppModel())
+        let app = AppModel()
+        _app = State(initialValue: app)
+        // 앱이 다 뜨기 전에 만든다. 알림 센터 델리게이트가 그때 등록돼야
+        // 알림을 눌러 앱이 실행된 경우도 받는다.
+        _diskAlerts = State(initialValue: DiskAlertNotifier(app: app, interval: Self.diskWatchInterval))
         // SPM 실행 파일은 앱 번들이 아니라서 기본이 백그라운드 프로세스다.
         // .regular로 올려야 창이 앞으로 나오고 메뉴 막대가 붙는다.
         NSApplication.shared.setActivationPolicy(.regular)
@@ -40,10 +44,33 @@ struct SweepApp: App {
     /// 다시 열 때마다 허락 화면이 떴다. `init`에서 복원한 뒤에 만든다.
     @State private var app: AppModel
 
+    /// 디스크 부족 감시. 창이 아니라 앱이 들고 있어야 창을 닫아도 돈다.
+    @State private var diskAlerts: DiskAlertNotifier
+
+    /// 확인 주기. `--disk-watch-interval 10`(초)은 5분을 기다리지 않고 알림을 확인하는 입구다 —
+    /// `--scan-only`와 같은 취지다.
+    private static var diskWatchInterval: Duration {
+        let args = CommandLine.arguments
+        if let flag = args.firstIndex(of: "--disk-watch-interval"),
+           args.indices.contains(flag + 1),
+           let seconds = Int(args[flag + 1]), seconds > 0 {
+            return .seconds(seconds)
+        }
+        return DiskWatcher.defaultInterval
+    }
+
     /// 상태 아이콘에서 본 창을 앞으로 부를 때 쓴다.
     @Environment(\.openWindow) private var openWindow
 
     var body: some Scene {
+        // 알림을 눌렀을 때도 같은 동작으로 창을 연다
+        let openMain = {
+            openWindow(id: "main")
+            // 다른 앱이 앞에 있으면 창만 만들어지고 뒤에 숨는다
+            NSApp.activate(ignoringOtherApps: true)
+        }
+        let _ = diskAlerts.openMain = openMain
+
         // `WindowGroup`이 아니라 `Window`다. 창마다 `AppModel`이 따로 생기면
         // 같은 43초 스캔이 두 번 돈다. 창을 여러 개 열 이유가 없는데
         // "New Window"와 탭 항목만 메뉴에 남는다.
@@ -69,15 +96,16 @@ struct SweepApp: App {
 
         // 배터리·와이파이가 있는 상태 영역. 창을 닫아도 여기는 남는다.
         MenuBarExtra("Sweep", systemImage: "sparkles") {
-            MenuBarPanel(app: app) {
-                openWindow(id: "main")
-                // 다른 앱이 앞에 있으면 창만 만들어지고 뒤에 숨는다
-                NSApp.activate(ignoringOtherApps: true)
-            }
-            .preferredColorScheme(.light)
+            MenuBarPanel(app: app, openMain: openMain, diskAlerts: diskAlerts)
+                .preferredColorScheme(.light)
         }
         // 기본 `.menu`는 임의 뷰를 그리지 못한다 — 텍스트 항목만 나온다
         .menuBarExtraStyle(.window)
+
+        Settings {
+            SweepSettingsView(notifier: diskAlerts, watcher: diskAlerts.watcher)
+                .preferredColorScheme(.light)
+        }
     }
 
     /// 스캔 결과를 탭 구분 텍스트로 찍고 종료한다.

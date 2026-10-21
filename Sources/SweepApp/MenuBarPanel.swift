@@ -12,6 +12,9 @@ struct MenuBarPanel: View {
     /// 창을 앞으로 부르는 동작. 씬 밖에서는 `openWindow`를 쓸 수 없어 주입받는다.
     let openMain: () -> Void
 
+    /// 디스크 부족 알림 동의를 받는 안내 줄. 한 번 답하면 다시 그리지 않는다.
+    let diskAlerts: DiskAlertNotifier
+
     /// 휴지통을 열지 못했다(샌드박스). 대신 할 일을 말한다.
     @State private var trashOpenFailed = false
 
@@ -22,6 +25,9 @@ struct MenuBarPanel: View {
 
         return VStack(alignment: .leading, spacing: 0) {
             diskSection
+            if !diskAlerts.watcher.consentAsked {
+                diskAlertConsent
+            }
             Retro95Separator()
             scanSection(summary)
             Retro95Separator()
@@ -66,6 +72,23 @@ struct MenuBarPanel: View {
             }
             .padding(Theme.panelPadding)
         }
+    }
+
+    /// 옵트인. 권한은 [켜기]를 누를 때만 묻는다 — 앱을 열자마자 묻지 않는다.
+    private var diskAlertConsent: some View {
+        HStack(spacing: 6) {
+            Text("디스크가 부족해지면 알려 드릴까요?")
+                .font(Theme.caption)
+            Spacer(minLength: 0)
+            Button("켜기") { diskAlerts.enable() }
+                .buttonStyle(.link)
+                .font(Theme.caption)
+            Button("괜찮아요") { diskAlerts.watcher.consentAsked = true }
+                .buttonStyle(.link)
+                .font(Theme.caption)
+        }
+        .padding(.horizontal, Theme.panelPadding)
+        .padding(.bottom, Theme.panelPadding)
     }
 
     /// 마지막 스캔 결과. 요약은 모델이 계산한다 — 여기서 다시 세면 어긋난다.
