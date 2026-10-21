@@ -6,9 +6,9 @@ import Foundation
 struct ScanCategoryTests {
 
     // TC-1
-    @Test("카테고리는 10종이다")
+    @Test("카테고리는 11종이다")
     func hasTenCases() {
-        #expect(ScanCategory.allCases.count == 10)
+        #expect(ScanCategory.allCases.count == 11)
     }
 
     @Test("새 정크 세 종은 재생성 쉬운 캐시 뒤, 사용자 파일 앞에 온다")
@@ -23,7 +23,11 @@ struct ScanCategoryTests {
     @Test("큰 파일·중복 파일만 사용자 폴더 범위로 검사한다")
     func onlyUserFileCategoriesUseUserFilesScope() {
         for category in ScanCategory.allCases {
-            let expected: RemovalScope = [.largeFile, .duplicate].contains(category) ? .userFiles : .cleanup
+            let expected: RemovalScope = switch category {
+            case .largeFile, .duplicate: .userFiles
+            case .projectArtifact: .projectArtifacts
+            default: .cleanup
+            }
             #expect(category.removalScope == expected, "\(category)")
         }
     }
@@ -69,7 +73,7 @@ struct ScanCategoryTests {
     func sortedOrderIsMeaningful() {
         let sorted = ScanCategory.allCases.sorted { $0.sortOrder < $1.sortOrder }
 
-        #expect(sorted == [.runawayTemp, .xcode, .devCache, .appCache,
+        #expect(sorted == [.runawayTemp, .xcode, .devCache, .projectArtifact, .appCache,
                            .staleCache, .mailAttachment, .trash, .deviceBackup,
                            .largeFile, .duplicate])
     }

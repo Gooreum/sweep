@@ -42,7 +42,8 @@ enum UserFileWalker {
     ///
     /// `isDataless`는 테스트가 갈아끼운다 — 자리표시자 파일은 만들 수 없다.
     static func files(under root: URL, minimumSize: Int64,
-                      isDataless: (URL) -> Bool = UserFileWalker.isDataless) -> [File] {
+                      isDataless: (URL) -> Bool = UserFileWalker.isDataless,
+                      inProjectFolder: (URL) -> Bool = { ProjectFolders.contains($0) }) -> [File] {
         guard let walker = FileManager.default.enumerator(
             at: root,
             includingPropertiesForKeys: Array(keys),
@@ -55,7 +56,11 @@ enum UserFileWalker {
             guard let v = try? url.resourceValues(forKeys: keys) else { continue }
 
             if v.isDirectory == true {
-                if UserFolders.skippedDirectoryNames.contains(url.lastPathComponent) {
+                // 짝이 맞는 프로젝트 산출물(`target`·`build` 등)은 **등록한 프로젝트 폴더 안일 때만**
+                // 내려가지 않는다 — 개발 프로젝트 탭이 통째로 보여주므로 한번에 찾기에서 두 번 세지 않게.
+                // 등록하지 않은 곳의 것은 어디서도 안 보이게 되므로 평소처럼 훑는다.
+                if UserFolders.skippedDirectoryNames.contains(url.lastPathComponent)
+                    || (ProjectArtifactRule.match(url) != nil && inProjectFolder(url)) {
                     walker.skipDescendants()
                 }
                 continue

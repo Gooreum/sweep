@@ -113,6 +113,7 @@ extension R95 {
         switch feature {
         case .smartScan: navy
         case .junk: teal
+        case .projects: purple
         case .largeFile: olive
         case .duplicate: purple
         case .trash: danger

@@ -33,10 +33,12 @@ public enum FolderAccess {
     public struct Grantable: Sendable, Hashable, Identifiable {
         /// 목록에 없는 폴더로도 만들 수 있다 — 권한이 막힌 곳을 그 자리에서
         /// 다시 열어 달라고 할 때 쓴다(`SmartScanView.unblock`).
-        public init(folder: URL, label: String, purpose: String) {
+        public init(folder: URL, label: String, purpose: String,
+                    keyPrefix: String = "folderBookmark.") {
             self.folder = folder
             self.label = label
             self.purpose = purpose
+            self.keyPrefix = keyPrefix
         }
 
         public let folder: URL
@@ -44,11 +46,14 @@ public enum FolderAccess {
         public let label: String
         /// 이 폴더를 열면 무엇을 찾을 수 있는지. 열기 대화상자 문구에 쓴다.
         public let purpose: String
+        /// 북마크 키 접두사. 같은 폴더를 다른 목적으로 따로 허락받을 때 키가 섞이지 않게 한다
+        /// (`ProjectFolders.grantable`).
+        let keyPrefix: String
 
         public var id: String { label }
 
         /// UserDefaults 키. 폴더마다 따로 저장한다.
-        var key: String { "folderBookmark." + label.replacingOccurrences(of: "/", with: "_") }
+        var key: String { keyPrefix + label.replacingOccurrences(of: "/", with: "_") }
     }
 
     private static func inHome(_ relative: String) -> URL {
@@ -165,6 +170,14 @@ public enum FolderAccess {
             grantedURLs.removeAll { FolderAccess.components(of: $0) == target }
         }
 
+        /// 저장된 북마크만 지운다. 열려 있는 접근은 닫지 않는다.
+        ///
+        /// 같은 폴더를 다른 곳(큰 파일 폴더, 고정 허락)도 열어 두었으면 `revoke`가 그쪽 접근까지
+        /// 닫아 버린다. 이쪽 북마크만 거두고 접근은 그쪽이 계속 들고 있게 할 때 쓴다.
+        public func forgetBookmark(_ grantable: Grantable) {
+            defaults.removeObject(forKey: grantable.key)
+        }
+
         /// 앱 시작 때 한 번. 저장된 북마크를 전부 풀어 접근을 다시 연다.
         ///
         /// 낡았으면(폴더가 옮겨졌다 돌아온 경우 등) 새로 저장한다. 못 풀거나 엉뚱한 곳을
@@ -173,11 +186,14 @@ public enum FolderAccess {
         ///
         /// 사용자가 스마트 스캔에 추가한 폴더(`UserFolders`)도 같은 북마크 방식으로 연다.
         /// 목록은 그쪽이 기억하고, 여기서는 접근만 되살린다.
-        public func restoreAll(custom: [URL] = UserFolders.shared.custom) {
+        /// 등록한 프로젝트 폴더(`ProjectFolders`)도 같다.
+        public func restoreAll(custom: [URL] = UserFolders.shared.custom,
+                               projects: [URL] = ProjectFolders.shared.custom) {
             migrateLegacyBookmark()
             // `legacyGrantable`도 함께 돈다. 새로 허락받을 목록(`grantables`)에는 없지만
             // 이전 버전에서 그것만 허락한 사용자의 접근을 열어야 한다.
-            for grantable in FolderAccess.grantables + [legacy] + custom.map(UserFolders.grantable(for:)) {
+            for grantable in FolderAccess.grantables + [legacy] + custom.map(UserFolders.grantable(for:))
+                + projects.map(ProjectFolders.grantable(for:)) {
                 restore(grantable)
             }
         }

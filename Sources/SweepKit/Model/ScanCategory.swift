@@ -8,6 +8,8 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
     case xcode
     /// 재생성 가능한 개발 도구 캐시.
     case devCache
+    /// 등록한 프로젝트 폴더 안의 설치·빌드 폴더. 설정 파일과 짝이 맞는 것만.
+    case projectArtifact
     /// 앱이 만든 웹 캐시. Electron·Chromium 앱이 공통 이름으로 쌓는다.
     case appCache
     /// 오래 손대지 않은 캐시.
@@ -29,6 +31,7 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
         case .runawayTemp: String(localized: "급증한 임시 파일")
         case .xcode: String(localized: "Xcode 개발 파일")
         case .devCache: String(localized: "개발용 파일")
+        case .projectArtifact: String(localized: "프로젝트 설치·빌드 폴더")
         case .appCache: String(localized: "앱 임시 파일")
         case .staleCache: String(localized: "오래된 임시 파일")
         case .mailAttachment: String(localized: "메일 첨부 사본")
@@ -46,13 +49,14 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
         case .runawayTemp: 0
         case .xcode: 1
         case .devCache: 2
-        case .appCache: 3
-        case .staleCache: 4
-        case .mailAttachment: 5
-        case .trash: 6
-        case .deviceBackup: 7
-        case .largeFile: 8
-        case .duplicate: 9
+        case .projectArtifact: 3
+        case .appCache: 4
+        case .staleCache: 5
+        case .mailAttachment: 6
+        case .trash: 7
+        case .deviceBackup: 8
+        case .largeFile: 9
+        case .duplicate: 10
         }
     }
 
@@ -63,6 +67,7 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
     public var removalScope: RemovalScope {
         switch self {
         case .largeFile, .duplicate: .userFiles
+        case .projectArtifact: .projectArtifacts
         default: .cleanup
         }
     }
@@ -76,6 +81,7 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
         case .runawayTemp: "exclamationmark.triangle.fill"
         case .xcode: "hammer.fill"
         case .devCache: "shippingbox.fill"
+        case .projectArtifact: "folder.badge.gearshape"
         case .appCache: "globe"
         case .staleCache: "clock.arrow.circlepath"
         case .mailAttachment: "paperclip"

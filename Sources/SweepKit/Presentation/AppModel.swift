@@ -39,6 +39,10 @@ public final class AppModel {
     public private(set) var scanFolderCount: Int = 0
     private let userFolders: UserFolders.Registry
 
+    /// 등록한 프로젝트 폴더 수. 개발 프로젝트 화면이 빈 상태와 목록을 가르는 데 쓴다.
+    public private(set) var projectFolderCount: Int = 0
+    private let projectFolders: ProjectFolders.Registry
+
     /// 이 앱이 폴더 허락을 요구하는 환경인가(= 샌드박스인가).
     ///
     /// 허락을 거둘 때 다시 물어야 하므로 판정을 기억해 둔다. 그때마다
@@ -78,6 +82,7 @@ public final class AppModel {
                     = { CPUModel() },
                 folderAccess: FolderAccess.Registry = FolderAccess.shared,
                 userFolders: UserFolders.Registry = UserFolders.shared,
+                projectFolders: ProjectFolders.Registry = ProjectFolders.shared,
                 history: CleanupHistory = .shared,
                 needsFolderAccess: Bool? = nil,
                 readVolumeUsage: @escaping @Sendable () -> VolumeUsage? = { VolumeUsage.current() }) {
@@ -86,6 +91,7 @@ public final class AppModel {
         self.makeCPU = makeCPU
         self.folderAccess = folderAccess
         self.userFolders = userFolders
+        self.projectFolders = projectFolders
         self.history = history
         self.cleanupSummary = history.summary
         self.readVolumeUsage = readVolumeUsage
@@ -95,6 +101,51 @@ public final class AppModel {
         self.needsFolderAccess = self.requiresFolderAccess && !folderAccess.hasAny
         self.grantedFolderCount = folderAccess.urls.count
         self.scanFolderCount = userFolders.custom.count
+        self.projectFolderCount = projectFolders.custom.count
+    }
+
+    /// 등록한 프로젝트 폴더. 「보는 폴더」 줄이 읽는다.
+    public var projectFolderURLs: [URL] { projectFolders.custom }
+
+    /// 개발 프로젝트를 찾을 폴더를 등록한다. 안 되는 폴더면 이유를 던지고 상태는 그대로다.
+    ///
+    /// `addScanFolder`와 같은 순서다 — 검증·저장 뒤 샌드박스면 북마크를 저장하고,
+    /// 실패하면 목록에서도 뺀다.
+    public func addProjectFolder(_ url: URL) throws(UserFolders.Rejection) {
+        try projectFolders.add(url)
+        if requiresFolderAccess {
+            do {
+                try folderAccess.grant(url, as: ProjectFolders.grantable(for: url))
+            } catch {
+                projectFolders.remove(url)
+                throw .bookmark(error.message)
+            }
+        }
+        refreshFolderState()
+    }
+
+    /// 등록한 프로젝트 폴더를 뺀다. 샌드박스에서는 그 폴더의 북마크도 거둔다.
+    ///
+    /// 같은 폴더를 큰 파일 폴더나 고정 허락으로도 열어 두었으면 북마크만 지우고 접근은 둔다 —
+    /// 접근까지 닫으면 그쪽 탭이 앱을 다시 켤 때까지 그 폴더를 못 읽는다.
+    public func removeProjectFolder(_ url: URL) {
+        projectFolders.remove(url)
+        if requiresFolderAccess {
+            let grantable = ProjectFolders.grantable(for: url)
+            if isFolderOpenedElsewhere(url) {
+                folderAccess.forgetBookmark(grantable)
+            } else {
+                folderAccess.revoke(grantable)
+            }
+        }
+        refreshFolderState()
+    }
+
+    /// 프로젝트 폴더 말고 다른 곳(큰 파일 폴더·고정 허락)도 같은 폴더를 열어 두었는가.
+    private func isFolderOpenedElsewhere(_ url: URL) -> Bool {
+        let target = FolderAccess.components(of: url)
+        let others = FolderAccess.grantables.map(\.folder) + userFolders.custom
+        return others.contains { FolderAccess.components(of: $0) == target }
     }
 
     /// 큰 파일·중복 파일을 찾을 폴더를 더한다. 안 되는 폴더면 이유를 던지고 상태는 그대로다.
@@ -128,6 +179,7 @@ public final class AppModel {
     private func refreshFolderState() {
         grantedFolderCount = folderAccess.urls.count
         scanFolderCount = userFolders.custom.count
+        projectFolderCount = projectFolders.custom.count
         needsFolderAccess = requiresFolderAccess && !folderAccess.hasAny
         forgetScans()
     }

@@ -6,16 +6,16 @@ import Foundation
 struct FeatureTests {
 
     // TC-1
-    @Test("7개 기능 전부 표시명·아이콘·설명을 가진다")
+    @Test("8개 기능 전부 표시명·아이콘·설명을 가진다")
     func everyFeatureIsPresentable() {
-        #expect(Feature.allCases.count == 7)
+        #expect(Feature.allCases.count == 8)
         for feature in Feature.allCases {
             #expect(!feature.displayName.isEmpty)
             #expect(!feature.systemImageName.isEmpty)
             #expect(!feature.summary.isEmpty)
         }
         // 표시명이 겹치면 사이드바에서 같은 줄이 두 번 보인다
-        #expect(Set(Feature.allCases.map(\.displayName)).count == 7)
+        #expect(Set(Feature.allCases.map(\.displayName)).count == 8)
     }
 
     // TC-2
@@ -44,7 +44,8 @@ struct FeatureTests {
 
         // 나머지는 전부 스캔 가능해야 한다. 이름을 나열하지 않는다 —
         // 읽기 전용 기능이 또 늘면 여기가 아니라 위 배열만 고치면 된다.
-        for feature in Feature.allCases where ![.diskMap, .cpu].contains(feature) {
+        // 개발 프로젝트는 폴더를 등록해야 스캐너가 붙는다(테스트 프로세스에는 등록이 없다).
+        for feature in Feature.allCases where ![.diskMap, .cpu, .projects].contains(feature) {
             #expect(feature.isScannable, "\(feature)가 스캔 불가로 나온다")
         }
     }
@@ -68,8 +69,9 @@ struct FeatureTests {
     func smartScanCoversEveryCategory() {
         // 스캐너를 추가하고 Feature에 넣는 것을 잊으면 여기서 걸린다.
         // 카테고리 전수와 맞춰 두면 목록이 어긋난 채로 지나가지 않는다.
+        // 프로젝트 산출물은 등록한 폴더가 있을 때만 붙는다. 테스트 프로세스에는 없다.
         #expect(Feature.smartScan.scanners.count == 10)
-        #expect(Set(Feature.smartScan.categories) == Set(ScanCategory.allCases))
+        #expect(Set(Feature.smartScan.categories) == Set(ScanCategory.allCases).subtracting([.projectArtifact]))
     }
 
     @Test("스캔 가능한 기능들의 카테고리를 합치면 스마트 스캔과 같다")
@@ -78,8 +80,9 @@ struct FeatureTests {
             .filter { $0 != .smartScan }
             .flatMap(\.categories)
 
-        // 어느 카테고리도 사이드바에서 갈 곳이 없으면 안 된다
-        #expect(Set(byFeature) == Set(ScanCategory.allCases))
+        // 어느 카테고리도 사이드바에서 갈 곳이 없으면 안 된다.
+        // 프로젝트 산출물은 폴더를 등록해야 붙으므로 아래 테스트가 따로 본다.
+        #expect(Set(byFeature) == Set(ScanCategory.allCases).subtracting([.projectArtifact]))
         // 같은 카테고리가 두 기능에 걸치면 결과가 중복 집계된다
         #expect(byFeature.count == Set(byFeature).count)
     }
@@ -218,7 +221,7 @@ struct FeatureTests {
     @Test("기능 색끼리 색상각이 충분히 벌어져 있다")
     func featureTintsAreDistinguishable() {
         let hues = Feature.allCases.compactMap { $0.tintHex }.map { hue(rgb($0.dark)) }.sorted()
-        #expect(hues.count == 6, "고유색을 가진 기능이 6개여야 한다")
+        #expect(hues.count == 7, "고유색을 가진 기능이 7개여야 한다")
 
         // 색상각이 붙어 있으면 사이드바에서 두 기능이 같은 색으로 읽힌다.
         // 색상환은 돈다 — 맨 끝(보라·빨강)과 맨 앞(빨강)도 이웃이다.

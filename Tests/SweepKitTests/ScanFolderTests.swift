@@ -116,4 +116,51 @@ struct ScanFolderTests {
         #expect(!access.isGranted(UserFolders.grantable(for: documents)))
         #expect(app.needsFolderAccess)
     }
+
+    @Test("프로젝트 폴더를 빼도 같은 폴더를 큰 파일 폴더로 열어 두었으면 접근은 남는다")
+    @MainActor
+    func removingProjectFolderKeepsSharedAccess() throws {
+        let (userDefaults, resetUser) = try makeDefaults()
+        defer { resetUser() }
+        let (projectDefaults, resetProject) = try makeDefaults()
+        defer { resetProject() }
+        let (accessDefaults, resetAccess) = try makeDefaults()
+        defer { resetAccess() }
+        let access = FolderAccess.Registry(defaults: accessDefaults)
+        let app = AppModel(folderAccess: access,
+                           userFolders: UserFolders.Registry(defaults: userDefaults),
+                           projectFolders: ProjectFolders.Registry(defaults: projectDefaults),
+                           needsFolderAccess: true)
+        let documents = Sandbox.userHome.appending(path: "Documents")
+
+        try app.addScanFolder(documents)
+        try app.addProjectFolder(documents)
+        app.removeProjectFolder(documents)
+
+        // 프로젝트 쪽 북마크는 거뒀지만, 큰 파일 폴더가 쓰는 접근은 닫히면 안 된다
+        #expect(access.isGranted(UserFolders.grantable(for: documents)))
+    }
+
+    @Test("프로젝트 폴더만 열어 둔 곳은 빼면 접근도 닫힌다")
+    @MainActor
+    func removingProjectFolderClosesAccessWhenNotShared() throws {
+        let (userDefaults, resetUser) = try makeDefaults()
+        defer { resetUser() }
+        let (projectDefaults, resetProject) = try makeDefaults()
+        defer { resetProject() }
+        let (accessDefaults, resetAccess) = try makeDefaults()
+        defer { resetAccess() }
+        let access = FolderAccess.Registry(defaults: accessDefaults)
+        let app = AppModel(folderAccess: access,
+                           userFolders: UserFolders.Registry(defaults: userDefaults),
+                           projectFolders: ProjectFolders.Registry(defaults: projectDefaults),
+                           needsFolderAccess: true)
+        let documents = Sandbox.userHome.appending(path: "Documents")
+
+        try app.addProjectFolder(documents)
+        #expect(access.isGranted(ProjectFolders.grantable(for: documents)))
+        app.removeProjectFolder(documents)
+
+        #expect(!access.isGranted(ProjectFolders.grantable(for: documents)))
+    }
 }
