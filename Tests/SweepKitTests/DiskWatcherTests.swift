@@ -165,6 +165,30 @@ struct DiskWatcherTests {
         #expect(settings.enabled == false)
     }
 
+    @Test("알림이 가지 못했다고 알리면 같은 상황에서도 다음 회차에 다시 알린다")
+    func deliveryFailureRearms() throws {
+        let (settings, _, cleanup) = try isolated()
+        defer { cleanup() }
+        var count = 0
+        let sut = watcher(settings, free: { 3 }) { _ in count += 1 }
+        sut.isEnabled = true
+        sut.isAuthorized = true
+
+        sut.tick()
+        #expect(count == 1)
+        #expect(settings.armed == false)
+
+        sut.deliveryFailed()
+        #expect(settings.armed == true)
+
+        sut.tick()
+        #expect(count == 2, "전송이 실패했는데 다시 시도하지 않았다")
+
+        // 이번에는 성공(신고 없음) — 더는 알리지 않는다
+        sut.tick()
+        #expect(count == 2)
+    }
+
     // TC-10
     @Test("장전 상태가 저장돼 다시 만든 감시기에서도 같은 상황에 알리지 않는다")
     func armedSurvivesRelaunch() throws {

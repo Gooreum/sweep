@@ -75,6 +75,15 @@ public final class DiskWatcher {
         return result.notify
     }
 
+    /// 알림 센터가 알림을 받지 않았다(권한이 도중에 꺼졌거나 전송이 거부됐다).
+    ///
+    /// `tick`은 알리는 순간 장전을 풀어 같은 상황에서 다시 알리지 않게 한다. 그런데 알림이
+    /// 가지 못했다면 사용자는 아무것도 못 본 채로 기준 아래에 머무르므로, 장전을 되돌려
+    /// 다음 회차에 다시 시도하게 한다.
+    public func deliveryFailed() {
+        settings.armed = true
+    }
+
     /// 켜져 있고 권한이 있으면 돌리고, 아니면 멈춘다. 설정이 바뀔 때마다 부른다.
     private func update() {
         if isEnabled && isAuthorized { start() } else { stop() }
@@ -85,8 +94,8 @@ public final class DiskWatcher {
         let interval = interval
         task = Task { [weak self] in
             while !Task.isCancelled {
-                // 잠자는 동안 감시기를 붙잡지 않는다
-                self?.tick()
+                // 잠자는 동안 감시기를 붙잡지 않는다. 감시기가 사라졌으면(nil) 루프도 끝낸다.
+                guard self?.tick() != nil else { return }
                 try? await Task.sleep(for: interval)
             }
         }
