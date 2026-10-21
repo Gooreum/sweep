@@ -64,7 +64,7 @@ struct RestorerTests {
         let result = Restorer().restoreOne(outcome(original, trashed))
 
         #expect(result.failure?.kind == .destinationOccupied)
-        #expect(result.failureReason == "돌려놓을 폴더가 더는 없어요")
+        #expect(result.failureReason?.contains("원래 폴더가 사라져") == true)
         #expect(!fm.fileExists(atPath: original.deletingLastPathComponent().path))
     }
 

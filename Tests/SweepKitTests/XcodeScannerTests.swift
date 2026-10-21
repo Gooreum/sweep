@@ -99,7 +99,9 @@ struct XcodeScannerTests {
         let items = await XcodeScanner(home: home).scan()
         #expect(items.count == 1)
         #expect(items.first?.safety == .safe)
-        #expect(items.first?.detail == "지워도 Xcode로 개발하면 새로 만들어져요")
+        // 지워도 괜찮다는 결론과, 무엇인지(앱을 만들며 쌓은 중간 결과)를 함께 말해야 한다
+        #expect(items.first?.detail.contains("중간 결과") == true)
+        #expect(items.first?.detail.contains("지워도") == true)
         #expect(items.first?.isSelectedByDefault == true)
     }
 

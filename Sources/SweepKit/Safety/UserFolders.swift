@@ -25,15 +25,15 @@ public enum UserFolders {
         public var message: String {
             switch self {
             case .tooWide:
-                String(localized: "내 폴더 안은 이미 모두 찾고 있어요. 내 폴더 전체나 그 상위 폴더는 추가할 수 없어요.")
+                String(localized: "내 폴더 바로 아래의 일반 폴더는 이미 찾고 있어요. 더 찾으려면 다른 위치의 폴더를 골라 주세요.")
             case .insideLibrary:
-                String(localized: "Library는 여기에 추가할 수 없어요. 앱이 만든 파일은 ‘정리할 파일’에서 확인하세요.")
+                String(localized: "Library 안의 앱 파일은 ‘정리할 파일’에서 살펴보면 돼요. 큰 파일과 중복 파일을 찾을 다른 폴더를 골라 주세요.")
             case .systemFolder:
-                String(localized: "컴퓨터에 필요한 폴더라 추가할 수 없어요.")
+                String(localized: "macOS나 설치한 도구가 쓰는 곳이에요. 문서나 사진을 보관한 폴더를 골라 주세요.")
             case .alreadyCovered(let url):
-                String(localized: "따로 추가하지 않아도 찾는 곳이에요: \(CleanupItem.abbreviating(url.path, home: Sandbox.userHome.path))")
+                String(localized: "이미 찾는 폴더에 포함돼 있어요. 다른 위치를 골라 주세요: \(CleanupItem.abbreviating(url.path, home: Sandbox.userHome.path))")
             case .bookmark(let reason):
-                String(localized: "이 폴더를 다시 열 수 있도록 저장하는 데 실패했어요. \(reason)")
+                String(localized: "이 폴더를 다음에도 열 수 있게 기억하지 못했어요. 폴더를 다시 골라 주세요. \(reason)")
             }
         }
     }

@@ -115,7 +115,8 @@ struct RemovalReportTests {
             RemovalOutcome(item: item("ok", size: 3_500), failureReason: nil),
             RemovalOutcome(item: item("nope", size: 9_999_999), failureReason: "권한 없음"),
         ])
-        #expect(report.trashNotice == "아직 공간이 늘어난 것은 아니에요. 휴지통까지 비워야 \(report.formattedReclaimed)를 쓸 수 있어요")
+        #expect(report.trashNotice?.contains(report.formattedReclaimed) == true)
+        #expect(report.trashNotice?.contains("휴지통을 비우면") == true)
         #expect(report.formattedReclaimed == ByteCountFormatter.string(fromByteCount: 3_500, countStyle: .file))
     }
 

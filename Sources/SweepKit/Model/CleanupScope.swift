@@ -61,7 +61,7 @@ extension CleanupScope {
                 guard !sawTemporary else { return nil }
                 sawTemporary = true
                 return CleanupScope(url: url, label: String(localized: "앱 임시 폴더"),
-                                    detail: String(localized: "앱을 쓰고 남은 임시 파일"))
+                                    detail: String(localized: "앱이 작업 중 잠시 쓰는 파일을 찾아요"))
             }
 
             let label = path.hasPrefix(home)
@@ -102,23 +102,23 @@ extension CleanupScope {
 
     private static func detail(for label: String) -> String {
         switch label {
-        case "~/Library/Developer": String(localized: "Xcode 개발용 파일을 찾아요")
-        case "~/Library/Caches": String(localized: "지워도 앱에서 다시 만들 수 있는 파일을 찾아요")
-        case "~/Library/Logs": String(localized: "앱 사용 기록")
+        case "~/Library/Developer": String(localized: "Xcode로 앱을 만들거나 시험하며 쌓인 파일을 찾아요")
+        case "~/Library/Caches": String(localized: "앱이 빠르게 열려고 모아 둔 파일을 찾아요")
+        case "~/Library/Logs": String(localized: "앱이 언제 어떻게 작동했는지 적은 파일을 찾아요")
         case "~/Downloads": String(localized: "받아 둔 파일과 중복 파일을 찾아요")
-        case "/private/tmp": String(localized: "macOS 임시 파일")
+        case "/private/tmp": String(localized: "macOS와 앱이 잠시 쓰려고 만든 파일을 찾아요")
         // 폴더 전체가 아니라 안의 캐시만 본다. 설정과 인증 정보는 건드리지 않는다.
-        case "~/.npm": String(localized: "npm 설치 임시 파일")
-        case "~/.expo": String(localized: "Expo 임시 파일")
-        case "~/.gradle/caches": String(localized: "Gradle 임시 파일")
-        case "~/.cargo/registry": String(localized: "Cargo 설치 임시 파일")
-        case "~/.m2/repository": String(localized: "Maven 설치 임시 파일")
-        case "~/.Trash": String(localized: "버린 파일이 모여 있어요. 완전히 지우면 복구할 수 없어요")
+        case "~/.npm": String(localized: "npm이 받은 코드예요. 설치할 때 다시 받아요")
+        case "~/.expo": String(localized: "Expo 앱 제작에 받은 파일이에요. 필요하면 다시 받아요")
+        case "~/.gradle/caches": String(localized: "Gradle의 앱 제작 중간 파일이에요. 다시 생겨요")
+        case "~/.cargo/registry": String(localized: "Cargo가 받은 코드예요. 앱을 만들 때 다시 받아요")
+        case "~/.m2/repository": String(localized: "Maven이 받은 코드예요. 직접 설치한 게 섞여 있으니 확인해 주세요")
+        case "~/.Trash": String(localized: "휴지통에서 완전히 지울 파일을 골라요. 지우면 복구할 수 없어요")
         case "~/Library/Mobile Documents/.Trash":
-            String(localized: "iCloud Drive에서 버린 파일이에요. 비우면 연결된 다른 기기에서도 없어져요")
-        case "~/Library/Application Support/MobileSync/Backup": String(localized: "iOS 기기 백업")
+            String(localized: "iCloud Drive 휴지통 파일이에요. 다른 기기에서도 지워지고 복구할 수 없어요")
+        case "~/Library/Application Support/MobileSync/Backup": String(localized: "iPhone 등을 되돌릴 때 쓸 데이터 사본을 찾아요")
         case "~/Library/Containers/com.apple.mail/Data/Library/Mail Downloads":
-            String(localized: "메일 첨부 사본")
+            String(localized: "메일에서 열어 본 첨부 파일의 사본을 찾아요")
         default: ""
         }
     }

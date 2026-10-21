@@ -96,8 +96,8 @@ public struct AppCacheScanner: CleanupScanner {
     private static func detail(for url: URL) -> String {
         let app = appName(of: url)
         return url.lastPathComponent == "CacheStorage"
-            ? String(localized: "인터넷 없이 \(app)을 쓸 때 필요한 파일이에요. 지우면 다시 받아요")
-            : String(localized: "지워도 \(app)에서 새로 만들어요")
+            ? String(localized: "\(app)을 인터넷 없이 쓸 때 필요해요. 지우면 인터넷에 연결해 다시 받아야 해요")
+            : String(localized: "\(app)이 빠르게 열려고 모아 둔 파일이에요. 지워도 다시 생겨요")
     }
 
     /// `.../Application Support/Slack/Cache` → `Slack`.

@@ -30,7 +30,7 @@ struct FeatureScreen: View {
             // 휴지통은 전체 디스크 접근 없이는 읽히지 않는다. 그때 결과는 "비어 있음"이라
             // 휴지통이 빈 것과 구분되지 않는다 — 화면 위에 이유를 먼저 둔다.
             if feature == .trash, FullDiskAccessBanner.isNeeded {
-                FullDiskAccessBanner(message: String(localized: "휴지통이 비어 보이나요? 전체 디스크 접근을 켜야 안에 있는 파일을 확인할 수 있어요."))
+                FullDiskAccessBanner(message: String(localized: "휴지통 안의 파일을 보려면 시스템 설정의 전체 디스크 접근에서 Sweep을 켜 주세요."))
             }
 
             if feature == .trash, showsLeftovers, !adminLeftovers.isEmpty {
@@ -199,7 +199,7 @@ struct FeatureScreen: View {
 
     private var emptyResult: some View {
         Retro95Dialog(title: String(localized: "이번에는 정리할 파일이 없어요"), icon: .check) {
-            Text("찾아본 곳에는 정리 기준에 맞는 크기의 파일이 없어요.")
+            Text("이번 검색에서는 정리할 파일을 찾지 못했어요. 작은 파일은 결과에서 빠져요.")
         } buttons: {
             Button("다시 검색") { Task { await model.scan() } }
                 .buttonStyle(Retro95ButtonStyle(isDefault: true))
@@ -282,7 +282,7 @@ struct FeatureScreen: View {
             .alert("휴지통을 열지 못했어요", isPresented: $trashOpenFailed) {
                 Button("확인") {}
             } message: {
-                Text("화면 아래 휴지통을 직접 열어 주세요. 비우면 되돌릴 수 없으니 안에 있는 파일을 먼저 확인해 주세요.")
+                Text("화면 아래에서 휴지통을 열고 필요한 파일이 남아 있는지 확인해 주세요. 휴지통을 비우면 복구할 수 없어요.")
             }
             .sheet(isPresented: $showsFailures) {
                 RemovalFailuresSheet(failed: report.failed) {

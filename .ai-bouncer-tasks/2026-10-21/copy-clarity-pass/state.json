@@ -1,0 +1,43 @@
+{
+  "workflow_phase": "done",
+  "plan_approved": true,
+  "team_name": "",
+  "current_dev_phase": 1,
+  "current_step": 1,
+  "dev_phases": {
+    "1": {
+      "name": "criteria",
+      "depends_on": [],
+      "steps": {
+        "1": {}
+      }
+    },
+    "2": {
+      "name": "codex",
+      "depends_on": [
+        1
+      ],
+      "steps": {
+        "1": {},
+        "2": {}
+      }
+    },
+    "3": {
+      "name": "review",
+      "depends_on": [
+        2
+      ],
+      "steps": {
+        "1": {},
+        "2": {},
+        "3": {}
+      }
+    }
+  },
+  "verification": {
+    "e2e_passed": false
+  },
+  "task_dir": ".ai-bouncer-tasks/2026-10-21/copy-clarity-pass",
+  "active_file": ".ai-bouncer-tasks/2026-10-21/copy-clarity-pass/.active",
+  "agent_mode": "single"
+}

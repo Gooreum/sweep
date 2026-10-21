@@ -17,7 +17,7 @@ enum FolderPicker {
         // `~/Library`처럼 Finder에서 숨겨진 곳도 이렇게 지정하면 그대로 열린다.
         panel.directoryURL = grantable.folder
         panel.prompt = String(localized: "허용")
-        panel.message = String(localized: "\(grantable.label) 폴더에서 \(grantable.purpose)을 찾아볼게요. 이 폴더를 선택하고 허용을 눌러 주세요.")
+        panel.message = String(localized: "\(grantable.label) 폴더를 선택하고 허용을 눌러 주세요. 이 폴더를 여는 이유: \(grantable.purpose)")
 
         guard panel.runModal() == .OK else { return nil }
         return panel.url

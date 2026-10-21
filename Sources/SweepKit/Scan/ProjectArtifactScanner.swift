@@ -89,7 +89,7 @@ public struct ProjectArtifactScanner: CleanupScanner {
             return (.caution, String(localized: "최근 \(recentDays)일 안에 고친 프로젝트예요. 지우기 전에 확인해 보세요."))
         }
         if match.rule.needsLock(in: project) {
-            return (.caution, String(localized: "버전을 적어 둔 파일(lock)이 없어요. 다시 설치하면 다른 버전이 깔릴 수 있어요."))
+            return (.caution, String(localized: "버전을 고정한 파일이 없어요. 다시 설치하면 버전이 달라질 수 있어요."))
         }
         return (.safe, match.rule.rebuildHint)
     }

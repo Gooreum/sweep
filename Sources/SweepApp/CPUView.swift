@@ -45,11 +45,11 @@ struct CPUView: View {
                 Text(coreSentence)
                     .font(R95.ui(12, bold: true))
                     .foregroundStyle(R95.black)
-                Text("숫자가 클수록 컴퓨터를 많이 쓰고 있어요. 100%를 넘어도 고장은 아니에요. 이 Mac에서는 최대 \(model.cores * 100)%까지 나와요.")
+                Text("프로그램별 숫자는 코어 하나를 모두 쓰면 100%예요. 여러 코어를 함께 쓰면 이 Mac에서는 최대 \(model.cores * 100)%까지 나와요.")
                     .font(R95.ui(11))
                     .foregroundStyle(R95.deep)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("퍼센트 기준은 활성 상태 보기와 같아요. Mac이 느리다면 오른쪽에서 많이 쓰는 프로그램을 확인해 보세요.")
+                Text("Mac이 느리다면 오른쪽 표에서 숫자가 큰 프로그램을 눌러 보세요. 종료가 필요하면 활성 상태 보기를 열면 돼요.")
                     .font(R95.ui(11))
                     .foregroundStyle(R95.deep)
             }
@@ -66,9 +66,9 @@ struct CPUView: View {
     private var coreSentence: String {
         if let performance = ProcessCPUSampler.performanceCores,
            let efficiency = ProcessCPUSampler.efficiencyCores {
-            String(localized: "어떤 프로그램이 컴퓨터를 바쁘게 하는지 살펴보세요. CPU 정보는 총 \(model.cores)개, 성능 \(performance)개, 효율 \(efficiency)개예요.")
+            String(localized: "Mac을 바쁘게 하는 프로그램을 찾아보세요. 이 Mac은 코어가 \(model.cores)개예요. 빠른 코어 \(performance)개, 절전 코어 \(efficiency)개예요.")
         } else {
-            String(localized: "어떤 프로그램이 컴퓨터를 바쁘게 하는지 살펴보세요. CPU 정보는 총 \(model.cores)개예요.")
+            String(localized: "Mac을 바쁘게 하는 프로그램을 찾아보세요. 이 Mac은 코어가 \(model.cores)개예요.")
         }
     }
 
@@ -79,7 +79,7 @@ struct CPUView: View {
             }
             Retro95GroupBox(title: String(localized: "많이 쓰는 프로그램")) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("막대가 길수록 많이 쓰고 있어요. 꽉 찬 막대끼리는 옆의 숫자를 비교해 보세요.")
+                    Text("코어 하나를 모두 쓰면 막대가 꽉 차요. 더 많이 쓰는 프로그램은 옆의 숫자로 비교해 주세요.")
                         .font(R95.ui(11))
                         .foregroundStyle(R95.deep)
                         .fixedSize(horizontal: false, vertical: true)
@@ -127,7 +127,7 @@ struct CPUView: View {
             VStack(alignment: .leading, spacing: 8) {
                 PixelIcon(art: .chip, size: 32)
                 Text(model.isWarmingUp ? String(localized: "측정 중…")
-                                       : String(localized: "지금은 Mac이 얼마나 바쁜지 확인할 수 없어요."))
+                                       : String(localized: "Mac 전체의 CPU 사용량을 읽지 못했어요. 잠시 뒤 숫자가 나오는지 확인해 주세요."))
                     .font(R95.ui(12))
                     .foregroundStyle(R95.deep)
             }
@@ -193,10 +193,10 @@ struct CPUView: View {
     private var content: some View {
         if model.isWarmingUp {
             placeholder(String(localized: "측정 중…"),
-                        detail: String(localized: "잠시 기다리면 많이 쓰는 프로그램부터 보여드려요."))
+                        detail: String(localized: "CPU 사용량을 재고 있어요. 잠시 뒤 많이 쓰는 순서로 보여드려요."))
         } else if model.rows.isEmpty {
             placeholder(String(localized: "지금은 표시할 프로그램이 없어요."),
-                        detail: String(localized: "컴퓨터를 쓰기 시작하면 여기에 나타나요."))
+                        detail: String(localized: "프로그램이 CPU를 쓰기 시작하면 여기에 나타나요."))
         } else {
             // 주기적 갱신이 NSTableView 대리자로 재진입하지 않도록 List 대신 스크롤 뷰를 쓴다.
             ScrollView {
@@ -257,7 +257,7 @@ struct CPUView: View {
         switch row {
         case .process(let usage): usage.displayPath
         case .unlisted:
-            String(localized: "Mac을 움직이는 프로그램과 잠깐 실행된 프로그램을 합친 값이에요. App Store 버전에서는 각각 나눠 볼 수 없어요.")
+            String(localized: "macOS 자체와, 짧게 켜졌다 꺼져서 따로 못 잰 프로그램이 쓴 몫이에요.")
         }
     }
 
@@ -273,7 +273,7 @@ struct CPUView: View {
                     Text("이 프로그램은 이미 끝났어요. 다른 프로그램을 눌러 보세요.")
                         .font(R95.ui(12)).foregroundStyle(R95.deep)
                 } else {
-                    Text("프로그램을 누르면 어떤 일을 하고 누가 켰는지 알려 드려요.")
+                    Text("표에서 프로그램을 골라 보세요. 알려진 프로그램은 하는 일과 종료해도 되는지 설명해 드려요.")
                         .font(R95.ui(12)).foregroundStyle(R95.deep)
                 }
             }
@@ -293,7 +293,7 @@ struct CPUView: View {
                 if let app = details.app {
                     Text(appLine(app)).font(R95.ui(11)).foregroundStyle(R95.deep)
                 } else if !details.isMine {
-                    Text("Mac이 켠 프로그램이에요").font(R95.ui(11)).foregroundStyle(R95.deep)
+                    Text("macOS나 다른 계정이 켠 프로그램이에요").font(R95.ui(11)).foregroundStyle(R95.deep)
                 }
             }
             if let known = details.known {
@@ -341,17 +341,17 @@ struct CPUView: View {
 
     private func appLine(_ app: AppIdentity) -> String {
         if let version = app.version {
-            String(localized: "\(app.name) \(version)에 들어 있어요")
+            String(localized: "\(app.name) \(version)의 일부로 실행 중이에요")
         } else {
-            String(localized: "\(app.name)에 들어 있어요")
+            String(localized: "\(app.name)의 일부로 실행 중이에요")
         }
     }
 
     private func adviceText(_ advice: KnownProcess.Advice) -> String {
         switch advice {
-        case .leaveIt: String(localized: "끄지 마세요. Mac에 꼭 필요해요.")
-        case .safeToQuit: String(localized: "끝내도 괜찮아요. 하던 일만 멈춰요.")
-        case .quitInApp: String(localized: "그 프로그램을 열어서 끝내 주세요.")
+        case .leaveIt: String(localized: "Mac 작동에 필요한 프로그램이에요. 그대로 켜 두세요.")
+        case .safeToQuit: String(localized: "필요 없는 작업이면 종료해도 괜찮아요. 진행 중인 작업은 멈춰요.")
+        case .quitInApp: String(localized: "종료하려면 이 프로그램을 켠 앱이나 터미널에서 작업을 먼저 멈춰 주세요.")
         }
     }
 

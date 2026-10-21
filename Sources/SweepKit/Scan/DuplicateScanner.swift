@@ -79,7 +79,7 @@ public struct DuplicateScanner: CleanupScanner {
                             // Downloads 밖의 사본은 일부러 둔 것일 수 있다(프로젝트 에셋, 백업).
                             // 원본이 남아도 자동 선택하지 않는다.
                             safety: duplicate.url.isDescendant(of: downloads) ? .safe : .caution,
-                            detail: String(localized: "같은 내용의 원본이 남아요: \(originalName(original.url, beside: duplicate.url))"),
+                            detail: String(localized: "이 사본을 지워도 같은 내용은 남아요: \(originalName(original.url, beside: duplicate.url))"),
                             dates: FileDates(created: duplicate.created,
                                              lastUsed: duplicate.modified),
                             originalURL: original.url))

@@ -19,8 +19,8 @@ struct FolderAccessView: View {
         Retro95Dialog(title: String(localized: "어디에서 찾을까요?"), icon: .folder) {
             VStack(alignment: .leading, spacing: 12) {
                 VStack(spacing: 6) {
-                    Text("파일을 찾으려면 폴더를 열 수 있어야 해요. 아래에서 찾을 곳을 허용해 주세요.")
-                    Text("대부분은 맨 위 폴더 안에 있어요. 우선 그곳부터 열어 주세요.")
+                    Text("아래에서 찾을 곳의 열기를 눌러 주세요. 새 창에서 허용을 누르면 그 안의 파일을 찾을 수 있어요.")
+                    Text("Mac 전체에서 찾으려면 맨 위의 이 Mac을 허용하면 돼요. 특정 폴더만 허용해도 괜찮아요.")
                 }
                 .font(R95.ui())
                 .foregroundStyle(R95.deep)

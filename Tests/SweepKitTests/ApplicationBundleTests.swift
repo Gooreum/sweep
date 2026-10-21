@@ -288,7 +288,7 @@ struct RunningApplicationTests {
     @Test("사유 문구가 무엇을 해야 하는지 말한다")
     func message() {
         let message = RemovalVeto.applicationRunning(ghost).message
-        #expect(message.hasPrefix("아직 켜져 있는 앱이에요. 먼저 닫고 다시 해 보세요"))
+        #expect(message.contains("종료한 뒤 다시"))
         #expect(message.contains(ghost.path))
     }
 

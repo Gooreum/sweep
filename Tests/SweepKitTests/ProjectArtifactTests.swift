@@ -282,7 +282,7 @@ struct ProjectArtifactTests {
         #expect(item("new")?.safety == .caution)
         #expect(item("new")?.detail.contains("최근 14일") == true)
         #expect(item("nolock")?.safety == .caution)
-        #expect(item("nolock")?.detail.contains("lock") == true)
+        #expect(item("nolock")?.detail.contains("버전을 고정한 파일이 없어요") == true)
     }
 
     @Test("산출물 폴더만 최근에 바뀐 프로젝트는 최근 활동으로 치지 않는다")

@@ -102,7 +102,7 @@ struct SmartScanView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("정리할 파일, 여기서 한번에 찾아보세요")
                     .font(R95.ui(14, bold: true))
-                Text("개발용 파일과 임시 파일부터 큰 파일과 중복 파일까지 찾아드려요. 결과를 보고 필요한 것만 골라 정리하세요.")
+                Text("앱을 만들며 쌓인 파일, 앱이 다시 쓰려고 저장한 파일, 큰 파일과 중복 파일을 찾아요. 결과에서 필요 없는 것만 골라 정리하면 돼요.")
                     .font(R95.ui(11))
                     .foregroundStyle(R95.deep)
                     .fixedSize(horizontal: false, vertical: true)
@@ -248,7 +248,7 @@ struct SmartScanView: View {
                     Text("폴더 추가")
                         .font(Theme.bodyText)
                         .foregroundStyle(Theme.textPrimary)
-                    Text("찾을 곳이 더 있나요? 폴더를 추가하면 큰 파일과 중복 파일을 함께 찾아요")
+                    Text("외장 디스크 같은 다른 곳도 찾으려면 폴더를 추가해 주세요. 그 안의 큰 파일과 중복 파일을 찾아요.")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.textSecondary)
                 }
@@ -331,7 +331,7 @@ struct SmartScanView: View {
             Divider().overlay(Theme.border)
 
             HStack(spacing: 12) {
-                Text("아직 열어 보지 못한 폴더가 있어요")
+                Text("일부 폴더는 볼 수 없어요. 시스템 설정에서 Sweep의 폴더 접근을 허용해 주세요.")
                     .font(Theme.caption)
                     .foregroundStyle(R95.danger)
                 Spacer(minLength: 12)

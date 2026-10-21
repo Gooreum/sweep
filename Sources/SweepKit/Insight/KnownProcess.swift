@@ -47,328 +47,328 @@ public struct KnownProcess: Sendable, Equatable {
         Entry(
             names: ["kernel_task"],
             process: KnownProcess(
-                summary: String(localized: "맥이 작동하는 데 꼭 필요한 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "맥이 너무 뜨거우면 열을 식히려고 일부러 CPU 사용을 막기도 해요. 이 숫자가 높으면 보통 맥이 뜨겁다는 뜻이에요. 식으면 줄어들어요."),
+                summary: String(localized: "Mac의 메모리와 기기 작동을 맡고, CPU가 과열되지 않게 도와요."),
+                whenBusy: String(localized: "열 때문에 다른 앱의 CPU 사용을 줄일 때 이 값이 높아지기도 해요. 온도가 내려가면 이 활동도 줄어요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["windowserver"],
             process: KnownProcess(
-                summary: String(localized: "앱 창과 화면을 보여 주는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "창을 많이 열거나 화면에 움직임이 많으면 바빠요. 창을 줄이거나 움직임이 멈추면 줄어들어요."),
+                summary: String(localized: "여러 앱의 창을 모아 모니터에 보이는 한 화면으로 만들어요."),
+                whenBusy: String(localized: "영상이나 움직이는 창이 많을수록 그릴 화면도 늘어요. 쓰지 않는 창을 닫아 화면 작업을 줄여 보세요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["launchd"],
             process: KnownProcess(
-                summary: String(localized: "맥에 필요한 프로그램을 켜 주는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "맥을 켜거나 여러 프로그램이 시작될 때 바쁠 수 있어요. 시작이 끝나면 줄어들어요."),
+                summary: String(localized: "Mac을 켤 때 필요한 프로그램을 시작하고, 계속 실행할 프로그램을 관리해요."),
+                whenBusy: String(localized: "로그인 직후에는 여러 프로그램을 한꺼번에 켜요. 잠시 뒤에도 사용률이 높다면 반복해서 켜지는 앱이 있는지 살펴보세요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["fileproviderd"],
             process: KnownProcess(
-                summary: String(localized: "온라인에 보관한 파일을 Finder에서 쓸 수 있게 돕는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "파일을 많이 받거나 바꾸면 한동안 바빠요. 파일을 맞추는 일이 끝나면 조용해져요."),
+                summary: String(localized: "iCloud Drive 같은 온라인 저장소의 파일을 Finder에서 열고 바꿀 수 있게 해 줘요."),
+                whenBusy: String(localized: "파일을 많이 받거나 옮긴 뒤에는 목록과 바뀐 내용을 맞추는 데 시간이 걸려요. Finder에서 전송 상태를 확인해 보세요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["bird"],
             process: KnownProcess(
-                summary: String(localized: "iCloud Drive 파일을 다른 기기와 맞추는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "파일을 많이 바꾸거나 처음 연결하면 한동안 바빠요. 끝나면 조용해져요."),
+                summary: String(localized: "iCloud Drive의 문서를 다른 기기에서도 이어서 쓰게 해 줘요."),
+                whenBusy: String(localized: "다른 기기에서 바꾼 문서를 받거나 Mac의 문서를 올릴 때 일해요. iCloud Drive의 전송이 끝날 때까지 기다려 주세요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["cloudd"],
             process: KnownProcess(
-                summary: String(localized: "앱의 iCloud 자료를 주고받는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "앱이 iCloud 자료를 많이 주고받으면 바빠요. 주고받는 일이 끝나면 줄어들어요."),
+                summary: String(localized: "앱이 iCloud에 저장한 내용을 읽고 바꿀 때 연결을 맡아요."),
+                whenBusy: String(localized: "앱에서 바꾼 내용을 iCloud로 보내고 새 내용을 받아요. 오래 계속되면 최근 사용한 앱의 iCloud 상태를 확인해 보세요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["mds", "mds_stores", "mdworker", "mdworker_shared"],
             process: KnownProcess(
-                summary: String(localized: "Spotlight에서 파일을 찾을 수 있게 준비하는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "파일이 많이 늘거나 macOS를 업데이트하면 한동안 바빠요. 검색 준비가 끝나면 조용해져요."),
+                summary: String(localized: "파일 이름과 내용을 읽어 두고 Spotlight 검색에서 빨리 찾게 해 줘요."),
+                whenBusy: String(localized: "파일을 많이 추가하거나 macOS를 업데이트한 뒤에는 검색할 내용을 다시 읽어요. 이 준비가 끝나면 사용량이 줄어요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["spotlight"],
             process: KnownProcess(
-                summary: String(localized: "맥에서 파일과 앱을 찾는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "검색어를 입력하고 결과를 보여 줄 때 바쁠 수 있어요. 검색을 마치면 줄어들어요."),
+                summary: String(localized: "Spotlight 검색창에서 입력한 말에 맞는 앱과 파일을 찾아 보여 줘요."),
+                whenBusy: String(localized: "검색어를 바꿀 때마다 결과를 골라요. 검색창을 닫은 뒤 사용률이 내려가는지 확인해 보세요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["photoanalysisd"],
             process: KnownProcess(
-                summary: String(localized: "사진 속 사람과 사물을 찾아 주는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "사진이 많이 추가되면 한동안 바빠요. 사진을 살펴보는 일이 끝나면 조용해져요."),
+                summary: String(localized: "사진 앱에서 사람별로 사진을 모으고, 사물이나 장면으로 찾을 수 있게 해 줘요."),
+                whenBusy: String(localized: "새 사진이 많으면 한 장씩 살펴보는 데 오래 걸려요. 사진을 모두 살펴본 뒤에는 이 작업이 줄어요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["mediaanalysisd"],
             process: KnownProcess(
-                summary: String(localized: "사진과 동영상의 내용을 살펴보는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "사진이나 동영상이 많이 추가되면 바쁠 수 있어요. 살펴보는 일이 끝나면 줄어들어요."),
+                summary: String(localized: "사진과 동영상 속 내용을 알아보는 일을 맡아요."),
+                whenBusy: String(localized: "새로 추가한 사진과 영상을 살펴보는 동안 CPU를 써요. 분량이 많으면 처리가 끝날 때까지 기다려 주세요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["softwareupdated"],
             process: KnownProcess(
-                summary: String(localized: "macOS 업데이트를 준비하는 기본 프로그램이에요."),
-                whenBusy: String(localized: "업데이트를 확인하거나 받고 설치할 때 바빠요. 업데이트 작업이 끝나면 조용해져요."),
+                summary: String(localized: "Mac을 새 버전으로 바꾸는 데 필요한 업데이트를 받고 준비해요."),
+                whenBusy: String(localized: "업데이트 파일을 받거나 설치를 준비할 때 사용량이 늘어요. 시스템 설정의 소프트웨어 업데이트에서 진행 상황을 볼 수 있어요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["diskimagesiod"],
             process: KnownProcess(
-                summary: String(localized: "설치 파일처럼 디스크 모양으로 여는 파일을 다루는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "이런 파일을 열거나 그 안의 파일을 읽고 쓸 때 바쁠 수 있어요. 작업이 끝나면 줄어들어요."),
+                summary: String(localized: ".dmg 파일 등을 열었을 때, 그 안의 파일을 읽고 쓰는 일을 맡아요."),
+                whenBusy: String(localized: "열어 둔 .dmg 안에서 앱을 복사하는 동안에도 일해요. 복사가 끝났다면 Finder에서 꺼내면 돼요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["backupd"],
             process: KnownProcess(
-                summary: String(localized: "Time Machine으로 파일을 따로 보관해 주는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "처음 보관하거나 바뀐 파일이 많으면 오래 바쁠 수 있어요. 보관이 끝나면 조용해져요."),
+                summary: String(localized: "Time Machine이 파일을 잃었을 때 되돌릴 사본을 저장해요."),
+                whenBusy: String(localized: "첫 백업이나 바뀐 파일이 많은 날에는 오래 걸려요. Time Machine 메뉴에서 백업 진행 상황을 확인해 주세요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["coreaudiod"],
             process: KnownProcess(
-                summary: String(localized: "맥에서 소리를 듣고 녹음할 수 있게 하는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "음악을 듣거나 통화하고 녹음할 때 바쁠 수 있어요. 소리를 쓰는 일이 끝나면 줄어들어요."),
+                summary: String(localized: "앱의 소리를 스피커로 보내고 마이크로 들어오는 소리를 전달해요."),
+                whenBusy: String(localized: "통화와 녹음, 음악 재생이 이어지는 동안 계속 일해요. 쓰지 않는 통화나 녹음을 끝내면 소리 처리도 줄어요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["syspolicyd"],
             process: KnownProcess(
-                summary: String(localized: "앱을 실행해도 되는지 확인하는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "앱을 처음 열거나 새 앱을 확인할 때 바쁠 수 있어요. 확인이 끝나면 조용해져요."),
+                summary: String(localized: "앱을 설치하거나 열 때 macOS의 보안 기준에 맞는지 검사해요."),
+                whenBusy: String(localized: "새로 받은 앱을 처음 열 때 검사가 걸려요. 검사가 끝날 때까지 기다리면 돼요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["trustd"],
             process: KnownProcess(
-                summary: String(localized: "웹사이트와 앱이 믿을 만한 곳에서 왔는지 확인하는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "웹사이트에 연결하거나 앱을 확인할 때 바쁠 수 있어요. 확인이 끝나면 줄어들어요."),
+                summary: String(localized: "웹사이트와 앱이 밝힌 신원을 믿을 수 있는지 확인해요."),
+                whenBusy: String(localized: "웹 연결이나 앱 실행에 필요한 확인을 맡아요. 계속 높다면 연결을 반복하는 앱이 있는지 살펴보세요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["xprotectservice"],
             process: KnownProcess(
-                summary: String(localized: "해로운 프로그램이 있는지 확인하는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "새로 받은 앱 등을 확인할 때 바쁠 수 있어요. 확인이 끝나면 조용해져요."),
+                summary: String(localized: "앱에 Mac을 해치는 악성 코드가 들어 있는지 검사해요."),
+                whenBusy: String(localized: "앱을 새로 받거나 바꾼 뒤 실행할 때 검사가 진행돼요. 검사가 끝나도록 그대로 두면 돼요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["node"],
             process: KnownProcess(
-                summary: String(localized: "개발할 때 켜는 프로그램이에요."),
-                whenBusy: String(localized: "개발 중인 프로그램이 일을 많이 하면 바빠요. 작업을 마치거나 개발 도구에서 멈추면 줄어들어요."),
+                summary: String(localized: "JavaScript로 작성한 코드를 실행해요. 웹 개발 도구나 앱이 함께 켜기도 해요."),
+                whenBusy: String(localized: "웹 개발 도구의 작업이나 요청 처리에 CPU를 써요. 아래 실행한 명령을 보고, 켠 도구에서 작업을 멈춰 주세요."),
                 advice: .quitInApp
             )
         ),
         Entry(
             names: ["swift-frontend", "swift-build", "swbbuildservice", "xcodebuild", "clang", "ld"],
             process: KnownProcess(
-                summary: String(localized: "개발할 때 앱을 만드는 데 쓰는 프로그램이에요."),
-                whenBusy: String(localized: "앱을 만드는 동안 바빠요. 만드는 일이 끝나거나 개발 도구에서 멈추면 조용해져요."),
+                summary: String(localized: "작성한 코드를 실행할 수 있는 앱으로 만드는 도구예요."),
+                whenBusy: String(localized: "앱을 만드는 동안 높은 사용률은 자연스러워요. 완료를 기다리거나 Xcode 또는 실행한 터미널에서 취소하면 돼요."),
                 advice: .quitInApp
             )
         ),
         Entry(
             names: ["xcode"],
             process: KnownProcess(
-                summary: String(localized: "앱을 개발할 때 쓰는 Xcode예요."),
-                whenBusy: String(localized: "앱을 만들거나 개발용 파일을 살펴볼 때 바빠요. 작업이 끝나면 줄어들어요."),
+                summary: String(localized: "Apple 기기용 앱의 코드를 쓰고 실행해 보는 도구예요."),
+                whenBusy: String(localized: "앱을 만들거나 코드에서 이름과 오류를 찾을 준비를 해요. 작업 표시를 확인하고, 만들기를 멈추려면 Xcode의 중지 버튼을 눌러 주세요."),
                 advice: .quitInApp
             )
         ),
         Entry(
             names: ["simulator"],
             process: KnownProcess(
-                summary: String(localized: "개발 중인 앱을 아이폰 같은 가상 기기에서 실행해 보는 프로그램이에요."),
-                whenBusy: String(localized: "가상 기기를 켜거나 그 안에서 앱이 일하면 바빠요. 앱을 멈추거나 가상 기기를 끄면 줄어들어요."),
+                summary: String(localized: "Mac 화면에 iPhone 같은 시험용 기기를 띄워, 만든 앱을 실행해 봐요."),
+                whenBusy: String(localized: "시험용 기기를 켜는 중이거나 그 안의 앱이 움직일 때 CPU를 써요. 시험을 마쳤다면 Simulator에서 기기를 종료해 주세요."),
                 advice: .quitInApp
             )
         ),
         Entry(
             names: ["claude"],
             process: KnownProcess(
-                summary: String(localized: "AI에게 질문하거나 일을 맡길 때 쓰는 Claude예요."),
-                whenBusy: String(localized: "요청한 일을 처리하거나 파일을 살펴볼 때 바쁠 수 있어요. 작업이 끝나면 줄어들어요."),
+                summary: String(localized: "질문에 답하거나 파일을 다루는 일을 맡길 수 있는 AI 도구예요."),
+                whenBusy: String(localized: "파일을 읽고 명령을 실행하는 등 요청한 일을 진행할 때 사용량이 늘어요. 멈추려면 Claude에서 진행 중인 요청을 중단해 주세요."),
                 advice: .quitInApp
             )
         ),
         Entry(
             names: ["codex"],
             process: KnownProcess(
-                summary: String(localized: "AI에게 개발 일을 맡길 때 쓰는 Codex예요."),
-                whenBusy: String(localized: "개발 작업을 하거나 파일을 살펴볼 때 바쁠 수 있어요. 작업이 끝나면 줄어들어요."),
+                summary: String(localized: "코드를 읽고 고치거나 명령을 실행하는 일을 돕는 AI 개발 도구예요."),
+                whenBusy: String(localized: "코드 검색이나 명령 실행 중에는 Mac도 일을 해요. Codex에서 작업을 끝내거나 중단하면 그 작업의 CPU 사용도 줄어요."),
                 advice: .quitInApp
             )
         ),
         Entry(
             names: ["whisper-cli"],
             process: KnownProcess(
-                summary: String(localized: "녹음한 말을 글로 바꾸는 프로그램이에요."),
-                whenBusy: String(localized: "녹음한 말을 글로 바꾸는 동안 바빠요. 변환이 끝나면 조용해져요."),
+                summary: String(localized: "Mac에서 녹음 파일을 읽어 말소리를 글로 옮겨요."),
+                whenBusy: String(localized: "녹음이 길수록 글로 옮기는 데 오래 걸려요. 끝날 때까지 기다리거나, 필요 없는 작업이면 종료해도 돼요."),
                 advice: .safeToQuit
             )
         ),
         Entry(
             names: ["ollama"],
             process: KnownProcess(
-                summary: String(localized: "맥에서 AI를 실행하는 Ollama예요."),
-                whenBusy: String(localized: "AI가 답을 만드는 동안 바빠요. 답을 다 만들거나 요청을 멈추면 줄어들어요."),
+                summary: String(localized: "Mac에 받은 AI 모델로 답을 만들어요."),
+                whenBusy: String(localized: "답변을 만드는 계산을 Mac에서 해요. 응답이 끝나길 기다리거나 Ollama를 쓰는 앱에서 요청을 멈춰 주세요."),
                 advice: .quitInApp
             )
         ),
         Entry(
             names: ["docker", "com.docker.backend"],
             process: KnownProcess(
-                summary: String(localized: "개발에 필요한 프로그램을 실행하는 Docker예요."),
-                whenBusy: String(localized: "Docker 안에서 실행한 프로그램이 일을 하면 바빠요. Docker에서 해당 작업을 멈추면 줄어들어요."),
+                summary: String(localized: "앱을 만드는 데 필요한 도구를 Mac의 다른 프로그램과 분리해서 실행해요."),
+                whenBusy: String(localized: "Docker 안에서 켠 프로그램도 Mac의 CPU를 써요. Docker에서 실행 목록을 보고 쓰지 않는 항목을 중지해 주세요."),
                 advice: .quitInApp
             )
         ),
         Entry(
             names: ["python", "python3"],
             process: KnownProcess(
-                summary: String(localized: "개발이나 자동 작업에 쓰는 프로그램이에요."),
-                whenBusy: String(localized: "실행한 작업에 따라 오래 바쁠 수 있어요. 작업이 끝나거나 실행한 앱에서 멈추면 줄어들어요."),
+                summary: String(localized: "Python으로 작성한 코드를 실행해요. 자료 계산이나 반복 작업 등에 쓰여요."),
+                whenBusy: String(localized: "무슨 일을 하는지는 이름만으로 알 수 없어요. 아래 실행한 명령을 확인하고, 실행한 앱이나 터미널에서 멈춰 주세요."),
                 advice: .quitInApp
             )
         ),
         Entry(
             names: ["java"],
             process: KnownProcess(
-                summary: String(localized: "여러 앱과 개발 도구를 실행하는 데 쓰는 프로그램이에요."),
-                whenBusy: String(localized: "이 프로그램을 쓰는 앱이 일을 많이 하면 바빠요. 해당 앱에서 작업을 마치면 줄어들어요."),
+                summary: String(localized: "Java로 만든 앱이나 개발 도구의 코드를 실행해요."),
+                whenBusy: String(localized: "계산이나 앱 만들기 등 실제 작업은 Java를 쓰는 앱이 정해요. 아래 경로와 명령으로 어떤 앱인지 먼저 확인해 주세요."),
                 advice: .quitInApp
             )
         ),
         Entry(
             names: ["qemu-system-aarch64"],
             process: KnownProcess(
-                summary: String(localized: "맥 안에서 다른 컴퓨터 환경을 실행하는 프로그램이에요."),
-                whenBusy: String(localized: "그 안에서 실행한 프로그램이 일을 하면 바빠요. 실행한 앱에서 해당 환경을 끄면 줄어들어요."),
+                summary: String(localized: "Mac 안에 또 다른 컴퓨터를 띄워, 그 안에서 앱을 실행해요."),
+                whenBusy: String(localized: "그 안에서 실행한 앱도 Mac의 CPU를 써요. 끝내려면 그 컴퓨터의 종료 메뉴로 먼저 꺼 주세요."),
                 advice: .quitInApp
             )
         ),
         Entry(
             names: ["google chrome helper", "google chrome helper (renderer)", "google chrome helper (gpu)"],
             process: KnownProcess(
-                summary: String(localized: "Chrome에서 웹페이지와 화면을 보여 주는 보조 프로그램이에요."),
-                whenBusy: String(localized: "웹페이지에서 영상이나 복잡한 화면을 보여 주면 바빠요. 해당 탭을 닫으면 줄어들 수 있어요."),
+                summary: String(localized: "Chrome이 웹페이지를 실행하고 화면을 그릴 때 나눠 쓰는 프로그램이에요."),
+                whenBusy: String(localized: "영상 재생이나 웹페이지의 코드가 CPU를 써요. Chrome의 작업 관리자에서 많이 쓰는 탭을 찾아 닫아 보세요."),
                 advice: .quitInApp
             )
         ),
         Entry(
             names: ["com.apple.webkit.webcontent"],
             process: KnownProcess(
-                summary: String(localized: "Safari 같은 앱 안에서 웹페이지를 보여 주는 프로그램이에요."),
-                whenBusy: String(localized: "웹페이지에서 영상이나 복잡한 화면을 보여 주면 바빠요. 해당 페이지를 닫으면 줄어들 수 있어요."),
+                summary: String(localized: "Safari나 다른 앱 안에 열린 웹페이지의 내용을 실행해요."),
+                whenBusy: String(localized: "페이지 안의 영상과 코드가 계속 작동할 수 있어요. 최근 연 웹페이지를 닫아 사용량이 줄어드는지 확인해 보세요."),
                 advice: .quitInApp
             )
         ),
         Entry(
             names: ["chrome", "google chrome"],
             process: KnownProcess(
-                summary: String(localized: "인터넷을 볼 때 쓰는 Google Chrome이에요."),
-                whenBusy: String(localized: "탭을 많이 열거나 영상 등을 보면 바빠요. 쓰지 않는 탭을 닫으면 줄어들 수 있어요."),
+                summary: String(localized: "웹사이트를 열고 인터넷을 둘러보는 Google Chrome이에요."),
+                whenBusy: String(localized: "여러 탭의 영상과 앱이 동시에 일을 할 수 있어요. 필요 없는 탭을 닫고, 계속 높다면 Chrome의 작업 관리자를 열어 보세요."),
                 advice: .quitInApp
             )
         ),
         Entry(
             names: ["finder"],
             process: KnownProcess(
-                summary: String(localized: "맥의 파일과 폴더를 보고 여는 Finder예요."),
-                whenBusy: String(localized: "파일을 많이 옮기거나 폴더를 열 때 바쁠 수 있어요. 파일 작업이 끝나면 줄어들어요."),
+                summary: String(localized: "파일과 폴더를 열고, 복사하거나 옮기는 Finder예요."),
+                whenBusy: String(localized: "파일 복사나 폴더 미리보기에 시간이 걸릴 수 있어요. 복사 진행창을 확인하고 작업이 끝날 때까지 기다려 주세요."),
                 advice: .quitInApp
             )
         ),
         Entry(
             names: ["dock"],
             process: KnownProcess(
-                summary: String(localized: "화면 아래의 앱 막대와 열려 있는 창 보기를 맡는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "앱 막대나 창을 모아 보는 화면이 움직일 때 바쁠 수 있어요. 움직임이 끝나면 줄어들어요."),
+                summary: String(localized: "앱 아이콘이 모인 Dock과 열어 둔 창을 한눈에 보는 화면을 맡아요."),
+                whenBusy: String(localized: "Dock을 펼치거나 창을 모아 보여 줄 때 화면을 움직여요. 움직임이 끝난 뒤에도 사용률이 높은지 살펴보세요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["loginwindow"],
             process: KnownProcess(
-                summary: String(localized: "맥에 로그인하거나 로그아웃하는 일을 맡는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "로그인하거나 로그아웃할 때 바쁠 수 있어요. 작업이 끝나면 줄어들어요."),
+                summary: String(localized: "로그인 화면을 띄우고, 로그인과 로그아웃을 맡아요."),
+                whenBusy: String(localized: "로그인과 로그아웃 때 필요한 일을 해요. 그 과정이 끝난 뒤 사용량이 줄어드는지 확인해 주세요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["hidd"],
             process: KnownProcess(
-                summary: String(localized: "키보드와 마우스 등의 입력을 받는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "키보드나 마우스 등을 사용할 때 바쁠 수 있어요. 입력이 멈추면 줄어들어요."),
+                summary: String(localized: "키보드, 마우스, 트랙패드로 누르고 움직인 내용을 Mac에 전달해요."),
+                whenBusy: String(localized: "입력 기기를 계속 움직이면 전달할 내용도 늘어요. 손을 뗀 뒤에도 높다면 연결한 입력 기기를 확인해 보세요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["notificationcenter"],
             process: KnownProcess(
-                summary: String(localized: "앱 알림과 위젯을 보여 주는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "알림이 오거나 위젯 내용을 새로 받을 때 바쁠 수 있어요. 화면을 갱신하고 나면 줄어들어요."),
+                summary: String(localized: "화면에 알림을 띄우고 알림 센터의 위젯을 보여 줘요."),
+                whenBusy: String(localized: "알림이 몰리거나 위젯이 새 내용을 표시할 때 일해요. 알림과 위젯 화면이 바뀐 뒤에는 사용량이 줄어드는지 보세요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["coreservicesd"],
             process: KnownProcess(
-                summary: String(localized: "파일을 알맞은 앱으로 여는 일을 돕는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "앱을 설치하거나 파일을 열 때 바쁠 수 있어요. 관련 작업이 끝나면 줄어들어요."),
+                summary: String(localized: "앱과 파일을 다룰 때 여러 macOS 기능을 연결해 줘요."),
+                whenBusy: String(localized: "여러 기능이 함께 쓰는 프로그램이라 이 이름만으로 원인을 알기는 어려워요. 사용률이 계속 높다면 Mac을 재시동해 보세요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["logd"],
             process: KnownProcess(
-                summary: String(localized: "맥과 앱의 작동 기록을 남기는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "앱이 기록을 많이 남기면 바빠요. 기록이 줄어들면 조용해져요."),
+                summary: String(localized: "앱과 macOS에서 무슨 일이 있었는지 남겨, 문제의 원인을 찾게 도와요."),
+                whenBusy: String(localized: "어떤 앱이 같은 오류를 반복해서 남기면 처리할 기록도 늘어요. 최근 문제가 난 앱을 종료한 뒤 사용량을 살펴보세요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["sharingd"],
             process: KnownProcess(
-                summary: String(localized: "AirDrop 같은 기기 간 공유를 돕는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "주변 기기를 찾거나 파일을 공유할 때 바쁠 수 있어요. 공유 작업이 끝나면 줄어들어요."),
+                summary: String(localized: "AirDrop으로 파일을 보내거나 가까운 Apple 기기와 작업을 이어 주는 일을 해요."),
+                whenBusy: String(localized: "주변 기기를 찾고 파일이나 작업을 전달할 때 일해요. AirDrop 전송 중이라면 완료를 기다려 주세요."),
                 advice: .leaveIt
             )
         ),
         Entry(
             names: ["nsurlsessiond"],
             process: KnownProcess(
-                summary: String(localized: "앱이 화면에 없어도 파일을 주고받게 돕는 macOS 기본 프로그램이에요."),
-                whenBusy: String(localized: "앱이 파일을 많이 받거나 보내면 바빠요. 주고받는 일이 끝나면 조용해져요."),
+                summary: String(localized: "앱 창을 닫은 뒤에도 파일을 받거나 보내는 일을 이어 가요."),
+                whenBusy: String(localized: "창이 안 보여도 전송은 계속될 수 있어요. 멈추려면 파일을 주고받기 시작한 앱을 열어 전송을 취소해 주세요."),
                 advice: .leaveIt
             )
         )

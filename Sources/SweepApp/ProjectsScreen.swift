@@ -38,7 +38,7 @@ struct ProjectsScreen: View {
     private var emptyState: some View {
         Retro95Dialog(title: String(localized: "프로젝트는 어디에 있나요?"), icon: .devProject) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("프로젝트가 있는 폴더를 추가해 주세요. package.json이나 Cargo.toml 같은 설정 파일이 있는 곳에서 다시 만들 수 있는 폴더만 찾아요.")
+                Text("프로젝트를 모아 둔 폴더를 알려 주세요. package.json 같은 프로젝트 설정 파일이 있는 곳에서, 지워도 다시 만들어지는 폴더를 찾아요.")
                     .font(R95.ui())
                     .foregroundStyle(R95.deep)
                     .multilineTextAlignment(.leading)
@@ -84,7 +84,7 @@ struct ProjectsScreen: View {
                 Text(ProjectFolders.displayPath(folder))
                     .font(Theme.bodyMono)
                 if !reachable {
-                    Text("다시 골라 주세요")
+                    Text("‘열기…’를 눌러 이 폴더를 다시 골라 주세요")
                         .font(Theme.caption)
                         .foregroundStyle(R95.danger)
                 }
