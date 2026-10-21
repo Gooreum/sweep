@@ -15,25 +15,25 @@ public struct DevCacheScanner: CleanupScanner {
     /// 앱 로그인 상태·세션 캐시까지 후보에 섞여, 사용자가 "전체 선택 → 삭제"를 눌렀을 때
     /// 엉뚱하게 로그아웃이 발생한다.
     static let knownCaches: [(name: String, detail: String)] = [
-        ("org.swift.swiftpm", String(localized: "Swift Package Manager 임시 파일")),
-        ("org.carthage.CarthageKit", String(localized: "Carthage 임시 파일")),
-        ("CocoaPods", String(localized: "CocoaPods 임시 파일")),
-        ("Homebrew", String(localized: "Homebrew 설치 임시 파일")),
-        ("com.apple.dt.Xcode", String(localized: "Xcode 임시 파일")),
-        ("go-build", String(localized: "Go 개발 임시 파일")),
-        ("node-gyp", String(localized: "node-gyp 임시 파일")),
-        ("typescript", String(localized: "TypeScript 임시 파일")),
-        ("deno", String(localized: "Deno 임시 파일")),
-        ("JetBrains", String(localized: "JetBrains 임시 파일")),
-        ("pnpm", String(localized: "pnpm 설치 임시 파일")),
-        ("Yarn", String(localized: "Yarn 임시 파일")),
-        ("ms-playwright", String(localized: "Playwright 브라우저 임시 파일")),
-        ("Cypress", String(localized: "Cypress 실행 파일 사본")),
-        ("electron", String(localized: "Electron 내려받기 임시 파일")),
-        ("electron-builder", String(localized: "electron-builder 임시 파일")),
-        ("pip", String(localized: "pip 설치 임시 파일")),
-        ("uv", String(localized: "uv 설치 임시 파일")),
-        ("bazelisk", String(localized: "Bazelisk 임시 파일")),
+        ("org.swift.swiftpm", String(localized: "Swift Package Manager 코드 사본이에요. 다시 받아요")),
+        ("org.carthage.CarthageKit", String(localized: "Carthage가 받은 코드 사본이에요. 다시 받아요")),
+        ("CocoaPods", String(localized: "CocoaPods가 받은 코드예요. 다시 설치할 때 받아요")),
+        ("Homebrew", String(localized: "Homebrew 설치 파일이에요. 다시 받아요")),
+        ("com.apple.dt.Xcode", String(localized: "Xcode가 작업하며 쌓은 파일이에요. 다시 생겨요")),
+        ("go-build", String(localized: "Go 코드로 앱을 만든 중간 결과예요. 다시 생겨요")),
+        ("node-gyp", String(localized: "node-gyp이 앱 제작에 쓴 파일이에요. 다시 받아요")),
+        ("typescript", String(localized: "TypeScript 작업 파일이에요. 다시 생겨요")),
+        ("deno", String(localized: "Deno가 실행에 쓴 코드 사본이에요. 다시 생겨요")),
+        ("JetBrains", String(localized: "JetBrains의 코드 분석 결과예요. 다시 만들어요")),
+        ("pnpm", String(localized: "pnpm이 설치에 쓴 파일이에요. 필요하면 다시 받아요")),
+        ("Yarn", String(localized: "Yarn이 받아 둔 코드예요. 설치할 때 다시 받아요")),
+        ("ms-playwright", String(localized: "Playwright 시험용 브라우저예요. 다시 받아요")),
+        ("Cypress", String(localized: "Cypress 시험 실행 파일이에요. 다시 설치하면 돼요")),
+        ("electron", String(localized: "Electron 앱 실행에 쓸 파일이에요. 다시 받아요")),
+        ("electron-builder", String(localized: "electron-builder 제작 도구예요. 다시 받아요")),
+        ("pip", String(localized: "pip이 받은 설치 파일이에요. 필요하면 다시 받아요")),
+        ("uv", String(localized: "uv가 설치하며 모은 파일이에요. 다시 만들거나 받아요")),
+        ("bazelisk", String(localized: "Bazelisk가 받은 앱 제작 도구예요. 다시 받아요")),
     ]
 
     /// 화이트리스트 이름만 모아 둔다.
@@ -47,13 +47,13 @@ public struct DevCacheScanner: CleanupScanner {
     /// 아래처럼 경로를 조립해 존재를 확인하는 방식이라 열거를 하지 않고, 그래서
     /// 목록에 없는 파일은 후보가 될 길이 없다.
     static let homeCaches: [(path: String, detail: String)] = [
-        (".npm/_cacache", String(localized: "npm 설치 임시 파일")),
-        (".npm/_npx", String(localized: "npx 실행 임시 파일")),
-        (".expo/native-modules-cache", String(localized: "Expo 개발 파일 사본")),
-        (".expo/versions-cache", String(localized: "Expo 버전 임시 파일")),
-        (".expo/schema-cache", String(localized: "Expo 설정 임시 파일")),
-        (".expo/ios-simulator-app-cache", String(localized: "Expo 개발 임시 파일")),
-        (".expo/expo-go", String(localized: "Expo Go 내려받기 임시 파일")),
+        (".npm/_cacache", String(localized: "npm이 받은 코드예요. 설치할 때 다시 받아요")),
+        (".npm/_npx", String(localized: "npx로 실행하려고 받은 도구예요. 다시 받아요")),
+        (".expo/native-modules-cache", String(localized: "Expo 앱 제작에 쓸 코드 사본이에요. 다시 받아요")),
+        (".expo/versions-cache", String(localized: "Expo의 버전 목록이에요. 필요하면 다시 받아요")),
+        (".expo/schema-cache", String(localized: "Expo 설정 검사에 쓸 파일이에요. 다시 받아요")),
+        (".expo/ios-simulator-app-cache", String(localized: "Expo 앱 시험 실행용 파일이에요. 다시 받아요")),
+        (".expo/expo-go", String(localized: "받아 둔 Expo Go 앱이에요. 필요하면 다시 받아요")),
     ]
 
     /// 홈 바로 아래 도구의 캐시 폴더. 이 폴더들은 관문의 **루트**라 통째로 지울 수 없다
@@ -62,9 +62,9 @@ public struct DevCacheScanner: CleanupScanner {
     /// 도구 폴더(`~/.gradle`)가 아니라 캐시 폴더를 짚는 이유는 `homeCaches`와 같다.
     /// 같은 층에 `gradle.properties`·`settings.xml`(인증 정보)과 `~/.cargo/bin`(실행 파일)이 있다.
     static let homeCacheRoots: [(path: String, detail: String)] = [
-        (".gradle/caches", String(localized: "Gradle 임시 파일")),
-        (".cargo/registry", String(localized: "Cargo 설치 임시 파일")),
-        (".m2/repository", String(localized: "Maven 설치 임시 파일")),
+        (".gradle/caches", String(localized: "Gradle의 앱 제작 중간 파일이에요. 다시 생겨요")),
+        (".cargo/registry", String(localized: "Cargo가 받은 코드예요. 앱을 만들 때 다시 받아요")),
+        (".m2/repository", String(localized: "Maven이 받은 코드예요. 직접 설치한 게 섞여 있으니 확인해 주세요")),
     ]
 
     /// 실측 0.01초. 1초 안에 끝나므로 중간 보고 없이 완료 시점만 알린다.
@@ -115,7 +115,7 @@ public struct DevCacheScanner: CleanupScanner {
             let found = DirectorySize.summary(at: url)
             guard found.bytes > 0 else { return nil }
             return CleanupItem(url: url, size: found.bytes, category: .devCache,
-                               safety: .safe, detail: String(localized: "앱을 쓰면서 쌓인 기록이에요"), dates: found.dates)
+                               safety: .safe, detail: String(localized: "앱의 작동 기록이에요. 지운 뒤 새 기록이 쌓여요"), dates: found.dates)
         }
     }
 }

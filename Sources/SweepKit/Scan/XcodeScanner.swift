@@ -24,22 +24,22 @@ public struct XcodeScanner: CleanupScanner {
 
     private static let targets: [Target] = [
         .init(path: "Library/Developer/Xcode/DerivedData",
-              safety: .safe, detail: String(localized: "지워도 Xcode로 개발하면 새로 만들어져요"), expandsChildren: true),
+              safety: .safe, detail: String(localized: "Xcode가 앱을 만들며 쌓은 중간 결과예요. 지워도 괜찮아요"), expandsChildren: true),
         // 이 기계에서는 실측 0B다. 용량을 먹는 dyld 공유 캐시는
         // `/Library/Developer/CoreSimulator/Caches`(root 소유, 11G)로 옮겨가 홈 쪽은 비어 있다.
         // 그래도 남겨 둔다 — Xcode 14 이하는 아직 여기에 쌓고, 비어 있으면 size 0으로 걸러진다.
         .init(path: "Library/Developer/CoreSimulator/Caches",
-              safety: .safe, detail: String(localized: "개발 중 앱을 실행하며 생긴 임시 파일이에요"), expandsChildren: false),
+              safety: .safe, detail: String(localized: "가상 기기가 쌓아 둔 파일이에요. 지워도 다시 생겨요"), expandsChildren: false),
         .init(path: "Library/Developer/CoreSimulator/Temp",
-              safety: .safe, detail: String(localized: "개발 중 앱을 실행하고 남은 임시 파일이에요"), expandsChildren: false),
+              safety: .safe, detail: String(localized: "가상 기기가 쓰고 남긴 파일이에요. 지워도 돼요"), expandsChildren: false),
         .init(path: "Library/Developer/Xcode/iOS DeviceSupport",
-              safety: .caution, detail: String(localized: "지워도 기기를 연결할 때 다시 받아요"), expandsChildren: true),
+              safety: .caution, detail: String(localized: "iPhone 연결용 파일이에요. Xcode가 다시 받아요"), expandsChildren: true),
         .init(path: "Library/Developer/XCTestDevices",
-              safety: .caution, detail: String(localized: "개발 중인 앱을 실행해 보는 가상 기기예요"), expandsChildren: false),
+              safety: .caution, detail: String(localized: "앱 자동 시험용 기기예요. 안의 앱과 데이터도 지워요"), expandsChildren: false),
         .init(path: "Library/Developer/DVTDownloads",
-              safety: .caution, detail: String(localized: "개발에 쓰려고 Xcode에서 받은 파일이에요"), expandsChildren: false),
+              safety: .caution, detail: String(localized: "Xcode가 내려받아 둔 설치 파일이에요. 지우면 다음에 다시 받아요"), expandsChildren: false),
         .init(path: "Library/Developer/Xcode/Archives",
-              safety: .danger, detail: String(localized: "심사에 낸 앱을 보관한 파일이에요. 삭제하면 되살릴 수 없어요"), expandsChildren: true),
+              safety: .danger, detail: String(localized: "App Store에 올릴 앱 보관본이에요. 지우면 복구할 수 없어요"), expandsChildren: true),
     ]
 
     /// 실측 1.0초. 1초 안에 끝나므로 중간 보고 없이 완료 시점만 알린다.
@@ -104,7 +104,7 @@ public struct XcodeScanner: CleanupScanner {
 
             return CleanupItem(url: url, size: found.bytes, category: .xcode,
                                safety: .caution,
-                               detail: String(localized: "\(device.name)에 \(device.runtime)이 설치되어 있어요. 지우면 안에 설치한 앱과 설정도 없어져요"),
+                               detail: String(localized: "\(device.name)의 \(device.runtime) 시험 기기예요. 지우면 안의 앱과 설정, 데이터도 사라져요"),
                                dates: found.dates)
         }
     }

@@ -30,7 +30,7 @@ struct RunawayTempScannerTests {
         // 5,000,000바이트/3초 × 60 = 100,000,000바이트/분 = 100 MB/분
         let text = RunawayTempScanner.detail(growth: 5_000_000, over: .seconds(3))
 
-        #expect(text.contains("씩 커져요"))
+        #expect(text.contains("1분에"))
         #expect(text.contains("100"))
         #expect(text.contains("MB"))
     }
@@ -39,14 +39,14 @@ struct RunawayTempScannerTests {
     @Test("증가량이 0이면 증가 없음으로 표시된다")
     func zeroGrowthIsIdle() {
         let text = RunawayTempScanner.detail(growth: 0, over: .seconds(3))
-        #expect(text == "더 커지지 않는 임시 파일이에요")
+        #expect(text.contains("지금은 멈춘"))
     }
 
     // TC-3
     @Test("크기가 줄어든 경우도 증가 없음으로 취급된다")
     func negativeGrowthIsIdle() {
         let text = RunawayTempScanner.detail(growth: -Int64(Self.oneMB), over: .seconds(3))
-        #expect(text == "더 커지지 않는 임시 파일이에요")
+        #expect(text.contains("지금은 멈춘"))
     }
 
     // TC-4
@@ -101,7 +101,7 @@ struct RunawayTempScannerTests {
 
         #expect(items.count == 1)
         #expect(items.first?.safety == .safe)
-        #expect(items.first?.detail.contains("더 커지지 않는 임시 파일") == true)
+        #expect(items.first?.detail == RunawayTempScanner.detail(growth: 0, over: .milliseconds(200)))
     }
 
     // TC-7

@@ -49,11 +49,11 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
     /// 시작 화면에 뜨는 설명 한 줄. 무엇을 하는 화면인지 먼저 말한다.
     public var summary: String {
         switch self {
-        case .smartScan: String(localized: "지울 만한 파일이 얼마나 있는지 한 번에 확인해 보세요.")
+        case .smartScan: String(localized: "필요 없는 파일을 찾아 종류별로 보여줘요. 결과를 보고 정리할 것을 고르면 돼요.")
         // 샌드박스에서는 사용자가 연 개발 폴더만 본다. 임시 파일·캐시라고 쓰면 과장이다.
         case .junk: Sandbox.isActive
-            ? String(localized: "Xcode 개발용 파일 중에서 정리할 것을 찾아보세요.")
-            : String(localized: "앱이 만든 임시 파일과 개발용 파일, 기기 백업을 모아 보여줘요. 필요 없는 것을 골라 주세요.")
+            ? String(localized: "Xcode가 앱을 만들거나 시험하며 쌓은 파일을 찾아요. 설명을 보고 필요 없는 것을 골라 주세요.")
+            : String(localized: "앱이 다시 쓰려고 저장한 파일, Xcode가 쌓은 파일, iPhone과 iPad 백업 등을 찾아요. 설명을 보고 필요 없는 것을 골라 주세요.")
         case .projects: String(localized: "프로젝트에서 다시 만들 수 있는 폴더(node_modules, .venv, Pods 등)를 찾아요. 휴지통으로 옮겨도 다시 설치하거나 빌드하면 생겨요.")
         case .largeFile: String(localized: "내 폴더에 큰 파일이 있는지 살펴보세요. 직접 추가한 폴더도 함께 찾아요.")
         case .duplicate: String(localized: "똑같은 파일이 여러 개 있으면 여분을 골라 정리해 보세요.")
@@ -73,15 +73,15 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
     public var reviewHint: String {
         switch self {
         case .junk:
-            String(localized: "지워도 대부분 개발할 때 다시 생기는 파일이에요. 심사에 낸 앱은 복구할 수 없어 고르지 못하게 했어요.")
+            String(localized: "대부분 지워도 앱을 만들 때 다시 생겨요. 각 설명에서 무엇이 지워지는지 확인해 주세요. 복구할 수 없는 파일은 잠가 뒀어요.")
         case .projects:
             String(localized: "프로젝트 설정 파일을 확인해 다시 만들 수 있는 폴더를 찾았어요. 최근에 수정한 프로젝트에는 확인 필요 표시를 붙였어요.")
         case .largeFile:
-            String(localized: "사진이나 영상 원본, 백업은 필요한지 먼저 확인하세요. 앱 설치 파일은 다시 받을 수 있어요.")
+            String(localized: "사진, 영상, 백업은 나중에도 필요한지 확인해 주세요. 앱 설치 파일은 다시 받을 곳이 있는지 보고 골라 주세요.")
         case .duplicate:
             String(localized: "아래는 여분의 파일이에요. 지우더라도 내용이 똑같은 원본 하나는 반드시 남아요.")
         case .trash:
-            String(localized: "여기서 고르면 휴지통에서도 완전히 없어져요. 다시 되살릴 수 없으니 꼭 확인하세요.")
+            String(localized: "완전히 지워도 되는 파일만 골라 주세요. 정리하면 휴지통에서도 사라지고 복구할 수 없어요.")
         case .smartScan:
             String(localized: "종류별로 살펴보고 정리할 것을 고르세요. 복구할 수 없는 항목은 잠가 두었어요.")
         case .diskMap:

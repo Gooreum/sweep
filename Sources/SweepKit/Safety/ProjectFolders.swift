@@ -20,11 +20,11 @@ public enum ProjectFolders {
     public static func message(for rejection: UserFolders.Rejection) -> String {
         switch rejection {
         case .tooWide:
-            String(localized: "프로젝트가 모인 폴더가 필요해요. 내 폴더 전체 대신 ~/Code 같은 폴더를 골라 주세요.")
+            String(localized: "~/Code처럼 프로젝트를 모아 둔 폴더를 골라 주세요. 내 폴더 전체는 추가할 수 없어요.")
         case .insideLibrary:
-            String(localized: "Library에 있는 폴더는 추가할 수 없어요. 다른 곳에 있는 프로젝트 폴더를 골라 주세요.")
+            String(localized: "Library 밖에 있는 프로젝트 폴더를 골라 주세요. Library 안의 폴더는 추가할 수 없어요.")
         case .alreadyCovered(let url):
-            String(localized: "이곳은 이미 찾고 있어요. 추가해 둔 \(CleanupItem.abbreviating(url.path, home: Sandbox.userHome.path)) 안에 있어요.")
+            String(localized: "이미 추가한 \(CleanupItem.abbreviating(url.path, home: Sandbox.userHome.path)) 안의 폴더예요. 따로 추가하지 않아도 함께 찾아요.")
         case .systemFolder, .bookmark:
             rejection.message
         }
@@ -39,7 +39,7 @@ public enum ProjectFolders {
     /// 같은 폴더를 양쪽에 등록했을 때 한쪽을 빼면 다른 쪽 북마크까지 지워지지 않게.
     public static func grantable(for url: URL) -> FolderAccess.Grantable {
         FolderAccess.Grantable(folder: url, label: url.standardizedFileURL.path,
-                               purpose: String(localized: "개발 프로젝트의 설치·빌드 폴더 찾기"),
+                               purpose: String(localized: "프로젝트에서 다시 만들 수 있는 파일 찾기"),
                                keyPrefix: "projectFolder.")
     }
 

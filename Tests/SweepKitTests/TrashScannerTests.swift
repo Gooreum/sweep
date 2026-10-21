@@ -32,7 +32,7 @@ struct TrashScannerTests {
         #expect(Set(items.map(\.displayName)) == ["옛날.dmg", "프로젝트"])
         #expect(items.allSatisfy { $0.category == .trash && $0.safety == .caution })
         #expect(items.allSatisfy { !$0.isSelectedByDefault })
-        #expect(items.allSatisfy { $0.detail == "완전히 삭제해요. 복구는 불가능해요" })
+        #expect(items.allSatisfy { $0.detail == scanner(home).locations().first!.detail })
     }
 
     @Test("휴지통이 없거나 비었으면 빈 배열이다")
@@ -70,7 +70,7 @@ struct TrashScannerTests {
         #expect(items.count == 2)
         let shot = try #require(items.first { $0.displayName == "스크린샷.png" })
         #expect(shot.category == .trash && shot.safety == .caution)
-        #expect(shot.detail == "iCloud Drive에서 버린 파일이에요. 비우면 연결된 다른 기기에서도 없어져요")
+        #expect(shot.detail == scanner(home).locations().first { $0.folder == TrashScanner.iCloudTrash(in: home) }!.detail)
         #expect(TrashScanner.isInICloudTrash(shot.url, home: home))
     }
 
@@ -92,7 +92,7 @@ struct TrashScannerTests {
         let items = await scanner(home).scan()
 
         #expect(items.map(\.displayName) == ["영상.mov"])
-        #expect(items.first?.detail == "Ext에서 버린 파일이에요. 완전히 지우면 복구할 수 없어요")
+        #expect(items.first?.detail == scanner(home).locations().first { $0.folder.path.contains("/Ext/") }!.detail)
     }
 
     @Test("isInICloudTrash는 iCloud 휴지통 안에서만 참이다")
@@ -120,7 +120,8 @@ struct TrashScannerTests {
 
         #expect(items.map(\.displayName) == ["index.html"])
         #expect(items.first?.size == 0)
-        #expect(items.first?.detail == "Mac에는 없는 파일이에요. 삭제해도 iCloud의 빈 공간만 늘어나요")
+        #expect(items.first?.detail.contains("Mac 공간은 그대로") == true)
+        #expect(items.first?.detail.contains("iCloud 공간만 늘어요") == true)
     }
 
     // MARK: - 관리자 소유

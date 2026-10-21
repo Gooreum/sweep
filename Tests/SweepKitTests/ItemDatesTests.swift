@@ -111,9 +111,9 @@ struct ItemDatesTests {
 
         let item = try #require(items.first)
         let used = try #require(item.dates.lastUsed)
-        // 설명은 "200일 동안 쓰이지 않았습니다", 우측 열은 "6개월 전 사용".
+        // 설명의 경과 일수와 우측 열의 "6개월 전 사용"을 함께 확인한다.
         // 둘이 같은 값에서 나오므로 서로 모순될 수 없다.
-        #expect(item.detail.hasPrefix("마지막으로 쓴 뒤 200일"))
+        #expect(item.detail.contains("200일째"))
         #expect(abs(used.timeIntervalSince(stamped)) < 2)
         #expect(item.dates.lastUsedLabel() == "6개월 전 사용")
     }

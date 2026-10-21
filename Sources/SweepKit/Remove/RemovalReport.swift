@@ -21,11 +21,11 @@ public enum RemovalFailureKind: Sendable, Hashable {
     /// 앱을 대신 끄지 않는다. App Store 빌드에서는 남의 프로세스를 끝낼 수 없다(README CPU 절).
     public var advice: String? {
         switch self {
-        case .applicationRunning: String(localized: "쓰고 있는 앱을 먼저 닫고 다시 해 보세요")
-        case .permissionDenied: String(localized: "설정에서 ‘전체 디스크 접근’을 켜 주세요. 그러면 옮길 수 있어요")
-        case .protected: String(localized: "Sweep이 보호하는 항목은 삭제하지 않아요")
-        case .destinationOccupied: String(localized: "원래 위치를 먼저 비워 주세요. 그다음 Finder의 휴지통에서 꺼내 주세요")
-        case .missingFromTrash: String(localized: "이미 휴지통 밖으로 옮겼거나 완전히 지운 항목은 여기서 복구할 수 없어요")
+        case .applicationRunning: String(localized: "이 파일을 쓰는 앱을 종료한 뒤 다시 시도해 주세요")
+        case .permissionDenied: String(localized: "시스템 설정에서 Sweep의 ‘전체 디스크 접근’을 켠 뒤 다시 시도해 주세요")
+        case .protected: String(localized: "이 파일은 보호 대상이라 Sweep에서 지울 수 없어요")
+        case .destinationOccupied: String(localized: "원래 자리에 같은 이름이 있어요. 그 파일을 옮긴 뒤 휴지통에서 꺼내 주세요")
+        case .missingFromTrash: String(localized: "다른 폴더로 옮겼다면 그곳에서 찾아 주세요. 완전히 지웠다면 복구할 수 없어요")
         case .other: nil
         }
     }
@@ -99,6 +99,6 @@ public struct RemovalReport: Sendable, Hashable {
     /// 이걸 말하지 않으면 "정리했는데 왜 디스크가 그대로지?"가 된다.
     /// 옮긴 것이 없으면 nil. "0 바이트가 확보됩니다"는 알려줄 것이 아니다.
     public var trashNotice: String? {
-        reclaimedBytes > 0 ? String(localized: "아직 공간이 늘어난 것은 아니에요. 휴지통까지 비워야 \(formattedReclaimed)를 쓸 수 있어요") : nil
+        reclaimedBytes > 0 ? String(localized: "휴지통을 비우면 \(formattedReclaimed)의 저장 공간이 생겨요. 비운 파일은 복구할 수 없어요") : nil
     }
 }

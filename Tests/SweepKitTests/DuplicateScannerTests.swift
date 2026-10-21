@@ -113,7 +113,8 @@ struct DuplicateScannerTests {
         let items = await DuplicateScanner(home: home).scan()
 
         #expect(items.count == 1)
-        #expect(items.first?.detail == "같은 내용의 원본이 남아요: 보고서.pdf")
+        #expect(items.first?.detail.contains(original.lastPathComponent) == true)
+        #expect(items.first?.detail.contains("같은 내용은 남아요") == true)
         #expect(items.first?.originalURL?.lastPathComponent == original.lastPathComponent)
     }
 
@@ -308,7 +309,8 @@ struct DuplicateScannerTests {
 
         #expect(items.map(\.displayName) == ["계약서 (1).pdf"])
         // 원본이 다른 폴더에 있으면 어디 있는지 경로로 말한다
-        #expect(items.first?.detail == "같은 내용의 원본이 남아요: ~/Documents/계약서.pdf")
+        #expect(items.first?.detail.precomposedStringWithCanonicalMapping.contains("~/Documents/계약서.pdf") == true)
+        #expect(items.first?.detail.contains("같은 내용은 남아요") == true)
     }
 
     @Test("Downloads 안의 사본은 safe, 밖의 사본은 caution이다")

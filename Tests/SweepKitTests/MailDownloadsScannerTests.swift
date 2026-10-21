@@ -24,7 +24,8 @@ struct MailDownloadsScannerTests {
         #expect(items.map(\.displayName) == ["6E1F-UUID"])
         #expect(items.first?.category == .mailAttachment)
         #expect(items.first?.safety == .safe)
-        #expect(items.first?.detail == "메일 원본은 남아요. 첨부 파일을 다시 열면 새 사본이 생겨요")
+        #expect(items.first?.detail.contains("첨부 사본") == true)
+        #expect(items.first?.detail.contains("메일 원본은 다시 열 수") == true)
     }
 
     @Test("Mail을 쓰지 않으면 빈 배열이다")

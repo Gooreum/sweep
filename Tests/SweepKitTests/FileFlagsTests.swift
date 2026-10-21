@@ -169,7 +169,7 @@ struct FileFlagsTests {
         let outcome = Remover(movesToTrash: false).removeOne(item)
 
         #expect(!outcome.succeeded)
-        #expect(outcome.failureReason?.contains("macOS에서 삭제를 막고 있어요") == true)
+        #expect(outcome.failureReason == RemovalVeto.systemProtected(ProtectedPaths.canonical(file)).message)
         #expect(fm.fileExists(atPath: file.path), "관문이 막았는데 파일이 사라졌다")
     }
 

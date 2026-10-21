@@ -78,7 +78,7 @@ struct DiskMapView: View {
             // 확인 필요 항목은 제목부터 다르다 — 캐시를 지울 때와 내 문서를 지울 때가
             // 같은 얼굴이면 배지를 세 갈래로 나눈 뜻이 없다.
             pendingDelete.flatMap { model.verdict(for: $0) }?.level == .caution
-                ? Text("내용을 확인한 뒤 옮길까요?")
+                ? Text("필요 없는 파일인지 확인했나요?")
                 : Text("휴지통으로 옮길까요?"),
             isPresented: Binding(get: { pendingDelete != nil },
                                  set: { if !$0 { pendingDelete = nil } }),
@@ -145,7 +145,7 @@ struct DiskMapView: View {
                     Text("다운로드 폴더부터 보여드려요")
                         .font(Theme.bodyText)
                         .foregroundStyle(Theme.textPrimary)
-                    Text("다른 곳도 보려면 디스크를 허용해 주세요. 내 폴더와 Mac 전체를 살펴볼 수 있어요.")
+                    Text("내 폴더나 Mac 전체가 차지한 공간도 볼 수 있어요. 디스크 허용을 누르고 열린 창에서 허용을 눌러 주세요.")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.textSecondary)
                 }
@@ -287,7 +287,7 @@ struct DiskMapView: View {
                                      detail: nil, fraction: nil, percentText: nil,
                                      leftFooter: nil, rightFooter: nil)
                 case .measuring(let percent):
-                    Retro95ScanPanel(title: String(localized: "재는 중"), headline: String(localized: "어디에 공간을 쓰는지 확인 중…"),
+                    Retro95ScanPanel(title: String(localized: "재는 중"), headline: String(localized: "파일과 폴더의 크기를 확인하고 있어요…"),
                                      detail: nil, fraction: Double(percent) / 100,
                                      percentText: "\(percent)%", leftFooter: nil, rightFooter: nil)
                 }
@@ -316,7 +316,7 @@ struct DiskMapView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             placeholder(String(localized: "어느 폴더를 볼까요?"),
-                        detail: String(localized: "위에서 폴더를 골라 주세요. 내 폴더나 Mac 전체, 응용 프로그램의 크기를 볼 수 있어요."))
+                        detail: String(localized: "위에서 볼 곳을 고르면 큰 파일과 폴더부터 보여줘요. 폴더를 열어 어디에 공간을 많이 쓰는지 살펴보세요."))
         }
     }
 
@@ -371,7 +371,7 @@ struct DiskMapView: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
             } else {
-                Text("임시 파일과 앱 사용 기록은 다시 생겨요. 내 파일과 앱 데이터는 내용을 보고 골라 주세요. 시스템과 계정 데이터는 보호해요.")
+                Text("항목에 마우스를 올리면 지워도 되는 이유나 주의할 점을 볼 수 있어요. 시스템과 계정에 필요한 파일은 보호해요.")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.textSecondary)
                     .lineLimit(1)
@@ -393,7 +393,7 @@ struct DiskMapView: View {
             Retro95Separator()
 
             HStack(spacing: 12) {
-                Text("아직 열어 보지 못한 폴더가 있어요")
+                Text("일부 폴더는 볼 수 없어요. 시스템 설정에서 Sweep의 폴더 접근을 허용해 주세요.")
                     .font(Theme.caption)
                     .foregroundStyle(SafetyLevel.caution.tint)
                 Spacer(minLength: 12)

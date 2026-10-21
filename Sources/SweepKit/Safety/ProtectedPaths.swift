@@ -23,15 +23,15 @@ public enum RemovalVeto: Error, Equatable, Sendable {
 
     public var message: String {
         switch self {
-        case .outsideAllowedRoots(let u): String(localized: "Sweep에서 삭제할 수 없는 위치예요: \(u.path)")
-        case .protectedPath(let u): String(localized: "지우지 못하도록 보호하는 곳이에요: \(u.path)")
-        case .symlinkEscape(let u): String(localized: "Sweep에서 삭제할 수 없는 곳으로 연결돼 있어요: \(u.path)")
-        case .rootOrHome(let u): String(localized: "디스크 전체나 내 폴더 전체를 삭제할 수는 없어요: \(u.path)")
-        case .allowedRootItself(let u): String(localized: "이 폴더는 남겨 두고 안에 든 항목만 정리할 수 있어요: \(u.path)")
-        case .notOwnedByCurrentUser(let u): String(localized: "내 소유가 아닌 항목은 지울 수 없어요: \(u.path)")
-        case .systemProtected(let u): String(localized: "macOS에서 삭제를 막고 있어요: \(u.path)")
-        case .applicationRunning(let u): String(localized: "아직 켜져 있는 앱이에요. 먼저 닫고 다시 해 보세요: \(u.path)")
-        case .essentialFolder(let u): String(localized: "내 계정에 필요한 파일이나 기본 폴더는 삭제하지 않아요: \(u.path)")
+        case .outsideAllowedRoots(let u): String(localized: "여기는 Sweep의 정리 범위 밖이에요. 직접 정리하려면 Finder에서 확인해 주세요: \(u.path)")
+        case .protectedPath(let u): String(localized: "앱 설정이나 사용에 필요한 파일이라 Sweep이 보호해요: \(u.path)")
+        case .symlinkEscape(let u): String(localized: "정리 범위 밖의 파일로 이어지는 바로 가기예요. Sweep에서는 지우지 않아요: \(u.path)")
+        case .rootOrHome(let u): String(localized: "디스크나 내 폴더는 통째로 지우지 않아요. 안에서 정리할 파일을 골라 주세요: \(u.path)")
+        case .allowedRootItself(let u): String(localized: "안에 있는 파일을 골라 주세요. 이 폴더 자체는 남겨 둬요: \(u.path)")
+        case .notOwnedByCurrentUser(let u): String(localized: "다른 사용자나 macOS가 소유한 파일이에요. Sweep에서는 지우지 않아요: \(u.path)")
+        case .systemProtected(let u): String(localized: "macOS가 지우지 못하게 잠근 파일이에요. Sweep에서도 그대로 둬요: \(u.path)")
+        case .applicationRunning(let u): String(localized: "앱을 완전히 종료한 뒤 다시 정리해 주세요. 지금은 실행 중이에요: \(u.path)")
+        case .essentialFolder(let u): String(localized: "로그인과 메일 등에 필요한 파일이나 Documents 같은 폴더라 보호해요: \(u.path)")
         }
     }
 }

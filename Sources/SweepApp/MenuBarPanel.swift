@@ -39,7 +39,7 @@ struct MenuBarPanel: View {
         .alert("휴지통을 열지 못했어요", isPresented: $trashOpenFailed) {
             Button("확인") {}
         } message: {
-            Text("화면 아래 휴지통을 직접 열어 주세요. 비우면 되돌릴 수 없으니 안에 있는 파일을 먼저 확인해 주세요.")
+            Text("화면 아래에서 휴지통을 열고 필요한 파일이 남아 있는지 확인해 주세요. 휴지통을 비우면 복구할 수 없어요.")
         }
         .foregroundStyle(R95.black)
         .background(R95.gray)
