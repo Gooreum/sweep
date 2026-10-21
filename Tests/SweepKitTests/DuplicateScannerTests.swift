@@ -107,13 +107,14 @@ struct DuplicateScannerTests {
         defer { try? FileManager.default.removeItem(at: home) }
 
         let data = payload(0x41, 2 * Self.oneMB)
-        try place("보고서.pdf", bytes: data, in: home, created: Date(timeIntervalSince1970: 1_000))
+        let original = try place("보고서.pdf", bytes: data, in: home, created: Date(timeIntervalSince1970: 1_000))
         try place("보고서 (1).pdf", bytes: data, in: home, created: Date(timeIntervalSince1970: 2_000))
 
         let items = await DuplicateScanner(home: home).scan()
 
         #expect(items.count == 1)
         #expect(items.first?.detail == "같은 내용의 원본이 남아요: 보고서.pdf")
+        #expect(items.first?.originalURL?.lastPathComponent == original.lastPathComponent)
     }
 
     // TC-6

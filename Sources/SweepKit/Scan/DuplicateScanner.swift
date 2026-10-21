@@ -81,7 +81,8 @@ public struct DuplicateScanner: CleanupScanner {
                             safety: duplicate.url.isDescendant(of: downloads) ? .safe : .caution,
                             detail: String(localized: "같은 내용의 원본이 남아요: \(originalName(original.url, beside: duplicate.url))"),
                             dates: FileDates(created: duplicate.created,
-                                             lastUsed: duplicate.modified)))
+                                             lastUsed: duplicate.modified),
+                            originalURL: original.url))
                     }
                 }
             }
