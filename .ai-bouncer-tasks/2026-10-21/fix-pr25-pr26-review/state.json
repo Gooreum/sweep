@@ -1,0 +1,34 @@
+{
+  "workflow_phase": "done",
+  "plan_approved": true,
+  "team_name": "",
+  "current_dev_phase": 2,
+  "current_step": 1,
+  "dev_phases": {
+    "1": {
+      "name": "pr26",
+      "depends_on": [],
+      "steps": {
+        "1": {},
+        "2": {},
+        "3": {}
+      }
+    },
+    "2": {
+      "name": "pr25",
+      "depends_on": [
+        1
+      ],
+      "steps": {
+        "1": {},
+        "2": {}
+      }
+    }
+  },
+  "verification": {
+    "e2e_passed": false
+  },
+  "task_dir": ".ai-bouncer-tasks/2026-10-21/fix-pr25-pr26-review",
+  "active_file": ".ai-bouncer-tasks/2026-10-21/fix-pr25-pr26-review/.active",
+  "agent_mode": "single"
+}
