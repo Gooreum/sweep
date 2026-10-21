@@ -161,10 +161,7 @@ public enum ProcessDetailsReader {
     /// 실행 파일 이름 → `proc_name` → 커널이 적어 둔 16자 이름 순으로 물러선다.
     /// 경로는 내 계정 소유만 읽히므로 시스템 프로세스는 뒤의 둘로 떨어진다.
     private static func name(of pid: pid_t, path: String?, info: kinfo_proc) -> String {
-        if let path {
-            let last = URL(filePath: path).lastPathComponent
-            if !last.isEmpty { return last }
-        }
+        if let path, let name = ProcessCPUSampler.displayName(forPath: path) { return name }
         var buffer = [CChar](repeating: 0, count: 256)
         if proc_name(pid, &buffer, UInt32(buffer.count)) > 0 {
             let name = ProcessCPUSampler.string(from: buffer)

@@ -1,0 +1,33 @@
+{
+  "workflow_phase": "done",
+  "plan_approved": true,
+  "team_name": "",
+  "current_dev_phase": 1,
+  "current_step": 1,
+  "dev_phases": {
+    "1": {
+      "name": "name-status",
+      "depends_on": [],
+      "steps": {
+        "1": {},
+        "2": {}
+      }
+    },
+    "2": {
+      "name": "sidebar-order",
+      "depends_on": [
+        1
+      ],
+      "steps": {
+        "1": {},
+        "2": {}
+      }
+    }
+  },
+  "verification": {
+    "e2e_passed": false
+  },
+  "task_dir": ".ai-bouncer-tasks/2026-10-21/cpu-polish-fixes",
+  "active_file": ".ai-bouncer-tasks/2026-10-21/cpu-polish-fixes/.active",
+  "agent_mode": "single"
+}

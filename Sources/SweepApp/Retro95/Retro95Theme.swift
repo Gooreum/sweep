@@ -26,8 +26,10 @@ enum R95 {
 
     static let dialogWidth: CGFloat = 460
 
-    /// 184. 172에서는 "스마트 스캔" 옆에 "52.88 GB" 배지가 붙으면 이름이 잘렸다.
-    static let sidebarWidth: CGFloat = 184
+    /// 200. 172에서는 "스마트 스캔" 옆에 "52.88 GB" 배지가 붙으면 이름이 잘렸고, 184에서는
+    /// 영어 "Duplicate Files"(Geneva 13pt 약 90pt) 옆에 "26.9 GB"(Monaco 11pt 약 46pt)가 붙으면
+    /// 칸이 8pt 모자랐다. 배지는 `AppModel.compactSize`로 줄여 최악이 "527 GB"다.
+    static let sidebarWidth: CGFloat = 200
     static let sidebarRowHeight: CGFloat = 36
     static let tableRowHeight: CGFloat = 40
     /// 한 줄짜리 상세 보기 행. 두 줄(이름+경로)이 없는 표는 이 높이로 촘촘하게 둔다.

@@ -307,6 +307,11 @@ struct CPUModelTests {
 
         let task = Task { await model.run() }
         await waitForUsage(model)
+        // 정보 다시 읽기는 사용률이 채워진 **뒤** 별도 작업에서 끝난다. 곧바로 취소하면
+        // 기계가 바쁠 때 읽기가 끝나기 전에 검사해 흔들린다.
+        for _ in 0..<200 where model.details?.memoryBytes == first {
+            try? await Task.sleep(for: .milliseconds(5))
+        }
         task.cancel()
 
         #expect(model.details?.memoryBytes != first)
@@ -323,6 +328,47 @@ struct CPUModelTests {
         await waitForUsage(model)
         task.cancel()
         #expect(reads.count == 0)
+    }
+
+    @Test("마우스를 올린 동안은 순위가 바뀌어도 줄 순서가 그대로이고, 나가면 사용률순으로 돌아온다")
+    func holdingOrderKeepsRowsStill() async throws {
+        let rates = FlippingRates()
+        let model = CPUModel(
+            interval: .milliseconds(10), cores: 1,
+            sample: { rates.next() },
+            loadSample: { nil })
+        let task = Task { await model.run() }
+        defer { task.cancel() }
+        await waitForUsage(model)
+        #expect(model.rows.map(\.id) == ["p1", "p2"])   // 처음에는 1번이 많이 쓴다
+
+        model.holdOrder(true)
+        rates.flip()                                     // 이제 2번이 더 많이 쓴다
+        for _ in 0..<400 where model.usage.first?.pid != 2 {
+            try? await Task.sleep(for: .milliseconds(5))
+        }
+        try #require(model.usage.first?.pid == 2, "순위가 바뀌지 않아 시험이 성립하지 않는다")
+
+        #expect(model.rows.map(\.id) == ["p1", "p2"], "붙잡아 둔 동안 줄이 움직였다")
+
+        model.holdOrder(false)
+        #expect(model.rows.map(\.id) == ["p2", "p1"])
+    }
+}
+
+/// 부를 때마다 pid 1·2의 누적값이 오르는 가짜 수집기. `flip` 뒤에는 오르는 속도가 서로 바뀐다.
+private final class FlippingRates: @unchecked Sendable {
+    private let lock = NSLock()
+    private var flipped = false
+    private var totals: [pid_t: UInt64] = [1: 0, 2: 0]
+
+    func flip() { lock.lock(); flipped = true; lock.unlock() }
+
+    func next() -> [ProcessCPUTick] {
+        lock.lock(); defer { lock.unlock() }
+        let step: [pid_t: UInt64] = flipped ? [1: 1_000_000, 2: 4_000_000] : [1: 4_000_000, 2: 1_000_000]
+        for (pid, add) in step { totals[pid, default: 0] += add }
+        return totals.map { ProcessCPUTick(pid: $0.key, name: "p\($0.key)", nanoseconds: $0.value) }
     }
 }
 

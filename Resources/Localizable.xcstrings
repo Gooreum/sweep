@@ -4207,6 +4207,22 @@
         }
       }
     },
+    "실시간으로 보는 중": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실시간으로 보는 중"
+          }
+        }
+      }
+    },
     "실패 이유 보기": {
       "localizations": {
         "en": {
@@ -7371,6 +7387,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "프로그램"
+          }
+        }
+      }
+    },
+    "프로그램 %lld개": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld program"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld programs"
+                }
+              }
+            }
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "프로그램 %lld개"
           }
         }
       }

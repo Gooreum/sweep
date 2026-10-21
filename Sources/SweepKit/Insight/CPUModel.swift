@@ -33,8 +33,30 @@ public final class CPUModel {
         return max(0, load.used - ownTotal) * Double(cores)
     }
 
+    /// 마우스가 표 위에 있는 동안 붙잡아 둔 줄 순서(`CPURow.id`). 없으면 사용률순이다.
+    private var heldOrder: [String]?
+
     /// 표와 상위 목록이 그리는 줄. 읽은 프로세스 사이에 시스템 프로세스 합계가 끼어 있다.
-    public var rows: [CPURow] { CPURow.rows(usage: usage, unlisted: unlistedPercent) }
+    ///
+    /// 붙잡아 둔 동안에도 **값은 주기마다 바뀐다.** 순서만 그대로다 — 2초마다 순위가
+    /// 뒤섞이면 누르려는 순간 행이 움직여 옆 프로그램이 골라진다. 새로 나타난 줄은
+    /// 끝에 붙고, 끝난 프로세스의 줄은 사라진다.
+    public var rows: [CPURow] {
+        let base = CPURow.rows(usage: usage, unlisted: unlistedPercent)
+        guard let heldOrder else { return base }
+        let position = Dictionary(heldOrder.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
+        return base.enumerated()
+            .sorted { lhs, rhs in
+                let l = position[lhs.element.id] ?? Int.max, r = position[rhs.element.id] ?? Int.max
+                return l != r ? l < r : lhs.offset < rhs.offset
+            }
+            .map(\.element)
+    }
+
+    /// 표 위에 마우스가 있는 동안 순서를 붙잡는다. 나가면 다시 사용률순이다.
+    public func holdOrder(_ hold: Bool) {
+        heldOrder = hold ? CPURow.rows(usage: usage, unlisted: unlistedPercent).map(\.id) : nil
+    }
 
     /// 첫 두 샘플이 아직 모이지 않았다.
     ///

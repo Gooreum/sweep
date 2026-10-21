@@ -183,6 +183,8 @@ struct CPUView: View {
             }
             .background(R95.white)
             .retroSunken()
+            // 마우스가 표 위에 있는 동안은 순서를 붙잡는다. 값만 갱신된다.
+            .onHover { model.holdOrder($0) }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

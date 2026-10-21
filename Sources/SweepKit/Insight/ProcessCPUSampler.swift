@@ -122,10 +122,7 @@ public enum ProcessCPUSampler {
     ///
     /// `kinfo_proc`의 `p_comm`은 쓰지 않는다. 16자에서 잘려 `qemu-system-aar`가 된다.
     static func displayName(of pid: pid_t, path: String?) -> String {
-        if let path {
-            let last = URL(filePath: path).lastPathComponent
-            if !last.isEmpty { return last }
-        }
+        if let path, let name = displayName(forPath: path) { return name }
 
         var buffer = [CChar](repeating: 0, count: 256)
         if proc_name(pid, &buffer, UInt32(buffer.count)) > 0 {
@@ -134,6 +131,29 @@ public enum ProcessCPUSampler {
         }
 
         return "pid \(pid)"
+    }
+
+    /// 실행 파일 경로에서 사람이 알아볼 이름.
+    ///
+    /// 보통은 마지막 조각이다. 그런데 버전마다 폴더에 깔리는 프로그램은 실제 파일 이름이
+    /// 버전 번호다(`.../claude/versions/2.1.304`). 그대로 쓰면 목록에 "2.1.304"만 보여
+    /// 무엇인지 알 수 없으므로, 버전 번호와 `versions`·`bin` 같은 껍데기 폴더는 건너뛰고
+    /// 그 위의 이름을 쓴다.
+    static func displayName(forPath path: String) -> String? {
+        var parts = URL(filePath: path).pathComponents.filter { $0 != "/" }
+        guard var name = parts.popLast(), !name.isEmpty else { return nil }
+        let wrappers: Set<String> = ["versions", "version", "bin", "current", "latest"]
+        while isVersion(name) || wrappers.contains(name.lowercased()) {
+            // 올라갈 곳이 없으면 지금 이름이라도 쓴다
+            guard let parent = parts.popLast() else { return name }
+            name = parent
+        }
+        return name
+    }
+
+    /// `2.1.304`, `v1.2` 같은 버전 번호. 점이 하나도 없는 `9`는 이름일 수 있어 버전으로 치지 않는다.
+    static func isVersion(_ text: String) -> Bool {
+        text.range(of: #"^v?\d+(\.\d+)+$"#, options: .regularExpression) != nil
     }
 
     static func executablePath(of pid: pid_t) -> String? {

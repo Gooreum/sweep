@@ -351,9 +351,26 @@ public final class AppModel {
             bytes[.smartScan, default: 0] += item.size
         }
 
-        return bytes.mapValues {
-            ByteCountFormatter.string(fromByteCount: $0, countStyle: .file)
-        }
+        return bytes.mapValues { Self.compactSize($0) }
+    }
+
+    /// 사이드바 배지용 짧은 용량. 좁은 칸이라 "26.88 GB"를 "26.9 GB"로 줄인다.
+    ///
+    /// `ByteCountFormatter`가 말한 것을 기준으로 하고, 숫자가 10 이상일 때만 소수 자리를 줄인다
+    /// (10 이상이면 소수 첫째 자리, 100 이상이면 정수). 그 아래와 "512 bytes"·"Zero KB"는
+    /// 포맷터의 말 그대로 둔다 — 다른 화면과 같은 말이어야 한다.
+    nonisolated static func compactSize(_ bytes: Int64) -> String {
+        let full = ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
+        guard let space = full.lastIndex(of: " ") else { return full }
+        let numberText = String(full[..<space]), unit = String(full[full.index(after: space)...])
+
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        guard let value = formatter.number(from: numberText)?.doubleValue, value >= 10 else { return full }
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = value >= 100 ? 0 : 1
+        guard let short = formatter.string(from: NSNumber(value: value)) else { return full }
+        return "\(short) \(unit)"
     }
 
     // MARK: - 상태 아이콘이 물어보는 것
@@ -462,6 +479,17 @@ public struct StatusLine: Equatable, Sendable {
             size: model.flatMap { $0.items.isEmpty ? nil : String(localized: "정리 대상 \($0.formattedTotalSize)") } ?? empty)
     }
 
+    /// CPU 탭은 스캔을 하지 않는다. 스캔 모델 기준으로 그리면 "시작 전"이 떠서
+    /// 이미 실시간으로 돌고 있는 화면이 아직 안 켜진 것처럼 보인다.
+    @MainActor
+    static func cpu(model: CPUModel?) -> StatusLine {
+        guard let model, !model.isWarmingUp else {
+            return StatusLine(status: String(localized: "측정 중…"), count: empty, size: empty)
+        }
+        return StatusLine(status: String(localized: "실시간으로 보는 중"),
+                          count: String(localized: "프로그램 \(model.usage.count)개"), size: empty)
+    }
+
     static func diskMap(loadPhase: DiskMapModel.LoadPhase?, current: DiskUsageNode?) -> StatusLine {
         let status: String
         switch loadPhase {
@@ -488,6 +516,9 @@ extension AppModel {
             StatusLine.diskMap(loadPhase: diskMapModel?.loadPhase, current: diskMapModel?.current)
         case .junk where needsFolderAccess:
             StatusLine(status: String(localized: "폴더 선택 필요"), count: StatusLine.empty, size: StatusLine.empty)
+        case .cpu:
+            // CPU 모델도 만들지 않는다 — 화면이 처음 열릴 때 만든다.
+            StatusLine.cpu(model: cpuModel)
         default:
             StatusLine.scan(currentModel)
         }
