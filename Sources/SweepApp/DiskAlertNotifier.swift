@@ -1,0 +1,93 @@
+import AppKit
+import UserNotifications
+import SweepKit
+
+/// 디스크 부족 알림을 macOS 알림 센터로 보내고, 누르면 Sweep 창을 연다.
+///
+/// 판정은 `DiskWatcher`가 한다. 여기는 알림 센터와 창 열기만 맡는다 — 로컬 알림뿐이고
+/// 네트워크도 데이터 수집도 없다.
+@MainActor
+final class DiskAlertNotifier: NSObject, UNUserNotificationCenterDelegate {
+
+    /// 고정이다. 같은 식별자로 보내면 알림 센터에 쌓이지 않고 교체된다.
+    static let identifier = "disk-low"
+
+    private let app: AppModel
+    private(set) var watcher: DiskWatcher!
+
+    /// 창을 앞으로 부르는 동작. `openWindow`는 씬 환경에서만 얻을 수 있어 앱이 넣어 준다.
+    var openMain: (() -> Void)?
+
+    /// SPM 실행 파일(`swift run`)은 앱 번들이 아니다. 그때 `UNUserNotificationCenter.current()`를
+    /// 부르면 번들 식별자가 없어 프로세스가 죽는다 — 알림 기능만 조용히 끈다.
+    private var center: UNUserNotificationCenter? {
+        Bundle.main.bundleURL.pathExtension == "app" ? .current() : nil
+    }
+
+    init(app: AppModel, interval: Duration) {
+        self.app = app
+        super.init()
+        watcher = DiskWatcher(interval: interval) { [weak self] usage in
+            self?.post(usage)
+        }
+        // 앱이 다 뜨기 전에 등록해야 알림을 눌러 앱이 실행된 경우도 받는다.
+        center?.delegate = self
+        refreshAuthorization()
+        // 시스템 설정에서 알림을 끄고 돌아오는 경우. 돌아올 때마다 다시 묻는다.
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refreshAuthorization() }
+        }
+    }
+
+    /// [켜기]·설정 스위치. 권한을 처음 묻는 것도 여기다 — 앱을 열자마자 묻지 않는다.
+    func enable() {
+        watcher.consentAsked = true
+        guard let center else { watcher.isEnabled = true; return }
+        Task {
+            let granted = (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
+            watcher.isAuthorized = granted
+            watcher.isEnabled = true
+        }
+    }
+
+    func refreshAuthorization() {
+        guard let center else { return }
+        Task {
+            let status = await center.notificationSettings().authorizationStatus
+            watcher.isAuthorized = status == .authorized || status == .provisional
+        }
+    }
+
+    private func post(_ usage: VolumeUsage) {
+        guard let center else { return }
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "디스크 공간이 부족해요")
+        content.body = String(localized: "남은 공간은 \(usage.formattedAvailable)이에요. 눌러서 정리할 파일을 찾아보세요.")
+        let request = UNNotificationRequest(identifier: Self.identifier, content: content, trigger: nil)
+        center.add(request) { _ in }
+    }
+
+    // MARK: - UNUserNotificationCenterDelegate
+
+    /// 검색을 자동으로 시작하지 않는다. 알림 한 번에 43초 스캔을 돌리지 않는다.
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse
+    ) async {
+        await MainActor.run {
+            app.selected = .smartScan
+            openMain?()
+            NSApp.activate(ignoringOtherApps: true)
+        }
+    }
+
+    /// Sweep이 앞에 있어도 배너를 띄운다. 기본은 앞에 있으면 아무것도 보이지 않는다.
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification
+    ) async -> UNNotificationPresentationOptions {
+        [.banner, .list]
+    }
+}

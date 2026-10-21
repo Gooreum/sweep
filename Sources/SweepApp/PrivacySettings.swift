@@ -24,7 +24,16 @@ enum PrivacySettings {
         "x-apple.systempreferences:com.apple.preference.security",
     ]
 
+    /// 알림 권한은 개인정보 보호가 아니라 "알림" 창에 있다.
+    private static let notificationCandidates = [
+        "x-apple.systempreferences:com.apple.Notifications-Settings.extension",
+        "x-apple.systempreferences:com.apple.preference.notifications",
+    ]
+
     static func openFilesAndFolders() { open(candidates) }
+
+    /// 디스크 부족 알림을 거부했을 때. 앱은 다시 물을 수 없다.
+    static func openNotifications() { open(notificationCandidates) }
 
     /// "다른 앱의 데이터" 물음을 통째로 없애는 스위치가 있는 곳.
     static func openFullDiskAccess() { open(allFilesCandidates) }

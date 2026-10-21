@@ -311,6 +311,22 @@
         }
       }
     },
+    "%lldGB": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld GB"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lldGB"
+          }
+        }
+      }
+    },
     "%lld개": {
       "localizations": {
         "en": {
@@ -1487,6 +1503,22 @@
         }
       }
     },
+    "Sweep이 켜져 있는 동안 5분마다 남은 공간을 확인해요. 앱을 종료하면 확인하지 않아요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While Sweep is running, it checks free space every 5 minutes. It stops checking when you quit the app."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweep이 켜져 있는 동안 5분마다 남은 공간을 확인해요. 앱을 종료하면 확인하지 않아요."
+          }
+        }
+      }
+    },
     "Swift Package Manager 임시 파일": {
       "localizations": {
         "en": {
@@ -2463,6 +2495,22 @@
         }
       }
     },
+    "괜찮아요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Thanks"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "괜찮아요"
+          }
+        }
+      }
+    },
     "권장": {
       "localizations": {
         "en": {
@@ -2623,6 +2671,22 @@
         }
       }
     },
+    "남은 공간은 %@이에요. 눌러서 정리할 파일을 찾아보세요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ left. Click to find files to clean up."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "남은 공간은 %@이에요. 눌러서 정리할 파일을 찾아보세요."
+          }
+        }
+      }
+    },
     "남은 공간은 %@이에요. 전체는 %@이에요.": {
       "localizations": {
         "en": {
@@ -2635,6 +2699,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "남은 공간은 %1$@이에요. 전체는 %2$@이에요."
+          }
+        }
+      }
+    },
+    "남은 공간이 이보다 적으면": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notify when free space is below"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "남은 공간이 이보다 적으면"
           }
         }
       }
@@ -3103,6 +3183,22 @@
         }
       }
     },
+    "디스크 공간이 부족해요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your disk is running low on space"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스크 공간이 부족해요"
+          }
+        }
+      }
+    },
     "디스크 전체나 내 폴더 전체를 삭제할 수는 없어요: %@": {
       "localizations": {
         "en": {
@@ -3147,6 +3243,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "디스크 허용…"
+          }
+        }
+      }
+    },
+    "디스크가 부족하면 알림": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notify when the disk is running low"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스크가 부족하면 알림"
+          }
+        }
+      }
+    },
+    "디스크가 부족해지면 알려 드릴까요?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get notified when your disk runs low?"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "디스크가 부족해지면 알려 드릴까요?"
           }
         }
       }
@@ -4191,6 +4319,22 @@
         }
       }
     },
+    "시스템 설정에서 Sweep 알림이 꺼져 있어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweep notifications are turned off in System Settings"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "시스템 설정에서 Sweep 알림이 꺼져 있어요"
+          }
+        }
+      }
+    },
     "시작 전": {
       "localizations": {
         "en": {
@@ -4475,6 +4619,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "안전만"
+          }
+        }
+      }
+    },
+    "알림": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "알림"
+          }
+        }
+      }
+    },
+    "알림 설정 열기": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Notification Settings"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "알림 설정 열기"
           }
         }
       }
@@ -6859,6 +7035,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "컴퓨터에 필요한 폴더라 추가할 수 없어요."
+          }
+        }
+      }
+    },
+    "켜기": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn On"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "켜기"
           }
         }
       }
