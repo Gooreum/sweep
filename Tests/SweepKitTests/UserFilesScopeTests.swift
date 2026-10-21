@@ -128,6 +128,26 @@ struct UserFilesScopeTests {
         #expect(kept.map(\.category) == [.largeFile])
     }
 
+    @Test("원본이 큰 파일로 함께 올라오면 중복 사본은 '원본이 남아요'라고 하지 않고 자동 선택에서 빠진다")
+    func normalizeWarnsWhenOriginalIsListed() {
+        let original = home.appending(path: "Downloads/sweep-없는-원본.mov")
+        let copy = CleanupItem(url: home.appending(path: "Downloads/sweep-없는-사본.mov"),
+                               size: 200, category: .duplicate, safety: .safe,
+                               detail: "같은 내용의 원본이 남아요: sweep-없는-원본.mov",
+                               originalURL: original)
+        let large = CleanupItem(url: original, size: 200, category: .largeFile, safety: .caution)
+
+        let alone = ScanCoordinator.normalize([copy])
+        #expect(alone.first?.detail == copy.detail)
+        #expect(alone.first?.isSelectedByDefault == true)
+
+        let together = ScanCoordinator.normalize([copy, large])
+        let warned = together.first { $0.category == .duplicate }
+        #expect(warned?.detail.contains("원본도 정리 목록에 있어요") == true)
+        #expect(warned?.isSelectedByDefault == false)
+        #expect(together.first { $0.category == .largeFile } == large)
+    }
+
     @Test("보는 곳 목록에 사용자 폴더가 한 번씩 나온다")
     func currentRootsIncludeUserFolders() {
         let paths = ProtectedPaths.currentRoots.map { FolderAccess.components(of: $0) }

@@ -156,7 +156,7 @@ public struct ScanCoordinator: Sendable {
     /// 스캐너가 버그로 엉뚱한 경로를 뱉어도 UI 목록에 도달하지 못한다.
     static func normalize(_ items: [CleanupItem]) -> [CleanupItem] {
         var seen: Set<URL> = []
-        return items
+        let kept = items
             // 휴지통은 크기 0도 남긴다. iCloud에만 있는 항목은 이 Mac 공간이 0이어도 지울 뜻이 있다.
             .filter { ($0.size > 0 || $0.category == .trash)
                 && ProtectedPaths.isRemovable($0.url, scope: $0.category.removalScope) }
@@ -170,5 +170,21 @@ public struct ScanCoordinator: Sendable {
             // (~/Downloads는 DuplicateScanner와 LargeFileScanner가 함께 본다.)
             // 정렬 뒤에 거르므로 더 위에 오는 카테고리가 이긴다.
             .filter { seen.insert($0.url).inserted }
+        return kept.map { warningIfOriginalListed($0, listed: seen) }
+    }
+
+    /// 중복 사본의 원본이 같은 목록에 따로 올라와 있으면 "원본이 남아요"는 거짓이 될 수 있다.
+    /// 100MB 이상인 원본은 `LargeFileScanner`가 큰 파일로 올리므로, 둘을 함께 정리하면
+    /// 같은 내용이 전부 휴지통으로 간다. 그때는 설명을 바꾸고 자동 선택에서 뺀다.
+    private static func warningIfOriginalListed(_ item: CleanupItem, listed: Set<URL>) -> CleanupItem {
+        guard let original = item.originalURL, listed.contains(original) else { return item }
+        return CleanupItem(
+            url: item.url,
+            size: item.size,
+            category: item.category,
+            safety: max(item.safety, .caution),
+            detail: String(localized: "원본도 정리 목록에 있어요. 함께 지우면 같은 내용이 모두 사라져요"),
+            dates: item.dates,
+            originalURL: original)
     }
 }

@@ -14,6 +14,9 @@ public struct CleanupItem: Sendable, Hashable, Identifiable {
     public let detail: String
     /// 만든 날 / 마지막 사용. 스캐너가 크기를 세는 순회에서 같이 읽어 채운다.
     public let dates: FileDates
+    /// 중복 사본이면 남겨 두는 원본의 경로. 원본이 같은 목록에 따로 올라왔는지
+    /// `ScanCoordinator.normalize`가 확인하는 데 쓴다.
+    public let originalURL: URL?
 
     public var id: URL { url }
 
@@ -23,7 +26,8 @@ public struct CleanupItem: Sendable, Hashable, Identifiable {
         category: ScanCategory,
         safety: SafetyLevel,
         detail: String = "",
-        dates: FileDates = .unknown
+        dates: FileDates = .unknown,
+        originalURL: URL? = nil
     ) {
         self.url = url
         self.size = size
@@ -31,6 +35,7 @@ public struct CleanupItem: Sendable, Hashable, Identifiable {
         self.safety = safety
         self.detail = detail
         self.dates = dates
+        self.originalURL = originalURL
     }
 
     /// 사람이 읽는 크기 문자열. ("152.1 GB")
