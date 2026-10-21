@@ -723,8 +723,36 @@ struct AppModelTests {
         #expect(app.badges == badgesBefore)
     }
 
-    @Test("되돌린 항목은 완료 화면을 띄운 탭을 건드리지 않는다")
-    func undoSkipsTabShowingOutcome() async throws {
+    @Test("스마트 스캔이 완료 화면이어도 기능 탭에서 되돌린 항목은 목록과 배지에 돌아온다")
+    func undoReachesSmartScanShowingOutcome() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let app = undoableApp(history: history)
+        let smart = app.model(for: .smartScan)
+        await smart.scan()
+
+        // 스마트 스캔에서 먼저 하나 정리해 완료 화면을 띄운다
+        let first = try #require(smart.items.first, "스마트 스캔이 비어 배분이 끊겼다")
+        smart.selection = [first.url]
+        await smart.removeSelected()
+        #expect(smart.phase == .cleaned)
+        let badgesBefore = app.badges
+
+        let junk = app.model(for: .junk)
+        let target = try #require(junk.items.first, "정크 탭이 비어 배분이 끊겼다")
+        junk.selection = [target.url]
+        await junk.removeSelected()
+        #expect(!smart.items.contains { $0.url == target.url })
+
+        await junk.undoLastCleanup()
+
+        #expect(smart.items.filter { $0.url == target.url }.count == 1, "완료 화면 탭이 되돌린 항목을 못 받았다")
+        #expect(smart.phase == .cleaned, "완료 화면이 덮였다")
+        #expect(app.badges == badgesBefore, "배지가 되돌린 용량을 반영하지 않는다")
+    }
+
+    @Test("되돌린 항목은 완료 화면을 띄운 탭의 화면을 덮지 않고 자기 몫만 넣는다")
+    func undoKeepsOutcomeScreen() async throws {
         let (history, cleanup) = try isolatedHistory()
         defer { cleanup() }
         let app = undoableApp(history: history)
@@ -747,6 +775,7 @@ struct AppModelTests {
 
         #expect(big.phase == .cleaned, "완료 화면이 덮였다")
         #expect(big.canUndo)
+        #expect(!big.items.contains { $0.url == target.url }, "남의 몫이 끼어들었다")
     }
 
     // MARK: - 휴지통 비우기는 합계에 넣지 않는다
