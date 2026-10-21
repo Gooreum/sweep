@@ -212,21 +212,40 @@ extension PixelArt {
         "................",
     ], palette: retroPalette)
 
+    static let devProject = PixelArt(rows: [
+        "................",
+        ".kkkkkkkkkkkkkk.",
+        ".kggggggggggggk.",
+        ".kgnnnnnnnnnngk.",
+        ".kgnnnnnnnnwngk.",
+        ".kgkkkkkkkkkkgk.",
+        ".kgkkkkkkkkkkgk.",
+        ".kgkGkkkkkkkkgk.",
+        ".kgkkGkkkkkkkgk.",
+        ".kgkkkGkkkkkkgk.",
+        ".kgkkGkkkkkkkgk.",
+        ".kgkGkkGGGkkkgk.",
+        ".kgkkkkkkkkkkgk.",
+        ".kggggggggggggk.",
+        ".kkkkkkkkkkkkkk.",
+        "................",
+    ], palette: retroPalette)
+
     static let spaceView = PixelArt(rows: [
         "................",
         ".kkkkkkkkkkkkkk.",
-        ".kwwwwwwwwwwwwk.",
-        ".kwcccccckwwwdk.",
-        ".kwcccccckyyydk.",
-        ".kwcccccckyyydk.",
-        ".kwcccccckddddk.",
-        ".kwcccccckkkkkk.",
-        ".kwcccccckwwkwk.",
-        ".kwcccccckcckwk.",
-        ".kwcccccckcckwk.",
-        ".kwcccccckcckdk.",
-        ".kwddddddkddkdk.",
-        ".kddddddddddddk.",
+        ".kcccccckyyyyyk.",
+        ".kcccccckyyyyyk.",
+        ".kcccccckyyyyyk.",
+        ".kcccccckyyyyyk.",
+        ".kcccccckyyyyyk.",
+        ".kcccccckkkkkkk.",
+        ".kcccccckRRkGGk.",
+        ".kcccccckRRkGGk.",
+        ".kcccccckRRkGGk.",
+        ".kcccccckRRkGGk.",
+        ".kcccccckRRkGGk.",
+        ".kcccccckRRkGGk.",
         ".kkkkkkkkkkkkkk.",
         "................",
     ], palette: retroPalette)
@@ -543,7 +562,7 @@ extension Feature {
         switch self {
         case .smartScan: .magnifier
         case .junk: .broom
-        case .projects: .box
+        case .projects: .devProject
         case .largeFile: .folder
         case .duplicate: .documents
         case .trash: .trash
