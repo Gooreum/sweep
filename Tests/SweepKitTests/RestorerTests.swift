@@ -22,8 +22,9 @@ struct RestorerTests {
         return (home.appending(path: "cache.bin"), trashed, { try? self.fm.removeItem(at: base) })
     }
 
-    private func outcome(_ original: URL, _ trashed: URL?) -> RemovalOutcome {
-        RemovalOutcome(item: CleanupItem(url: original, size: 10, category: .devCache, safety: .safe),
+    private func outcome(_ original: URL, _ trashed: URL?,
+                         category: ScanCategory = .devCache) -> RemovalOutcome {
+        RemovalOutcome(item: CleanupItem(url: original, size: 10, category: category, safety: .safe),
                        failure: nil, trashedURL: trashed)
     }
 
@@ -92,5 +93,22 @@ struct RestorerTests {
         #expect(result.failure?.kind == .protected)
         #expect(!fm.fileExists(atPath: target.path))
         #expect(fm.fileExists(atPath: trashed.path))
+    }
+
+    @Test("큰 파일·중복 파일은 사용자 폴더로 되돌린다", arguments: [ScanCategory.largeFile, .duplicate])
+    func restoresUserFilesToDocuments(_ category: ScanCategory) throws {
+        let (_, trashed, cleanup) = try trashedFile()
+        defer { cleanup() }
+        let folder = FileManager.default.homeDirectoryForCurrentUser
+            .appending(path: "Documents").appending(path: "sweep-restore-\(UUID().uuidString)")
+        try fm.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: folder) }
+        let target = folder.appending(path: "cache.bin")
+
+        let result = Restorer().restoreOne(outcome(target, trashed, category: category))
+
+        #expect(result.succeeded)
+        #expect(try String(contentsOf: target, encoding: .utf8) == "되돌릴 내용")
+        #expect(!fm.fileExists(atPath: trashed.path))
     }
 }

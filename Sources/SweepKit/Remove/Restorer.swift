@@ -35,8 +35,9 @@ public struct Restorer: Sendable {
         }
 
         do {
-            // 관문 재통과. 예외 없음.
-            try ProtectedPaths.validate(target)
+            // 관문 재통과. 예외 없음. 지울 때처럼 항목의 분류가 정하는 범위로 본다 —
+            // 큰 파일·중복 파일은 사용자 폴더에 있다(`ScanCategory.removalScope`).
+            try ProtectedPaths.validate(target, scope: outcome.item.category.removalScope)
             try FileManager.default.moveItem(at: trashed, to: target)
             return RemovalOutcome(item: outcome.item, failure: nil)
         } catch let veto as RemovalVeto {
