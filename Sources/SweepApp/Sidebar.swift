@@ -54,14 +54,16 @@ struct Sidebar: View {
             Text(feature.displayName)
                 .font(R95.ui(13))
                 .lineLimit(1)
-                // 배지보다 이름이 먼저다. 폭이 모자라면 숫자 쪽이 줄어든다.
+                // 이름이 숫자보다 먼저 자리를 얻되, 모자라면 이름이 조금 줄어든다.
+                // 숫자가 "26.88…"로 잘리면 용량을 알 수 없다.
+                .minimumScaleFactor(0.85)
                 .layoutPriority(1)
             Spacer(minLength: 0)
 
             // 스캔 결과를 사이드바에서 바로 본다. 어디에 용량이 묶여 있는지
             // 화면을 옮기지 않고 알 수 있어야 한다.
             if let badge {
-                Text(badge).font(R95.mono(11)).lineLimit(1).minimumScaleFactor(0.8)
+                Text(badge).font(R95.mono(11)).lineLimit(1).fixedSize(horizontal: true, vertical: false)
             }
         }
         .foregroundStyle(isSelected ? R95.white : R95.black)

@@ -292,10 +292,10 @@ struct AppModelTests {
         #expect(junk + large + dup == items.totalSize)
 
         let badges = app.badges
-        #expect(badges[.smartScan] == items.formattedTotalSize)
-        #expect(badges[.junk] == Feature.junk.items(from: model.items).formattedTotalSize)
-        #expect(badges[.largeFile] == Feature.largeFile.items(from: model.items).formattedTotalSize)
-        #expect(badges[.duplicate] == Feature.duplicate.items(from: model.items).formattedTotalSize)
+        #expect(badges[.smartScan] == AppModel.compactSize(items.totalSize))
+        #expect(badges[.junk] == AppModel.compactSize(junk))
+        #expect(badges[.largeFile] == AppModel.compactSize(large))
+        #expect(badges[.duplicate] == AppModel.compactSize(dup))
     }
 
     // TC-6
@@ -312,7 +312,7 @@ struct AppModelTests {
             if matched.isEmpty {
                 #expect(badges[feature] == nil, "\(feature)에 빈 배지가 붙었다")
             } else {
-                #expect(badges[feature] == matched.formattedTotalSize)
+                #expect(badges[feature] == AppModel.compactSize(matched.totalSize))
             }
         }
     }
@@ -876,5 +876,18 @@ struct AppModelTests {
         #expect(app.volumeUsage == nil)
         app.refreshVolumeUsage()
         #expect(app.volumeUsage == nil)
+    }
+}
+
+@Suite("사이드바 배지 용량")
+struct CompactSizeTests {
+    @Test("10 이상이면 소수 첫째 자리, 100 이상이면 정수로 줄이고 작은 값은 그대로 둔다")
+    func compactSizeShortensLargeNumbers() {
+        #expect(AppModel.compactSize(26_880_000_000) == "26.9 GB")
+        #expect(AppModel.compactSize(526_880_000_000) == "527 GB")
+        #expect(AppModel.compactSize(8_880_000_000) == "8.88 GB")
+        #expect(AppModel.compactSize(1_000_000_000_000) == "1 TB")
+        #expect(AppModel.compactSize(21_000) == "21 KB")
+        #expect(AppModel.compactSize(512) == ByteCountFormatter.string(fromByteCount: 512, countStyle: .file))
     }
 }

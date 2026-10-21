@@ -125,4 +125,19 @@ struct ProcessCPUSamplerTests {
         let expected = URL(filePath: try #require(withPath.executablePath)).lastPathComponent
         #expect(withPath.name == expected)
     }
+
+    @Test("실제 파일 이름이 버전 번호인 프로그램은 그 위의 이름으로 보인다")
+    func versionedExecutableUsesParentName() {
+        // claude는 .../claude/versions/2.1.304 가 실제 파일이다
+        #expect(ProcessCPUSampler.displayName(forPath: "/Users/x/.local/share/claude/versions/2.1.304") == "claude")
+        #expect(ProcessCPUSampler.displayName(forPath: "/opt/tool/v1.2/bin/tool-bin") == "tool-bin")
+        #expect(ProcessCPUSampler.displayName(forPath: "/Applications/Foo/Contents/bin/9.1") == "Contents")
+        // 평범한 이름은 그대로, 점 없는 숫자는 이름일 수 있어 그대로
+        #expect(ProcessCPUSampler.displayName(forPath: "/usr/bin/zsh") == "zsh")
+        #expect(ProcessCPUSampler.displayName(forPath: "/usr/local/bin/qemu-system-aarch64") == "qemu-system-aarch64")
+        #expect(ProcessCPUSampler.displayName(forPath: "/opt/tools/9") == "9")
+        // 올라갈 곳이 없으면 있는 이름이라도 쓴다
+        #expect(ProcessCPUSampler.displayName(forPath: "/2.1.304") == "2.1.304")
+        #expect(ProcessCPUSampler.displayName(forPath: "/") == nil)
+    }
 }

@@ -68,6 +68,30 @@ struct StatusLineTests {
         #expect(app.statusLine == StatusLine(status: "시작 전", count: "항목 0개", size: "—"))
     }
 
+    @Test("CPU 탭은 스캔 전 문구 '시작 전'을 쓰지 않고, 모델 없이 읽어도 만들지 않는다")
+    func cpuTabIsNotNotStarted() {
+        let app = AppModel(needsFolderAccess: false)
+        app.selected = .cpu
+
+        #expect(app.statusLine.status == "측정 중…")
+        #expect(app.statusLine.status != "시작 전")
+    }
+
+    @Test("CPU 탭은 재기 시작하면 읽은 프로그램 수를 보여준다")
+    func cpuTabShowsProgramCount() async {
+        let model = CPUModel(
+            interval: .milliseconds(5), limit: 20, cores: 1,
+            sample: { [ProcessCPUTick(pid: 7, name: "a", nanoseconds: 1), ProcessCPUTick(pid: 8, name: "b", nanoseconds: 1)] },
+            loadSample: { nil })
+        let task = Task { await model.run() }
+        for _ in 0..<200 where model.isWarmingUp { try? await Task.sleep(for: .milliseconds(5)) }
+        task.cancel()
+
+        let line = StatusLine.cpu(model: model)
+        #expect(line.status == "실시간으로 보는 중")
+        #expect(line.count == "프로그램 \(model.usage.count)개")
+    }
+
     // TC-7
     @Test("상태바를 읽는다고 디스크 맵 모델을 만들지 않는다")
     func statusLineDoesNotCreateDiskMap() {
