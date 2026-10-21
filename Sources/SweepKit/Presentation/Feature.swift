@@ -54,7 +54,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         case .junk: Sandbox.isActive
             ? String(localized: "Xcode 개발용 파일 중에서 정리할 것을 찾아보세요.")
             : String(localized: "앱이 만든 임시 파일과 개발용 파일, 기기 백업을 모아 보여줘요. 필요 없는 것을 골라 주세요.")
-        case .projects: String(localized: "코드 폴더에서 다시 설치하면 되살아나는 node_modules·빌드 폴더를 찾아요.")
+        case .projects: String(localized: "코드 폴더에서 다시 설치하거나 다시 빌드하면 되살아나는 폴더(node_modules, target, Pods, .venv 등)를 찾아요.")
         case .largeFile: String(localized: "내 폴더에 큰 파일이 있는지 살펴보세요. 직접 추가한 폴더도 함께 찾아요.")
         case .duplicate: String(localized: "똑같은 파일이 여러 개 있으면 여분을 골라 정리해 보세요.")
         case .trash: String(localized: "휴지통에서 지울 것을 골라 주세요. 큰 항목부터 보여줘요. 지운 항목은 되살릴 수 없어요.")

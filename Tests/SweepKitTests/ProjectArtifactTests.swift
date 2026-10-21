@@ -31,6 +31,15 @@ struct ProjectArtifactTests {
         return url
     }
 
+    /// 글이 든 파일(`.gitignore` 등).
+    @discardableResult
+    private func file(_ root: URL, _ relative: String, _ text: String) throws -> URL {
+        let url = root.appending(path: relative)
+        try fm.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try text.write(to: url, atomically: true, encoding: .utf8)
+        return url
+    }
+
     /// 프로젝트 바로 아래 항목의 수정일을 옮긴다. 최근 활동 판정이 이것을 본다.
     private func age(_ project: URL, days: Double) throws {
         let date = Date().addingTimeInterval(-days * 86_400)
@@ -90,7 +99,126 @@ struct ProjectArtifactTests {
         #expect(!node.needsLock(in: project))
     }
 
+    @Test("다시 만들어지는 숨김 폴더도 설정 파일이 옆에 있을 때만 짝이 맞는다")
+    func hiddenGeneratedFolders() throws {
+        let (root, cleanup) = try makeRoot()
+        defer { cleanup() }
+        try file(root, "web/package.json")
+        try file(root, "app/build.gradle.kts")
+        try file(root, "flutter/pubspec.yaml")
+        try file(root, "gradle/settings.gradle")
+
+        for name in [".next", ".nuxt", ".svelte-kit", ".expo"] {
+            #expect(ProjectArtifactRule.match(try dir(root, "web/\(name)"))?.manifest == "package.json", "\(name)")
+            #expect(ProjectArtifactRule.match(try dir(root, "none/\(name)")) == nil, "\(name) 짝 없음")
+        }
+        #expect(ProjectArtifactRule.match(try dir(root, "app/.gradle"))?.manifest == "build.gradle.kts")
+        #expect(ProjectArtifactRule.match(try dir(root, "gradle/.gradle"))?.manifest == "settings.gradle")
+        #expect(ProjectArtifactRule.match(try dir(root, "flutter/.dart_tool"))?.manifest == "pubspec.yaml")
+    }
+
+    @Test("가상환경은 폴더 안에 pyvenv.cfg가 있을 때만 짝이 맞고, 없으면 그냥 폴더다")
+    func virtualEnvironmentNeedsMarkerInside() throws {
+        let (root, cleanup) = try makeRoot()
+        defer { cleanup() }
+        try file(root, "py/.venv/pyvenv.cfg")
+        try file(root, "py/venv/pyvenv.cfg")
+        try dir(root, "plain/.venv")
+        try file(root, "plain/pyvenv.cfg")   // 옆에 있어도 안에 없으면 가상환경이 아니다
+
+        #expect(ProjectArtifactRule.match(root.appending(path: "py/.venv"))?.manifest == "pyvenv.cfg")
+        #expect(ProjectArtifactRule.match(root.appending(path: "py/venv"))?.manifest == "pyvenv.cfg")
+        #expect(ProjectArtifactRule.match(root.appending(path: "plain/.venv")) == nil)
+    }
+
+    @Test("dist·build·vendor는 .gitignore에 적혀 있을 때만 짝이 맞는다")
+    func ignoreGatedFolders() throws {
+        let (root, cleanup) = try makeRoot()
+        defer { cleanup() }
+        // 적혀 있음
+        try file(root, "ignored/package.json")
+        try file(root, "ignored/.gitignore", "dist\n/build\n")
+        let dist = try dir(root, "ignored/dist")
+        let build = try dir(root, "ignored/build")
+        // 적혀 있지 않음 — 커밋된 결과물일 수 있다
+        try file(root, "tracked/package.json")
+        let trackedDist = try dir(root, "tracked/dist")
+        let trackedBuild = try dir(root, "tracked/build")
+        // PHP·Go vendor
+        try file(root, "php/composer.json")
+        try file(root, "php/.gitignore", "vendor/")
+        let phpVendor = try dir(root, "php/vendor")
+        try file(root, "go/go.mod")
+        let goVendor = try dir(root, "go/vendor")   // .gitignore 없음 — Go는 커밋하는 경우가 많다
+
+        #expect(ProjectArtifactRule.match(dist)?.manifest == "package.json")
+        #expect(ProjectArtifactRule.match(build)?.manifest == "package.json")
+        #expect(ProjectArtifactRule.match(trackedDist) == nil)
+        #expect(ProjectArtifactRule.match(trackedBuild) == nil)
+        #expect(ProjectArtifactRule.match(phpVendor)?.manifest == "composer.json")
+        #expect(ProjectArtifactRule.match(goVendor) == nil)
+    }
+
+    @Test("Gradle build는 .gitignore 없이도 짝이 맞고, JS build는 .gitignore가 있어야 한다")
+    func buildHasTwoRules() throws {
+        let (root, cleanup) = try makeRoot()
+        defer { cleanup() }
+        try file(root, "g/build.gradle")
+        try file(root, "j/package.json")
+
+        #expect(ProjectArtifactRule.match(try dir(root, "g/build"))?.manifest == "build.gradle")
+        #expect(ProjectArtifactRule.match(try dir(root, "j/build")) == nil)
+        try file(root, "j/.gitignore", "build\n")
+        #expect(ProjectArtifactRule.match(root.appending(path: "j/build"))?.manifest == "package.json")
+    }
+
+    @Test("가상환경과 JS 결과물은 lock 파일이 없으면 확인 필요다")
+    func newRulesNeedLockFiles() throws {
+        let (root, cleanup) = try makeRoot()
+        defer { cleanup() }
+        let venv = ProjectArtifactRule.all.first { $0.name == ".venv" }!
+        let dist = ProjectArtifactRule.all.first { $0.name == "dist" }!
+        let next = ProjectArtifactRule.all.first { $0.name == ".next" }!
+        let project = try dir(root, "p")
+
+        #expect(venv.needsLock(in: project))
+        #expect(dist.needsLock(in: project))
+        #expect(!next.needsLock(in: project))
+        try file(root, "p/requirements.txt")
+        try file(root, "p/package-lock.json")
+        #expect(!venv.needsLock(in: project))
+        #expect(!dist.needsLock(in: project))
+    }
+
     // MARK: - 스캐너
+
+    @Test("새 종류도 스캐너가 찾고, .gitignore에 없는 dist와 짝 없는 폴더는 빠진다")
+    func scannerFindsNewKinds() async throws {
+        let (root, cleanup) = try makeRoot()
+        defer { cleanup() }
+        try file(root, "web/package.json")
+        try file(root, "web/package-lock.json")
+        try file(root, "web/.gitignore", "dist\n")
+        try file(root, "web/.next/cache/a", bytes: 3_000)
+        try file(root, "web/dist/bundle.js", bytes: 2_000)
+        try file(root, "web/build/out.js", bytes: 900)        // .gitignore에 없음
+        try file(root, "py/pyvenv.cfg.txt")
+        try file(root, "py/.venv/pyvenv.cfg", bytes: 800)
+        try file(root, "py/.venv/lib/x", bytes: 1_500)
+        try file(root, "lonely/.next/x", bytes: 5_000)        // package.json 없음
+        for path in ["web", "py"] { try age(root.appending(path: path), days: 30) }
+
+        let items = await ProjectArtifactScanner(roots: [root], recentDays: 14).scan()
+        // `/var`↔`/private/var` 표기가 달라 경로 앞부분은 비교하지 않는다
+        let found = Set(items.map {
+            $0.url.deletingLastPathComponent().lastPathComponent + "/" + $0.url.lastPathComponent
+        })
+
+        #expect(found == ["web/.next", "web/dist", "py/.venv"])
+        // lock 파일이 있는 JS 결과물은 안전, 가상환경은 lock이 없어 확인 필요
+        #expect(items.first { $0.url.lastPathComponent == "dist" }?.safety == .safe)
+        #expect(items.first { $0.url.lastPathComponent == ".venv" }?.safety == .caution)
+    }
 
     @Test("짝이 맞는 산출물만 크기순으로 나오고 중첩·숨김·링크는 빠진다")
     func scannerFindsPairedArtifacts() async throws {

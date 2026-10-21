@@ -17,6 +17,21 @@ public struct ProjectArtifactRule: Sendable, Equatable {
     public let lockFiles: [String]
     /// 지운 뒤 다시 만드는 법. 목록 설명 줄에 쓴다.
     public let rebuildHint: String
+    /// 설정 파일이 폴더 **안**에 있어야 한다(가상환경의 `pyvenv.cfg`). 기본은 폴더 옆이다.
+    public let manifestsInside: Bool
+    /// 프로젝트의 `.gitignore`에 이 폴더가 적혀 있어야 한다. `dist`·`build`·`vendor`처럼
+    /// 커밋된 결과물이거나 직접 만든 파일일 수 있는 이름에 건다(`GitIgnore`).
+    public let requiresIgnore: Bool
+
+    public init(name: String, manifests: [String], lockFiles: [String], rebuildHint: String,
+                manifestsInside: Bool = false, requiresIgnore: Bool = false) {
+        self.name = name
+        self.manifests = manifests
+        self.lockFiles = lockFiles
+        self.rebuildHint = rebuildHint
+        self.manifestsInside = manifestsInside
+        self.requiresIgnore = requiresIgnore
+    }
 
     /// 짝이 맞은 결과. 어느 설정 파일로 맞았는지 화면에 말해야 한다.
     public struct Match: Sendable, Equatable {
@@ -24,7 +39,11 @@ public struct ProjectArtifactRule: Sendable, Equatable {
         public let manifest: String
     }
 
-    /// MVP 규칙. `dist`·`vendor`는 커밋된 결과물일 수 있어 넣지 않는다.
+    private static let nodeLocks = ["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb"]
+
+    /// 규칙표. 이름이 흔하거나 커밋될 수 있는 `dist`·`build`(JS)·`vendor`는 `.gitignore`에
+    /// 적혀 있을 때만, 가상환경은 폴더 안에 `pyvenv.cfg`가 있을 때만 잡는다.
+    /// 같은 이름의 규칙이 여럿이면(`target`, `build`, `vendor`) 먼저 맞는 쪽이 이긴다.
     public static let all: [ProjectArtifactRule] = [
         .init(name: "node_modules", manifests: ["package.json"],
               lockFiles: ["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "bun.lockb"],
@@ -39,6 +58,35 @@ public struct ProjectArtifactRule: Sendable, Equatable {
               rebuildHint: String(localized: "gradle build로 다시 만들어요")),
         .init(name: ".build", manifests: ["Package.swift"], lockFiles: [],
               rebuildHint: String(localized: "swift build로 다시 만들어요")),
+        .init(name: ".next", manifests: ["package.json"], lockFiles: [],
+              rebuildHint: String(localized: "next build로 다시 만들어요")),
+        .init(name: ".nuxt", manifests: ["package.json"], lockFiles: [],
+              rebuildHint: String(localized: "nuxt build로 다시 만들어요")),
+        .init(name: ".svelte-kit", manifests: ["package.json"], lockFiles: [],
+              rebuildHint: String(localized: "vite dev로 다시 만들어요")),
+        .init(name: ".expo", manifests: ["package.json"], lockFiles: [],
+              rebuildHint: String(localized: "expo start로 다시 만들어요")),
+        .init(name: ".gradle",
+              manifests: ["build.gradle", "build.gradle.kts", "settings.gradle", "settings.gradle.kts"],
+              lockFiles: [], rebuildHint: String(localized: "gradle build로 다시 만들어요")),
+        .init(name: ".dart_tool", manifests: ["pubspec.yaml"], lockFiles: [],
+              rebuildHint: String(localized: "flutter pub get으로 다시 만들어요")),
+        .init(name: ".venv", manifests: ["pyvenv.cfg"],
+              lockFiles: ["requirements.txt", "poetry.lock", "Pipfile.lock", "uv.lock"],
+              rebuildHint: String(localized: "python -m venv로 만들고 패키지를 다시 설치해요"),
+              manifestsInside: true),
+        .init(name: "venv", manifests: ["pyvenv.cfg"],
+              lockFiles: ["requirements.txt", "poetry.lock", "Pipfile.lock", "uv.lock"],
+              rebuildHint: String(localized: "python -m venv로 만들고 패키지를 다시 설치해요"),
+              manifestsInside: true),
+        .init(name: "dist", manifests: ["package.json"], lockFiles: nodeLocks,
+              rebuildHint: String(localized: "npm run build로 다시 만들어요"), requiresIgnore: true),
+        .init(name: "build", manifests: ["package.json"], lockFiles: nodeLocks,
+              rebuildHint: String(localized: "npm run build로 다시 만들어요"), requiresIgnore: true),
+        .init(name: "vendor", manifests: ["composer.json"], lockFiles: ["composer.lock"],
+              rebuildHint: String(localized: "composer install로 다시 설치해요"), requiresIgnore: true),
+        .init(name: "vendor", manifests: ["go.mod"], lockFiles: [],
+              rebuildHint: String(localized: "go mod vendor로 다시 만들어요"), requiresIgnore: true),
     ]
 
     /// 규칙표에 있는 폴더 이름. 짝 여부와 관계없이 스캐너가 이 안으로 내려가지 않는다.
@@ -54,11 +102,14 @@ public struct ProjectArtifactRule: Sendable, Equatable {
         guard names.contains(name), isKind(url, S_IFDIR) else { return nil }
         let project = url.deletingLastPathComponent()
         for rule in all where rule.name == name {
-            if let manifest = rule.manifests.first(where: {
-                isKind(project.appending(path: $0), S_IFREG)
-            }) {
-                return Match(rule: rule, manifest: manifest)
-            }
+            // 가상환경은 설정 파일이 폴더 안에 있고, 나머지는 폴더 옆에 있다
+            let base = rule.manifestsInside ? url : project
+            guard let manifest = rule.manifests.first(where: {
+                isKind(base.appending(path: $0), S_IFREG)
+            }) else { continue }
+            // 커밋될 수 있는 이름은 저장소가 "만들어지는 것"이라고 적어 둔 것만 믿는다
+            if rule.requiresIgnore, !GitIgnore.lists(name, from: project) { continue }
+            return Match(rule: rule, manifest: manifest)
         }
         return nil
     }
