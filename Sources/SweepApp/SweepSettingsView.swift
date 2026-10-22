@@ -13,6 +13,8 @@ struct SweepSettingsView: View {
         VStack(spacing: 0) {
             Retro95WindowTitleBar(title: String(localized: "Sweep 설정"), icon: .computer,
                                   zoomable: false)
+                // 아래 탭 패널 배경이 안전 영역으로 번져 제목줄을 덮지 않게 위에 그린다(메인 창과 같다).
+                .zIndex(1)
             Retro95TabView(selection: $selectedTab,
                            titles: [String(localized: "권한"), String(localized: "알림")]) { index in
                 if index == 0 {
@@ -23,7 +25,9 @@ struct SweepSettingsView: View {
             }
             .padding(8)
         }
-        .frame(width: 640, height: 680)
+        // 툴바를 떼면 창이 예전 높이(툴바 포함)를 유지해 아래에 흰 띠가 남는다. 남는 높이까지 채운다.
+        .frame(width: 640)
+        .frame(minHeight: 680, maxHeight: .infinity)
         .foregroundStyle(R95.black)
         .background(R95.gray)
         .retroRaised()

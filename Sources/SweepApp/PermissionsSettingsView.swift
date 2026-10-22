@@ -8,9 +8,13 @@ struct PermissionsSettingsView: View {
     @Bindable var watcher: DiskWatcher
 
     @State private var failure: String?
+    private static let top = "permissions-top"
 
     var body: some View {
+        ScrollViewReader { proxy in
         ScrollView {
+            // 열 때 맨 위로 올리는 표지. `defaultScrollAnchor(.top)`은 설정 창에서 듣지 않았다.
+            Color.clear.frame(height: 0).id(Self.top)
             VStack(alignment: .leading, spacing: 16) {
                 if Sandbox.isActive {
                     Retro95GroupBox(title: String(localized: "폴더")) {
@@ -61,8 +65,8 @@ struct PermissionsSettingsView: View {
             }
             .padding(16)
         }
-        // 열 때 맨 위(폴더)부터 보인다. 기본값이면 창이 열리며 아래로 밀려 폴더 줄이 잘렸다.
-        .defaultScrollAnchor(.top)
+        .onAppear { DispatchQueue.main.async { proxy.scrollTo(Self.top, anchor: .top) } }
+        }
         .foregroundStyle(Theme.textPrimary)
         .background(R95.gray)
         .buttonStyle(Retro95ButtonStyle())

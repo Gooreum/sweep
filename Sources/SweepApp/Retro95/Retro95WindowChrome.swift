@@ -14,7 +14,8 @@ struct WindowChromeConfigurator: NSViewRepresentable {
             applyChrome()
             for name in [NSWindow.didBecomeKeyNotification, NSWindow.didResignKeyNotification,
                          NSWindow.didResizeNotification, NSWindow.didExitFullScreenNotification,
-                         NSWindow.didDeminiaturizeNotification] {
+                         NSWindow.didDeminiaturizeNotification, NSWindow.didEnterFullScreenNotification,
+                         NSWindow.didChangeScreenNotification] {
                 NotificationCenter.default.addObserver(
                     self, selector: #selector(windowChromeChanged(_:)), name: name, object: window)
             }
@@ -33,10 +34,27 @@ struct WindowChromeConfigurator: NSViewRepresentable {
             // 숨긴 제목줄 자리에도 제목줄 그릇(NSTitlebarContainerView)이 남아 그 영역의 클릭을 가로챈다.
             // 감춰야 Win95 제목줄의 [_][□][×]와 끌기가 마우스를 받는다.
             window.titlebarSeparatorStyle = .none
-            window.standardWindowButton(.closeButton)?.superview?.superview?.isHidden = true
+            // Settings 창은 SwiftUI가 툴바를 붙여 제목줄 자리를 반투명 회색으로 덮는다.
+            window.toolbar = nil
+            hideTitlebarContainers(in: window)
         }
 
-        @objc private func windowChromeChanged(_ notification: Notification) { applyChrome() }
+        /// 테마 프레임 바로 아래의 제목줄 그릇을 전부 숨긴다. 전체 화면을 나오거나 크기가 바뀌면
+        /// AppKit이 새 그릇을 붙이므로, 닫기 버튼 하나의 조상만 숨겨서는 놓친다.
+        private func hideTitlebarContainers(in window: NSWindow) {
+            guard let frame = window.contentView?.superview else { return }
+            for view in frame.subviews
+            where String(describing: type(of: view)) == "NSTitlebarContainerView" {
+                view.isHidden = true
+            }
+        }
+
+        /// 알림 직후에 한 번, 이번 레이아웃이 끝난 뒤에 한 번 더 숨긴다 — AppKit이 레이아웃 중에
+        /// 제목줄 그릇을 다시 붙이면 첫 번째만으로는 회색 띠가 남는다.
+        @objc private func windowChromeChanged(_ notification: Notification) {
+            applyChrome()
+            DispatchQueue.main.async { [weak self] in self?.applyChrome() }
+        }
     }
 }
 
