@@ -50,6 +50,12 @@ public final class AppModel {
     /// 거둔 직후 "허락이 필요 없다"고 답한다.
     private let requiresFolderAccess: Bool
 
+    /// 전체 디스크 접근. 시스템 설정에서 켜고 돌아오면 `refreshPermissions()`로 다시 잰다.
+    ///
+    /// 판정(`FullDiskAccess`)은 관찰되지 않는 값이라, 화면이 따라오려면 여기 하나 있어야 한다.
+    public private(set) var hasFullDiskAccess: Bool
+    private let fullDiskAccessProbe: @MainActor () -> Bool
+
     /// 지금까지 얼마를 비웠고 마지막이 언제였는지.
     ///
     /// 저장소(`CleanupHistory`)는 관찰되지 않으므로 화면이 따라오려면
@@ -85,6 +91,7 @@ public final class AppModel {
                 projectFolders: ProjectFolders.Registry = ProjectFolders.shared,
                 history: CleanupHistory = .shared,
                 needsFolderAccess: Bool? = nil,
+                fullDiskAccess: @escaping @MainActor () -> Bool = { !FullDiskAccess.isMissing() },
                 readVolumeUsage: @escaping @Sendable () -> VolumeUsage? = { VolumeUsage.current() }) {
         self.makeModel = makeModel
         self.makeDiskMap = makeDiskMap
@@ -102,6 +109,25 @@ public final class AppModel {
         self.grantedFolderCount = folderAccess.urls.count
         self.scanFolderCount = userFolders.custom.count
         self.projectFolderCount = projectFolders.custom.count
+        self.fullDiskAccessProbe = fullDiskAccess
+        self.hasFullDiskAccess = fullDiskAccess()
+    }
+
+    /// 앱이 다시 앞으로 올 때 부른다. 바뀌었을 때만 결과를 버린다 — 전체 디스크 접근이 없어
+    /// 빈 결과로 끝난 휴지통을 켠 뒤에 다시 찾게.
+    public func refreshPermissions() {
+        let now = fullDiskAccessProbe()
+        guard now != hasFullDiskAccess else { return }
+        hasFullDiskAccess = now
+        forgetScans()
+    }
+
+    /// 이 화면을 쓰려면 켜야 하는 것. 화면 위 안내 줄이 읽는다.
+    public func permissionNeeds(for feature: Feature) -> [PermissionNeed] {
+        // 허락이 바뀌면 이 값이 바뀐다. 읽어 둬야 안내 줄이 허락 뒤에 사라진다.
+        _ = grantedFolderCount
+        return feature.permissionNeeds(sandboxed: requiresFolderAccess, granted: folderAccess.urls,
+                                       fullDiskAccess: hasFullDiskAccess)
     }
 
     /// 등록한 프로젝트 폴더. 「보는 폴더」 줄이 읽는다.
@@ -197,6 +223,8 @@ public final class AppModel {
         try folderAccess.grant(picked, as: grantable)
         needsFolderAccess = false
         grantedFolderCount = folderAccess.urls.count
+        // 홈을 허락하는 순간 샌드박스에서도 전체 디스크 접근을 잴 수 있게 된다.
+        hasFullDiskAccess = fullDiskAccessProbe()
         forgetScans()
     }
 
@@ -208,6 +236,7 @@ public final class AppModel {
         folderAccess.revoke(grantable)
         grantedFolderCount = folderAccess.urls.count
         needsFolderAccess = requiresFolderAccess && !folderAccess.hasAny
+        hasFullDiskAccess = fullDiskAccessProbe()
         forgetScans()
     }
 

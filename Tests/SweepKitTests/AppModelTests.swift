@@ -877,6 +877,42 @@ struct AppModelTests {
         app.refreshVolumeUsage()
         #expect(app.volumeUsage == nil)
     }
+
+    // MARK: - 전체 디스크 접근
+
+    // TC-1, TC-2
+    @Test("전체 디스크 접근이 바뀌었을 때만 스캔 결과를 버린다")
+    func refreshPermissionsForgetsOnlyOnChange() {
+        nonisolated(unsafe) var granted = false
+        let app = AppModel(fullDiskAccess: { granted })
+        #expect(!app.hasFullDiskAccess)
+        let before = app.model(for: .trash)
+
+        app.refreshPermissions()
+        #expect(app.model(for: .trash) === before)
+
+        // 시스템 설정에서 켜고 돌아왔다. 빈 결과로 끝난 휴지통을 다시 찾아야 한다.
+        granted = true
+        app.refreshPermissions()
+        #expect(app.hasFullDiskAccess)
+        #expect(app.model(for: .trash) !== before)
+    }
+
+    // TC-3
+    @Test("홈을 허락하면 안내가 사라지고 휴지통은 전체 디스크 접근만 남는다")
+    func permissionNeedsFollowGrant() throws {
+        let suite = "sweep-test-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let app = AppModel(folderAccess: FolderAccess.Registry(defaults: defaults),
+                           needsFolderAccess: true, fullDiskAccess: { false })
+        #expect(app.permissionNeeds(for: .largeFile) == [.folder(FolderAccess.home)])
+
+        try app.grantFolderAccess(FolderAccess.home.folder, as: FolderAccess.home)
+
+        #expect(app.permissionNeeds(for: .largeFile).isEmpty)
+        #expect(app.permissionNeeds(for: .trash) == [.fullDiskAccess])
+    }
 }
 
 @Suite("사이드바 배지 용량")
