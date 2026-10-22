@@ -167,6 +167,30 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// 이 화면을 제대로 쓰려면 켜야 하는 것. 비어 있으면 안내가 없다.
+    ///
+    /// 한번에 찾기·공간 보기·개발 프로젝트는 자기 화면에 허용 입구가 따로 있어 여기서 뺀다.
+    /// `/`(이 Mac)를 허용했으면 조상이라 홈과 `~/Library`도 열린 것으로 친다.
+    public func permissionNeeds(sandboxed: Bool, granted: [URL],
+                                fullDiskAccess: Bool) -> [PermissionNeed] {
+        func open(_ grantable: FolderAccess.Grantable) -> Bool {
+            !sandboxed || granted.contains { grantable.folder.isSameOrDescendant(of: $0) }
+        }
+
+        switch self {
+        case .junk:
+            return open(FolderAccess.library) ? [] : [.folder(FolderAccess.library)]
+        case .largeFile, .duplicate:
+            return open(FolderAccess.home) ? [] : [.folder(FolderAccess.home)]
+        case .trash:
+            // 폴더가 먼저다. 폴더가 없으면 전체 디스크 접근을 잴 수도, 켜도 쓸 수도 없다.
+            if !open(FolderAccess.home) { return [.folder(FolderAccess.home)] }
+            return fullDiskAccess ? [] : [.fullDiskAccess]
+        case .smartScan, .projects, .diskMap, .cpu:
+            return []
+        }
+    }
+
     /// 이 기능이 만들어내는 결과 분류.
     ///
     /// 손으로 적지 않고 스캐너에게서 가져온다. 따로 적어 두면 스캐너를 바꿀 때

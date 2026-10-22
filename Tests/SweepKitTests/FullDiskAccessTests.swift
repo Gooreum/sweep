@@ -70,4 +70,17 @@ struct FullDiskAccessTests {
         #expect(components.suffix(2) == ["com.apple.TCC", "TCC.db"])
         #expect(FullDiskAccess.probe.path.hasPrefix(Sandbox.userHome.path))
     }
+
+    // TC-6
+    @Test("샌드박스에서 확인용 파일의 폴더를 허용하지 않았으면 잴 수 없다")
+    func measurableOnlyWithProbeFolder() {
+        let home = Sandbox.userHome
+        #expect(FullDiskAccess.isMeasurable(sandboxed: false, granted: []))
+        #expect(!FullDiskAccess.isMeasurable(sandboxed: true, granted: []))
+        #expect(!FullDiskAccess.isMeasurable(sandboxed: true, granted: [home.appending(path: ".npm")]))
+        #expect(FullDiskAccess.isMeasurable(sandboxed: true, granted: [home]))
+        #expect(FullDiskAccess.isMeasurable(sandboxed: true, granted: [home.appending(path: "Library")]))
+        // 잴 수 없으면 "꺼짐"으로 치지 않는다.
+        #expect(!FullDiskAccess.isMissing(sandboxed: true, granted: []))
+    }
 }

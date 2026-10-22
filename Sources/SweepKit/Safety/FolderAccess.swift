@@ -79,11 +79,15 @@ public enum FolderAccess {
         folder: Sandbox.userHome, label: "~",
         purpose: String(localized: "큰 파일과 중복 파일, 버린 파일, 앱을 만들며 쌓인 파일을 찾아요"))
 
+    /// `~/Library`. 정리할 파일 탭의 스캐너가 대부분 이 아래를 본다.
+    public static let library = Grantable(
+        folder: inHome("Library"), label: "~/Library",
+        purpose: String(localized: "앱을 만들며 쌓인 파일과 웹페이지 사본, 앱 작동 기록을 찾아요"))
+
     public static let grantables: [Grantable] = [
         wholeDisk,
         home,
-        .init(folder: inHome("Library"), label: "~/Library",
-              purpose: String(localized: "앱을 만들며 쌓인 파일과 웹페이지 사본, 앱 작동 기록을 찾아요")),
+        library,
         .init(folder: inHome(".npm"), label: "~/.npm",
               purpose: String(localized: "npm이 받은 코드예요. 설치할 때 다시 받아요")),
         .init(folder: inHome(".expo"), label: "~/.expo",
