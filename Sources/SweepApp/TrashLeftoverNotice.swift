@@ -8,6 +8,7 @@ import SweepKit
 /// **지우는 길을 같이 준다** — Finder에서 비우면 암호를 묻고 지운다.
 struct TrashLeftoverNotice: View {
     let leftovers: [URL]
+    var app: AppModel?
 
     private var names: String {
         let first = leftovers.first?.lastPathComponent ?? ""
@@ -31,7 +32,7 @@ struct TrashLeftoverNotice: View {
 
             Spacer(minLength: 12)
 
-            Button("휴지통 열기") { _ = ItemActions.openTrash() }
+            TrashOpenButton(app: app)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 8)

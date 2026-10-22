@@ -16,8 +16,6 @@ struct FeatureScreen: View {
 
     /// 옮기지 못한 항목 시트를 띄울지.
     @State private var showsFailures = false
-    /// 휴지통을 열지 못했다(샌드박스가 막는 경우). 조용히 넘어가지 않고 대신 할 일을 말한다.
-    @State private var trashOpenFailed = false
     /// 되돌리기 실패 목록 시트.
     @State private var showsRestoreFailures = false
     /// 열 머리 경계를 끌어 바꾼 폭. 다음 실행에도 남긴다.
@@ -38,7 +36,7 @@ struct FeatureScreen: View {
             }
 
             if feature == .trash, showsLeftovers, !adminLeftovers.isEmpty {
-                TrashLeftoverNotice(leftovers: adminLeftovers)
+                TrashLeftoverNotice(leftovers: adminLeftovers, app: app)
             }
 
             stage
@@ -196,7 +194,7 @@ struct FeatureScreen: View {
             }
             .frame(maxWidth: R95.dialogWidth)
             .sheet(isPresented: $showsRestoreFailures) {
-                RemovalFailuresSheet.restore(report.failed) { showsRestoreFailures = false }
+                RemovalFailuresSheet.restore(report.failed, app: app) { showsRestoreFailures = false }
             }
         }
     }
@@ -276,20 +274,15 @@ struct FeatureScreen: View {
                 // 휴지통에서 지운 것은 휴지통에 없다. 열어 봐야 보여 줄 것이 없다.
                 if moved > 0, !feature.removesPermanently {
                     // 열어 주기만 한다. 비우는 것은 영구 삭제라 사용자가 Finder에서 직접 한다.
-                    Button("휴지통 열기") { trashOpenFailed = !ItemActions.openTrash() }
+                    TrashOpenButton(app: app)
                         .buttonStyle(Retro95ButtonStyle())
                 }
                 Button("완료") { model.dismissReport() }
                     .buttonStyle(Retro95ButtonStyle(isDefault: true))
             }
             .frame(maxWidth: R95.dialogWidth)
-            .alert("휴지통을 열지 못했어요", isPresented: $trashOpenFailed) {
-                Button("확인") {}
-            } message: {
-                Text("화면 아래에서 휴지통을 열고 필요한 파일이 남아 있는지 확인해 주세요. 휴지통을 비우면 복구할 수 없어요.")
-            }
             .sheet(isPresented: $showsFailures) {
-                RemovalFailuresSheet(failed: report.failed) {
+                RemovalFailuresSheet(failed: report.failed, app: app) {
                     showsFailures = false
                 } onRetry: {
                     showsFailures = false
