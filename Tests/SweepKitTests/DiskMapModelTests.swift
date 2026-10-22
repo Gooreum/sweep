@@ -602,6 +602,45 @@ struct DiskMapModelTests {
         #expect(model.loadPhase == nil)
     }
 
+    // MARK: - 완료 신호
+
+    @Test("끝까지 읽으면 완료 시각이 남고 완료 콜백이 한 번 불린다")
+    func completionSignals() async {
+        let model = DiskMapModel(countEntries: { _, _, _ in 1 },
+                                 buildTree: { url, _, _ in DiskUsageNode(url: url, size: 1) })
+        var calls = 0
+        model.onCompleted = { calls += 1 }
+        #expect(model.completedAt == nil)
+
+        await model.load(URL(filePath: "/private/tmp/root"))
+
+        #expect(model.completedAt != nil)
+        #expect(calls == 1)
+    }
+
+    @Test("중단하면 완료로 치지 않는다")
+    func cancelIsNotCompletion() async {
+        let gate = Gate()
+        let model = DiskMapModel(
+            countEntries: { _, _, onCounted in onCounted(1); return 1 },
+            buildTree: { url, _, onScanned in
+                onScanned()
+                gate.wait()
+                return DiskUsageNode(url: url, size: 1)
+            })
+        var calls = 0
+        model.onCompleted = { calls += 1 }
+
+        let running = Task { await model.load(URL(filePath: "/private/tmp/root")) }
+        for _ in 0..<200 where !model.isScanning { await Task.yield() }
+        model.cancelLoad()
+        gate.signal()
+        await running.value
+
+        #expect(model.completedAt == nil)
+        #expect(calls == 0)
+    }
+
     @Test("중단해서 트리가 없어도 고른 시작점으로 다시 훑는다")
     func reloadRecoversAfterCancel() async {
         let tree = deepTree()

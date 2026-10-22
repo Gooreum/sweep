@@ -74,6 +74,12 @@ public final class DiskMapModel {
 
     public var isScanning: Bool { loadPhase != nil }
 
+    /// 마지막으로 끝까지 읽은 때. 중단하면 바뀌지 않는다. 사이드바 완료 표시가 읽는다.
+    public private(set) var completedAt: Date?
+
+    /// 끝까지 읽었을 때 한 번. 앱이 완료 알림을 보낸다 — 알림 센터는 SweepKit 밖의 일이다.
+    public var onCompleted: (@MainActor () -> Void)?
+
     private let countEntries:
         @Sendable (URL, CancelFlag, @escaping @Sendable (Int) -> Void) -> Int
     private let buildTree:
@@ -179,6 +185,8 @@ public final class DiskMapModel {
 
         path = [tree]
         loadPhase = nil
+        completedAt = Date()
+        onCompleted?()
     }
 
     /// 이 항목의 판정. 지금 보고 있는 지점의 자식이 아니면 nil —

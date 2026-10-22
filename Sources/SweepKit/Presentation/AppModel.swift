@@ -609,6 +609,24 @@ public struct StatusLine: Equatable, Sendable {
     }
 }
 
+/// 사이드바 "공간 보기" 줄 오른쪽에 붙는 상태.
+public enum DiskMapStatus: Equatable, Sendable {
+    /// 아직 읽지 않았다.
+    case idle
+    case loading
+    /// 끝까지 읽었다.
+    case done
+}
+
+extension AppModel {
+    /// 공간 보기 상태. 디스크 맵 모델은 **만들지 않는다** — 사이드바는 body에서 읽힌다.
+    public var diskMapStatus: DiskMapStatus {
+        guard let model = diskMapModel else { return .idle }
+        if model.isScanning { return .loading }
+        return model.completedAt == nil ? .idle : .done
+    }
+}
+
 extension AppModel {
     /// 디스크 맵 모델은 **만들지 않는다.** 상태바는 body에서 읽히므로,
     /// 여기서 만들면 관찰 중인 값을 그리는 도중에 바꾸게 된다.
