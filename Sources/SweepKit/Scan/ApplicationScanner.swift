@@ -44,10 +44,18 @@ public struct ApplicationScanner: CleanupScanner {
                 .filter { $0.pathExtension == "app" }
         }.filter { $0.standardizedFileURL.resolvingSymlinksInPath().path != me }
 
-        var items: [CleanupItem] = []
-        for (index, app) in apps.enumerated() {
-            let path = app.standardizedFileURL.resolvingSymlinksInPath().path
+        // 크기 재기가 대부분의 시간이다(Xcode 하나에 수십 초). 앱마다 따로라 여러 스레드로 나눈다.
+        // 진행은 끝난 개수로 알린다 — 끝나는 순서는 앱 크기에 따라 뒤섞인다.
+        let finished = Finished(total: apps.count, onProgress: onProgress)
+        let sizes = apps.concurrentMap { app in
             let found = DirectorySize.summary(at: app)
+            finished.tick()
+            return found
+        }
+
+        var items: [CleanupItem] = []
+        for (app, found) in zip(apps, sizes) {
+            let path = app.standardizedFileURL.resolvingSymlinksInPath().path
             let opened = lastUsed(app)
             // 번들의 만든 날짜는 앱을 빌드한 날이라(Electron 앱은 1980년) 설치일로 쓸 수 없다.
             // Finder의 "추가된 날짜"를 먼저 쓴다.
@@ -70,7 +78,6 @@ public struct ApplicationScanner: CleanupScanner {
                 safety: isRunning || needsPassword ? .danger : .caution,
                 detail: detail,
                 dates: FileDates(created: added, lastUsed: opened)))
-            onProgress(Double(index + 1) / Double(apps.count))
         }
         return items
     }
@@ -97,5 +104,25 @@ public struct ApplicationScanner: CleanupScanner {
     public static let spotlightLastUsed: @Sendable (URL) -> Date? = { url in
         guard let item = MDItemCreateWithURL(kCFAllocatorDefault, url as CFURL) else { return nil }
         return MDItemCopyAttribute(item, kMDItemLastUsedDate) as? Date
+    }
+}
+
+/// 끝난 앱 수를 세고 진행을 알린다. 세기와 알리기를 **한 잠금 안에서** 해서
+/// 진행이 거꾸로(100% 뒤에 50%) 가지 않게 한다.
+private final class Finished: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+    private let total: Int
+    private let onProgress: @Sendable (Double) -> Void
+
+    init(total: Int, onProgress: @escaping @Sendable (Double) -> Void) {
+        self.total = total
+        self.onProgress = onProgress
+    }
+
+    func tick() {
+        lock.lock(); defer { lock.unlock() }
+        count += 1
+        onProgress(Double(count) / Double(total))
     }
 }
