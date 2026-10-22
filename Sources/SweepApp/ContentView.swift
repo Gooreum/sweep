@@ -32,6 +32,8 @@ struct ContentView: View {
         .background(R95.gray)
         .background(WindowChromeConfigurator())
         .ignoresSafeArea(edges: .top)
+        // CPU는 탭을 떠나도 계속 잰다. 창을 닫으면 멈춘다 — 안 보이는 창이 CPU를 쓰지 않게.
+        .onDisappear { app.stopCPU() }
         // 기능 이름은 **창 제목**으로 둔다. 명령은 시스템 툴바가 아니라 창 안의 명령줄에 있다 —
         // 툴바에 두면 둥근 유리 캡슐로 그려져 Win95 화면과 따로 논다.
         .navigationTitle(app.selected.displayName)

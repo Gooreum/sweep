@@ -180,6 +180,25 @@ struct AppModelTests {
         #expect(app.badges[.diskMap] == AppModel.compactSize(1_000_000_000))
     }
 
+    @Test("CPU 측정은 탭을 떠나도 계속되고, 두 번 시작해도 하나만 돈다")
+    func cpuKeepsSamplingAfterStart() async {
+        let cpu = CPUModel(interval: .milliseconds(10), sample: { [] }, loadSample: { nil })
+        let app = AppModel(makeCPU: { cpu })
+        app.stopCPU()   // 모델이 없으면 만들지 않는다
+        #expect(app.status(of: .cpu) == .idle)
+
+        app.cpu().start()
+        app.cpu().start()
+        for _ in 0..<200 where app.status(of: .cpu) != .loading { await Task.yield() }
+        // 다른 탭으로 옮긴 것처럼 뷰가 없어도 계속 잰다
+        app.selected = .junk
+        #expect(app.status(of: .cpu) == .loading)
+
+        app.stopCPU()
+        for _ in 0..<200 where app.status(of: .cpu) != .idle { await Task.yield() }
+        #expect(app.status(of: .cpu) == .idle)
+    }
+
     @Test("CPU는 재는 동안만 loading이다")
     func cpuStatusFollowsSampling() async {
         let cpu = CPUModel(interval: .milliseconds(10), sample: { [] }, loadSample: { nil })

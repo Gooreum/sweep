@@ -116,8 +116,24 @@ public final class CPUModel {
         details = selectedPID.flatMap(detailsReader)
     }
 
-    /// 뷰의 `.task`가 붙잡는다. 탭을 떠나면 SwiftUI가 취소하므로 따로 멈출 필요가 없다 —
-    /// **CPU를 보는 화면이 안 보이는 동안 CPU를 쓰면 안 된다.**
+    /// 모델이 소유한 측정 작업. 탭을 떠나도 멈추지 않는다 — 사이드바가 측정 중임을 계속 보여 주고,
+    /// 돌아오면 바로 최신 값이 보인다(사용자 선택). 메인 창을 닫을 때 `stop()`으로 멈춘다.
+    private var runTask: Task<Void, Never>?
+
+    /// 측정을 시작한다. 이미 돌고 있으면 아무것도 하지 않는다 — 탭을 오갈 때마다
+    /// 새로 시작하면 "측정 중…"으로 되돌아간다.
+    public func start() {
+        guard runTask == nil else { return }
+        runTask = Task { [weak self] in await self?.run() }
+    }
+
+    /// 측정을 멈춘다.
+    public func stop() {
+        runTask?.cancel()
+        runTask = nil
+    }
+
+    /// `start()`가 돌린다. 취소되면 끝난다.
     ///
     /// 한 바퀴에 한 번만 잰다. 직전 샘플을 들고 있어서, 주기마다 두 번씩
     /// 재는 낭비를 하지 않는다.

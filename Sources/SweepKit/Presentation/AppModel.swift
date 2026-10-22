@@ -401,6 +401,9 @@ public final class AppModel {
         return created
     }
 
+    /// CPU 측정을 멈춘다. 메인 창을 닫을 때. 모델이 없으면 만들지 않는다.
+    public func stopCPU() { cpuModel?.stop() }
+
     // MARK: - 메뉴가 물어보는 것
 
     /// 지금 보고 있는 기능의 모델. 디스크 맵·CPU는 스캔하지 않으므로 nil이다.

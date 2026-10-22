@@ -33,8 +33,8 @@ struct CPUView: View {
         }
         .padding(10)
         .background(R95.gray)
-        // 탭을 떠나면 측정 작업도 취소되어 보이지 않는 화면이 CPU를 쓰지 않는다.
-        .task { await model.run() }
+        // 모델이 측정을 소유한다. 탭을 떠나도 계속 재고, 메인 창을 닫을 때 멈춘다.
+        .onAppear { model.start() }
     }
 
     private var header: some View {
