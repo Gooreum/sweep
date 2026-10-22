@@ -92,11 +92,14 @@ public enum FolderAccess {
               purpose: String(localized: "npm이 받은 코드예요. 설치할 때 다시 받아요")),
         .init(folder: inHome(".expo"), label: "~/.expo",
               purpose: String(localized: "Expo 앱 제작에 받은 파일이에요. 필요하면 다시 받아요")),
-        // 홈 밖이지만 같은 방식으로 열린다 — 열기 대화상자로 고른 폴더는 위치를 가리지 않는다.
-        // 이것을 열어도 지울 수 있는 것은 **바로 아래 `.app` 하나씩**뿐이다(`ProtectedPaths`).
-        .init(folder: URL(filePath: "/Applications"), label: String(localized: "응용 프로그램"),
-              purpose: String(localized: "공간 보기에서 앱 크기를 보고 안 쓰는 앱을 지울 수 있어요")),
+        applications,
     ]
+
+    /// 응용 프로그램 폴더. 홈 밖이지만 열기 대화상자로 고르면 같은 방식으로 열린다.
+    /// 이것을 열어도 지울 수 있는 것은 **바로 아래 `.app` 하나씩**뿐이다(`ProtectedPaths`).
+    public static let applications = Grantable(
+        folder: URL(filePath: "/Applications"), label: String(localized: "응용 프로그램"),
+        purpose: String(localized: "응용 프로그램 화면과 공간 보기에서 앱 크기를 보고 안 쓰는 앱을 지울 수 있어요"))
 
     /// 앱 전체가 공유하는 허락 상태.
     public static let shared = Registry()

@@ -6,16 +6,16 @@ import Foundation
 struct FeatureTests {
 
     // TC-1
-    @Test("8개 기능 전부 표시명·아이콘·설명을 가진다")
+    @Test("9개 기능 전부 표시명·아이콘·설명을 가진다")
     func everyFeatureIsPresentable() {
-        #expect(Feature.allCases.count == 8)
+        #expect(Feature.allCases.count == 9)
         for feature in Feature.allCases {
             #expect(!feature.displayName.isEmpty)
             #expect(!feature.systemImageName.isEmpty)
             #expect(!feature.summary.isEmpty)
         }
         // 표시명이 겹치면 사이드바에서 같은 줄이 두 번 보인다
-        #expect(Set(Feature.allCases.map(\.displayName)).count == 8)
+        #expect(Set(Feature.allCases.map(\.displayName)).count == 9)
     }
 
     // TC-2
@@ -71,7 +71,9 @@ struct FeatureTests {
         // 카테고리 전수와 맞춰 두면 목록이 어긋난 채로 지나가지 않는다.
         // 프로젝트 산출물은 등록한 폴더가 있을 때만 붙는다. 테스트 프로세스에는 없다.
         #expect(Feature.smartScan.scanners.count == 10)
-        #expect(Set(Feature.smartScan.categories) == Set(ScanCategory.allCases).subtracting([.projectArtifact]))
+        // 응용 프로그램은 정리할 파일이 아니라 한번에 찾기가 훑지 않는다.
+        #expect(Set(Feature.smartScan.categories)
+                == Set(ScanCategory.allCases).subtracting([.projectArtifact, .application]))
     }
 
     @Test("스캔 가능한 기능들의 카테고리를 합치면 스마트 스캔과 같다")
@@ -121,7 +123,9 @@ struct FeatureTests {
         #expect(!cards.contains(.diskMap))     // 스캔하지 않으니 발견량도 없다
         #expect(cards == [.junk, .largeFile, .duplicate, .trash])
         // 손으로 나열하지 않았으므로 스캔 가능한 기능 수와 맞아야 한다
-        #expect(cards.count == Feature.allCases.filter(\.isScannable).count - 1)
+        // 응용 프로그램은 한번에 찾기가 훑지 않아 카드가 없다
+        #expect(!cards.contains(.applications))
+        #expect(cards.count == Feature.allCases.filter(\.isScannable).count - 2)
     }
 
     // TC-4
@@ -221,7 +225,7 @@ struct FeatureTests {
     @Test("기능 색끼리 색상각이 충분히 벌어져 있다")
     func featureTintsAreDistinguishable() {
         let hues = Feature.allCases.compactMap { $0.tintHex }.map { hue(rgb($0.dark)) }.sorted()
-        #expect(hues.count == 7, "고유색을 가진 기능이 7개여야 한다")
+        #expect(hues.count == 8, "고유색을 가진 기능이 8개여야 한다")
 
         // 색상각이 붙어 있으면 사이드바에서 두 기능이 같은 색으로 읽힌다.
         // 색상환은 돈다 — 맨 끝(보라·빨강)과 맨 앞(빨강)도 이웃이다.
@@ -251,9 +255,10 @@ struct FeatureTests {
         #expect(!Feature.trash.reviewHint.isEmpty)
     }
 
-    @Test("휴지통은 사이드바에서 중복 파일 다음, 디스크 맵 앞에 온다")
+    @Test("휴지통은 중복 파일 다음, 그 뒤에 응용 프로그램과 공간 보기가 온다")
     func trashSitsBeforeDiskMap() {
-        // CPU가 맨 뒤에 붙어도 셋의 순서만 본다 — 선언 순서가 ⌘N을 정한다.
-        #expect(Array(Feature.allCases.drop { $0 != .duplicate }.prefix(3)) == [.duplicate, .trash, .diskMap])
+        // CPU가 맨 뒤에 붙어도 넷의 순서만 본다 — 선언 순서가 ⌘N을 정한다.
+        #expect(Array(Feature.allCases.drop { $0 != .duplicate }.prefix(4))
+                == [.duplicate, .trash, .applications, .diskMap])
     }
 }

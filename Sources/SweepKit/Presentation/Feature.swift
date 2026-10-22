@@ -14,6 +14,9 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
     /// 휴지통 비우기. 정크와 나눠 둔다 — 다른 정리는 휴지통으로 옮겨 되살릴 수 있는데
     /// 이것만은 바로 지워진다. 같은 화면·같은 문구에 섞으면 그 차이가 가려진다.
     case trash
+    /// 설치된 앱. 정리할 파일이 아니라 사용자가 하나씩 골라 휴지통으로 옮기는 것이라
+    /// 한번에 찾기에는 넣지 않는다.
+    case applications
     case diskMap
     /// 유일하게 디스크와 무관한 기능. 읽기 전용이라 `.diskMap`과 같은 자리에 산다.
     case cpu
@@ -28,6 +31,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         case .largeFile: String(localized: "큰 파일")
         case .duplicate: String(localized: "중복 파일")
         case .trash: String(localized: "휴지통")
+        case .applications: String(localized: "응용 프로그램")
         case .diskMap: String(localized: "공간 보기")
         case .cpu: "CPU"
         }
@@ -41,6 +45,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         case .largeFile: "arrow.down.doc"
         case .duplicate: "doc.on.doc"
         case .trash: "trash"
+        case .applications: "app"
         case .diskMap: "chart.pie"
         case .cpu: "speedometer"
         }
@@ -58,6 +63,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         case .largeFile: String(localized: "내 폴더에 큰 파일이 있는지 살펴보세요. 직접 추가한 폴더도 함께 찾아요.")
         case .duplicate: String(localized: "똑같은 파일이 여러 개 있으면 여분을 골라 정리해 보세요.")
         case .trash: String(localized: "휴지통에서 지울 것을 골라 주세요. 큰 항목부터 보여줘요. 지운 항목은 되살릴 수 없어요.")
+        case .applications: String(localized: "설치된 앱을 크기와 마지막으로 연 날짜로 살펴보고, 안 쓰는 앱을 휴지통으로 옮겨요.")
         case .diskMap: String(localized: "큰 폴더부터 열어 보며 어디에 공간을 많이 쓰는지 확인하세요.")
         // 내 계정 소유만 읽힌다는 것을 여기서 미리 말한다. 화면에 들어가서야
         // 알면 "왜 활성 상태 보기와 목록이 다르지"로 읽힌다.
@@ -82,6 +88,8 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
             String(localized: "아래는 여분의 파일이에요. 지우더라도 내용이 똑같은 원본 하나는 반드시 남아요.")
         case .trash:
             String(localized: "완전히 지워도 되는 파일만 골라 주세요. 정리하면 휴지통에서도 사라지고 복구할 수 없어요.")
+        case .applications:
+            String(localized: "오래 열지 않은 앱부터 확인해 보세요. 실행 중인 앱은 종료해야 옮길 수 있어요.")
         case .smartScan:
             String(localized: "종류별로 살펴보고 정리할 것을 고르세요. 복구할 수 없는 항목은 잠가 두었어요.")
         case .diskMap:
@@ -144,6 +152,10 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         let projectRoots = ProjectFolders.roots(sandboxed: sandboxed, granted: granted)
         let projects: [any CleanupScanner] = projectRoots.isEmpty
             ? [] : [ProjectArtifactScanner(roots: projectRoots)]
+        // 앱 폴더는 홈 밖이라 `ifReadable`(홈 기준)을 쓰지 않는다. 지울 수 있는 상태와 같은 판정이다.
+        let applications: [any CleanupScanner] =
+            ProtectedPaths.applicationsRemovable(sandboxed: sandboxed, granted: granted)
+            ? [ApplicationScanner()] : []
 
         switch self {
         case .smartScan:
@@ -158,6 +170,8 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
             return [LargeFileScanner()]
         case .duplicate:
             return [DuplicateScanner()]
+        case .applications:
+            return applications
         case .diskMap:
             return []
         // 지울 것을 찾지 않는다. 비워 두면 `isScannable`이 false가 되어
@@ -186,6 +200,8 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
             // 폴더가 먼저다. 폴더가 없으면 전체 디스크 접근을 잴 수도, 켜도 쓸 수도 없다.
             if !open(FolderAccess.home) { return [.folder(FolderAccess.home)] }
             return fullDiskAccess ? [] : [.fullDiskAccess]
+        case .applications:
+            return open(FolderAccess.applications) ? [] : [.folder(FolderAccess.applications)]
         case .smartScan, .projects, .diskMap, .cpu:
             return []
         }
@@ -221,6 +237,7 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
         case .largeFile: (0xB69BFF, 0x5B33C4)
         case .duplicate: (0x5FD3C4, 0x0C6558)
         case .trash:     (0xFF8A70, 0xB42318)
+        case .applications: (0xA8D86A, 0x4F6E00)
         case .diskMap:   (0x7ED88F, 0x186628)
         case .cpu:       (0xE8D46A, 0x6E5E00)
         }
@@ -231,7 +248,8 @@ public enum Feature: String, CaseIterable, Identifiable, Sendable {
     /// 자기 자신과 읽기 전용(디스크 맵)은 뺀다. 손으로 나열하지 않아
     /// 기능을 추가하면 요약에도 자동으로 따라 붙는다.
     public static var summaryCards: [Feature] {
-        allCases.filter { $0 != .smartScan && $0.isScannable }
+        // 응용 프로그램은 한번에 찾기가 훑지 않아 카드에 늘 0이 뜬다 — 뺀다.
+        allCases.filter { $0 != .smartScan && $0 != .applications && $0.isScannable }
     }
 
     /// 스캔 결과 중 이 기능이 담당하는 것만.

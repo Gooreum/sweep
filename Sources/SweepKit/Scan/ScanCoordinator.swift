@@ -158,8 +158,7 @@ public struct ScanCoordinator: Sendable {
         var seen: Set<URL> = []
         let kept = items
             // 휴지통은 크기 0도 남긴다. iCloud에만 있는 항목은 이 Mac 공간이 0이어도 지울 뜻이 있다.
-            .filter { ($0.size > 0 || $0.category == .trash)
-                && ProtectedPaths.isRemovable($0.url, scope: $0.category.removalScope) }
+            .filter { ($0.size > 0 || $0.category == .trash) && passesGate($0) }
             .sorted { lhs, rhs in
                 // 위험한 카테고리가 위로, 같은 카테고리 안에서는 큰 것부터
                 lhs.category.sortOrder == rhs.category.sortOrder
@@ -171,6 +170,15 @@ public struct ScanCoordinator: Sendable {
             // 정렬 뒤에 거르므로 더 위에 오는 카테고리가 이긴다.
             .filter { seen.insert($0.url).inserted }
         return kept.map { warningIfOriginalListed($0, listed: seen) }
+    }
+
+    /// 관문 판정. 실행 중인 앱만 예외로 목록에 남긴다 — 빼 버리면 "왜 이 앱이 없지?"가 된다.
+    /// 스캐너가 잠금(`.danger`)으로 올리고, 실제로 옮길 때는 관문이 다시 막는다.
+    private static func passesGate(_ item: CleanupItem) -> Bool {
+        guard let veto = ProtectedPaths.veto(for: item.url, scope: item.category.removalScope)
+        else { return true }
+        if item.category == .application, case .applicationRunning = veto { return true }
+        return false
     }
 
     /// 중복 사본의 원본이 같은 목록에 따로 올라와 있으면 "원본이 남아요"는 거짓이 될 수 있다.

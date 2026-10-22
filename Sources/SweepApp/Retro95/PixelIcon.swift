@@ -566,6 +566,7 @@ extension Feature {
         case .largeFile: .folder
         case .duplicate: .documents
         case .trash: .trash
+        case .applications: .computer   // Phase 2에서 전용 아이콘으로 바꾼다
         case .diskMap: .spaceView
         case .cpu: .chip
         }
@@ -586,6 +587,7 @@ extension ScanCategory {
         case .deviceBackup: .hardDrive
         case .largeFile: .bigFile
         case .duplicate: .documents
+        case .application: .computer   // 행에서는 실제 앱 아이콘을 쓴다(Phase 2)
         }
     }
 }

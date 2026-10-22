@@ -273,6 +273,16 @@ struct RunningApplicationTests {
         }
     }
 
+    @Test("실행 중인 앱도 응용 프로그램 목록에는 남는다")
+    func normalizeKeepsRunningApplication() {
+        // 빼 버리면 "왜 이 앱이 없지?"가 된다. 스캐너가 잠그고, 옮길 때는 관문이 다시 막는다.
+        let item = CleanupItem(url: ghost, size: 1_000, category: .application, safety: .danger)
+        withRunning([ghost]) {
+            #expect(ScanCoordinator.normalize([item]).map(\.url) == [ghost])
+            #expect(ProtectedPaths.veto(for: ghost) == .applicationRunning(ghost.standardizedFileURL))
+        }
+    }
+
     // TC-4
     @Test("앱이 아닌 경로는 이 검사를 타지 않는다")
     func nonApplicationSkipsCheck() {

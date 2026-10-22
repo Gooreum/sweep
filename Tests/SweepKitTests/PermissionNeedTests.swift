@@ -57,6 +57,14 @@ struct PermissionNeedTests {
         }
     }
 
+    @Test("응용 프로그램은 샌드박스에서 응용 프로그램 폴더를 달라고 한다")
+    func applicationsNeedFolder() {
+        #expect(needs(.applications) == [.folder(FolderAccess.applications)])
+        #expect(needs(.applications, granted: [URL(filePath: "/Applications")]).isEmpty)
+        #expect(needs(.applications, granted: [URL(filePath: "/")]).isEmpty)
+        #expect(needs(.applications, sandboxed: false).isEmpty)
+    }
+
     @Test("자기 허용 입구가 있는 화면은 안내하지 않는다")
     func screensWithOwnEntry() {
         for feature in [Feature.smartScan, .projects, .diskMap, .cpu] {
