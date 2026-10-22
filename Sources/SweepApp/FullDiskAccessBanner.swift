@@ -19,6 +19,8 @@ struct FullDiskAccessBanner: View {
     /// 켜면 무엇이 좋아지는지. 화면마다 얻는 것이 달라 바꿔 끼운다.
     var message = String(localized: "시스템 설정의 전체 디스크 접근에서 Sweep을 켜 주세요. 앱이 다시 쓰려고 저장한 파일도 찾을 수 있어요. 앱마다 파일을 열어도 되는지 묻는 창도 더는 뜨지 않아요.")
 
+    var showsPermissionsLink = false
+
     var body: some View {
         HStack(spacing: 12) {
             PixelIcon(art: .warning, size: 24)
@@ -34,7 +36,14 @@ struct FullDiskAccessBanner: View {
 
             Spacer(minLength: 12)
 
-            Button("시스템 설정 열기") { PrivacySettings.openFullDiskAccess() }
+            VStack(alignment: .trailing, spacing: 8) {
+                Button("시스템 설정 열기") { PrivacySettings.openFullDiskAccess() }
+                if showsPermissionsLink {
+                    SettingsLink { Text("권한 모두 보기") }
+                        .buttonStyle(.link)
+                        .font(Theme.caption)
+                }
+            }
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 8)

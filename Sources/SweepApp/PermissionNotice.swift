@@ -18,7 +18,7 @@ struct PermissionNotice: View {
         case .folder(let grantable):
             folderRow(grantable)
         case .fullDiskAccess:
-            FullDiskAccessBanner(message: fullDiskAccessMessage)
+            FullDiskAccessBanner(message: fullDiskAccessMessage, showsPermissionsLink: true)
         }
     }
 
@@ -37,10 +37,15 @@ struct PermissionNotice: View {
 
             Spacer(minLength: 12)
 
-            Button("허용…") {
-                if case .failed(let message) = FolderPicker.grant(grantable, app: app) {
-                    failure = message
+            VStack(alignment: .trailing, spacing: 8) {
+                Button("허용…") {
+                    if case .failed(let message) = FolderPicker.grant(grantable, app: app) {
+                        failure = message
+                    }
                 }
+                SettingsLink { Text("권한 모두 보기") }
+                    .buttonStyle(.link)
+                    .font(Theme.caption)
             }
         }
         .padding(.horizontal, 8)

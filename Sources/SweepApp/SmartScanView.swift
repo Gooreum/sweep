@@ -308,6 +308,10 @@ struct SmartScanView: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 8)
             }
+            SettingsLink { Text("권한 모두 보기") }
+                .buttonStyle(.link)
+                .font(Theme.caption)
+                .padding(8)
         }
     }
 

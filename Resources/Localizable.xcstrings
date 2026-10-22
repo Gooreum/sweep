@@ -2783,6 +2783,38 @@
         }
       }
     },
+    "권한": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permissions"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한"
+          }
+        }
+      }
+    },
+    "권한 모두 보기": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View All Permissions"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한 모두 보기"
+          }
+        }
+      }
+    },
     "권한 없음": {
       "localizations": {
         "en": {
@@ -2859,6 +2891,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "기능"
+          }
+        }
+      }
+    },
+    "꺼짐": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "꺼짐"
           }
         }
       }
@@ -5839,6 +5887,22 @@
         }
       }
     },
+    "이 빌드는 폴더 허용이 필요 없어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This build does not need folder access"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 빌드는 폴더 허용이 필요 없어요"
+          }
+        }
+      }
+    },
     "이 사본을 지워도 같은 내용은 남아요: %@": {
       "localizations": {
         "en": {
@@ -6191,6 +6255,22 @@
         }
       }
     },
+    "저장 공간이 부족하면 알려드려요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get notified when storage is running low"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저장 공간이 부족하면 알려드려요"
+          }
+        }
+      }
+    },
     "저장 공간이 얼마 남지 않았어요": {
       "localizations": {
         "en": {
@@ -6251,6 +6331,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "전체 검색"
+          }
+        }
+      }
+    },
+    "전체 디스크 접근": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full Disk Access"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 디스크 접근"
           }
         }
       }
@@ -7391,6 +7487,38 @@
         }
       }
     },
+    "켜짐": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "켜짐"
+          }
+        }
+      }
+    },
+    "켜짐 · %@으로 열림": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On · Opened via %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "켜짐 · %@으로 열림"
+          }
+        }
+      }
+    },
     "코드 검색이나 명령 실행 중에는 Mac도 일을 해요. Codex에서 작업을 끝내거나 중단하면 그 작업의 CPU 사용도 줄어요.": {
       "localizations": {
         "en": {
@@ -7823,6 +7951,22 @@
         }
       }
     },
+    "폴더": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folders"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "폴더"
+          }
+        }
+      }
+    },
     "폴더 선택 필요": {
       "localizations": {
         "en": {
@@ -7867,6 +8011,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "폴더 추가…"
+          }
+        }
+      }
+    },
+    "폴더 허용은 macOS 시스템 설정에 나오지 않아요. 여기서 해제할 수 있어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder access does not appear in macOS System Settings. You can revoke it here."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "폴더 허용은 macOS 시스템 설정에 나오지 않아요. 여기서 해제할 수 있어요."
           }
         }
       }
@@ -8407,6 +8567,22 @@
         }
       }
     },
+    "홈 폴더를 허용하면 확인할 수 있어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow access to your home folder to check"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "홈 폴더를 허용하면 확인할 수 있어요"
+          }
+        }
+      }
+    },
     "화면 아래에서 휴지통을 열고 필요한 파일이 남아 있는지 확인해 주세요. 휴지통을 비우면 복구할 수 없어요.": {
       "localizations": {
         "en": {
@@ -8451,6 +8627,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "확인"
+          }
+        }
+      }
+    },
+    "확인 불가": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unable to Check"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "확인 불가"
           }
         }
       }
@@ -8547,6 +8739,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "휴지통 이동 실패"
+          }
+        }
+      }
+    },
+    "휴지통과 다른 앱이 저장한 파일도 찾을 수 있어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find files in the Trash and files saved by other apps."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통과 다른 앱이 저장한 파일도 찾을 수 있어요."
           }
         }
       }

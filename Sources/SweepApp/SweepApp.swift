@@ -110,7 +110,7 @@ struct SweepApp: App {
         .menuBarExtraStyle(.window)
 
         Settings {
-            SweepSettingsView(notifier: diskAlerts, watcher: diskAlerts.watcher)
+            SweepSettingsView(app: app, notifier: diskAlerts, watcher: diskAlerts.watcher)
                 .preferredColorScheme(.light)
         }
     }

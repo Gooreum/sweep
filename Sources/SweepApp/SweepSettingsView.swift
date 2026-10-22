@@ -1,12 +1,28 @@
 import SwiftUI
 import SweepKit
 
-/// 앱 메뉴 › 설정…(⌘,). 지금은 디스크 부족 알림 하나뿐이다.
+/// 앱 메뉴 › 설정…(⌘,). 권한과 디스크 부족 알림을 관리한다.
 struct SweepSettingsView: View {
+    @Bindable var app: AppModel
     let notifier: DiskAlertNotifier
     @Bindable var watcher: DiskWatcher
 
     var body: some View {
+        TabView {
+            PermissionsSettingsView(app: app, notifier: notifier, watcher: watcher)
+                .tabItem { Text("권한") }
+            notifications
+                .padding(Theme.panelPadding)
+                .tabItem { Text("알림") }
+        }
+        .padding(8)
+        .frame(width: 640, height: 640)
+        .foregroundStyle(R95.black)
+        .background(R95.gray)
+        .onAppear { notifier.refreshAuthorization() }
+    }
+
+    private var notifications: some View {
         Retro95GroupBox(title: String(localized: "알림")) {
             VStack(alignment: .leading, spacing: 10) {
                 Toggle("저장 공간 부족 알림", isOn: Binding(
@@ -42,10 +58,5 @@ struct SweepSettingsView: View {
                 }
             }
         }
-        .padding(Theme.panelPadding)
-        .frame(width: Theme.panelWidth)
-        .foregroundStyle(R95.black)
-        .background(R95.gray)
-        .onAppear { notifier.refreshAuthorization() }
     }
 }
