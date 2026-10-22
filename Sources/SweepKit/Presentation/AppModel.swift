@@ -453,6 +453,12 @@ public final class AppModel {
             bytes[feature] = total > 0 ? total : nil
         }
 
+        // 공간 보기는 읽은 시작 지점의 크기. 끝까지 읽었을 때만, 모델은 만들지 않는다.
+        if let map = diskMapModel, map.completedAt != nil, !map.isScanning,
+           let root = map.path.first, root.size > 0 {
+            bytes[.diskMap] = root.size
+        }
+
         return bytes.mapValues { Self.compactSize($0) }
     }
 

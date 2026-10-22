@@ -168,6 +168,18 @@ struct AppModelTests {
         #expect(app.badges[.junk] == AppModel.compactSize(5_000_000_000))
     }
 
+    @Test("공간 보기 배지는 끝까지 읽은 시작 지점의 크기다")
+    func diskMapBadgeIsRootSize() async {
+        let injected = DiskMapModel(countEntries: { _, _, _ in 1 },
+                                    buildTree: { url, _, _ in DiskUsageNode(url: url, size: 1_000_000_000) })
+        let app = AppModel(makeDiskMap: { injected })
+        #expect(app.badges[.diskMap] == nil)
+
+        await app.diskMap().load(URL(filePath: "/private/tmp/root"))
+
+        #expect(app.badges[.diskMap] == AppModel.compactSize(1_000_000_000))
+    }
+
     @Test("CPU는 재는 동안만 loading이다")
     func cpuStatusFollowsSampling() async {
         let cpu = CPUModel(interval: .milliseconds(10), sample: { [] }, loadSample: { nil })

@@ -97,10 +97,9 @@ struct Sidebar: View {
                         } else {
                             Retro95Hourglass(size: 16)
                         }
+                    // 끝나면 아이콘 대신 용량 배지가 완료를 말한다(공간 보기 포함).
                     case .done:
-                        if feature == .diskMap {
-                            PixelIcon(art: .check, size: 16)
-                        }
+                        EmptyView()
                     }
                 }
                 // 픽셀의 검은 테두리도 선택 배경에서 보이게 한다.
@@ -131,7 +130,7 @@ struct Sidebar: View {
             switch status {
             case .idle: return ""
             case .loading: return String(localized: "공간 보기 읽는 중")
-            case .done: return String(localized: "공간 보기 완료")
+            case .done: return ""
             }
         }
         if feature == .cpu {

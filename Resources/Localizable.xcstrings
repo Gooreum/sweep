@@ -2831,22 +2831,6 @@
         }
       }
     },
-    "공간 보기 완료": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Disk map ready"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "공간 보기 완료"
-          }
-        }
-      }
-    },
     "공간 보기 읽는 중": {
       "localizations": {
         "en": {
