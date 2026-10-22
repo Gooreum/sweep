@@ -107,6 +107,12 @@ public final class AppModel {
     /// 등록한 프로젝트 폴더. 「보는 폴더」 줄이 읽는다.
     public var projectFolderURLs: [URL] { projectFolders.custom }
 
+    /// 등록한 프로젝트 폴더를 지금 읽을 수 있는가. 샌드박스에서 북마크를 되살리지 못했으면 false다.
+    /// 화면이 `Sandbox.isActive`를 직접 보지 않고 이것을 본다 — 주입한 모델(데모·테스트)과 어긋나지 않게.
+    public func isProjectFolderReachable(_ url: URL) -> Bool {
+        !requiresFolderAccess || folderAccess.isGranted(ProjectFolders.grantable(for: url))
+    }
+
     /// 개발 프로젝트를 찾을 폴더를 등록한다. 안 되는 폴더면 이유를 던지고 상태는 그대로다.
     ///
     /// `addScanFolder`와 같은 순서다 — 검증·저장 뒤 샌드박스면 북마크를 저장하고,

@@ -18,7 +18,7 @@ cd "$(dirname "$0")/.."
 
 APP="${APP:-dist/Sweep.app}"
 OUT="${OUT:-.build/store-captures}"
-ALL=(store-summary store-cpu store-xcode store-large store-duplicate store-diskmap store-cleaned)
+ALL=(store-summary store-cpu store-xcode store-projects store-large store-duplicate store-diskmap store-cleaned)
 STAGES=("$@"); [ ${#STAGES[@]} -eq 0 ] && STAGES=("${ALL[@]}")
 
 for s in "${STAGES[@]}"; do

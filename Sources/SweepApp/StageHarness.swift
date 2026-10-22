@@ -228,7 +228,7 @@ struct StageHarness: View {
             await created.scan()
 
         case "store-summary", "store-xcode", "store-large", "store-duplicate", "store-diskmap",
-             "store-cleaned", "store-cpu":
+             "store-cleaned", "store-cpu", "store-projects":
             storeApp = await StoreDemo.app(for: stage)
 
         case "diskmap":

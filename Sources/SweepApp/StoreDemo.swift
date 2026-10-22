@@ -51,6 +51,7 @@ enum StoreDemo {
             },
             makeDiskMap: { diskMap() },
             makeCPU: { cpu() },
+            projectFolders: projectFolders,
             // 스크린샷용 가짜 삭제가 실제 정리 기록에 쌓이면 안 된다
             history: CleanupHistory(defaults: UserDefaults(suiteName: "sweep-store-demo")!),
             // 허락한 뒤의 화면을 보여준다
@@ -75,10 +76,48 @@ enum StoreDemo {
         case "store-cpu":
             app.selected = .cpu
             app.cpu().select(fileprovider)
+        case "store-projects":
+            // 이 장면에만 넣는다. 스마트 스캔에 섞으면 1번 스크린샷의 합계(52GB)가 바뀐다.
+            app.selected = .projects
+            app.model(for: .projects).adopt(projectItems)
         default: // store-summary
             app.selected = .smartScan
         }
         return app
+    }
+
+    /// 데모 전용 프로젝트 폴더 목록(`~/Code`). 실제 설정(`ProjectFolders.shared`)을 건드리지 않는다.
+    private static let projectFolders: ProjectFolders.Registry = {
+        let suite = "sweep-store-demo-projects"
+        UserDefaults().removePersistentDomain(forName: suite)
+        let registry = ProjectFolders.Registry(defaults: UserDefaults(suiteName: suite)!)
+        try? registry.add(Sandbox.userHome.appending(path: "Code"))
+        return registry
+    }()
+
+    /// 개발 프로젝트 탭의 가짜 결과. `ProjectArtifactScanner`와 같은 안전도·설명이어야 한다 —
+    /// 설명은 규칙표의 문구와 스캐너의 주의 문구를 그대로 쓴다(영어 캡처에 한국어가 남지 않게).
+    private static var projectItems: [CleanupItem] {
+        let code = Sandbox.userHome.appending(path: "Code")
+        func hint(_ name: String) -> String {
+            ProjectArtifactRule.all.first { $0.name == name }?.rebuildHint ?? ""
+        }
+        func artifact(_ project: String, _ folder: String, _ size: Int64,
+                      _ safety: SafetyLevel = .safe, _ detail: String? = nil) -> CleanupItem {
+            CleanupItem(url: code.appending(path: "\(project)/\(folder)"), size: size,
+                        category: .projectArtifact, safety: safety, detail: detail ?? hint(folder))
+        }
+        let recent = String(localized: "최근 \(14)일 안에 고친 프로젝트예요. 지우기 전에 확인해 보세요.")
+        let noLock = String(localized: "버전을 고정한 파일이 없어요. 다시 설치하면 버전이 달라질 수 있어요.")
+        return [
+            artifact("budgetly-web", "node_modules", 1_840_000_000),
+            artifact("photo-memo-ios", "Pods", 1_260_000_000),
+            artifact("portfolio-site", ".next", 980_000_000),
+            artifact("ml-notebooks", ".venv", 2_310_000_000),
+            artifact("rust-cli", "target", 3_420_000_000),
+            artifact("landing-page", "node_modules", 690_000_000, .caution, recent),
+            artifact("admin-dashboard", "node_modules", 1_120_000_000, .caution, noLock),
+        ].sorted { $0.size > $1.size }
     }
 
     /// 스캐너가 내는 것과 같은 모양 — 큰 파일은 '주의' + "N개월 전에 받았습니다",
@@ -92,7 +131,7 @@ enum StoreDemo {
         func dup(_ name: String, _ size: Int64, of original: String) -> CleanupItem {
             CleanupItem(url: preview.appending(path: name), size: size,
                         category: .duplicate, safety: .safe,
-                        detail: String(localized: "같은 내용의 원본이 남아요: \(original)"))
+                        detail: String(localized: "이 사본을 지워도 같은 내용은 남아요: \(original)"))
         }
         // `XcodeScanner`와 같은 안전도·설명. 목록에는 마지막 경로 이름만 보인다.
         func xcode(_ path: String, _ size: Int64, _ safety: SafetyLevel, _ detail: String)

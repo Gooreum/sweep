@@ -103,7 +103,8 @@ public enum ProjectFolders {
         private let defaults: UserDefaults
         private let lock = NSLock()
 
-        init(defaults: UserDefaults = .standard) {
+        /// 저장소를 주입할 수 있게 연다 — 테스트와 스토어 스크린샷 데모가 실제 설정을 건드리지 않게.
+        public init(defaults: UserDefaults = .standard) {
             self.defaults = defaults
         }
 

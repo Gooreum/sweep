@@ -33,6 +33,17 @@
     }
   },
   {
+    "stage": "store-projects",
+    "ko": {
+      "headline": "개발 폴더 속 숨은 용량까지",
+      "subhead": "node_modules, .venv처럼 다시 만들 수 있는 것만"
+    },
+    "en": {
+      "headline": "Free up space in old projects",
+      "subhead": "node_modules, .venv and more you can rebuild"
+    }
+  },
+  {
     "stage": "store-large",
     "ko": {
       "headline": "잊고 있던 큰 파일을 찾아요",

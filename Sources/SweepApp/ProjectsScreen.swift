@@ -76,7 +76,7 @@ struct ProjectsScreen: View {
     private func row(_ folder: URL) -> some View {
         let grantable = ProjectFolders.grantable(for: folder)
         // 샌드박스에서 북마크를 되살리지 못한 폴더(옮겼거나 지운 경우)는 다시 열어 달라고 한다.
-        let reachable = !Sandbox.isActive || app.isGranted(grantable)
+        let reachable = app.isProjectFolderReachable(folder)
 
         HStack(spacing: 12) {
             PixelIcon(art: .folder, size: 16)
