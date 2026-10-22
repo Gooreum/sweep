@@ -2479,6 +2479,22 @@
         }
       }
     },
+    "‘%@’ 폴더를 아직 허용하지 않았어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access to the “%@” folder hasn’t been allowed yet"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‘%@’ 폴더를 아직 허용하지 않았어요"
+          }
+        }
+      }
+    },
     "‘열기…’를 눌러 이 폴더를 다시 골라 주세요": {
       "localizations": {
         "en": {
@@ -3483,6 +3499,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "메일에서 열어 본 첨부 파일의 사본을 찾아요"
+          }
+        }
+      }
+    },
+    "목록에 Sweep이 없으면 + 버튼으로 추가해 주세요. 켜고 돌아오면 바로 반영돼요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If Sweep isn’t listed, click + to add it. Changes take effect as soon as you turn it on and return to Sweep."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "목록에 Sweep이 없으면 + 버튼으로 추가해 주세요. 켜고 돌아오면 바로 반영돼요."
           }
         }
       }
@@ -6239,6 +6271,54 @@
         }
       }
     },
+    "전체 디스크 접근이 꺼져 있어요. 시스템 설정에서 Sweep을 켜면 보호된 파일도 찾을 수 있어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full Disk Access is off. Turn on Sweep under Full Disk Access in System Settings to search protected files too."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 디스크 접근이 꺼져 있어요. 시스템 설정에서 Sweep을 켜면 보호된 파일도 찾을 수 있어요."
+          }
+        }
+      }
+    },
+    "전체 디스크 접근이 꺼져 있어요. 시스템 설정에서 Sweep을 켜면 휴지통 안의 파일을 볼 수 있어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full Disk Access is off. Turn on Sweep under Full Disk Access in System Settings to see the files in Trash."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 디스크 접근이 꺼져 있어요. 시스템 설정에서 Sweep을 켜면 휴지통 안의 파일을 볼 수 있어요."
+          }
+        }
+      }
+    },
+    "전체 디스크 접근이 꺼져 있어요. 시스템 설정에서 Sweep을 켜면 휴지통을 열 수 있어요. %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full Disk Access is off. Turn on Sweep under Full Disk Access in System Settings to open Trash. %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 디스크 접근이 꺼져 있어요. 시스템 설정에서 Sweep을 켜면 휴지통을 열 수 있어요. %@"
+          }
+        }
+      }
+    },
     "정렬": {
       "localizations": {
         "en": {
@@ -6603,6 +6683,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "지금까지 %@를 휴지통으로 옮겼어요. 마지막 정리는 %@"
+          }
+        }
+      }
+    },
+    "지금은 다운로드 폴더에서만 찾아요. 홈 폴더를 허용하면 문서·데스크탑 등 내 폴더 전체에서 찾아요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweep is only searching the Downloads folder. Allow access to your Home folder to search all your folders, including Documents and Desktop."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금은 다운로드 폴더에서만 찾아요. 홈 폴더를 허용하면 문서·데스크탑 등 내 폴더 전체에서 찾아요."
           }
         }
       }
@@ -8231,6 +8327,22 @@
         }
       }
     },
+    "허용…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "허용…"
+          }
+        }
+      }
+    },
     "허용됨": {
       "localizations": {
         "en": {
@@ -8243,6 +8355,54 @@
           "stringUnit": {
             "state": "translated",
             "value": "허용됨"
+          }
+        }
+      }
+    },
+    "홈": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "홈"
+          }
+        }
+      }
+    },
+    "홈 폴더 허용…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow Home Folder…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "홈 폴더 허용…"
+          }
+        }
+      }
+    },
+    "홈 폴더가 허용되지 않았어요. 허용하면 그 안의 휴지통을 열 수 있어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access to your Home folder hasn’t been allowed. Allow access to open Trash inside it."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "홈 폴더가 허용되지 않았어요. 허용하면 그 안의 휴지통을 열 수 있어요."
           }
         }
       }
@@ -8355,22 +8515,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "휴지통"
-          }
-        }
-      }
-    },
-    "휴지통 안의 파일을 보려면 시스템 설정의 전체 디스크 접근에서 Sweep을 켜 주세요.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "To see the files in Trash, turn on Sweep under Full Disk Access in System Settings."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "휴지통 안의 파일을 보려면 시스템 설정의 전체 디스크 접근에서 Sweep을 켜 주세요."
           }
         }
       }
@@ -8599,6 +8743,22 @@
         }
       }
     },
+    "휴지통은 홈 폴더 안에 있어요. 허용하면 휴지통에 버린 파일을 찾을 수 있어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trash is inside your Home folder. Allow access to find files you’ve moved to Trash."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "홈 폴더가 허용되지 않았어요. 허용하면 휴지통에 버린 파일을 찾을 수 있어요."
+          }
+        }
+      }
+    },
     "휴지통을 비우기 전에는 고른 파일을 모두 복구할 수 있어요. 이 중 %lld개는 다시 만들 수 없는 파일이에요. 휴지통까지 비우면 복구할 수 없어요. 저장 공간은 비운 뒤에 생겨요.": {
       "localizations": {
         "en": {
@@ -8643,6 +8803,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "휴지통을 비우면 %@의 저장 공간이 생겨요. 비운 파일은 복구할 수 없어요"
+          }
+        }
+      }
+    },
+    "휴지통을 열려면 허용이 필요해요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow Access to Open Trash"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통을 열려면 허용이 필요해요"
           }
         }
       }

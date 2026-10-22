@@ -11,7 +11,7 @@ import SweepKit
 struct TrashOpenButton: View {
     var app: AppModel?
     /// 권한 문제가 아닐 때 할 말. 화면마다 다음 할 일이 달라 넘겨받는다(되돌려 놓기 안내 등).
-    var fallback: LocalizedStringKey = "화면 아래 Dock에서 휴지통을 열고 필요한 파일이 남아 있는지 확인해 주세요. 휴지통을 비우면 복구할 수 없어요."
+    var fallback: LocalizedStringKey = "화면 아래에서 휴지통을 열고 필요한 파일이 남아 있는지 확인해 주세요. 휴지통을 비우면 복구할 수 없어요."
 
     @State private var need: PermissionNeed?
     @State private var failed = false
@@ -20,7 +20,7 @@ struct TrashOpenButton: View {
 
     var body: some View {
         Button("휴지통 열기") { open() }
-            .alert(need == nil ? "휴지통을 열지 못했어요" : "휴지통을 열 권한이 꺼져 있어요",
+            .alert(need == nil ? "휴지통을 열지 못했어요" : "휴지통을 열려면 허용이 필요해요",
                    isPresented: $failed) {
                 switch need {
                 case .folder(let grantable):
@@ -34,9 +34,9 @@ struct TrashOpenButton: View {
             } message: {
                 switch need {
                 case .folder:
-                    Text("휴지통은 홈 폴더 안에 있어요. 홈 폴더를 허용하면 열 수 있어요.")
+                    Text("홈 폴더가 허용되지 않았어요. 허용하면 그 안의 휴지통을 열 수 있어요.")
                 case .fullDiskAccess:
-                    Text("macOS가 휴지통을 보호하고 있어요. 시스템 설정의 전체 디스크 접근에서 Sweep을 켜 주세요. \(PermissionNotice.fullDiskAccessHowTo)")
+                    Text("전체 디스크 접근이 꺼져 있어요. 시스템 설정에서 Sweep을 켜면 휴지통을 열 수 있어요. \(PermissionNotice.fullDiskAccessHowTo)")
                 case nil:
                     Text(fallback)
                 }

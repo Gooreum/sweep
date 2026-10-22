@@ -67,7 +67,7 @@ struct PermissionNotice: View {
         case .largeFile, .duplicate:
             String(localized: "지금은 다운로드 폴더에서만 찾아요. 홈 폴더를 허용하면 문서·데스크탑 등 내 폴더 전체에서 찾아요.")
         case .trash:
-            String(localized: "휴지통은 홈 폴더 안에 있어요. 홈 폴더를 허용해야 버린 파일을 찾을 수 있어요.")
+            String(localized: "휴지통은 홈 폴더 안에 있어요. 허용하면 휴지통에 버린 파일을 찾을 수 있어요.")
         default:
             grantable.purpose
         }
@@ -75,8 +75,8 @@ struct PermissionNotice: View {
 
     private var fullDiskAccessMessage: String {
         let reason = feature == .trash
-            ? String(localized: "휴지통 안을 보려면 시스템 설정의 전체 디스크 접근에서 Sweep을 켜 주세요.")
-            : String(localized: "시스템 설정의 전체 디스크 접근에서 Sweep을 켜 주세요.")
+            ? String(localized: "전체 디스크 접근이 꺼져 있어요. 시스템 설정에서 Sweep을 켜면 휴지통 안의 파일을 볼 수 있어요.")
+            : String(localized: "전체 디스크 접근이 꺼져 있어요. 시스템 설정에서 Sweep을 켜면 보호된 파일도 찾을 수 있어요.")
         return reason + " " + Self.fullDiskAccessHowTo
     }
 
