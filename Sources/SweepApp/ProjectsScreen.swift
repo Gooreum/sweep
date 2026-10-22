@@ -23,7 +23,7 @@ struct ProjectsScreen: View {
                 foldersBox(folders)
                     .padding(.horizontal, 8)
                     .padding(.top, 8)
-                FeatureScreen(feature: .projects, model: app.model(for: .projects))
+                FeatureScreen(feature: .projects, model: app.model(for: .projects), app: app)
                     .id(Feature.projects)
             }
         }

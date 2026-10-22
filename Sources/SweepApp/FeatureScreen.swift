@@ -7,6 +7,8 @@ import SweepKit
 struct FeatureScreen: View {
     let feature: Feature
     @Bindable var model: ScanModel
+    /// 권한 안내 줄과 그 자리 허용에 쓴다. 스테이지 하네스는 넘기지 않아 안내가 없다.
+    var app: AppModel? = nil
 
     /// 확인 시트를 띄울지. 목록에서 바로 지우지 않는다 —
     /// 되돌릴 수 없는 항목이 몇 개 빠졌는지 한 번 더 보여줘야 한다.
@@ -27,10 +29,12 @@ struct FeatureScreen: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            // 휴지통은 전체 디스크 접근 없이는 읽히지 않는다. 그때 결과는 "비어 있음"이라
-            // 휴지통이 빈 것과 구분되지 않는다 — 화면 위에 이유를 먼저 둔다.
-            if feature == .trash, FullDiskAccessBanner.isNeeded {
-                FullDiskAccessBanner(message: String(localized: "휴지통 안의 파일을 보려면 시스템 설정의 전체 디스크 접근에서 Sweep을 켜 주세요."))
+            // 권한이 없으면 결과가 "비어 있음"이라 정말 빈 것과 구분되지 않는다 — 화면 위에
+            // 이유를 먼저 두고 그 자리에서 켜게 한다. 휴지통은 샌드박스에서도 전체 디스크 접근이 필요하다.
+            if let app {
+                ForEach(app.permissionNeeds(for: feature), id: \.self) { need in
+                    PermissionNotice(need: need, feature: feature, app: app)
+                }
             }
 
             if feature == .trash, showsLeftovers, !adminLeftovers.isEmpty {

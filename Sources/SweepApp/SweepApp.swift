@@ -29,6 +29,13 @@ struct SweepApp: App {
         }
         let app = AppModel()
         _app = State(initialValue: app)
+        // 시스템 설정에서 전체 디스크 접근을 켜고 돌아오는 경우. 돌아올 때마다 다시 잰다 —
+        // 알림 권한(`DiskAlertNotifier`)과 같은 방식이다.
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { _ in
+            MainActor.assumeIsolated { app.refreshPermissions() }
+        }
         // 앱이 다 뜨기 전에 만든다. 알림 센터 델리게이트가 그때 등록돼야
         // 알림을 눌러 앱이 실행된 경우도 받는다.
         _diskAlerts = State(initialValue: DiskAlertNotifier(app: app, interval: Self.diskWatchInterval))

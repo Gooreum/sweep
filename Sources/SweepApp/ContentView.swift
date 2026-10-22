@@ -61,7 +61,7 @@ struct ContentView: View {
             ProjectsScreen(app: app)
 
         case let feature:
-            FeatureScreen(feature: feature, model: app.model(for: feature))
+            FeatureScreen(feature: feature, model: app.model(for: feature), app: app)
                 // 기능을 바꾸면 뷰를 새로 만든다. 안 그러면 이전 기능의
                 // 스크롤 위치와 애니메이션 상태가 그대로 따라온다.
                 .id(feature)
