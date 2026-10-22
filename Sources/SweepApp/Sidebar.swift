@@ -74,8 +74,9 @@ struct Sidebar: View {
     private func row(_ feature: Feature, badge: String?) -> some View {
         // 선택 상태를 따로 들고 있지 않는다. 두 곳에 있으면 어긋난다.
         let isSelected = app.selected == feature
+        let status = app.status(of: feature)
 
-        return HStack(spacing: 8) {
+        return HStack(spacing: 4) {
             PixelIcon(art: feature.pixelArt, size: 24)
             Text(feature.displayName)
                 .font(R95.ui(13))
@@ -86,23 +87,24 @@ struct Sidebar: View {
                 .layoutPriority(1)
             Spacer(minLength: 0)
 
-            // 스캔 결과를 사이드바에서 바로 본다. 어디에 용량이 묶여 있는지
-            // 화면을 옮기지 않고 알 수 있어야 한다.
-            if feature == .diskMap {
-                Group {
-                    switch app.diskMapStatus {
-                    case .idle: EmptyView()
-                    case .loading:
-                        Retro95Hourglass(size: 16)
-                    case .done:
-                        PixelIcon(art: .check, size: 16)
+            HStack(spacing: 4) {
+                if feature != .cpu {
+                    Group {
+                        switch status {
+                        case .idle: EmptyView()
+                        case .loading: Retro95Hourglass(size: 16)
+                        case .done: PixelIcon(art: .check, size: 16)
+                        }
                     }
+                    // 픽셀의 검은 테두리도 선택 배경에서 보이게 한다.
+                    .background(R95.gray)
+                    .accessibilityHidden(true)
                 }
-                .accessibilityHidden(true)
+                if let badge {
+                    Text(badge).font(R95.mono(11)).lineLimit(1).fixedSize(horizontal: true, vertical: false)
+                }
             }
-            if let badge {
-                Text(badge).font(R95.mono(11)).lineLimit(1).fixedSize(horizontal: true, vertical: false)
-            }
+            .fixedSize(horizontal: true, vertical: false)
         }
         .foregroundStyle(isSelected ? R95.white : R95.black)
         .padding(.horizontal, 4)
@@ -112,16 +114,25 @@ struct Sidebar: View {
         .contentShape(Rectangle())
         .onTapGesture { app.selected = feature }
         .accessibilityElement(children: .combine)
-        .accessibilityValue(feature == .diskMap ? diskMapAccessibilityStatus : "")
+        .accessibilityValue(accessibilityStatus(for: feature))
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
         .padding(.horizontal, 4)
     }
 
-    private var diskMapAccessibilityStatus: String {
-        switch app.diskMapStatus {
-        case .idle: ""
-        case .loading: String(localized: "공간 보기 읽는 중")
-        case .done: String(localized: "공간 보기 완료")
+    private func accessibilityStatus(for feature: Feature) -> String {
+        let status = app.status(of: feature)
+        if feature == .diskMap {
+            switch status {
+            case .idle: return ""
+            case .loading: return String(localized: "공간 보기 읽는 중")
+            case .done: return String(localized: "공간 보기 완료")
+            }
+        }
+        guard feature != .cpu else { return "" }
+        switch status {
+        case .idle: return ""
+        case .loading: return String(localized: "\(feature.displayName) 찾는 중")
+        case .done: return String(localized: "\(feature.displayName) 찾기 완료")
         }
     }
 

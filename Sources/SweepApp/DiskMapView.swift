@@ -288,7 +288,6 @@ struct DiskMapView: View {
     private var content: some View {
         if let phase = model.loadPhase {
             VStack(spacing: 12) {
-                Retro95Hourglass(size: 48)
                 switch phase {
                 case .counting(let scanned):
                     // 분모를 만드는 중이라 아직 퍼센트가 없다. 숫자를 지어내지 않는다.

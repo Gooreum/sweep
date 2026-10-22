@@ -151,6 +151,38 @@
         }
       }
     },
+    "%@ 찾기 완료": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — scan complete"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 찾기 완료"
+          }
+        }
+      }
+    },
+    "%@ 찾는 중": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — scanning"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 찾는 중"
+          }
+        }
+      }
+    },
     "%@ 폴더를 선택하고 허용을 눌러 주세요. 이 폴더를 여는 이유: %@": {
       "localizations": {
         "en": {
@@ -975,6 +1007,22 @@
         }
       }
     },
+    "App Store나 설치 프로그램으로 깐 앱이라 Mac 암호가 필요해요. Finder에서 옮겨 주세요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This app was installed from the App Store or an installer and requires your Mac password. Please move it in Finder."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Store나 설치 프로그램으로 깐 앱이라 Mac 암호가 필요해요. Finder에서 옮겨 주세요"
+          }
+        }
+      }
+    },
     "App Store에 올릴 앱 보관본이에요. 지우면 복구할 수 없어요": {
       "localizations": {
         "en": {
@@ -1499,6 +1547,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mac 안에서 앱을 시험하는 기기예요. 지우면 안의 앱과 데이터도 모두 사라져요."
+          }
+        }
+      }
+    },
+    "Mac 암호가 필요한 앱이에요. App Store나 설치 프로그램으로 깐 앱은 Finder에서 휴지통으로 옮겨 주세요: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This app requires your Mac password. Please use Finder to move apps installed from the App Store or an installer to the Trash: %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac 암호가 필요한 앱이에요. App Store나 설치 프로그램으로 깐 앱은 Finder에서 휴지통으로 옮겨 주세요: %@"
           }
         }
       }
