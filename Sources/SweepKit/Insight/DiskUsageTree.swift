@@ -39,6 +39,52 @@ extension DiskUsageNode {
     }
 }
 
+extension DiskUsageNode {
+    /// `target`을 품은 갈래를 따라 내려가며 크기를 `delta`만큼 바꾼다 — 조상 전부 함께.
+    ///
+    /// `removing`이면 정확히 그 노드를 children에서 뺀다. 노드가 없으면(가지치기·깊이 밖)
+    /// 가장 깊은 조상까지만 바꾼다 — 그 조상의 크기에는 이미 들어 있기 때문이다.
+    /// 이 트리 밖이면 nil.
+    func adjusting(_ target: URL, by delta: Int64, removing: Bool) -> DiskUsageNode? {
+        let targetPath = target.standardizedFileURL.path
+        guard Self.contains(url.standardizedFileURL.path, targetPath) else { return nil }
+
+        var children = self.children
+        if let index = children.firstIndex(where: {
+            Self.contains($0.url.standardizedFileURL.path, targetPath)
+        }) {
+            let child = children[index]
+            if removing, child.url.standardizedFileURL.path == targetPath {
+                children.remove(at: index)
+            } else if let updated = child.adjusting(target, by: delta, removing: removing) {
+                children[index] = updated
+                // 크기가 바뀌면 순서도 바뀐다. 목록은 크기순이 규칙이다.
+                children.sort { $0.size > $1.size }
+            }
+        }
+        return DiskUsageNode(url: url, size: max(0, size + delta), children: children,
+                             // 안 넘기면 기본값 true로 되살아나 "읽을 수 없음"이 사라진다
+                             isReadable: isReadable)
+    }
+
+    /// 트리 안에서 그 경로의 노드. 목록에 남지 않은 곳이면 nil.
+    func node(at target: URL) -> DiskUsageNode? {
+        let targetPath = target.standardizedFileURL.path
+        let mine = url.standardizedFileURL.path
+        if mine == targetPath { return self }
+        guard Self.contains(mine, targetPath) else { return nil }
+        for child in children {
+            if let found = child.node(at: target) { return found }
+        }
+        return nil
+    }
+
+    /// `path`가 `ancestor` 자신이거나 그 아래인가. `/foo`가 `/foobar`를 품지 않게 `/`까지 맞춘다.
+    private static func contains(_ ancestor: String, _ path: String) -> Bool {
+        path == ancestor || path.hasPrefix(ancestor.hasSuffix("/") ? ancestor : ancestor + "/")
+    }
+}
+
 /// 여러 스레드가 함께 보는 중단 신호.
 ///
 /// 순회는 `Task.detached`에서 도는데 그 안에서는 바깥 `Task`의 취소가 보이지

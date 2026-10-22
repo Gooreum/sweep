@@ -75,6 +75,27 @@ public struct RemovalOutcome: Sendable, Hashable {
     }
 }
 
+/// 휴지통으로(또는 휴지통에서 되돌려) 옮긴 것 한 건. `to`가 nil이면 완전히 지운 것이다.
+///
+/// 한 화면에서 옮긴 것을 다른 화면이 다시 훑지 않고 반영하려면 **어디서 어디로**를 알아야 한다.
+/// 빠진 경로만 넘기면 휴지통 탭은 새로 들어온 것을 모르고, 공간 보기는 휴지통 크기를 늘리지 못한다.
+public struct TrashMove: Sendable, Hashable {
+    public let from: URL
+    public let to: URL?
+    public let size: Int64
+
+    public init(from: URL, to: URL?, size: Int64) {
+        self.from = from
+        self.to = to
+        self.size = size
+    }
+}
+
+extension RemovalOutcome {
+    /// 성공한 결과의 옮김. 실패면 의미가 없다 — 부르는 쪽이 `succeeded`로 거른다.
+    public var move: TrashMove { TrashMove(from: item.url, to: trashedURL, size: item.size) }
+}
+
 /// 삭제 한 회차 전체의 결과.
 public struct RemovalReport: Sendable, Hashable {
     public let outcomes: [RemovalOutcome]

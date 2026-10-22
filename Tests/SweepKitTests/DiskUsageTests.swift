@@ -388,3 +388,60 @@ struct DiskUsageAppDataTests {
     }
 }
 
+
+@Suite("트리 크기 고치기")
+struct TreeAdjustTests {
+
+    private func url(_ path: String) -> URL { URL(filePath: "/r" + path) }
+
+    /// /r(100) ─ a(60) ─ a/deep(40)
+    ///         ├ .Trash(30)
+    ///         └ locked(0, 못 읽음)
+    private var tree: DiskUsageNode {
+        DiskUsageNode(url: url(""), size: 100, children: [
+            DiskUsageNode(url: url("/a"), size: 60, children: [
+                DiskUsageNode(url: url("/a/deep"), size: 40),
+            ]),
+            DiskUsageNode(url: url("/.Trash"), size: 30),
+            DiskUsageNode(url: url("/locked"), size: 0, isReadable: false),
+        ])
+    }
+
+    @Test("깊은 노드를 빼면 그 노드가 사라지고 조상 크기가 그만큼 준다")
+    func removingDeepNode() throws {
+        let result = try #require(tree.adjusting(url("/a/deep"), by: -40, removing: true))
+        #expect(result.size == 60)
+        let a = try #require(result.node(at: url("/a")))
+        #expect(a.size == 20)
+        #expect(a.children.isEmpty)
+    }
+
+    @Test("휴지통 폴더에 더하면 그 노드와 조상이 늘고 크기순으로 다시 선다")
+    func addingToTrash() throws {
+        let result = try #require(tree.adjusting(url("/.Trash"), by: 40, removing: false))
+        #expect(result.size == 140)
+        #expect(result.children.first?.url == url("/.Trash"))
+        #expect(result.node(at: url("/.Trash"))?.size == 70)
+    }
+
+    @Test("목록에 없는 깊은 경로는 가장 깊은 조상까지만 바꾼다")
+    func missingNodeStopsAtDeepestAncestor() throws {
+        let result = try #require(tree.adjusting(url("/a/deep/x/y"), by: -10, removing: true))
+        #expect(result.size == 90)
+        #expect(result.node(at: url("/a"))?.size == 50)
+        #expect(result.node(at: url("/a/deep"))?.size == 30)
+    }
+
+    @Test("트리 밖 경로는 nil이고, 이름이 앞부분만 같은 형제는 품지 않는다")
+    func outsideIsNil() {
+        #expect(tree.adjusting(URL(filePath: "/other/x"), by: -1, removing: true) == nil)
+        #expect(tree.adjusting(URL(filePath: "/rr/x"), by: -1, removing: true) == nil)
+        #expect(tree.node(at: url("/aa")) == nil)
+    }
+
+    @Test("크기를 바꿔도 못 읽음 표시는 남는다")
+    func keepsUnreadable() throws {
+        let result = try #require(tree.adjusting(url("/locked/x"), by: 5, removing: false))
+        #expect(result.node(at: url("/locked"))?.isReadable == false)
+    }
+}
