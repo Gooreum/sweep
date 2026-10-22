@@ -6463,6 +6463,22 @@
         }
       }
     },
+    "전체 화면 끝내기": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exit Full Screen"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 화면 끝내기"
+          }
+        }
+      }
+    },
     "정렬": {
       "localizations": {
         "en": {

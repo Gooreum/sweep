@@ -12,7 +12,7 @@ struct SweepSettingsView: View {
     var body: some View {
         VStack(spacing: 0) {
             Retro95WindowTitleBar(title: String(localized: "Sweep 설정"), icon: .computer,
-                                  fullScreenable: false)
+                                  fullScreenable: false, minimizable: false)
                 // 아래 탭 패널 배경이 안전 영역으로 번져 제목줄을 덮지 않게 위에 그린다(메인 창과 같다).
                 .zIndex(1)
             Retro95TabView(selection: $selectedTab,
@@ -31,7 +31,7 @@ struct SweepSettingsView: View {
         .foregroundStyle(R95.black)
         .background(R95.gray)
         .retroRaised()
-        .background(WindowChromeConfigurator())
+        .background(WindowChromeConfigurator(auxiliary: true))
         .ignoresSafeArea(edges: .top)
         .onAppear { notifier.refreshAuthorization() }
     }

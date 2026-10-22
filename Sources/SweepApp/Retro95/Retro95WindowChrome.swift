@@ -3,10 +3,27 @@ import SwiftUI
 
 /// 설정 Scene과 스테이지 모두, 실제로 부착된 창에만 적용한다.
 struct WindowChromeConfigurator: NSViewRepresentable {
-    func makeNSView(context: Context) -> ChromeView { ChromeView() }
+    /// 전체 화면 앱 위에 떠도 되는 보조 창(설정). 아니면 메인 창이 전체 화면일 때
+    /// macOS가 이 창을 데스크탑 Space로 보내 앱 밖에서 열린 것처럼 보인다.
+    var auxiliary = false
+
+    func makeNSView(context: Context) -> ChromeView {
+        let view = ChromeView()
+        view.auxiliary = auxiliary
+        return view
+    }
     func updateNSView(_ nsView: ChromeView, context: Context) { nsView.applyChrome() }
 
     final class ChromeView: NSView {
+        var auxiliary = false
+
+        /// SwiftUI가 다시 그릴 때마다 불린다. Settings 창은 알림 없이 툴바·제목줄 그릇을 다시
+        /// 붙여(버튼을 누르거나 열기 창을 닫은 뒤) Win95 제목줄이 사라졌다 — 여기서도 확인한다.
+        override func layout() {
+            super.layout()
+            applyChrome()
+        }
+
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
             NotificationCenter.default.removeObserver(self)
@@ -21,21 +38,25 @@ struct WindowChromeConfigurator: NSViewRepresentable {
             }
         }
 
+        /// 값이 다를 때만 바꾼다 — `layout()`에서 매번 불리므로 같은 값을 다시 넣으면 레이아웃이 다시 돈다.
         func applyChrome() {
             guard let window else { return }
-            window.titleVisibility = .hidden
-            window.titlebarAppearsTransparent = true
+            if window.titleVisibility != .hidden { window.titleVisibility = .hidden }
+            if !window.titlebarAppearsTransparent { window.titlebarAppearsTransparent = true }
+            if auxiliary, !window.collectionBehavior.contains(.fullScreenAuxiliary) {
+                window.collectionBehavior.insert([.fullScreenAuxiliary, .moveToActiveSpace])
+            }
             if !window.styleMask.contains(.fullSizeContentView) {
                 window.styleMask.insert(.fullSizeContentView)
             }
             for button in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
-                window.standardWindowButton(button)?.isHidden = true
+                if let view = window.standardWindowButton(button), !view.isHidden { view.isHidden = true }
             }
             // 숨긴 제목줄 자리에도 제목줄 그릇(NSTitlebarContainerView)이 남아 그 영역의 클릭을 가로챈다.
             // 감춰야 Win95 제목줄의 [_][□][×]와 끌기가 마우스를 받는다.
-            window.titlebarSeparatorStyle = .none
+            if window.titlebarSeparatorStyle != .none { window.titlebarSeparatorStyle = .none }
             // Settings 창은 SwiftUI가 툴바를 붙여 제목줄 자리를 반투명 회색으로 덮는다.
-            window.toolbar = nil
+            if window.toolbar != nil { window.toolbar = nil }
             hideTitlebarContainers(in: window)
         }
 
@@ -44,7 +65,7 @@ struct WindowChromeConfigurator: NSViewRepresentable {
         private func hideTitlebarContainers(in window: NSWindow) {
             guard let frame = window.contentView?.superview else { return }
             for view in frame.subviews
-            where String(describing: type(of: view)) == "NSTitlebarContainerView" {
+            where !view.isHidden && String(describing: type(of: view)) == "NSTitlebarContainerView" {
                 view.isHidden = true
             }
         }
@@ -112,6 +133,8 @@ struct Retro95WindowTitleBar: View {
     let icon: PixelArt
     /// [□]가 전체 화면(새 Space)으로 들어간다. 크기가 고정된 창(설정)은 false라 흐리게 그린다.
     var fullScreenable = false
+    /// [_]. macOS 설정 창처럼 최소화하지 않는 창은 false라 흐리게 그린다.
+    var minimizable = true
     @Environment(\.controlActiveState) private var activeState
     @State private var windowReference = WindowReference()
     @State private var isFullScreen = false
@@ -143,8 +166,13 @@ struct Retro95WindowTitleBar: View {
                     .accessibilityHidden(true)
             }
             HStack(spacing: 0) {
-                caption(.minimize, label: String(localized: "최소화")) { window?.miniaturize(nil) }
-                caption(.maximize, label: String(localized: "전체 화면"), enabled: fullScreenable) {
+                // macOS 신호등과 같은 규칙: 전체 화면에서는 최소화할 수 없고, [□]는 나가는 버튼이 된다.
+                caption(.minimize, label: String(localized: "최소화"),
+                        enabled: minimizable && !isFullScreen) { window?.miniaturize(nil) }
+                caption(isFullScreen ? .restore : .maximize,
+                        label: isFullScreen ? String(localized: "전체 화면 끝내기")
+                                            : String(localized: "전체 화면"),
+                        enabled: fullScreenable) {
                     window?.toggleFullScreen(nil)
                 }
                 caption(.close, label: String(localized: "닫기")) { window?.performClose(nil) }
@@ -178,7 +206,7 @@ private struct CaptionButtonStyle: ButtonStyle {
 }
 
 private struct CaptionGlyph: View {
-    enum Kind { case minimize, maximize, close }
+    enum Kind { case minimize, maximize, restore, close }
     let kind: Kind
     let enabled: Bool
 
@@ -193,6 +221,16 @@ private struct CaptionGlyph: View {
                              CGRect(x: 3, y: 5, width: 1, height: 7),
                              CGRect(x: 12, y: 5, width: 1, height: 7),
                              CGRect(x: 3, y: 11, width: 10, height: 1)] { path.addRect(rect) }
+            case .restore:
+                // Win95 "이전 크기로": 뒤 창은 윗변·오른쪽 변만, 앞 창은 굵은 윗변의 온전한 사각형.
+                for rect in [CGRect(x: 5, y: 2, width: 8, height: 2),
+                             CGRect(x: 12, y: 4, width: 1, height: 5),
+                             CGRect(x: 10, y: 8, width: 2, height: 1),
+                             CGRect(x: 2, y: 5, width: 8, height: 2),
+                             CGRect(x: 2, y: 7, width: 1, height: 5),
+                             CGRect(x: 9, y: 7, width: 1, height: 5),
+                             CGRect(x: 2, y: 11, width: 8, height: 1),
+                             CGRect(x: 5, y: 4, width: 1, height: 1)] { path.addRect(rect) }
             case .close:
                 for row in 0..<8 {
                     path.addRect(CGRect(x: 4 + row, y: 3 + row, width: 2, height: 1))
