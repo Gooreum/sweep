@@ -2751,6 +2751,22 @@
         }
       }
     },
+    "공간 보기에서 앱 크기를 보고 안 쓰는 앱을 지울 수 있어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See app sizes in Space View and remove apps you don't use"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "공간 보기에서 앱 크기를 보고 안 쓰는 앱을 지울 수 있어요"
+          }
+        }
+      }
+    },
     "공간 사용량": {
       "localizations": {
         "en": {
@@ -4491,22 +4507,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "아래에서 찾을 곳의 열기를 눌러 주세요. 새 창에서 허용을 누르면 그 안의 파일을 찾을 수 있어요."
-          }
-        }
-      }
-    },
-    "안 쓰는 앱을 골라 정리해요": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose unused apps to remove"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "안 쓰는 앱을 골라 정리해요"
           }
         }
       }
@@ -6447,6 +6447,22 @@
         }
       }
     },
+    "전체 화면": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full Screen"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 화면"
+          }
+        }
+      }
+    },
     "정렬": {
       "localizations": {
         "en": {
@@ -7387,22 +7403,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "최근 %lld일 안에 고친 프로젝트예요. 지우기 전에 확인해 보세요."
-          }
-        }
-      }
-    },
-    "최대화": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Maximize"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "최대화"
           }
         }
       }

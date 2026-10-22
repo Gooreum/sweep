@@ -308,10 +308,13 @@ struct SmartScanView: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 8)
             }
-            SettingsLink { Text("권한 모두 보기") }
-                .buttonStyle(.link)
-                .font(Theme.caption)
-                .padding(8)
+            // 링크 글자로 두니 누르는 것인지 몰랐다. 사이드바와 같은 볼록 버튼으로 둔다.
+            HStack {
+                Spacer(minLength: 0)
+                SettingsLink { Text("권한 모두 보기").padding(.horizontal, 8) }
+                    .buttonStyle(Retro95ButtonStyle())
+            }
+            .padding(8)
         }
     }
 

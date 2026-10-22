@@ -60,30 +60,46 @@ struct WindowChromeConfigurator: NSViewRepresentable {
 
 /// 제목줄이 속한 창을 사용해 다른 keyWindow를 조작하지 않는다.
 private struct TitleBarDragArea: NSViewRepresentable {
-    let zoomable: Bool
+    let fullScreenable: Bool
     let didAttach: (NSWindow?) -> Void
+    /// 전체 화면에 들어가고 나올 때. 모서리 여백을 바꾸는 데 쓴다.
+    let fullScreenChanged: (Bool) -> Void
 
     func makeNSView(context: Context) -> DragView { DragView() }
     func updateNSView(_ view: DragView, context: Context) {
-        view.zoomable = zoomable
+        view.fullScreenable = fullScreenable
         view.didAttach = didAttach
+        view.fullScreenChanged = fullScreenChanged
     }
 
     final class DragView: NSView {
-        var zoomable = false
+        var fullScreenable = false
         var didAttach: ((NSWindow?) -> Void)?
+        var fullScreenChanged: ((Bool) -> Void)?
         override var mouseDownCanMoveWindow: Bool { true }
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
+            NotificationCenter.default.removeObserver(self)
+            if let window {
+                for name in [NSWindow.didEnterFullScreenNotification, NSWindow.didExitFullScreenNotification] {
+                    NotificationCenter.default.addObserver(
+                        self, selector: #selector(fullScreenDidChange), name: name, object: window)
+                }
+            }
             // SwiftUI 업데이트 중 State를 바꾸지 않는다.
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
+                if fullScreenable { window?.collectionBehavior.insert(.fullScreenPrimary) }
                 didAttach?(window)
+                fullScreenDidChange()
             }
+        }
+        @objc private func fullScreenDidChange() {
+            fullScreenChanged?(window?.styleMask.contains(.fullScreen) ?? false)
         }
         override func mouseDown(with event: NSEvent) {
             if event.clickCount == 2 {
-                if zoomable { window?.zoom(nil) }
+                if fullScreenable { window?.toggleFullScreen(nil) }
             } else {
                 window?.performDrag(with: event)
             }
@@ -94,9 +110,14 @@ private struct TitleBarDragArea: NSViewRepresentable {
 struct Retro95WindowTitleBar: View {
     let title: String
     let icon: PixelArt
-    var zoomable = false
+    /// [□]가 전체 화면(새 Space)으로 들어간다. 크기가 고정된 창(설정)은 false라 흐리게 그린다.
+    var fullScreenable = false
     @Environment(\.controlActiveState) private var activeState
     @State private var windowReference = WindowReference()
+    @State private var isFullScreen = false
+
+    /// 창 모드에서는 macOS 창 모서리가 둥글어 끝에 붙은 아이콘과 [×]가 잘린다. 전체 화면은 각지다.
+    private var cornerInset: CGFloat { isFullScreen ? 0 : 8 }
 
     private var window: NSWindow? { windowReference.window }
 
@@ -113,21 +134,23 @@ struct Retro95WindowTitleBar: View {
                     .foregroundStyle(R95.white).lineLimit(1)
                 Spacer(minLength: 0)
             }
-            .padding(.leading, 6)
+            .padding(.leading, 6 + cornerInset)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .overlay {
-                TitleBarDragArea(zoomable: zoomable) { windowReference.window = $0 }
+                TitleBarDragArea(fullScreenable: fullScreenable,
+                                 didAttach: { windowReference.window = $0 },
+                                 fullScreenChanged: { isFullScreen = $0 })
                     .accessibilityHidden(true)
             }
             HStack(spacing: 0) {
                 caption(.minimize, label: String(localized: "최소화")) { window?.miniaturize(nil) }
-                caption(.maximize, label: String(localized: "최대화"), enabled: zoomable) {
-                    window?.zoom(nil)
+                caption(.maximize, label: String(localized: "전체 화면"), enabled: fullScreenable) {
+                    window?.toggleFullScreen(nil)
                 }
                 caption(.close, label: String(localized: "닫기")) { window?.performClose(nil) }
                     .padding(.leading, 2)
             }
-            .padding(.trailing, 3)
+            .padding(.trailing, 3 + cornerInset)
         }
         .frame(height: R95.titleStripHeight)
         .background(activeState == .key || activeState == .active ? R95.navy : R95.shadow)

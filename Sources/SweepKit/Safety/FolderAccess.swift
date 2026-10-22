@@ -95,7 +95,7 @@ public enum FolderAccess {
         // 홈 밖이지만 같은 방식으로 열린다 — 열기 대화상자로 고른 폴더는 위치를 가리지 않는다.
         // 이것을 열어도 지울 수 있는 것은 **바로 아래 `.app` 하나씩**뿐이다(`ProtectedPaths`).
         .init(folder: URL(filePath: "/Applications"), label: String(localized: "응용 프로그램"),
-              purpose: String(localized: "안 쓰는 앱을 골라 정리해요")),
+              purpose: String(localized: "공간 보기에서 앱 크기를 보고 안 쓰는 앱을 지울 수 있어요")),
     ]
 
     /// 앱 전체가 공유하는 허락 상태.

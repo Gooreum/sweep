@@ -9,7 +9,7 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             Retro95WindowTitleBar(title: "Sweep - \(app.selected.displayName)",
-                                  icon: app.selected.pixelArt, zoomable: true)
+                                  icon: app.selected.pixelArt, fullScreenable: true)
                 // 아래 패널들의 배경(`background(R95.gray)`)은 안전 영역으로 번진다. 제목줄이
                 // macOS 제목줄 자리(안전 영역)에 있으므로 위에 그려야 회색에 덮이지 않는다.
                 .zIndex(1)
