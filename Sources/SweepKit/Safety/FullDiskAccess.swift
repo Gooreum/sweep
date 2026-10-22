@@ -23,7 +23,7 @@ public enum FullDiskAccess {
 
     /// 확인용 파일에 닿을 수 있는가. 샌드박스에서는 그 폴더 권한이 없으면 전체 디스크 접근과
     /// 무관하게 못 읽는다 — 그때 "꺼짐"이라고 하면 켜 놓은 사용자에게도 켜라고 한다.
-    static func isMeasurable(sandboxed: Bool, granted: [URL]) -> Bool {
+    public static func isMeasurable(sandboxed: Bool, granted: [URL]) -> Bool {
         !sandboxed || granted.contains { probe.isSameOrDescendant(of: $0) }
     }
 

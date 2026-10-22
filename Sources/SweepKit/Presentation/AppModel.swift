@@ -122,6 +122,13 @@ public final class AppModel {
         forgetScans()
     }
 
+    /// 전체 디스크 접근을 지금 잴 수 있는가. 샌드박스에서 홈이나 ~/Library를 허락하기 전에는 못 잰다.
+    /// 권한 탭이 "확인 불가"와 "꺼짐"을 가르는 데 쓴다.
+    public var canMeasureFullDiskAccess: Bool {
+        _ = grantedFolderCount
+        return FullDiskAccess.isMeasurable(sandboxed: requiresFolderAccess, granted: folderAccess.urls)
+    }
+
     /// 이 화면을 쓰려면 켜야 하는 것. 화면 위 안내 줄이 읽는다.
     public func permissionNeeds(for feature: Feature) -> [PermissionNeed] {
         // 허락이 바뀌면 이 값이 바뀐다. 읽어 둬야 안내 줄이 허락 뒤에 사라진다.

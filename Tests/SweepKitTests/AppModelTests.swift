@@ -913,6 +913,22 @@ struct AppModelTests {
         #expect(app.permissionNeeds(for: .largeFile).isEmpty)
         #expect(app.permissionNeeds(for: .trash) == [.fullDiskAccess])
     }
+
+    @Test("전체 디스크 접근은 샌드박스에서 홈을 허락해야 잴 수 있다")
+    func canMeasureFullDiskAccessFollowsGrant() throws {
+        let suite = "sweep-test-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let sandboxed = AppModel(folderAccess: FolderAccess.Registry(defaults: defaults),
+                                 needsFolderAccess: true, fullDiskAccess: { false })
+        #expect(!sandboxed.canMeasureFullDiskAccess)
+
+        try sandboxed.grantFolderAccess(FolderAccess.home.folder, as: FolderAccess.home)
+        #expect(sandboxed.canMeasureFullDiskAccess)
+
+        // 샌드박스 밖에서는 늘 잰다.
+        #expect(AppModel(needsFolderAccess: false, fullDiskAccess: { false }).canMeasureFullDiskAccess)
+    }
 }
 
 @Suite("사이드바 배지 용량")
