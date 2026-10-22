@@ -99,6 +99,9 @@ struct SweepApp: App {
             }
         }
         .defaultSize(width: Theme.windowWidth, height: Theme.windowHeight)
+        // macOS 제목줄 자리를 비운다. 창 안의 Win95 제목줄(`Retro95WindowTitleBar`)이 그 자리를 쓴다 —
+        // 투명 제목줄만으로는 제목·툴바 영역이 남아 Win95 제목줄을 덮었다.
+        .windowStyle(.hiddenTitleBar)
         .commands { SweepCommands(app: app) }
 
         // 배터리·와이파이가 있는 상태 영역. 창을 닫아도 여기는 남는다.
@@ -113,6 +116,7 @@ struct SweepApp: App {
             SweepSettingsView(app: app, notifier: diskAlerts, watcher: diskAlerts.watcher)
                 .preferredColorScheme(.light)
         }
+        .windowStyle(.hiddenTitleBar)
     }
 
     /// 스캔 결과를 탭 구분 텍스트로 찍고 종료한다.

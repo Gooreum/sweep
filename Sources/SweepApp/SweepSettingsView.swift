@@ -7,18 +7,28 @@ struct SweepSettingsView: View {
     let notifier: DiskAlertNotifier
     @Bindable var watcher: DiskWatcher
 
+    @State private var selectedTab = 0
+
     var body: some View {
-        TabView {
-            PermissionsSettingsView(app: app, notifier: notifier, watcher: watcher)
-                .tabItem { Text("권한") }
-            notifications
-                .padding(Theme.panelPadding)
-                .tabItem { Text("알림") }
+        VStack(spacing: 0) {
+            Retro95WindowTitleBar(title: String(localized: "Sweep 설정"), icon: .computer,
+                                  zoomable: false)
+            Retro95TabView(selection: $selectedTab,
+                           titles: [String(localized: "권한"), String(localized: "알림")]) { index in
+                if index == 0 {
+                    PermissionsSettingsView(app: app, notifier: notifier, watcher: watcher)
+                } else {
+                    notifications.padding(Theme.panelPadding)
+                }
+            }
+            .padding(8)
         }
-        .padding(8)
-        .frame(width: 640, height: 640)
+        .frame(width: 640, height: 680)
         .foregroundStyle(R95.black)
         .background(R95.gray)
+        .retroRaised()
+        .background(WindowChromeConfigurator())
+        .ignoresSafeArea(edges: .top)
         .onAppear { notifier.refreshAuthorization() }
     }
 

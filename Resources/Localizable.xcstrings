@@ -1807,6 +1807,22 @@
         }
       }
     },
+    "Sweep 설정": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweep Settings"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweep 설정"
+          }
+        }
+      }
+    },
     "Sweep 열기": {
       "localizations": {
         "en": {
@@ -7371,6 +7387,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "최근 %lld일 안에 고친 프로젝트예요. 지우기 전에 확인해 보세요."
+          }
+        }
+      }
+    },
+    "최대화": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximize"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "최대화"
+          }
+        }
+      }
+    },
+    "최소화": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimize"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "최소화"
           }
         }
       }

@@ -8,11 +8,14 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            Retro95WindowTitleBar(title: "Sweep - \(app.selected.displayName)",
+                                  icon: app.selected.pixelArt, zoomable: true)
+                // 아래 패널들의 배경(`background(R95.gray)`)은 안전 영역으로 번진다. 제목줄이
+                // macOS 제목줄 자리(안전 영역)에 있으므로 위에 그려야 회색에 덮이지 않는다.
+                .zIndex(1)
             HStack(spacing: 0) {
                 Sidebar(app: app)
                 VStack(spacing: 0) {
-                    Retro95TitleStrip(title: "Sweep - \(app.selected.displayName)",
-                                      icon: app.selected.pixelArt)
                     // 디스크 맵·폴더 허락 화면은 스캔하지 않으므로 명령이 없다.
                     if app.currentModel != nil {
                         CommandBar(app: app)
@@ -26,6 +29,8 @@ struct ContentView: View {
             AppStatusBar(app: app)
         }
         .background(R95.gray)
+        .background(WindowChromeConfigurator())
+        .ignoresSafeArea(edges: .top)
         // 기능 이름은 **창 제목**으로 둔다. 명령은 시스템 툴바가 아니라 창 안의 명령줄에 있다 —
         // 툴바에 두면 둥근 유리 캡슐로 그려져 Win95 화면과 따로 논다.
         .navigationTitle(app.selected.displayName)
