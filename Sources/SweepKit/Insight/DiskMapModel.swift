@@ -147,9 +147,11 @@ public final class DiskMapModel {
         // 화면이 무엇을 보고 있는지도 모델이 안다. 뷰와 두 곳에 두면 어긋난다.
         selectedRoot = root
         let previous = cache?.load(root)
-        if let previous, path.first?.url != root {
-            path = [previous.tree]
-            cachedAt = previous.date
+        // 다른 시작점으로 옮겼으면 보던 트리를 내린다. 읽는 동안에도 목록이 보이므로
+        // 남겨 두면 새로 고른 곳 이름 아래 엉뚱한 폴더가 보인다.
+        if path.first?.url != root {
+            path = previous.map { [$0.tree] } ?? []
+            cachedAt = previous?.date
         }
 
         let total = previous?.tree.size ?? expectedBytes(root)

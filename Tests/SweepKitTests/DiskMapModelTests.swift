@@ -295,6 +295,26 @@ struct DiskMapModelTests {
         #expect(model.completedAt == nil)
     }
 
+    @Test("지난 결과가 없는 다른 시작점으로 옮기면 보던 트리를 내린다")
+    func switchingRootClearsOldTree() async {
+        let gate = Gate()
+        let model = DiskMapModel(
+            buildTree: { url, _, _ in
+                gate.wait()
+                return DiskUsageNode(url: url, size: 1)
+            },
+            expectedBytes: { _ in nil })
+        model.seed(sampleTree())
+
+        async let load: Void = model.load(URL(filePath: "/private/tmp/other"))
+        while model.loadPhase == nil { await Task.yield() }
+
+        #expect(model.current == nil, "새 시작점 아래 이전 폴더가 보인다")
+        gate.signal()
+        await load
+        #expect(model.current?.name == "other")
+    }
+
     @Test("지운 항목은 다음 지난 결과에서도 빠진다")
     func dropUpdatesCache() async {
         let (cache, cleanup) = makeCache()

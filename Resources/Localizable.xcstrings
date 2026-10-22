@@ -151,6 +151,50 @@
         }
       }
     },
+    "%@ 읽는 중…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading %@…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を読み込み中…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 읽는 중…"
+          }
+        }
+      }
+    },
+    "%@ 읽었어요…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read %@…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を読み込みました…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 읽었어요…"
+          }
+        }
+      }
+    },
     "%@ 찾는 중": {
       "localizations": {
         "en": {
@@ -211,38 +255,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@, 총 %lld개는 Mac 암호가 있어야 지울 수 있어요"
-          }
-        }
-      }
-    },
-    "%@개 확인 중…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Checking %@ items…"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@개 확인 중…"
-          }
-        }
-      }
-    },
-    "%@개 확인했어요…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Checked %@ items…"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@개 확인했어요…"
           }
         }
       }
@@ -3367,6 +3379,12 @@
             "value": "Reload"
           }
         },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再読み込み"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -4219,6 +4237,72 @@
           "stringUnit": {
             "state": "translated",
             "value": "새로 받은 앱을 처음 열 때 검사가 걸려요. 검사가 끝날 때까지 기다리면 돼요."
+          }
+        }
+      }
+    },
+    "새로 읽기를 멈췄어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh stopped"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再読み込みを停止しました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새로 읽기를 멈췄어요"
+          }
+        }
+      }
+    },
+    "새로 읽는 중 %lld%%": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refreshing %lld%%"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再読み込み中 %lld%%"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새로 읽는 중 %lld%%"
+          }
+        }
+      }
+    },
+    "새로 읽는 중 · %@ 읽음": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refreshing · %@ read"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再読み込み中 · %@読み込み済み"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새로 읽는 중 · %@ 읽음"
           }
         }
       }
@@ -7115,6 +7199,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "지금은 표시할 프로그램이 없어요."
+          }
+        }
+      }
+    },
+    "지난 결과(%@) · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous results (%@) · %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前回の結果（%@） · %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지난 결과(%@) · %@"
           }
         }
       }

@@ -286,7 +286,20 @@ struct DiskMapView: View {
 
     @ViewBuilder
     private var content: some View {
-        if let phase = model.loadPhase {
+        if let current = model.current {
+            VStack(spacing: 0) {
+                if model.loadPhase != nil || model.cachedAt != nil {
+                    refreshStatus
+                    Retro95Separator()
+                }
+                if model.tiles.isEmpty {
+                    placeholder(String(localized: "\(current.name) 안에 표시할 항목이 없어요"),
+                                detail: current.formattedSize)
+                } else {
+                    usageList
+                }
+            }
+        } else if let phase = model.loadPhase {
             VStack(spacing: 12) {
                 switch phase {
                 case .reading(let bytes):
@@ -305,13 +318,6 @@ struct DiskMapView: View {
             }
             .padding(12)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if let current = model.current {
-            if model.tiles.isEmpty {
-                placeholder(String(localized: "\(current.name) 안에 표시할 항목이 없어요"),
-                            detail: current.formattedSize)
-            } else {
-                usageList
-            }
         } else if model.selectedRoot != nil {
             // 중단했거나 아직 못 읽은 상태. 고른 곳은 있으니 다시 훑을 길을 준다.
             Retro95Dialog(title: String(localized: "검색을 멈췄어요"), icon: .spaceView) {
@@ -326,6 +332,53 @@ struct DiskMapView: View {
             placeholder(String(localized: "어느 폴더를 볼까요?"),
                         detail: String(localized: "위에서 볼 곳을 고르면 큰 파일과 폴더부터 보여줘요. 폴더를 열어 어디에 공간을 많이 쓰는지 살펴보세요."))
         }
+    }
+
+    /// 지난 트리를 읽는 동안에도 탐색할 수 있도록 진행 상황만 얇게 올린다.
+    private var refreshStatus: some View {
+        let message = refreshStatusMessage
+        // 모래시계는 사이드바에만 둔다(사용자 결정). 여기서는 글과 막대로 충분하다.
+        return HStack(spacing: 8) {
+            Text(verbatim: message)
+                .font(R95.ui())
+            if case .measuring(let percent) = model.loadPhase {
+                Retro95ProgressBar(fraction: Double(percent) / 100, height: 16)
+                    .frame(width: 96)
+                    .accessibilityHidden(true)
+            }
+            Spacer(minLength: 8)
+            if model.loadPhase != nil {
+                Button("중단") { model.cancelLoad() }
+                    .buttonStyle(Retro95ButtonStyle())
+            } else {
+                Button("다시 읽기") { Task { await model.reload() } }
+                    .buttonStyle(Retro95ButtonStyle())
+            }
+        }
+        .padding(8)
+        .background(R95.gray)
+        .retroSunken()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text(verbatim: message))
+    }
+
+    private var refreshStatusMessage: String {
+        let progress: String
+        switch model.loadPhase {
+        case .reading(let bytes):
+            let amount = ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)
+            progress = String(localized: "새로 읽는 중 · \(amount) 읽음")
+        case .measuring(let percent):
+            progress = String(localized: "새로 읽는 중 \(percent)%")
+        case nil:
+            progress = String(localized: "새로 읽기를 멈췄어요")
+        }
+        guard let cachedAt = model.cachedAt else { return progress }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.dateTimeStyle = .named
+        formatter.unitsStyle = .full
+        let relativeTime = formatter.localizedString(for: cachedAt, relativeTo: Date())
+        return String(localized: "지난 결과(\(relativeTime)) · \(progress)")
     }
 
     /// 크기순 막대 목록. 트리맵은 이 데이터에 맞지 않았다 —
