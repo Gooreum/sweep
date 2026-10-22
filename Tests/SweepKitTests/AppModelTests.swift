@@ -111,8 +111,7 @@ struct AppModelTests {
     @Test("주입한 디스크 맵 모델을 그대로 돌려준다")
     func diskMapModelIsInjectable() {
         // 기본 구성은 실제 순회를 물고 있어 테스트에서 10초를 기다리게 된다.
-        let injected = DiskMapModel(countEntries: { _, _, _ in 0 },
-                                    buildTree: { url, _, _ in
+        let injected = DiskMapModel(buildTree: { url, _, _ in
                                         DiskUsageNode(url: url, size: 0)
                                     })
         let app = AppModel(makeDiskMap: { injected })
@@ -170,8 +169,7 @@ struct AppModelTests {
 
     @Test("공간 보기 배지는 끝까지 읽은 시작 지점의 크기다")
     func diskMapBadgeIsRootSize() async {
-        let injected = DiskMapModel(countEntries: { _, _, _ in 1 },
-                                    buildTree: { url, _, _ in DiskUsageNode(url: url, size: 1_000_000_000) })
+        let injected = DiskMapModel(buildTree: { url, _, _ in DiskUsageNode(url: url, size: 1_000_000_000) })
         let app = AppModel(makeDiskMap: { injected })
         #expect(app.badges[.diskMap] == nil)
 
@@ -216,8 +214,7 @@ struct AppModelTests {
 
     @Test("공간 보기 상태는 모델이 없으면 idle, 끝까지 읽으면 done이다")
     func diskMapStatusFollowsModel() async {
-        let injected = DiskMapModel(countEntries: { _, _, _ in 0 },
-                                    buildTree: { url, _, _ in DiskUsageNode(url: url, size: 0) })
+        let injected = DiskMapModel(buildTree: { url, _, _ in DiskUsageNode(url: url, size: 0) })
         let app = AppModel(makeDiskMap: { injected })
         // 사이드바가 읽는다고 모델이 만들어지면 안 된다
         #expect(app.diskMapStatus == .idle)

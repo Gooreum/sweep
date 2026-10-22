@@ -289,9 +289,9 @@ struct DiskMapView: View {
         if let phase = model.loadPhase {
             VStack(spacing: 12) {
                 switch phase {
-                case .counting(let scanned):
-                    // 분모를 만드는 중이라 아직 퍼센트가 없다. 숫자를 지어내지 않는다.
-                    Retro95ScanPanel(title: String(localized: "재는 중"), headline: String(localized: "\(scanned.formatted())개 확인했어요…"),
+                case .reading(let bytes):
+                    // 얼마를 읽어야 하는지 모른다. 퍼센트를 지어내지 않고 읽은 양만 보여 준다.
+                    Retro95ScanPanel(title: String(localized: "재는 중"), headline: String(localized: "\(ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)) 읽었어요…"),
                                      detail: nil, fraction: nil, percentText: nil,
                                      leftFooter: nil, rightFooter: nil)
                 case .measuring(let percent):

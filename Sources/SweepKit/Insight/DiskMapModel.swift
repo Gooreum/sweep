@@ -16,6 +16,12 @@ public final class ScanCounter: @unchecked Sendable {
         count += 1
     }
 
+    /// 읽은 바이트처럼 한 번에 여러 개를 더한다.
+    public func add(_ amount: Int64) {
+        lock.lock(); defer { lock.unlock() }
+        count += Int(amount)
+    }
+
     public var value: Int {
         lock.lock(); defer { lock.unlock() }
         return count
@@ -27,11 +33,7 @@ public final class ScanCounter: @unchecked Sendable {
         count = newValue
     }
 
-    /// 0~100.
-    ///
-    /// **절삭이 아니라 반올림한다.** 두 패스가 서로 다른 시점에 돌아 분모와 분자가
-    /// 완전히 같을 수 없다 — 실측에서 73,952 vs 73,947로 5개가 어긋났고,
-    /// 절삭하면 99.99%가 99%가 되어 "멈춘 것처럼" 보인다.
+    /// 0~100. 반올림한다.
     public func percent(of total: Int) -> Int {
         guard total > 0 else { return 0 }
         return min(100, max(0, (value * 200 + total) / (total * 2)))
@@ -45,12 +47,15 @@ public final class ScanCounter: @unchecked Sendable {
 @Observable
 public final class DiskMapModel {
 
-    /// 로딩 단계. 분모가 생기기 전에는 퍼센트를 보여줄 수 없다.
+    /// 로딩 단계.
+    ///
+    /// 예전에는 항목 수를 먼저 세서 분모로 썼다. 그 세기가 디스크를 한 번 더 훑어
+    /// 집계와 읽기를 나눠 먹었다. 이제 분모는 **이미 아는 크기**다 — 이 시작점의
+    /// 지난 결과, 없으면 볼륨 사용량. 둘 다 없으면 퍼센트를 지어내지 않는다.
     public enum LoadPhase: Equatable, Sendable {
-        /// 항목 수를 세는 중. 총량을 모르므로 퍼센트 대신 지금까지 센 개수를 보여준다.
-        /// 없는 분모로 퍼센트를 지어내지 않는다.
-        case counting(scanned: Int)
-        /// 크기를 재는 중. 0~100.
+        /// 얼마나 읽어야 하는지 모른다. 지금까지 읽은 양만 보여 준다.
+        case reading(bytes: Int64)
+        /// 크기를 재는 중. 0~100. 분모가 추정이라 끝나기 전에는 99를 넘지 않는다.
         case measuring(percent: Int)
     }
 
@@ -77,36 +82,50 @@ public final class DiskMapModel {
     /// 마지막으로 끝까지 읽은 때. 중단하면 바뀌지 않는다. 사이드바 완료 표시가 읽는다.
     public private(set) var completedAt: Date?
 
+    /// 지금 보이는 트리가 **지난번에 읽은 것**이면 그때. 새로 다 읽으면 nil.
+    ///
+    /// 볼륨 전체는 몇 분이 걸린다. 그동안 빈 진행 화면 대신 지난 결과를 보여 주고
+    /// 뒤에서 새로 읽는다. 화면은 이 값으로 "지난 결과"라고 알린다.
+    public private(set) var cachedAt: Date?
+
     /// 끝까지 읽었을 때 한 번. 앱이 완료 알림을 보낸다 — 알림 센터는 SweepKit 밖의 일이다.
     public var onCompleted: (@MainActor () -> Void)?
 
-    private let countEntries:
-        @Sendable (URL, CancelFlag, @escaping @Sendable (Int) -> Void) -> Int
     private let buildTree:
-        @Sendable (URL, CancelFlag, @escaping @Sendable () -> Void) -> DiskUsageNode
+        @Sendable (URL, CancelFlag, @escaping @Sendable (Int64) -> Void) -> DiskUsageNode
+    private let expectedBytes: @Sendable (URL) -> Int64?
+    private let cache: DiskMapCache?
 
     /// 지금 도는 순회의 중단 신호.
     private var cancelFlag: CancelFlag?
 
-    /// 세기·집계를 주입할 수 있게 열어 둔다 — 실제 스캔은 10초가 넘어 테스트에 쓸 수 없다.
+    /// 집계·분모·저장소를 주입할 수 있게 열어 둔다 — 실제 스캔은 10초가 넘어 테스트에 쓸 수 없다.
+    /// `cache`가 nil이면 지난 결과를 쓰지도 남기지도 않는다.
     public init(
-        countEntries: @escaping @Sendable
-            (URL, CancelFlag, @escaping @Sendable (Int) -> Void) -> Int
-            = { url, flag, onCounted in
-                DiskUsageTree.countEntries(at: url,
-                                           isCancelled: { flag.isCancelled },
-                                           onCounted: onCounted)
-            },
         buildTree: @escaping @Sendable
-            (URL, CancelFlag, @escaping @Sendable () -> Void) -> DiskUsageNode
-            = { url, flag, onScanned in
+            (URL, CancelFlag, @escaping @Sendable (Int64) -> Void) -> DiskUsageNode
+            = { url, flag, onBytes in
                 DiskUsageTree.build(at: url,
                                     isCancelled: { flag.isCancelled },
-                                    onEntryScanned: onScanned)
-            }
+                                    onBytesScanned: onBytes)
+            },
+        expectedBytes: @escaping @Sendable (URL) -> Int64? = DiskMapModel.volumeUsedBytes,
+        cache: DiskMapCache? = nil
     ) {
-        self.countEntries = countEntries
         self.buildTree = buildTree
+        self.expectedBytes = expectedBytes
+        self.cache = cache
+    }
+
+    /// 시작점이 볼륨 자신(`/`, 외장 디스크)이면 그 볼륨의 사용량. 아니면 모른다.
+    public static let volumeUsedBytes: @Sendable (URL) -> Int64? = { url in
+        guard let values = try? url.resourceValues(forKeys: [
+            .isVolumeKey, .volumeTotalCapacityKey, .volumeAvailableCapacityKey,
+        ]), values.isVolume == true,
+            let total = values.volumeTotalCapacity,
+            let available = values.volumeAvailableCapacity
+        else { return nil }
+        return Int64(max(0, total - available))
     }
 
     /// 사용자가 고를 수 있는 시작점.
@@ -120,73 +139,79 @@ public final class DiskMapModel {
 
     public var canGoUp: Bool { path.count > 1 }
 
-    /// 세기와 집계를 **동시에** 돌린다.
+    /// 한 번만 훑는다. 진행률의 분모는 이미 아는 크기다(`LoadPhase` 참고).
     ///
-    /// 순차로 하면 5.9 + 9.2 = 15.1초인데, 동시에 돌리면 벽시계 시간이
-    /// 집계 패스 수준으로 줄어든다. 분모가 도착하기 전까지는 퍼센트 대신
-    /// "세는 중"을 보여주는 것이 정직하다.
+    /// 다른 시작점에서 왔고 지난 결과가 있으면 **그것부터 보여 주고** 뒤에서 새로 읽는다.
+    /// 같은 시작점을 다시 읽을 때는 지금 화면을 그대로 둔다 — 파고든 자리까지 지켜야 한다.
     public func load(_ root: URL) async {
         // 화면이 무엇을 보고 있는지도 모델이 안다. 뷰와 두 곳에 두면 어긋난다.
         selectedRoot = root
-        loadPhase = .counting(scanned: 0)
+        let previous = cache?.load(root)
+        if let previous, path.first?.url != root {
+            path = [previous.tree]
+            cachedAt = previous.date
+        }
+
+        let total = previous?.tree.size ?? expectedBytes(root)
+        loadPhase = Self.phase(read: 0, of: total)
 
         // 볼륨 전체는 몇 분이 걸린다. 시작한 순회를 멈출 수 있어야 한다.
         let flag = CancelFlag()
         cancelFlag = flag
 
         let measured = ScanCounter()
-        let counted = ScanCounter()
-        let counting = Task.detached { [countEntries] in
-            countEntries(root, flag) { counted.set($0) }
-        }
         let building = Task.detached { [buildTree] in
-            buildTree(root, flag) { measured.increment() }
+            buildTree(root, flag) { measured.add($0) }
         }
 
-        // 분모가 오기 전에는 센 개수를, 온 뒤에는 퍼센트를 보여준다.
         let ticker = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(80))
-                // 중단했는데 티커가 진행률을 되살리면 "중단" 버튼이 안 먹은 것처럼 보인다
-                guard let self, !flag.isCancelled,
-                      case .counting = self.loadPhase else { return }
-                self.loadPhase = .counting(scanned: counted.value)
-            }
-        }
-
-        // countEntries는 루트 하위만 세고, build는 루트 자신도 방문한다.
-        // 분모에 1을 더해야 둘이 같은 것을 세게 된다.
-        let total = await counting.value + 1
-        ticker.cancel()
-        loadPhase = .measuring(percent: measured.percent(of: total))
-
-        // 집계가 끝날 때까지 주기적으로 퍼센트를 갱신한다.
-        let percentTicker = Task { [weak self] in
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .milliseconds(80))
-                guard let self, !flag.isCancelled else { return }
-                self.loadPhase = .measuring(percent: measured.percent(of: total))
+                // 중단했는데 티커가 진행률을 되살리면 "중단" 버튼이 안 먹은 것처럼 보인다.
+                // 다 읽은 뒤 깨어난 경우도 같다 — 끝난 화면에 "읽는 중"을 되살린다.
+                guard !Task.isCancelled, let self, !flag.isCancelled else { return }
+                self.loadPhase = Self.phase(read: Int64(measured.value), of: total)
             }
         }
         let tree = await building.value
-        percentTicker.cancel()
+        ticker.cancel()
 
         // 중단됐으면 반쪽 트리로 화면을 덮지 않는다.
-        // 보던 것은 그대로 둔다 — 멈췄다고 화면까지 비면 처음부터 다시 해야 한다.
+        // 보던 것(지난 결과 포함)은 그대로 둔다 — 멈췄다고 화면까지 비면 처음부터 다시 해야 한다.
         guard !flag.isCancelled else {
             loadPhase = nil
             return
         }
 
-        // 집계가 끝났으면 정의상 100%다. 분모 오차로 99%에서 끝나지 않도록 확정한다.
-        // 한 틱만 보여주고 넘어간다 — 사용자가 완료를 확인할 수 있어야 한다.
-        loadPhase = .measuring(percent: 100)
-        try? await Task.sleep(for: .milliseconds(120))
+        // 집계가 끝났으면 정의상 100%다. 한 틱만 보여주고 넘어간다 — 사용자가 완료를 확인할 수 있어야 한다.
+        if total != nil {
+            loadPhase = .measuring(percent: 100)
+            try? await Task.sleep(for: .milliseconds(120))
+        }
 
-        path = [tree]
+        // 보던 자리를 **URL로 다시 찾아 내려간다.** 세 단계 파고든 뒤 새로 읽었다고
+        // 맨 위로 튕기면 세 번 다시 눌러야 한다. 중간이 사라졌으면 거기서 멈춘다.
+        let trail = path.first?.url == root ? path.dropFirst().map(\.url) : []
+        var rebuilt = [tree]
+        for url in trail {
+            guard let next = rebuilt.last?.children.first(where: { $0.url == url }),
+                  !next.children.isEmpty
+            else { break }
+            rebuilt.append(next)
+        }
+        path = rebuilt
+        cachedAt = nil
         loadPhase = nil
         completedAt = Date()
+        cache?.save(tree, for: root)
         onCompleted?()
+    }
+
+    /// 읽은 양과 분모로 단계를 정한다. 분모가 추정이라 다 읽기 전에는 99%에서 멈춘다.
+    static func phase(read: Int64, of total: Int64?) -> LoadPhase {
+        guard let total, total > 0 else { return .reading(bytes: read) }
+        let percent = Int((Double(read) / Double(total) * 100).rounded())
+        return .measuring(percent: min(99, max(0, percent)))
     }
 
     /// 이 항목의 판정. 지금 보고 있는 지점의 자식이 아니면 nil —
@@ -247,16 +272,7 @@ public final class DiskMapModel {
         // 중단하면 트리가 없다. 그래도 고른 시작점이 있으면 다시 훑을 수 있어야 한다 —
         // 없으면 중단한 순간 되돌아갈 길이 막힌다.
         guard let root = path.first?.url ?? selectedRoot else { return }
-        let trail = path.dropFirst().map(\.url)
-
         await load(root)
-
-        for url in trail {
-            guard let next = current?.children.first(where: { $0.url == url }),
-                  !next.children.isEmpty
-            else { break }
-            path.append(next)
-        }
     }
 
     // MARK: - 삭제
@@ -316,6 +332,8 @@ public final class DiskMapModel {
             index = parent
         }
         path = rebuilt
+        // 지운 것이 다음에 지난 결과로 되살아나면 안 된다.
+        if let root = path.first { cache?.save(root, for: root.url, at: cachedAt ?? completedAt ?? Date()) }
     }
 
     /// 테스트에서 스캔 없이 트리를 넣기 위한 입구.

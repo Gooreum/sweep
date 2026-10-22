@@ -23,15 +23,21 @@ struct DiskMapModelTests {
         return model
     }
 
-    /// 세기·집계를 즉시 끝내는 가짜 모델.
-    private func fakeModel(entries: Int = 3) -> DiskMapModel {
+    /// 집계를 즉시 끝내는 가짜 모델.
+    private func fakeModel(cache: DiskMapCache? = nil) -> DiskMapModel {
         let tree = sampleTree()
         return DiskMapModel(
-            countEntries: { _, _, onCounted in onCounted(entries); return entries },
-            buildTree: { _, _, onScanned in
-                for _ in 0..<entries { onScanned() }
+            buildTree: { _, _, onBytes in
+                onBytes(tree.size)
                 return tree
-            })
+            },
+            expectedBytes: { _ in nil },
+            cache: cache)
+    }
+
+    private func makeCache() -> (DiskMapCache, () -> Void) {
+        let dir = URL(filePath: NSTemporaryDirectory()).appending(path: "sweep-cache-\(UUID().uuidString)")
+        return (DiskMapCache(directory: dir), { try? FileManager.default.removeItem(at: dir) })
     }
 
     // TC-2
@@ -196,39 +202,112 @@ struct DiskMapModelTests {
     }
 
     // TC-2
-    @Test("분모가 오기 전에는 세는 중 단계를 보여준다")
-    func countingPhaseComesFirst() async {
+    @Test("분모를 모르면 퍼센트 대신 읽은 양을 보여준다")
+    func readingPhaseWithoutTotal() async {
         let tree = sampleTree()
-        // 세기를 붙잡아 둔다. 시간에 기대면 부하에 따라 결과가 흔들린다.
+        // 집계를 붙잡아 둔다. 시간에 기대면 부하에 따라 결과가 흔들린다.
         let gate = Gate()
         let model = DiskMapModel(
-            countEntries: { _, _, onCounted in
-                onCounted(5)
+            buildTree: { _, _, onBytes in
+                onBytes(5)
                 gate.wait()
-                return 10
-            },
-            buildTree: { _, _, onScanned in
-                for _ in 0..<10 { onScanned() }
                 return tree
-            })
+            },
+            expectedBytes: { _ in nil })
 
         async let load: Void = model.load(URL(filePath: "/private/tmp/root"))
 
-        // load가 시작될 때까지 양보한다
-        while model.loadPhase == nil { await Task.yield() }
-
-        // 아직 분모가 없으므로 퍼센트를 지어내지 않는다
-        guard case .counting = model.loadPhase else {
-            Issue.record("세는 중이 아니다: \(String(describing: model.loadPhase))")
-            gate.signal()
-            await load
-            return
-        }
+        // 티커가 읽은 양을 옮길 때까지 기다린다
+        while model.loadPhase != .reading(bytes: 5) { await Task.yield() }
 
         gate.signal()
         await load
         #expect(model.loadPhase == nil)
         #expect(model.current?.name == "root")
+    }
+
+    @Test("분모가 있으면 퍼센트를 내되 다 읽기 전엔 99를 넘지 않는다")
+    func percentIsCappedUntilDone() {
+        #expect(DiskMapModel.phase(read: 0, of: nil) == .reading(bytes: 0))
+        #expect(DiskMapModel.phase(read: 50, of: 200) == .measuring(percent: 25))
+        // 추정 분모보다 더 읽어도 끝나기 전에는 100이 아니다
+        #expect(DiskMapModel.phase(read: 300, of: 200) == .measuring(percent: 99))
+        #expect(DiskMapModel.phase(read: 10, of: 0) == .reading(bytes: 10))
+    }
+
+    @Test("지난 결과가 있으면 먼저 보여 주고, 다 읽으면 새 것으로 바꾸고 남긴다")
+    func showsCachedTreeFirst() async {
+        let (cache, cleanup) = makeCache()
+        defer { cleanup() }
+        let root = URL(filePath: "/private/tmp/root")
+        let old = DiskUsageNode(url: root, size: 42)
+        let when = Date(timeIntervalSince1970: 1_700_000_000)
+        cache.save(old, for: root, at: when)
+
+        let gate = Gate()
+        let fresh = sampleTree()
+        let model = DiskMapModel(
+            buildTree: { _, _, onBytes in
+                onBytes(21)
+                gate.wait()
+                return fresh
+            },
+            expectedBytes: { _ in nil }, cache: cache)
+
+        async let load: Void = model.load(root)
+        while model.loadPhase == nil { await Task.yield() }
+
+        // 읽는 동안: 지난 결과와 그 날짜, 분모는 지난 크기
+        #expect(model.current?.size == 42)
+        #expect(model.cachedAt == when)
+        while model.loadPhase != .measuring(percent: 50) { await Task.yield() }
+
+        gate.signal()
+        await load
+        #expect(model.current?.size == fresh.size)
+        #expect(model.cachedAt == nil)
+        #expect(cache.load(root)?.tree.size == fresh.size)
+    }
+
+    @Test("중단하면 지난 결과는 그대로 남는다")
+    func cancelKeepsCachedTree() async {
+        let (cache, cleanup) = makeCache()
+        defer { cleanup() }
+        let root = URL(filePath: "/private/tmp/root")
+        cache.save(DiskUsageNode(url: root, size: 42), for: root)
+
+        let gate = Gate()
+        let model = DiskMapModel(
+            buildTree: { url, _, _ in
+                gate.wait()
+                return DiskUsageNode(url: url, size: 1)
+            },
+            expectedBytes: { _ in nil }, cache: cache)
+
+        async let load: Void = model.load(root)
+        while model.loadPhase == nil { await Task.yield() }
+        model.cancelLoad()
+        gate.signal()
+        await load
+
+        #expect(model.current?.size == 42)
+        #expect(model.cachedAt != nil)
+        #expect(model.completedAt == nil)
+    }
+
+    @Test("지운 항목은 다음 지난 결과에서도 빠진다")
+    func dropUpdatesCache() async {
+        let (cache, cleanup) = makeCache()
+        defer { cleanup() }
+        let model = fakeModel(cache: cache)
+        let root = URL(filePath: "/private/tmp/root")
+        await model.load(root)
+
+        let small = model.tiles.first { $0.name == "small" }!
+        model.drop(small)
+
+        #expect(cache.load(root)?.tree.children.map(\.name) == ["big"])
+        #expect(cache.load(root)?.tree.size == 500)
     }
 
     // TC-3
@@ -580,9 +659,8 @@ struct DiskMapModelTests {
         let replacement = DiskUsageNode(url: URL(filePath: "/private/tmp/other"), size: 1)
         let gate = Gate()
         let model = DiskMapModel(
-            countEntries: { _, _, onCounted in onCounted(1); return 1 },
             buildTree: { _, _, onScanned in
-                onScanned()
+                onScanned(1)
                 gate.wait()          // 중단을 누를 때까지 붙잡아 둔다
                 return replacement
             })
@@ -606,8 +684,7 @@ struct DiskMapModelTests {
 
     @Test("끝까지 읽으면 완료 시각이 남고 완료 콜백이 한 번 불린다")
     func completionSignals() async {
-        let model = DiskMapModel(countEntries: { _, _, _ in 1 },
-                                 buildTree: { url, _, _ in DiskUsageNode(url: url, size: 1) })
+        let model = DiskMapModel(buildTree: { url, _, _ in DiskUsageNode(url: url, size: 1) })
         var calls = 0
         model.onCompleted = { calls += 1 }
         #expect(model.completedAt == nil)
@@ -622,9 +699,8 @@ struct DiskMapModelTests {
     func cancelIsNotCompletion() async {
         let gate = Gate()
         let model = DiskMapModel(
-            countEntries: { _, _, onCounted in onCounted(1); return 1 },
             buildTree: { url, _, onScanned in
-                onScanned()
+                onScanned(1)
                 gate.wait()
                 return DiskUsageNode(url: url, size: 1)
             })
@@ -685,8 +761,7 @@ struct DiskMapModelTests {
 
     private func sourcedModel(_ source: TreeSource) -> DiskMapModel {
         DiskMapModel(
-            countEntries: { _, _, onCounted in onCounted(1); return 1 },
-            buildTree: { _, _, onScanned in onScanned(); return source.next() })
+            buildTree: { _, _, onScanned in onScanned(1); return source.next() })
     }
 
     /// root → big → a 까지 내려간 모델을 만든다.

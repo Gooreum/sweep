@@ -83,7 +83,7 @@ public final class AppModel {
     public init(makeModel: @escaping @MainActor (Feature) -> ScanModel
                     = { ScanModel(feature: $0) },
                 makeDiskMap: @escaping @MainActor () -> DiskMapModel
-                    = { DiskMapModel() },
+                    = { DiskMapModel(cache: .standard) },
                 makeCPU: @escaping @MainActor () -> CPUModel
                     = { CPUModel() },
                 folderAccess: FolderAccess.Registry = FolderAccess.shared,
@@ -612,7 +612,8 @@ public struct StatusLine: Equatable, Sendable {
     static func diskMap(loadPhase: DiskMapModel.LoadPhase?, current: DiskUsageNode?) -> StatusLine {
         let status: String
         switch loadPhase {
-        case let .counting(scanned): status = String(localized: "\(scanned.formatted())개 확인 중…")
+        case let .reading(bytes):
+            status = String(localized: "\(ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)) 읽는 중…")
         case let .measuring(percent): status = String(localized: "크기 확인 중… \(percent)%")
         case .none: status = current == nil ? String(localized: "시작 전") : String(localized: "확인 완료")
         }

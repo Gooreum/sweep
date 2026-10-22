@@ -117,12 +117,14 @@ struct DiskUsageTreeTests {
         try write(2, to: root.appending(path: "c/z.bin"))
 
         let counter = VisitCounter()
-        _ = DiskUsageTree.build(at: root, maxDepth: 4,
-                                minimumSize: Int64(Self.oneMB),
-                                onEntryScanned: { counter.increment() })
+        let tree = DiskUsageTree.build(at: root, maxDepth: 4,
+                                       minimumSize: Int64(Self.oneMB),
+                                       onBytesScanned: { _ in counter.increment() })
 
-        // 루트 1 + 디렉토리 3 + 파일 3
-        #expect(counter.value == 7, "방문 횟수가 항목 수와 다르다: \(counter.value)")
+        // 파일이 있는 폴더 a, b, c에서 한 번씩. 같은 폴더를 두 번 읽지 않는다.
+        #expect(counter.value == 3, "폴더를 읽은 횟수가 다르다: \(counter.value)")
+        #expect(tree.size >= Int64(6 * Self.oneMB))
+        #expect(tree.size < Int64(7 * Self.oneMB))
     }
 
     // TC-6
@@ -386,52 +388,3 @@ struct DiskUsageAppDataTests {
     }
 }
 
-/// 세기와 집계가 **같은 곳을 본다.**
-///
-/// `build`가 안 내려가는데 `countEntries`만 세면 분모가 커져 퍼센트가 100에 닿지 못한다.
-/// 링크 232개 때문에 99%에서 멈췄던 것과 같은 함정이다.
-@Suite("세기와 집계가 같은 범위")
-struct CountMatchesBuildTests {
-
-    private let fm = FileManager.default
-
-    private func makeHome() throws -> (URL, () -> Void) {
-        let home = URL(filePath: NSTemporaryDirectory())
-            .appending(path: "sweep-count-\(UUID().uuidString)")
-        for relative in ["Library/Containers/com.example.app/deep/deeper",
-                         "Library/Caches/Example"] {
-            try fm.createDirectory(at: home.appending(path: relative),
-                                   withIntermediateDirectories: true)
-        }
-        return (home, { try? self.fm.removeItem(at: home) })
-    }
-
-    // TC-1
-    @Test("접근이 없으면 세기도 앱 데이터 안으로 안 들어간다")
-    func countSkipsAppDataWhenDenied() throws {
-        let (home, cleanup) = try makeHome()
-        defer { cleanup() }
-        let library = home.appending(path: "Library")
-
-        let denied = DiskUsageTree.countEntries(at: library,
-                                                canReadAppData: false, appDataHome: home)
-        let granted = DiskUsageTree.countEntries(at: library,
-                                                 canReadAppData: true, appDataHome: home)
-
-        // 막았으면 `com.example.app` 아래 두 층을 세지 않는다.
-        #expect(denied < granted)
-    }
-
-    // TC-2
-    @Test("구역 자신은 세기에 들어간다")
-    func countIncludesRootItself() throws {
-        let (home, cleanup) = try makeHome()
-        defer { cleanup() }
-
-        let denied = DiskUsageTree.countEntries(at: home.appending(path: "Library"),
-                                                canReadAppData: false, appDataHome: home)
-
-        // `Containers`와 그 안의 `com.example.app`까지는 목록에 보인다.
-        #expect(denied >= 4)
-    }
-}

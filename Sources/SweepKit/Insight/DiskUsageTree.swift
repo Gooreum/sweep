@@ -1,7 +1,7 @@
 import Foundation
 
 /// 디스크 사용량 트리의 한 노드.
-public struct DiskUsageNode: Identifiable, Sendable, Hashable {
+public struct DiskUsageNode: Identifiable, Sendable, Hashable, Codable {
     public let url: URL
     public let size: Int64
     public let children: [DiskUsageNode]
@@ -68,156 +68,183 @@ public enum DiskUsageTree {
     /// 없을 만큼 작은 조각이 수만 개 나오고 스캔만 느려진다. 눈에 보이는 것만 만든다.
     ///
     /// 가지치기된 자식도 **부모의 size에는 포함된다.** 합계가 맞아야 면적 비교가 의미를 갖는다.
+    ///
+    /// `onBytesScanned`는 폴더 하나를 읽을 때마다 그 폴더 **바로 아래 파일들의 바이트 합**을
+    /// 한 번 알린다. 다 더하면 루트 크기가 된다 — 진행률의 분자다.
     public static func build(at url: URL,
                              maxDepth: Int = 4,
                              minimumSize: Int64 = 1024 * 1024,
                              canReadAppData: Bool = FullDiskAccess.isGranted,
                              appDataHome: URL = Sandbox.userHome,
                              isCancelled: @escaping @Sendable () -> Bool = { false },
-                             onEntryScanned: (@Sendable () -> Void)? = nil) -> DiskUsageNode {
-        node(at: url, depth: maxDepth, minimumSize: minimumSize,
-             canReadAppData: canReadAppData, appDataHome: appDataHome,
-             isCancelled: isCancelled, onEntryScanned: onEntryScanned)
-    }
+                             onBytesScanned: (@Sendable (Int64) -> Void)? = nil) -> DiskUsageNode {
+        let walk = Walk(
+            minimumSize: minimumSize,
+            protectedPrefixes: canReadAppData
+                ? [] : AppDataPaths.roots(home: appDataHome).map { $0.standardizedFileURL.path + "/" },
+            isCancelled: isCancelled,
+            onBytesScanned: onBytesScanned)
 
-    /// 항목 하나를 정확히 한 번만 본다. 크기는 자식에서 올려받는다.
-    ///
-    /// 예전에는 노드마다 `DirectorySize.bytes(at:)`를 불렀는데, 그 함수가 하위 전체를
-    /// 훑으므로 같은 파일을 깊이만큼 반복해서 셌다 — 실측 30.7초가 이것 때문이었다.
-    private static func node(at url: URL, depth: Int, minimumSize: Int64,
-                             canReadAppData: Bool, appDataHome: URL,
-                             isCancelled: @escaping @Sendable () -> Bool,
-                             onEntryScanned: (@Sendable () -> Void)?) -> DiskUsageNode {
-        // 무엇이든 들여다봤으면 보고한다. `countEntries`가 링크와 읽기 실패 항목까지
-        // 세므로 여기서 빼먹으면 분모가 커져 퍼센트가 100에 닿지 못한다 —
-        // 실측에서 링크 232개 때문에 99%에서 멈췄다.
-        onEntryScanned?()
-
+        let path = url.standardizedFileURL.path
         // 전체 디스크 접근이 없으면 남의 앱 폴더를 **열어 보지도 않는다.**
         // 열면 그 앱마다 "다른 앱의 데이터에 접근하려고 합니다"가 뜬다 —
         // 앱 폴더 수만큼 물으므로 한 번 허용으로 끝나지 않는다.
         // 못 읽는다고 표시하면 화면이 배너로 켜는 길을 알려 준다.
-        if !canReadAppData, AppDataPaths.isInside(url, home: appDataHome) {
-            return DiskUsageNode(url: url, size: 0, isReadable: false)
-        }
+        if walk.isProtected(path) { return DiskUsageNode(url: url, size: 0, isReadable: false) }
 
-        guard let values = try? url.resourceValues(forKeys: keys) else {
+        // 루트 자신만 속성을 따로 묻는다. 그 아래는 부모 폴더를 읽을 때 같이 받는다.
+        guard let values = try? url.resourceValues(forKeys: rootKeys) else {
             return DiskUsageNode(url: url, size: 0)
         }
         // 링크는 크기에 넣지 않는다. 따라가면 대상 용량이 중복 집계된다.
-        // 다만 **방문은 했으므로** 위에서 이미 보고했다 — 두 성질은 별개다.
         if values.isSymbolicLink == true { return DiskUsageNode(url: url, size: 0) }
-
         guard values.isDirectory == true else {
-            return DiskUsageNode(url: url, size: allocated(values))
+            let size = Int64(values.totalFileAllocatedSize ?? values.fileAllocatedSize ?? 0)
+            onBytesScanned?(size)
+            return DiskUsageNode(url: url, size: size)
+        }
+        return walk.directory(url: url, path: path, depth: maxDepth, parallelLevels: parallelLevels)
+    }
+
+    /// 몇 단계까지 자식 폴더를 여러 스레드로 나눠 잴까.
+    ///
+    /// 한 단계만 나누면 `/`처럼 한 자식(`Users`)이 거의 전부인 곳에서 한 스레드만 일한다.
+    /// 두 단계면 그 아래 폴더들로 다시 나뉜다. 더 깊으면 스레드만 늘고 빨라지지 않는다.
+    static let parallelLevels = 2
+
+    private static let rootKeys: Set<URLResourceKey> = [
+        .isDirectoryKey, .isSymbolicLinkKey, .totalFileAllocatedSizeKey, .fileAllocatedSizeKey,
+    ]
+
+    /// 한 번의 순회가 공유하는 설정.
+    private struct Walk: Sendable {
+        let minimumSize: Int64
+        /// 열면 안 되는 앱 데이터 구역의 **안쪽** 접두사(`…/Library/Containers/`).
+        /// 구역 자신은 목록에 보여야 하므로 끝의 `/`까지 맞아야 안쪽이다.
+        let protectedPrefixes: [String]
+        let isCancelled: @Sendable () -> Bool
+        let onBytesScanned: (@Sendable (Int64) -> Void)?
+
+        func isProtected(_ path: String) -> Bool {
+            !protectedPrefixes.isEmpty && protectedPrefixes.contains { path.hasPrefix($0) }
         }
 
-        // 못 읽었으면 0바이트가 아니라 "모른다"다. `?? []`로 삼키면
-        // 권한 없는 폴더가 "0 KB"로 보인다.
-        guard let entries = contents(of: url) else {
-            return DiskUsageNode(url: url, size: 0, isReadable: false)
-        }
+        /// 폴더 하나. 항목을 정확히 한 번만 보고, 크기는 자식에서 올려받는다.
+        ///
+        /// 예전에는 노드마다 `DirectorySize.bytes(at:)`를 불렀는데, 그 함수가 하위 전체를
+        /// 훑으므로 같은 파일을 깊이만큼 반복해서 셌다 — 실측 30.7초가 이것 때문이었다.
+        func directory(url: URL, path: String, depth: Int, parallelLevels: Int) -> DiskUsageNode {
+            // 몇 분짜리 순회를 끊을 수 있어야 한다. 폴더 단위면 충분히 촘촘하다.
+            if isCancelled() { return DiskUsageNode(url: url, size: 0) }
 
-        var total: Int64 = 0
-        var children: [DiskUsageNode] = []
-        for child in entries {
-            // 몇 분짜리 순회를 끊을 수 있어야 한다. 자식 단위면 충분히 촘촘하다.
-            if isCancelled() { break }
+            // 못 읽었으면 0바이트가 아니라 "모른다"다. `?? []`로 삼키면
+            // 권한 없는 폴더가 "0 KB"로 보인다.
+            guard let entries = BulkDirectory.entries(atPath: path) else {
+                return DiskUsageNode(url: url, size: 0, isReadable: false)
+            }
 
-            let node = node(at: child, depth: depth - 1, minimumSize: minimumSize,
-                            canReadAppData: canReadAppData, appDataHome: appDataHome,
-                            isCancelled: isCancelled, onEntryScanned: onEntryScanned)
-            total += node.size
+            // 이 아래는 목록에 남지 않는다. 크기만 합치면 되므로 URL·노드를 만들지 않는다 —
+            // 깊은 곳일수록 항목이 많아 이것만으로 순회 시간의 상당 부분이다.
+            if depth <= 0, parallelLevels <= 0 {
+                return DiskUsageNode(url: url, size: size(path: path, entries: entries))
+            }
+
+            var fileBytes: Int64 = 0
+            var nodes: [DiskUsageNode] = []
+            var folders: [(url: URL, path: String)] = []
+            for entry in entries {
+                let childPath = BulkDirectory.join(path, entry.name)
+                let isFolder = entry.kind == .directory
+                let childURL = URL(filePath: childPath,
+                                   directoryHint: isFolder ? .isDirectory : .notDirectory)
+                if isProtected(childPath) {
+                    nodes.append(DiskUsageNode(url: childURL, size: 0, isReadable: false))
+                    continue
+                }
+                switch entry.kind {
+                case .directory:
+                    folders.append((childURL, childPath))
+                case .symlink:
+                    // 링크는 세되 크기는 0이다. 따라 내려가지 않는다.
+                    nodes.append(DiskUsageNode(url: childURL, size: 0))
+                case .file, .other:
+                    fileBytes += entry.allocated
+                    nodes.append(DiskUsageNode(url: childURL, size: entry.allocated))
+                }
+            }
+            // 항목마다가 아니라 폴더마다 한 번. 여러 스레드가 항목마다 잠금을 잡으면
+            // 나눠 잰 이득이 사라진다.
+            if fileBytes > 0 { onBytesScanned?(fileBytes) }
+
+            let measure: @Sendable ((url: URL, path: String)) -> DiskUsageNode = { folder in
+                directory(url: folder.url, path: folder.path,
+                          depth: depth - 1, parallelLevels: parallelLevels - 1)
+            }
+            let measured = parallelLevels > 0 && folders.count > 1
+                ? folders.concurrentMap(measure)
+                : folders.map(measure)
+
+            let total = fileBytes + measured.reduce(0) { $0 + $1.size }
             // 깊이를 넘어서도 **순회는 계속한다** — 크기를 정확히 합치려면 끝까지 세야 한다.
             // 달라지는 것은 children에 넣느냐뿐이다.
             //
             // 못 읽은 노드는 크기와 무관하게 남긴다. 크기가 0이라 최소 크기에
             // 걸려 잘려 나가면, 안에 뭐가 얼마나 있는지 모르는 폴더가 목록에서
             // 통째로 사라진다 — 0으로 보이는 것보다 나쁘다.
-            if depth > 0, node.size >= minimumSize || !node.isReadable {
-                children.append(node)
-            }
+            let children = depth > 0
+                ? (nodes + measured).filter { $0.size >= minimumSize || !$0.isReadable }
+                    .sorted { $0.size > $1.size }
+                : []
+            return DiskUsageNode(url: url, size: total, children: children)
         }
-        return DiskUsageNode(url: url, size: total,
-                             children: children.sorted { $0.size > $1.size })
-    }
 
-    private static let keys: Set<URLResourceKey> = [
-        .isDirectoryKey, .isSymbolicLinkKey, .totalFileAllocatedSizeKey, .fileAllocatedSizeKey,
-    ]
-
-    /// 논리 크기가 아니라 할당 크기. 지웠을 때 실제로 회수되는 양이다.
-    private static func allocated(_ v: URLResourceValues) -> Int64 {
-        Int64(v.totalFileAllocatedSize ?? v.fileAllocatedSize ?? 0)
-    }
-
-    /// 크기를 재기 전에 항목 수만 센다. 이 값이 진행률의 분모가 된다.
-    ///
-    /// `stat`을 부르지 않고 `readdir`의 `d_type`만으로 디렉토리를 판별한다.
-    /// `FileManager.enumerator`로 세면 6.2초인데 이 방식은 3.6초다 —
-    /// 퍼센트 하나 때문에 대기 시간을 두 배로 만들 수는 없다.
-    ///
-    /// 숨김 파일을 포함하는 이유는 `build`도 포함하기 때문이다. 한쪽만 빼면 분모가 어긋난다.
-    public static func countEntries(at url: URL,
-                                    canReadAppData: Bool = FullDiskAccess.isGranted,
-                                    appDataHome: URL = Sandbox.userHome,
-                                    isCancelled: @Sendable () -> Bool = { false },
-                                    onCounted: (@Sendable (Int) -> Void)? = nil) -> Int {
-        var total = 0
-        var stack = [url.path]
-
-        while let path = stack.popLast() {
-            if isCancelled() { return total }
-            // 디렉토리 단위로 보고한다. 분모가 생기기 전에도 숫자가 움직여야
-            // 멈춘 것처럼 보이지 않는다.
-            onCounted?(total)
-
-            // **세기도 집계와 같은 곳을 건너뛴다.** `build`가 안 내려가는데 여기서만
-            // 세면 분모가 커져 퍼센트가 100에 닿지 못한다 — 링크 232개 때문에
-            // 99%에서 멈췄던 것과 같은 함정이다. `opendir`도 TCC를 지나므로
-            // 프롬프트를 부르지 않으려면 여기서도 막아야 한다.
-            if !canReadAppData,
-               AppDataPaths.isInside(URL(filePath: path), home: appDataHome) { continue }
-
-            guard let handle = opendir(path) else { continue }
-            defer { closedir(handle) }
-
-            while let entry = readdir(handle) {
-                // `.`/`..`는 바이트로 거른다. 여기서 String을 만들면
-                // 항목 7만 개에 대해 문자열 생성 비용이 그대로 붙는다(실측 5.9 → 3.4초 차이).
-                let isDotEntry = withUnsafePointer(to: entry.pointee.d_name) {
-                    $0.withMemoryRebound(to: CChar.self, capacity: 3) { name in
-                        name[0] == 46 && (name[1] == 0 || (name[1] == 46 && name[2] == 0))
+        /// 목록에 남지 않는 갈래의 합계. 한 스레드에서 스택으로 훑는다.
+        /// 규칙은 `directory`와 같다 — 링크 0, 앱 데이터 구역 안쪽은 열지 않음, 폴더마다 진행 보고.
+        private func size(path: String, entries first: [BulkEntry]) -> Int64 {
+            var total: Int64 = 0
+            var pending: [(path: String, entries: [BulkEntry]?)] = [(path, first)]
+            while let next = pending.popLast() {
+                if isCancelled() { break }
+                guard let entries = next.entries ?? BulkDirectory.entries(atPath: next.path) else { continue }
+                var fileBytes: Int64 = 0
+                for entry in entries {
+                    switch entry.kind {
+                    case .directory:
+                        let child = BulkDirectory.join(next.path, entry.name)
+                        if !isProtected(child) { pending.append((child, nil)) }
+                    case .symlink:
+                        continue
+                    case .file, .other:
+                        if !protectedPrefixes.isEmpty, isProtected(BulkDirectory.join(next.path, entry.name)) {
+                            continue
+                        }
+                        fileBytes += entry.allocated
                     }
                 }
-                if isDotEntry { continue }
-                total += 1
+                if fileBytes > 0 { onBytesScanned?(fileBytes) }
+                total += fileBytes
+            }
+            return total
+        }
+    }
+}
 
-                // 이름이 필요한 건 더 내려갈 디렉토리뿐이다. 파일은 세기만 하면 된다.
-                // 링크는 세되 따라 내려가지 않는다 — build도 링크 하위를 보지 않는다.
-                guard entry.pointee.d_type == DT_DIR else { continue }
-                let name = withUnsafePointer(to: entry.pointee.d_name) {
-                    $0.withMemoryRebound(to: CChar.self,
-                                         capacity: Int(entry.pointee.d_namlen) + 1) {
-                        String(cString: $0)
-                    }
-                }
-                stack.append(path + "/" + name)
+extension Array where Element: Sendable {
+    /// 원소마다 `transform`을 여러 스레드에서 돌리고 **원래 순서대로** 모은다.
+    ///
+    /// 디스크 순회는 동기 코드라 `TaskGroup`에 넣으면 협력 스레드 풀을 막는다.
+    /// GCD가 코어 수에 맞춰 나눈다.
+    func concurrentMap<T: Sendable>(_ transform: @Sendable (Element) -> T) -> [T] {
+        let results = UnsafeMutableBufferPointer<T?>.allocate(capacity: count)
+        results.initialize(repeating: nil)
+        defer { results.deallocate() }
+        nonisolated(unsafe) let slots = results
+        withoutActuallyEscaping(transform) { transform in
+            DispatchQueue.concurrentPerform(iterations: count) { index in
+                // 칸마다 한 스레드만 쓴다.
+                slots[index] = transform(self[index])
             }
         }
-        return total
-    }
-
-    /// 하위 항목을 가져오면서 **필요한 속성을 함께 프리페치**한다.
-    /// `includingPropertiesForKeys: nil`로 가져오면 뒤이은 `resourceValues`가
-    /// 항목마다 별도 syscall이 되어 순회가 두 배 가까이 느려진다.
-    ///
-    /// 숨김 파일도 포함한다. 용량을 보는 화면에서 `.git` 같은 것을 빼면
-    /// 합계가 실제와 어긋난다(실측 37MB 차이).
-    /// 읽지 못하면 nil. **빈 디렉토리(`[]`)와 구분해야 한다** —
-    /// 둘 다 0바이트지만 하나는 사실이고 하나는 모르는 것이다.
-    private static func contents(of url: URL) -> [URL]? {
-        try? FileManager.default.contentsOfDirectory(
-            at: url, includingPropertiesForKeys: Array(keys), options: [])
+        return results.map { $0! }
     }
 }
