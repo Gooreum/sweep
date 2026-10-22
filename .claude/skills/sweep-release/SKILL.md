@@ -51,9 +51,11 @@ ko와 en-US를 쓴다. 파일에는 아직 쓰지 않는다.
 | 배포·버전 | 이번 머지를 App Store에 배포할까요? 한다면 버전은? (지금 X.Y.Z (B)) | `패치 X.Y.(Z+1) (빌드) (Recommended)` / `마이너 X.(Y+1).0 (빌드)` / `메이저 (X+1).0.0 (빌드)` / `이번엔 배포 안 함` — 빌드는 3절의 규칙(예: 1.0.6 → 10601) |
 | 업데이트 | 업데이트 내용을 이대로 쓸까요? | `확정` / `고쳐 줘` — 두 보기 모두 `preview`에 ko·en 초안 전문 |
 | 앱 정보 | 바꿀 앱 정보가 있나요? (multiSelect) | `없음` / `이름·부제·키워드` / `설명·프로모션 문구` / `URL·저작권·카테고리` |
-| 스크린샷 | 스크린샷을 바꿀까요? | `그대로 둔다 (Recommended)` / `전부 다시 찍는다` / `특정 화면만 다시 찍는다` |
+| 스크린샷 | 스크린샷을 바꿀까요? | `그대로 둔다 (Recommended)` / `전부 다시 찍는다` / `특정 화면만 다시 찍는다` / `바꿔서 다시 만든다` |
 
 - 첫 탭이 배포 여부다. 다른 탭보다 앞에 둔다.
+- 스크린샷 `바꿔서 다시 만든다`는 문구·배경·배치·순서·화면 속 데이터를 바꾸고 싶을 때 고른다.
+  나머지 보기는 지금 디자인 그대로 다시 찍는다.
 - 현재 버전이 아직 스토어에 나가지 않았으면(`v<현재버전>-*` 태그가 없고 빌드만 올라간 상태)
   `메이저` 대신 `X.Y.Z 그대로 (Recommended)`를 두고, `패치`의 Recommended는 뗀다.
 - 버전 직접 입력만 Other 칸을 쓴다.
@@ -72,8 +74,10 @@ ko와 en-US를 쓴다. 파일에는 아직 쓰지 않는다.
 - 업데이트 `고쳐 줘` → "무엇을 고칠까요?" (Other 입력)
 - 앱 정보 항목마다 → "무엇으로 바꿀까요?" (Other 입력)
 - `특정 화면만` → 장면 multiSelect 2탭(보기 4개 제한):
-  `store-summary`(스마트 스캔)·`store-xcode`(정크)·`store-large`(큰 파일)·`store-duplicate`(중복) /
-  `store-diskmap`(디스크 맵)·`store-cleaned`(정리 완료)
+  `store-summary`(한번에 찾기)·`store-cpu`(CPU)·`store-xcode`(정리할 파일)·`store-projects`(개발 프로젝트) /
+  `store-large`(큰 파일)·`store-duplicate`(중복 파일)·`store-diskmap`(공간 보기)·`store-cleaned`(정리 완료)
+- `바꿔서 다시 만든다` → "어떻게 바꿀까요?" (Other 입력). description에 지금 장면별 제목을 보여 준다
+  (`scripts/store-screenshots.json`의 ko title). 예: "배경을 밝게", "3번 제목을 더 짧게", "개발 프로젝트를 2번으로".
 
 답을 받아 초안을 고쳤으면, 고친 업데이트 내용·앱 정보 초안도 탭 하나씩 `preview`로 띄워
 `확정` / `고쳐 줘`를 **한 번에** 묻는다.
@@ -126,6 +130,18 @@ bash scripts/make-archive.sh --check-only
 
 바꾼다면 아래 순서로 한다.
 
+0. **`바꿔서 다시 만든다`면 요청을 고칠 곳별로 나눈다.** 사용자 요청 원문과 함께 적어 둔다.
+
+   | 요청 종류 | 고치는 곳 | 누가 |
+   |---|---|---|
+   | 제목·부제 문구 | `scripts/store-screenshots.json` (ko·en 둘 다) | Codex |
+   | 배경·글꼴·배치 | `scripts/store-compose.py` | Codex |
+   | 장 순서·뺄 장면 | `store-screenshots.json` 항목 순서 (뺐으면 `capture-store-shots.sh`의 `ALL`도) | Codex |
+   | 화면 속 가짜 데이터 | `Sources/SweepApp/StoreDemo.swift` | 내가 (dev-bounce 안에서, 캡처 전에) |
+
+   화면 속 데이터를 바꾸는 요청이 아니면 1~2단계를 건너뛰고 기존 원본(`.build/store-captures`)으로 합성만 다시 한다.
+   원본이 없으면 1~2단계를 그대로 한다.
+
 1. 현재 소스로 앱을 빌드한다: `bash scripts/make-app.sh`
 2. 원본을 찍는다. Sweep 창이 잠깐씩 앞으로 뜬다고 먼저 말한다.
    `bash scripts/capture-store-shots.sh <장면...>` → `.build/store-captures/{ko,en}/`
@@ -140,12 +156,16 @@ bash scripts/make-archive.sh --check-only
    프롬프트에 담을 것:
    - 원본 경로와 장면 목록
    - `python3 scripts/store-compose.py <장면...>`을 돌려 `fastlane/screenshots/{ko,en-US}/NN.png`를 만든다.
-     아트디렉션과 카피(`scripts/store-screenshots.json`)를 바꾸지 않는다.
+   - `바꿔서 다시 만든다`가 아니면: 아트디렉션과 카피(`scripts/store-screenshots.json`)를 바꾸지 않는다.
+   - `바꿔서 다시 만든다`면: 사용자 요청 원문과 0단계 표의 고칠 곳을 그대로 넣는다. 요청에 없는 장면·문구는
+     건드리지 않는다. 문구는 ko·en을 함께 고치고 한 줄에 들어가는지 확인한다. 고친 파일과 내용을 보고한다.
    - 결과를 한 장씩 열어 검수한다: 글자 깨짐·잘림, 창 경계, 2880×1800, ko 장에 영어 UI가 섞였거나 그 반대인지.
      문제가 있으면 고친 뒤 무엇을 고쳤는지 보고한다.
    - `Sources/**`, `Tests/**`, `fastlane/metadata/**`는 건드리지 않는다.
 4. Codex가 끝나면 `git diff --stat fastlane/screenshots`로 다시 찍은 장면의 파일만 바뀌었는지 보고,
    컨택트 시트 `.build/store-sheet.png`를 직접 열어 확인한 뒤 사용자에게 보여 준다.
+   `바꿔서 다시 만든다`였으면 `git diff scripts/store-screenshots.json scripts/store-compose.py`를 읽어 요청 밖의
+   변경이 없는지 먼저 본다. 이 스크립트 변경은 릴리스 커밋에 함께 넣는다.
    - 질문: "이 스크린샷으로 갈까요?" / `확정` / `다시`
 
 ## 4. 릴리스 커밋 → 워크플로 확인
