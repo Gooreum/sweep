@@ -65,6 +65,17 @@ struct StageHarness: View {
                 } else {
                     Text("준비 중").font(Theme.bodyText)
                 }
+            } else if stage == "permission-notices" {
+                // 권한이 꺼진 화면의 안내 줄. 실제 허락을 거두지 않고 모양과 문구를 본다.
+                VStack(spacing: 8) {
+                    PermissionNotice(need: .folder(FolderAccess.library), feature: .junk, app: app)
+                    PermissionNotice(need: .folder(FolderAccess.home), feature: .largeFile, app: app)
+                    PermissionNotice(need: .folder(FolderAccess.home), feature: .trash, app: app)
+                    PermissionNotice(need: .fullDiskAccess, feature: .trash, app: app)
+                    Spacer()
+                }
+                .padding(8)
+                .background(R95.gray)
             } else if stage == "trash-confirm" {
                 // 확인 시트도 창 캡처에 잡히지 않는다. 시트 뷰를 그대로 그린다.
                 if let model {
