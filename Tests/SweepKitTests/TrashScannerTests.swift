@@ -124,6 +124,37 @@ struct TrashScannerTests {
         #expect(items.first?.detail.contains("iCloud 공간만 늘어요") == true)
     }
 
+    @Test("iCloud 휴지통 항목에는 iCloud에만 있는 파일의 원래 크기를 담는다")
+    func measuresCloudOnlyBytes() async throws {
+        let home = try makeHome()
+        defer { try? fm.removeItem(at: home) }
+        let iCloud = home.appending(path: "Library/Mobile Documents/.Trash")
+        try fm.createDirectory(at: iCloud.appending(path: "사진들"), withIntermediateDirectories: true)
+        try Data(repeating: 0x41, count: 1000).write(to: iCloud.appending(path: "사진들/a.heic"))
+        try Data(repeating: 0x42, count: 1000).write(to: iCloud.appending(path: "사진들/b.heic"))
+        // 같은 이름을 홈 휴지통에도 둔다 — 여기서는 재지 않아야 한다.
+        try Data(repeating: 0x43, count: 1000).write(to: home.appending(path: ".Trash/a.heic"))
+
+        let items = await TrashScanner(home: home, volumes: home.appending(path: "Volumes"),
+                                       isDataless: { $0.pathExtension == "heic" }).scan()
+
+        #expect(items.first { $0.displayName == "사진들" }?.cloudBytes == 2000)
+        #expect(items.first { $0.displayName == "a.heic" }?.cloudBytes == 0)
+    }
+
+    @Test("크기 칸은 iCloud에만 있으면 iCloud 크기를, 아니면 Mac 크기를 쓴다")
+    func sizeLabelShowsCloudBytes() {
+        let url = URL(filePath: "/tmp/x")
+        let cloudOnly = CleanupItem(url: url, size: 0, category: .trash, safety: .caution, cloudBytes: 5_000_000_000)
+        let local = CleanupItem(url: url, size: 30_000_000, category: .trash, safety: .caution, cloudBytes: 1)
+
+        #expect(cloudOnly.sizeLabel.hasPrefix("iCloud "))
+        #expect(cloudOnly.sizeLabel.contains("5"))
+        #expect(local.sizeLabel == local.formattedSize)
+        #expect([cloudOnly, local].totalCloudBytes == 5_000_000_001)
+        #expect([cloudOnly, local].totalSize == 30_000_000)
+    }
+
     // MARK: - 관리자 소유
 
     @Test("남의 소유 항목만 모든 휴지통에서 골라 준다")

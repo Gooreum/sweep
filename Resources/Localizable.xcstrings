@@ -1455,6 +1455,22 @@
         }
       }
     },
+    "Mac %@ · iCloud %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac %1$@ · iCloud %2$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac %1$@ · iCloud %2$@"
+          }
+        }
+      }
+    },
     "Mac 안에 또 다른 컴퓨터를 띄워, 그 안에서 앱을 실행해요.": {
       "localizations": {
         "en": {
@@ -2059,6 +2075,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "해제"
+          }
+        }
+      }
+    },
+    "iCloud %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud %@"
           }
         }
       }
