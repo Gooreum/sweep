@@ -88,18 +88,24 @@ struct Sidebar: View {
             Spacer(minLength: 0)
 
             HStack(spacing: 4) {
-                if feature != .cpu {
-                    Group {
-                        switch status {
-                        case .idle: EmptyView()
-                        case .loading: Retro95Hourglass(size: 16)
-                        case .done: PixelIcon(art: .check, size: 16)
+                Group {
+                    switch status {
+                    case .idle: EmptyView()
+                    case .loading:
+                        if feature == .cpu {
+                            Retro95CPUActivity()
+                        } else {
+                            Retro95Hourglass(size: 16)
+                        }
+                    case .done:
+                        if feature == .diskMap {
+                            PixelIcon(art: .check, size: 16)
                         }
                     }
-                    // 픽셀의 검은 테두리도 선택 배경에서 보이게 한다.
-                    .background(R95.gray)
-                    .accessibilityHidden(true)
                 }
+                // 픽셀의 검은 테두리도 선택 배경에서 보이게 한다.
+                .background(R95.gray)
+                .accessibilityHidden(true)
                 if let badge {
                     Text(badge).font(R95.mono(11)).lineLimit(1).fixedSize(horizontal: true, vertical: false)
                 }
@@ -128,11 +134,13 @@ struct Sidebar: View {
             case .done: return String(localized: "공간 보기 완료")
             }
         }
-        guard feature != .cpu else { return "" }
+        if feature == .cpu {
+            return status == .loading ? String(localized: "CPU 측정 중") : ""
+        }
         switch status {
         case .idle: return ""
         case .loading: return String(localized: "\(feature.displayName) 찾는 중")
-        case .done: return String(localized: "\(feature.displayName) 찾기 완료")
+        case .done: return ""
         }
     }
 
