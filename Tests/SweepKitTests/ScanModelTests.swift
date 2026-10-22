@@ -677,6 +677,21 @@ struct ScanModelTests {
         #expect(model.selection == [safe.url])
     }
 
+    @Test("고른 용량은 iCloud에만 있는 것이 섞이면 Mac과 iCloud로 나눠 말한다")
+    func selectedSizeSplitsCloudBytes() {
+        let model = ScanModel(scan: stream([[]]))
+        let mac = CleanupItem(url: URL(filePath: "/private/tmp/t/mac"), size: 30_000_000,
+                              category: .trash, safety: .safe)
+        let cloud = CleanupItem(url: URL(filePath: "/private/tmp/t/cloud"), size: 0,
+                                category: .trash, safety: .safe, cloudBytes: 20_000_000_000)
+        model.adopt([mac, cloud])
+        #expect(model.formattedSelectedSize.hasPrefix("Mac "))
+        #expect(model.formattedSelectedSize.contains(" · iCloud "))
+
+        model.adopt([mac])
+        #expect(model.formattedSelectedSize == [mac].formattedTotalSize)
+    }
+
     // TC-3
     @Test("adopt에 빈 결과를 줘도 idle로 돌아가지 않는다")
     func adoptWithNothingStaysInResults() {

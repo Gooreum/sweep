@@ -130,7 +130,14 @@ public final class ScanModel {
     // MARK: - 파생 상태
 
     public var selectedItems: [CleanupItem] { items.filter { selection.contains($0.url) } }
-    public var formattedSelectedSize: String { selectedItems.formattedTotalSize }
+    /// 고른 용량. iCloud에만 있는 것이 섞이면 "Mac 30.1 MB · iCloud 20.4 GB"로 나눠 말한다 —
+    /// Mac 크기만 보이면 Finder가 20GB라는 휴지통이 30MB로 보인다.
+    public var formattedSelectedSize: String {
+        let picked = selectedItems
+        let cloud = picked.totalCloudBytes
+        guard cloud > 0 else { return picked.formattedTotalSize }
+        return String(localized: "Mac \(picked.formattedTotalSize) · iCloud \(ByteCountFormatter.string(fromByteCount: cloud, countStyle: .file))")
+    }
     public var hasSelection: Bool { !selection.isEmpty }
 
     /// 스캔이나 삭제가 도는 중.

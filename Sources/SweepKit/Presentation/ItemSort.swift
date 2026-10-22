@@ -42,7 +42,7 @@ public struct ItemSort: Equatable, Sendable {
         case .tie: break
         }
         // 동점은 크기 → 이름으로 갈라 다시 그릴 때마다 순서가 흔들리지 않게 한다.
-        if a.size != b.size { return a.size > b.size }
+        if a.sortSize != b.sortSize { return a.sortSize > b.sortSize }
         return a.displayName.localizedStandardCompare(b.displayName) == .orderedAscending
     }
 
@@ -57,7 +57,7 @@ public struct ItemSort: Equatable, Sendable {
     private func order(_ a: CleanupItem, _ b: CleanupItem) -> Order {
         switch key {
         case .size:
-            return a.size == b.size ? .tie : .ordered(aFirst: a.size < b.size)
+            return a.sortSize == b.sortSize ? .tie : .ordered(aFirst: a.sortSize < b.sortSize)
         case .name:
             return Self.text(a.displayName, b.displayName)
         case .detail:
@@ -86,4 +86,9 @@ public struct ItemSort: Equatable, Sendable {
         case .orderedDescending: .ordered(aFirst: false)
         }
     }
+}
+
+private extension CleanupItem {
+    /// 크기순 정렬값. iCloud에만 있는 20GB가 Mac 크기 0이라 맨 아래로 가지 않게 둘을 더한다.
+    var sortSize: Int64 { size + cloudBytes }
 }

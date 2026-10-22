@@ -34,33 +34,36 @@ public struct TrashScanner: CleanupScanner {
     public var progressWeight: Double { 1 }
 
     /// 읽을 휴지통과 그 안 항목에 붙일 설명. 설명이 곧 출처 표시다.
-    func locations() -> [(folder: URL, detail: String)] {
+    /// `isCloud`는 iCloud Drive 휴지통이다 — 거기서만 iCloud에만 있는 크기를 따로 잰다.
+    func locations() -> [(folder: URL, detail: String, isCloud: Bool)] {
         var found = [
-            (home.appending(path: ".Trash"), String(localized: "휴지통에서 완전히 지워요. 복구할 수 없어요")),
+            (home.appending(path: ".Trash"), String(localized: "휴지통에서 완전히 지워요. 복구할 수 없어요"), false),
             (Self.iCloudTrash(in: home),
-             String(localized: "iCloud Drive 휴지통 파일이에요. 다른 기기에서도 지워지고 복구할 수 없어요")),
+             String(localized: "iCloud Drive 휴지통 파일이에요. 다른 기기에서도 지워지고 복구할 수 없어요"), true),
         ]
         // 시동 디스크는 `/Volumes/Macintosh HD → /`라 홈 휴지통과 겹친다. 실경로가 `/`인 것은 뺀다.
         for volume in children(of: volumes) where volume.resolvingSymlinksInPath().path != "/" {
             found.append((volume.appending(path: ".Trashes/\(getuid())"),
-                          String(localized: "\(volume.lastPathComponent) 휴지통 파일이에요. 지우면 복구할 수 없어요")))
+                          String(localized: "\(volume.lastPathComponent) 휴지통 파일이에요. 지우면 복구할 수 없어요"), false))
         }
         return found
     }
 
     public func scan() async -> [CleanupItem] {
-        locations().flatMap { folder, detail in
+        locations().flatMap { folder, detail, isCloud in
             children(of: folder).compactMap { url in
                 let found = DirectorySize.summary(at: url)
                 // iCloud에만 있고 이 Mac에 내용이 없는 항목은 할당 크기가 0이다. 지워도 이 Mac의
                 // 공간은 그대로지만 iCloud 공간이 비워지고, 남겨 두면 Finder 휴지통에 계속 보인다.
-                let cloudOnly = found.bytes == 0 && isDataless(url)
+                // 그 원래 크기는 `cloudBytes`로 따로 담는다 — 없으면 20GB 휴지통이 30MB로 보인다.
+                let cloud = isCloud ? cloudOnlyBytes(at: url) : 0
+                let cloudOnly = found.bytes == 0 && (cloud > 0 || isDataless(url))
                 guard found.bytes > 0 || cloudOnly else { return nil }
                 return CleanupItem(url: url, size: found.bytes, category: .trash, safety: .caution,
                                    detail: cloudOnly
                                        ? String(localized: "iCloud에만 있는 파일이에요. 지워도 Mac 공간은 그대로고 iCloud 공간만 늘어요")
                                        : detail,
-                                   dates: found.dates)
+                                   dates: found.dates, cloudBytes: cloud)
             }
         }
     }
@@ -72,6 +75,27 @@ public struct TrashScanner: CleanupScanner {
     /// 화면이 이 목록으로 "Finder에서 비우면 암호를 묻고 지운다"를 알린다.
     public func adminOwnedLeftovers() -> [URL] {
         locations().flatMap { children(of: $0.folder) }.filter { !isOwnedByMe($0) }
+    }
+
+    /// 항목 아래 iCloud에만 있는 파일의 원래 크기(논리 크기) 합. 이 Mac에는 내용이 없어
+    /// 할당 크기로는 0이다. 파일마다 플래그를 읽어 비싸므로 iCloud 휴지통에서만 부른다.
+    func cloudOnlyBytes(at url: URL) -> Int64 {
+        let keys: Set<URLResourceKey> = [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey]
+        func logical(_ file: URL) -> Int64 {
+            guard let v = try? file.resourceValues(forKeys: keys),
+                  v.isRegularFile == true, v.isSymbolicLink != true, isDataless(file) else { return 0 }
+            return Int64(v.fileSize ?? 0)
+        }
+        guard (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true else {
+            return logical(url)
+        }
+        guard let walker = FileManager.default.enumerator(
+            at: url, includingPropertiesForKeys: Array(keys), options: [],
+            errorHandler: { _, _ in true }
+        ) else { return 0 }
+        var total: Int64 = 0
+        for case let file as URL in walker { total += logical(file) }
+        return total
     }
 
     /// lstat의 소유자가 나인가. 읽을 수 없으면 내 것으로 친다 — 모르는 것을 남의 것이라 알리지 않는다.
