@@ -609,22 +609,35 @@ public struct StatusLine: Equatable, Sendable {
     }
 }
 
-/// 사이드바 "공간 보기" 줄 오른쪽에 붙는 상태.
-public enum DiskMapStatus: Equatable, Sendable {
-    /// 아직 읽지 않았다.
+/// 사이드바 줄 오른쪽에 붙는 진행 상태. 검색 중이면 모래시계, 끝났으면 체크.
+public enum FeatureStatus: Equatable, Sendable {
+    /// 아직 찾지 않았다.
     case idle
     case loading
-    /// 끝까지 읽었다.
+    /// 찾기(공간 보기는 읽기)가 끝났다.
     case done
 }
 
 extension AppModel {
-    /// 공간 보기 상태. 디스크 맵 모델은 **만들지 않는다** — 사이드바는 body에서 읽힌다.
-    public var diskMapStatus: DiskMapStatus {
-        guard let model = diskMapModel else { return .idle }
-        if model.isScanning { return .loading }
-        return model.completedAt == nil ? .idle : .done
+    /// 기능의 진행 상태. 모델을 **만들지 않는다** — 사이드바는 body에서 기능 수만큼 읽는다.
+    public func status(of feature: Feature) -> FeatureStatus {
+        switch feature {
+        case .cpu:
+            return .idle
+        case .diskMap:
+            guard let model = diskMapModel else { return .idle }
+            if model.isScanning { return .loading }
+            return model.completedAt == nil ? .idle : .done
+        default:
+            switch models[feature]?.phase {
+            case .scanning, .removing, .restoring: return .loading
+            case .results, .cleaned, .restored: return .done
+            default: return .idle
+            }
+        }
     }
+
+    public var diskMapStatus: FeatureStatus { status(of: .diskMap) }
 }
 
 extension AppModel {

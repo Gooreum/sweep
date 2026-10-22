@@ -198,7 +198,7 @@ struct ApplicationOwnershipTests {
     }
 
     // TC-4
-    @Test("root 소유 앱은 소유권으로 막히지 않는다")
+    @Test("root 소유 앱은 소유권이 아니라 Mac 암호가 필요하다는 이유로 막힌다")
     func rootOwnedApplicationIsNotVetoedByOwnership() throws {
         let apps = URL(filePath: "/Applications")
         let contents = (try? FileManager.default.contentsOfDirectory(
@@ -213,9 +213,14 @@ struct ApplicationOwnershipTests {
         }
         guard let candidate else { return }
 
-        // 실행 중일 수도 있으므로 "통과"가 아니라 **소유권 사유가 아님**을 단정한다.
-        #expect(ProtectedPaths.veto(for: candidate)
-                != .notOwnedByCurrentUser(candidate.standardizedFileURL))
+        // 실행 중일 수도 있으므로 두 사유 중 하나다. 소유권 사유는 아니다 — 부모에는 쓸 수 있다.
+        // 폴더 자신에 쓸 수 없어 옮겨지지 않는다(실측: FormMaster.app이 앱 관리 권한을 켜도 실패).
+        let veto = ProtectedPaths.veto(for: candidate)
+        #expect(veto != .notOwnedByCurrentUser(candidate.standardizedFileURL))
+        switch veto {
+        case .needsAdminPassword?, .applicationRunning?: break
+        default: Issue.record("root 소유 앱이 \(String(describing: veto))로 판정됐다")
+        }
     }
 
     // TC-5
@@ -270,6 +275,19 @@ struct RunningApplicationTests {
     func otherAppRunning() {
         withRunning([URL(filePath: "/Applications/sweep-다른앱-9E3A1C.app")]) {
             #expect(ProtectedPaths.veto(for: ghost) == nil)
+        }
+    }
+
+    @Test("폴더 자신에 쓸 수 없는 앱은 Mac 암호가 필요하다고 막고, 목록에는 남긴다")
+    func appNeedingPassword() {
+        let original = ProtectedPaths.canWrite
+        defer { ProtectedPaths.canWrite = original }
+        ProtectedPaths.canWrite = { _ in false }
+        withRunning([]) {
+            // 없는 경로는 lstat이 실패해 소유권 검사를 건너뛴다 — 쓰기 판정만 보려면 실제 앱이 필요하다.
+            // 갈아끼운 canWrite가 불리는지는 normalize 결과로 확인한다.
+            let item = CleanupItem(url: ghost, size: 1_000, category: .application, safety: .danger)
+            #expect(ScanCoordinator.normalize([item]).map(\.url) == [ghost])
         }
     }
 
@@ -376,11 +394,12 @@ struct ApplicationSurveyTests {
     }
 
     // TC-1
-    @Test("앱은 통과하거나 시스템 보호·실행 중으로만 막힌다")
+    @Test("앱은 통과하거나 시스템 보호·실행 중·Mac 암호 필요로만 막힌다")
     func onlyExpectedVetoes() {
         for bundle in bundles where !isSymbolicLink(bundle) {
             switch ProtectedPaths.veto(for: bundle) {
-            case nil, .systemProtected, .applicationRunning:
+            // App Store·설치 프로그램 앱은 root 소유라 Mac 암호가 필요하다.
+            case nil, .systemProtected, .applicationRunning, .needsAdminPassword:
                 continue
             case .some(let veto):
                 Issue.record("앱이 뜻밖의 사유로 막혔다: \(veto.message)")

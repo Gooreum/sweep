@@ -120,6 +120,26 @@ struct AppModelTests {
         #expect(app.diskMap() === injected)
     }
 
+    @Test("기능 상태는 모델이 없으면 idle, 찾기가 끝나면 done, CPU는 늘 idle이다")
+    func featureStatusFollowsModels() async {
+        let model = ScanModel(scan: {
+            AsyncStream { continuation in
+                continuation.yield(ScanCoordinator.Progress(
+                    items: [], fraction: 1, elapsed: .seconds(1), estimatedRemaining: nil,
+                    finishedScanners: 1, totalScanners: 1))
+                continuation.finish()
+            }
+        })
+        let app = AppModel(makeModel: { _ in model })
+        // 사이드바가 읽는다고 모델이 만들어지면 안 된다
+        #expect(app.status(of: .junk) == .idle)
+
+        await app.model(for: .junk).scan()
+
+        #expect(app.status(of: .junk) == .done)
+        #expect(app.status(of: .cpu) == .idle)
+    }
+
     @Test("공간 보기 상태는 모델이 없으면 idle, 끝까지 읽으면 done이다")
     func diskMapStatusFollowsModel() async {
         let injected = DiskMapModel(countEntries: { _, _, _ in 0 },

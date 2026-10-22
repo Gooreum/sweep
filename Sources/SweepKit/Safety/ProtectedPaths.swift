@@ -18,6 +18,8 @@ public enum RemovalVeto: Error, Equatable, Sendable {
     case systemProtected(URL)
     /// 지금 실행 중인 앱이다.
     case applicationRunning(URL)
+    /// 폴더 자신에 쓸 수 없는 앱(App Store·설치 프로그램으로 깐 root 소유 앱). Mac 암호가 있어야 옮겨진다.
+    case needsAdminPassword(URL)
     /// 홈의 기본 폴더 자체이거나 계정 데이터(키체인·메일·iCloud Drive)다. 디스크 맵 범위에서만 나온다.
     case essentialFolder(URL)
 
@@ -31,6 +33,7 @@ public enum RemovalVeto: Error, Equatable, Sendable {
         case .notOwnedByCurrentUser(let u): String(localized: "다른 사용자나 macOS가 소유한 파일이에요. Sweep에서는 지우지 않아요: \(u.path)")
         case .systemProtected(let u): String(localized: "macOS가 지우지 못하게 잠근 파일이에요. Sweep에서도 그대로 둬요: \(u.path)")
         case .applicationRunning(let u): String(localized: "앱을 완전히 종료한 뒤 다시 정리해 주세요. 지금은 실행 중이에요: \(u.path)")
+        case .needsAdminPassword(let u): String(localized: "Mac 암호가 필요한 앱이에요. App Store나 설치 프로그램으로 깐 앱은 Finder에서 휴지통으로 옮겨 주세요: \(u.path)")
         case .essentialFolder(let u): String(localized: "로그인과 메일 등에 필요한 파일이나 Documents 같은 폴더라 보호해요: \(u.path)")
         }
     }
@@ -403,6 +406,12 @@ public enum ProtectedPaths {
                 guard canWriteParent(of: resolved) else {
                     throw RemovalVeto.notOwnedByCurrentUser(resolved)
                 }
+                // 폴더를 다른 폴더로 옮기면 그 폴더의 ".."도 바뀐다 — 폴더 자신에도 쓰기 권한이 필요하다.
+                // App Store·설치 프로그램 앱은 root 소유라 Mac 암호 없이는 옮겨지지 않는다
+                // (실측: FormMaster.app, root:wheel drwxr-xr-x — 앱 관리 권한을 켜도 실패).
+                guard canWrite(resolved) else {
+                    throw RemovalVeto.needsAdminPassword(resolved)
+                }
             } else {
                 guard info.uid == getuid() else {
                     throw RemovalVeto.notOwnedByCurrentUser(resolved)
@@ -443,10 +452,14 @@ public enum ProtectedPaths {
     /// 이 항목을 담고 있는 폴더에 쓸 수 있는가.
     ///
     /// 휴지통으로 옮기는 것은 이름 바꾸기라 **항목이 아니라 부모 폴더**에 쓰기 권한이
-    /// 필요하다. 소유권 검사로는 이것을 알 수 없다 — `/Applications`의 root 소유 앱은
-    /// 소유자가 내가 아니지만 부모가 `admin` 그룹에 열려 있어 실제로 옮겨진다.
+    /// 필요하다. 소유권 검사로는 이것을 알 수 없다. 단, 앱은 폴더라 이것만으로는 부족하다(`canWrite`).
     static func canWriteParent(of url: URL) -> Bool {
         access(url.deletingLastPathComponent().path, W_OK) == 0
+    }
+
+    /// 이 항목 자신에 쓸 수 있는가. 폴더를 다른 폴더로 옮길 때 필요하다. 테스트에서 갈아끼운다.
+    nonisolated(unsafe) static var canWrite: @Sendable (URL) -> Bool = {
+        access($0.path, W_OK) == 0
     }
 
     /// 심볼릭 링크를 따라가지 않고 소유자와 파일 플래그를 **한 번의 lstat으로** 읽는다.

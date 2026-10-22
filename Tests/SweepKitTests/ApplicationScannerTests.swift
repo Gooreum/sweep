@@ -70,6 +70,33 @@ struct ApplicationScannerTests {
         #expect(ApplicationScanner.usageLine(nil, now: now).contains("기록"))
     }
 
+    @Test("폴더 자신에 쓸 수 없는 앱은 Mac 암호가 필요하다고 잠근다")
+    func locksAppsNeedingPassword() async throws {
+        let root = try makeFolder()
+        defer { try? fm.removeItem(at: root) }
+
+        let items = await ApplicationScanner(folders: [root], lastUsed: { _ in nil }, running: { [] },
+                                             isWritable: { $0.lastPathComponent != "A.app" }).scan()
+
+        let a = try #require(items.first { $0.displayName == "A.app" })
+        #expect(a.safety == .danger)
+        #expect(a.detail.contains("암호"))
+        #expect(items.first { $0.displayName == "B.app" }?.safety == .caution)
+    }
+
+    @Test("앱 하나를 잴 때마다 진행을 알리고 1에서 끝난다")
+    func reportsProgress() async throws {
+        let root = try makeFolder()
+        defer { try? fm.removeItem(at: root) }
+        final class Box: @unchecked Sendable { var values: [Double] = [] }
+        let box = Box()
+
+        _ = await ApplicationScanner(folders: [root], lastUsed: { _ in nil }, running: { [] })
+            .scan(onProgress: { box.values.append($0) })
+
+        #expect(box.values == [0.5, 1.0])
+    }
+
     @Test("없는 폴더는 건너뛴다")
     func missingFolder() async {
         let ghost = URL(filePath: "/private/tmp/sweep-없음-\(UUID().uuidString)")

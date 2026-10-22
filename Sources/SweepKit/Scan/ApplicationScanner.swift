@@ -12,49 +12,65 @@ public struct ApplicationScanner: CleanupScanner {
     private let folders: [URL]
     private let lastUsed: @Sendable (URL) -> Date?
     private let running: @Sendable () -> [URL]
+    private let isWritable: @Sendable (URL) -> Bool
 
     /// 폴더·마지막 사용일·실행 중 앱을 주입할 수 있게 연다 — 테스트가 진짜 `/Applications`와
     /// Spotlight에 기대지 않게.
     init(folders: [URL] = ProtectedPaths.applicationFolders,
          lastUsed: @escaping @Sendable (URL) -> Date? = ApplicationScanner.spotlightLastUsed,
-         running: @escaping @Sendable () -> [URL] = { RunningApplications.urls }) {
+         running: @escaping @Sendable () -> [URL] = { RunningApplications.urls },
+         isWritable: @escaping @Sendable (URL) -> Bool = { ProtectedPaths.canWrite($0) }) {
         self.folders = folders
         self.lastUsed = lastUsed
         self.running = running
+        self.isWritable = isWritable
     }
 
     public init() { self.init(folders: ProtectedPaths.applicationFolders) }
 
-    public func scan() async -> [CleanupItem] {
+    public func scan() async -> [CleanupItem] { await scan(onProgress: { _ in }) }
+
+    /// 앱 하나를 잴 때마다 진행을 알린다. Xcode처럼 큰 앱이 있으면 수십 초가 걸려
+    /// 알리지 않으면 막대가 0%에 멈춰 보인다.
+    public func scan(onProgress: @escaping @Sendable (Double) -> Void) async -> [CleanupItem] {
         let fm = FileManager.default
         let runningPaths = Set(running().map { $0.standardizedFileURL.resolvingSymlinksInPath().path })
         let me = Bundle.main.bundleURL.standardizedFileURL.resolvingSymlinksInPath().path
 
+        // 먼저 목록을 모아야 분모가 생긴다.
+        let apps = folders.flatMap { folder in
+            ((try? fm.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil,
+                                          options: [.skipsHiddenFiles])) ?? [])
+                .filter { $0.pathExtension == "app" }
+        }.filter { $0.standardizedFileURL.resolvingSymlinksInPath().path != me }
+
         var items: [CleanupItem] = []
-        for folder in folders {
-            guard let children = try? fm.contentsOfDirectory(
-                at: folder, includingPropertiesForKeys: [.isDirectoryKey, .creationDateKey],
-                options: [.skipsHiddenFiles]) else { continue }
+        for (index, app) in apps.enumerated() {
+            let path = app.standardizedFileURL.resolvingSymlinksInPath().path
+            let found = DirectorySize.summary(at: app)
+            let opened = lastUsed(app)
+            // 번들의 만든 날짜는 앱을 빌드한 날이라(Electron 앱은 1980년) 설치일로 쓸 수 없다.
+            // Finder의 "추가된 날짜"를 먼저 쓴다.
+            let added = Self.spotlightDateAdded(app)
+                ?? (try? app.resourceValues(forKeys: [.creationDateKey]))?.creationDate
+            let isRunning = runningPaths.contains(path)
+            // App Store·설치 프로그램 앱은 root 소유라 Mac 암호 없이는 옮겨지지 않는다(관문과 같은 판정).
+            let needsPassword = !isWritable(app)
 
-            for app in children where app.pathExtension == "app" {
-                let path = app.standardizedFileURL.resolvingSymlinksInPath().path
-                guard path != me else { continue }
-                let found = DirectorySize.summary(at: app)
-                let opened = lastUsed(app)
-                // 번들의 만든 날짜는 앱을 빌드한 날이라(Electron 앱은 1980년) 설치일로 쓸 수 없다.
-                // Finder의 "추가된 날짜"를 먼저 쓴다.
-                let added = Self.spotlightDateAdded(app)
-                    ?? (try? app.resourceValues(forKeys: [.creationDateKey]))?.creationDate
-                let isRunning = runningPaths.contains(path)
-
-                items.append(CleanupItem(
-                    url: app, size: found.bytes, category: .application,
-                    // 실행 중이면 잠근다. 휴지통으로 옮겨도 앱은 계속 돌다가 다음 실행에 깨진다.
-                    safety: isRunning ? .danger : .caution,
-                    detail: isRunning ? String(localized: "실행 중이에요. 종료하면 옮길 수 있어요")
-                                      : Self.usageLine(opened),
-                    dates: FileDates(created: added, lastUsed: opened)))
+            let detail: String = if isRunning {
+                String(localized: "실행 중이에요. 종료하면 옮길 수 있어요")
+            } else if needsPassword {
+                String(localized: "App Store나 설치 프로그램으로 깐 앱이라 Mac 암호가 필요해요. Finder에서 옮겨 주세요")
+            } else {
+                Self.usageLine(opened)
             }
+            items.append(CleanupItem(
+                url: app, size: found.bytes, category: .application,
+                // 옮길 수 없는 앱은 잠근다. 고를 수 있게 두면 정리할 때마다 실패만 쌓인다.
+                safety: isRunning || needsPassword ? .danger : .caution,
+                detail: detail,
+                dates: FileDates(created: added, lastUsed: opened)))
+            onProgress(Double(index + 1) / Double(apps.count))
         }
         return items
     }

@@ -177,8 +177,11 @@ public struct ScanCoordinator: Sendable {
     private static func passesGate(_ item: CleanupItem) -> Bool {
         guard let veto = ProtectedPaths.veto(for: item.url, scope: item.category.removalScope)
         else { return true }
-        if item.category == .application, case .applicationRunning = veto { return true }
-        return false
+        guard item.category == .application else { return false }
+        switch veto {
+        case .applicationRunning, .needsAdminPassword: return true
+        default: return false
+        }
     }
 
     /// 중복 사본의 원본이 같은 목록에 따로 올라와 있으면 "원본이 남아요"는 거짓이 될 수 있다.
