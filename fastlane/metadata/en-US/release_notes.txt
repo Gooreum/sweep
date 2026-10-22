@@ -1,6 +1,7 @@
-See what is slowing your Mac down, and every message is easier to understand.
+A new tab for developers, low-disk alerts, and easier explanations.
 
-• CPU tab — See which programs keep your Mac busy, using the same numbers as Activity Monitor.
-• Program details — Click a program to see what it is, who started it, how long it has been running, its memory and the command it was started with.
-• Plainer wording — Every message in the app was rewritten so anyone can follow it.
-• New menu names — Smart Scan is now “Search All”, Junk Files is “Files to Clean” and Disk Map is “Space View”.
+• Dev Projects tab — Tell Sweep where you keep your code and it lists folders that come back when deleted, like node_modules, .venv and Pods, biggest first.
+• Low disk alerts — Get a menu bar alert when free space drops below the level you choose. Turn it on or off in Settings.
+• Easier explanations — Descriptions in the cleanup list, CPU tab and confirmation windows were rewritten in plain words, and safety labels are clearer.
+• New icons — The CPU, Space View and Dev Projects icons now show what each one does.
+• Fixes — Restoring files now brings them back in other tabs too, and large and duplicate files can be restored.
