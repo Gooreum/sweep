@@ -44,6 +44,15 @@ struct PermissionsSettingsView: View {
                     }
                 }
 
+                Retro95GroupBox(title: String(localized: "앱 관리")) {
+                    permissionRow(icon: .application,
+                                  name: String(localized: "앱 관리"),
+                                  purpose: String(localized: "응용 프로그램 화면에서 다른 앱을 휴지통으로 옮기려면 필요해요"),
+                                  enabled: false, measurable: false) {
+                        Button("시스템 설정 열기") { PrivacySettings.openAppManagement() }
+                    }
+                }
+
                 Retro95GroupBox(title: String(localized: "알림")) {
                     permissionRow(icon: .info,
                                   name: String(localized: "알림"),

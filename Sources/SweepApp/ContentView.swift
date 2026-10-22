@@ -5,6 +5,7 @@ import SweepKit
 struct ContentView: View {
     /// 앱이 소유한다 — 메뉴 명령도 같은 모델을 건드려야 한다.
     @Bindable var app: AppModel
+    var notifier: DiskAlertNotifier? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -42,7 +43,7 @@ struct ContentView: View {
         case .diskMap:
             // 스캔 모델은 아니지만 **소유는 다른 기능과 똑같이** AppModel이 한다.
             // 뷰가 들고 있으면 탭을 옮기는 순간 트리가 사라져 10초를 다시 기다린다.
-            DiskMapView(model: app.diskMap(), app: app)
+            DiskMapView(model: app.diskMap(), app: app, notifier: notifier)
 
         case .cpu:
             // 스캔 모델이 없다. 디스크 맵과 같은 이유로 소유는 AppModel이 한다.

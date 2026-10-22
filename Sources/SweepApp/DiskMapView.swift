@@ -14,6 +14,7 @@ struct DiskMapView: View {
 
     /// 막힌 폴더를 그 자리에서 허락받으려면 필요하다.
     @Bindable var app: AppModel
+    var notifier: DiskAlertNotifier? = nil
 
     /// 삭제 확인을 기다리는 항목. nil이면 대화가 닫혀 있다.
     @State private var pendingDelete: DiskUsageNode?
@@ -41,6 +42,13 @@ struct DiskMapView: View {
             wholeDiskBanner
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .onAppear {
+            model.onCompleted = { [weak notifier] in notifier?.postDiskMapDone() }
+            if model.isScanning { notifier?.diskMapLoadingStarted() }
+        }
+        .onChange(of: model.isScanning) { _, loading in
+            if loading { notifier?.diskMapLoadingStarted() }
         }
         .background(R95.gray)
         .foregroundStyle(R95.black)
@@ -280,6 +288,7 @@ struct DiskMapView: View {
     private var content: some View {
         if let phase = model.loadPhase {
             VStack(spacing: 12) {
+                Retro95Hourglass(size: 48)
                 switch phase {
                 case .counting(let scanned):
                     // 분모를 만드는 중이라 아직 퍼센트가 없다. 숫자를 지어내지 않는다.

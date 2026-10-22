@@ -88,6 +88,18 @@ struct Sidebar: View {
 
             // 스캔 결과를 사이드바에서 바로 본다. 어디에 용량이 묶여 있는지
             // 화면을 옮기지 않고 알 수 있어야 한다.
+            if feature == .diskMap {
+                Group {
+                    switch app.diskMapStatus {
+                    case .idle: EmptyView()
+                    case .loading:
+                        Retro95Hourglass(size: 16)
+                    case .done:
+                        PixelIcon(art: .check, size: 16)
+                    }
+                }
+                .accessibilityHidden(true)
+            }
             if let badge {
                 Text(badge).font(R95.mono(11)).lineLimit(1).fixedSize(horizontal: true, vertical: false)
             }
@@ -100,8 +112,17 @@ struct Sidebar: View {
         .contentShape(Rectangle())
         .onTapGesture { app.selected = feature }
         .accessibilityElement(children: .combine)
+        .accessibilityValue(feature == .diskMap ? diskMapAccessibilityStatus : "")
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
         .padding(.horizontal, 4)
+    }
+
+    private var diskMapAccessibilityStatus: String {
+        switch app.diskMapStatus {
+        case .idle: ""
+        case .loading: String(localized: "공간 보기 읽는 중")
+        case .done: String(localized: "공간 보기 완료")
+        }
     }
 
     /// 용량을 읽지 못하면 아예 그리지 않는다 — 0으로 그리면

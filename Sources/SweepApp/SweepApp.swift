@@ -91,7 +91,7 @@ struct SweepApp: App {
                     .background(R95.gray)
                     .preferredColorScheme(.light)
             } else {
-                ContentView(app: app)
+                ContentView(app: app, notifier: diskAlerts)
                     // 결과 목록이 접히지 않도록 창의 최소 폭을 유지한다.
                     .frame(minWidth: 940, minHeight: 600)
                     .background(R95.gray)

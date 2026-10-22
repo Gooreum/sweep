@@ -67,6 +67,12 @@ struct RemovalFailuresSheet: View {
                 .retroSunken()
             }
         } buttons: {
+            if failed.contains(where: {
+                $0.item.category == .application && $0.failure?.kind == .permissionDenied
+            }) {
+                Button("앱 관리 설정 열기") { PrivacySettings.openAppManagement() }
+                    .buttonStyle(Retro95ButtonStyle())
+            }
             if offersFullDiskAccess {
                 Button("전체 디스크 접근 설정 열기") { PrivacySettings.openFullDiskAccess() }
                     .buttonStyle(Retro95ButtonStyle())

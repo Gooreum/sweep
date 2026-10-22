@@ -41,7 +41,10 @@ public struct ApplicationScanner: CleanupScanner {
                 guard path != me else { continue }
                 let found = DirectorySize.summary(at: app)
                 let opened = lastUsed(app)
-                let added = (try? app.resourceValues(forKeys: [.creationDateKey]))?.creationDate
+                // 번들의 만든 날짜는 앱을 빌드한 날이라(Electron 앱은 1980년) 설치일로 쓸 수 없다.
+                // Finder의 "추가된 날짜"를 먼저 쓴다.
+                let added = Self.spotlightDateAdded(app)
+                    ?? (try? app.resourceValues(forKeys: [.creationDateKey]))?.creationDate
                 let isRunning = runningPaths.contains(path)
 
                 items.append(CleanupItem(
@@ -64,6 +67,12 @@ public struct ApplicationScanner: CleanupScanner {
         let days = Calendar.current.dateComponents([.day], from: opened, to: now).day ?? 0
         if days < 30 { return String(localized: "최근에 열었어요") }
         return String(localized: "\(days)일 동안 열지 않았어요")
+    }
+
+    /// Finder의 "추가된 날짜"(Spotlight `kMDItemDateAdded`). 이 Mac에 설치한 날에 가깝다.
+    static func spotlightDateAdded(_ url: URL) -> Date? {
+        guard let item = MDItemCreateWithURL(kCFAllocatorDefault, url as CFURL) else { return nil }
+        return MDItemCopyAttribute(item, kMDItemDateAdded) as? Date
     }
 
     /// Finder 정보 창의 "마지막으로 열어 본 날짜"와 같은 값(Spotlight `kMDItemLastUsedDate`).

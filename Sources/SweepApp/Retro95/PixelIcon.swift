@@ -82,6 +82,26 @@ extension PixelArt {
         "................",
     ], palette: retroPalette)
 
+    /// Raised program window with a navy title bar and a small document inside.
+    static let application = PixelArt(rows: [
+        "................",
+        ".kkkkkkkkkkkkkk.",
+        ".kwwwwwwwwwwwwk.",
+        ".kwnnnnnnnnngdk.",
+        ".kwnwnnnnnnngdk.",
+        ".kwdddddddddddk.",
+        ".kwgggggggggddk.",
+        ".kwggkkkkkggddk.",
+        ".kwggkwwwkggddk.",
+        ".kwggkwnwkggddk.",
+        ".kwggkwwwkggddk.",
+        ".kwggkkkkkggddk.",
+        ".kwgggggggggddk.",
+        ".kddddddddddddk.",
+        ".kkkkkkkkkkkkkk.",
+        "................",
+    ], palette: retroPalette)
+
     static let computer = PixelArt(rows: [
         "..kkkkkkkkkkkk..",
         "..kweeeeeeeeek..",
@@ -566,7 +586,7 @@ extension Feature {
         case .largeFile: .folder
         case .duplicate: .documents
         case .trash: .trash
-        case .applications: .computer   // Phase 2에서 전용 아이콘으로 바꾼다
+        case .applications: .application
         case .diskMap: .spaceView
         case .cpu: .chip
         }
@@ -587,7 +607,7 @@ extension ScanCategory {
         case .deviceBackup: .hardDrive
         case .largeFile: .bigFile
         case .duplicate: .documents
-        case .application: .computer   // 행에서는 실제 앱 아이콘을 쓴다(Phase 2)
+        case .application: .application
         }
     }
 }
@@ -607,6 +627,7 @@ extension SafetyLevel {
 struct PixelIconGallery: View {
     private let entries: [(name: String, art: PixelArt)] = [
         ("computer", .computer),
+        ("application", .application),
         ("computerLarge", .computerLarge),
         ("magnifier", .magnifier),
         ("folder", .folder),

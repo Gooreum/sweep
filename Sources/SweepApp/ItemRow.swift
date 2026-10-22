@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import SweepKit
 
@@ -64,8 +65,18 @@ struct ItemRow: View {
                 .accessibilityAction { isOn.toggle() }
                 .frame(width: ItemTableColumns.check)
 
-            PixelIcon(art: item.category.pixelArt, size: 16)
-                .frame(width: ItemTableColumns.icon)
+            Group {
+                if item.category == .application {
+                    Image(nsImage: ApplicationIconCache.icon(for: item.url.path))
+                        .resizable()
+                        .interpolation(.high)
+                        .frame(width: 16, height: 16)
+                        .accessibilityHidden(true)
+                } else {
+                    PixelIcon(art: item.category.pixelArt, size: 16)
+                }
+            }
+            .frame(width: ItemTableColumns.icon)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.displayName)
@@ -127,5 +138,23 @@ struct ItemRow: View {
             Button("Finder에서 보기") { ItemActions.reveal(item.url) }
             Button("위치 복사") { ItemActions.copyPath(item.url) }
         }
+    }
+}
+
+/// AppKit icon lookup stays on the main actor; repeated row updates reuse the image.
+@MainActor
+private enum ApplicationIconCache {
+    static let images: NSCache<NSString, NSImage> = {
+        let cache = NSCache<NSString, NSImage>()
+        cache.countLimit = 256
+        return cache
+    }()
+
+    static func icon(for path: String) -> NSImage {
+        let key = path as NSString
+        if let image = images.object(forKey: key) { return image }
+        let image = NSWorkspace.shared.icon(forFile: path)
+        images.setObject(image, forKey: key)
+        return image
     }
 }
