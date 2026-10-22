@@ -36,6 +36,8 @@ struct Sidebar: View {
             diskGauge.padding(.top, 24)
 
             Spacer(minLength: 0)
+
+            permissionsEntry
         }
         .frame(width: R95.sidebarWidth)
         .frame(maxHeight: .infinity)
@@ -43,6 +45,30 @@ struct Sidebar: View {
         .overlay(alignment: .trailing) {
             Retro95SidebarEdge()
         }
+    }
+
+    private var permissionsEntry: some View {
+        let hasOff = Feature.allCases.contains { !app.permissionNeeds(for: $0).isEmpty }
+
+        return VStack(alignment: .leading, spacing: 8) {
+            Retro95Separator()
+            HStack(spacing: 8) {
+                PixelIcon(art: hasOff ? .warning : .check, size: 16)
+                    .accessibilityHidden(true)
+                Text(hasOff ? "꺼진 권한이 있어요" : "필요한 권한이 켜져 있어요")
+                    .font(R95.ui(11))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .foregroundStyle(hasOff ? Theme.cautionText : Theme.textSecondary)
+            SettingsLink {
+                Text("권한 모두 보기")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(Retro95ButtonStyle())
+            .accessibilityLabel(Text("권한 모두 보기"))
+        }
+        .padding(8)
     }
 
     private func row(_ feature: Feature, badge: String?) -> some View {
