@@ -430,8 +430,6 @@ public final class AppModel {
     /// 카테고리 → 기능 대응표를 먼저 만들고 항목을 **한 번만** 지나간다.
     public var badges: [Feature: String] {
         let items = model(for: .smartScan).items
-        guard !items.isEmpty else { return [:] }
-
         var owner: [ScanCategory: Feature] = [:]
         for feature in Feature.summaryCards {
             for category in feature.categories { owner[category] = feature }
@@ -443,6 +441,16 @@ public final class AppModel {
             // 스마트 스캔은 전체를 대표한다. 담당 기능이 없는 카테고리가 생겨도
             // 전체 합에서는 빠지지 않는다.
             bytes[.smartScan, default: 0] += item.size
+        }
+
+        // 탭에서 직접 찾은 결과가 있으면 그 값이 더 정확하다(한번에 찾기보다 나중이거나 범위가 같다).
+        // 응용 프로그램은 한번에 찾기가 훑지 않아 이것으로만 나온다. 모델은 만들지 않는다.
+        // 비운 뒤(`.cleaned`)에는 정리 전 숫자를 남기지 않도록 쓰지 않는다.
+        for feature in Feature.allCases where feature != .smartScan {
+            guard let model = models[feature], model.phase == .results else { continue }
+            // 찾았는데 없으면 배지를 떼어 낸다 — 빈 배지("Zero KB")는 붙이지 않는 규칙과 같다.
+            let total = model.items.reduce(0) { $0 + $1.size }
+            bytes[feature] = total > 0 ? total : nil
         }
 
         return bytes.mapValues { Self.compactSize($0) }
@@ -623,7 +631,7 @@ extension AppModel {
     public func status(of feature: Feature) -> FeatureStatus {
         switch feature {
         case .cpu:
-            return .idle
+            return cpuModel?.isSampling == true ? .loading : .idle
         case .diskMap:
             guard let model = diskMapModel else { return .idle }
             if model.isScanning { return .loading }

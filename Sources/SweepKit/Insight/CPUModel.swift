@@ -65,6 +65,9 @@ public final class CPUModel {
     /// 앱이 거짓말을 한다.
     public private(set) var isWarmingUp = true
 
+    /// 지금 재는 중인가. CPU 화면이 열려 있는 동안만 true다. 사이드바 애니메이션이 읽는다.
+    public private(set) var isSampling = false
+
     /// 논리 코어 수. 프로세스 사용률의 상한(코어 수 × 100%)이고, `ownTotal`의 분모다.
     ///
     /// `public`인 이유는 화면이 "코어가 N개라 최대 N00%"라고 밝혀야 하기 때문이다.
@@ -119,6 +122,8 @@ public final class CPUModel {
     /// 한 바퀴에 한 번만 잰다. 직전 샘플을 들고 있어서, 주기마다 두 번씩
     /// 재는 낭비를 하지 않는다.
     public func run() async {
+        isSampling = true
+        defer { isSampling = false }
         let clock = ContinuousClock()
         var (previous, previousLoad) = await measure()
         var previousAt = clock.now

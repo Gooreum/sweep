@@ -140,6 +140,49 @@ struct AppModelTests {
         #expect(app.status(of: .cpu) == .idle)
     }
 
+    @Test("탭에서 직접 찾은 결과가 배지가 된다 — 응용 프로그램은 그것으로만 나온다")
+    func badgesUseFeatureOwnResults() async {
+        let app = AppModel(makeModel: { feature in
+            let items: [CleanupItem] = switch feature {
+            case .applications:
+                [CleanupItem(url: URL(filePath: "/Applications/A.app"), size: 2_000_000_000,
+                             category: .application, safety: .caution)]
+            case .junk:
+                [CleanupItem(url: URL(filePath: "/private/tmp/j"), size: 5_000_000_000,
+                             category: .devCache, safety: .safe)]
+            case .smartScan:
+                [CleanupItem(url: URL(filePath: "/private/tmp/s"), size: 1_000_000_000,
+                             category: .devCache, safety: .safe)]
+            default: []
+            }
+            return ScanModel(scan: self.finishing(items))
+        })
+        #expect(app.badges[.applications] == nil)
+
+        await app.model(for: .applications).scan()
+        await app.model(for: .smartScan).scan()
+        await app.model(for: .junk).scan()
+
+        #expect(app.badges[.applications] == AppModel.compactSize(2_000_000_000))
+        // 한번에 찾기는 1GB로 셌지만 탭에서 다시 찾은 5GB가 이긴다
+        #expect(app.badges[.junk] == AppModel.compactSize(5_000_000_000))
+    }
+
+    @Test("CPU는 재는 동안만 loading이다")
+    func cpuStatusFollowsSampling() async {
+        let cpu = CPUModel(interval: .milliseconds(10), sample: { [] }, loadSample: { nil })
+        let app = AppModel(makeCPU: { cpu })
+        #expect(app.status(of: .cpu) == .idle)
+
+        let running = Task { await app.cpu().run() }
+        for _ in 0..<200 where app.status(of: .cpu) != .loading { await Task.yield() }
+        #expect(app.status(of: .cpu) == .loading)
+
+        running.cancel()
+        await running.value
+        #expect(app.status(of: .cpu) == .idle)
+    }
+
     @Test("공간 보기 상태는 모델이 없으면 idle, 끝까지 읽으면 done이다")
     func diskMapStatusFollowsModel() async {
         let injected = DiskMapModel(countEntries: { _, _, _ in 0 },
