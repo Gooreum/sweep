@@ -162,7 +162,7 @@ public enum DiskUsageTree {
     /// `onBytesScanned`는 폴더 하나를 읽을 때마다 그 폴더 **바로 아래 파일들의 바이트 합**을
     /// 한 번 알린다. 다 더하면 루트 크기가 된다 — 진행률의 분자다.
     public static func build(at url: URL,
-                             maxDepth: Int = 4,
+                             maxDepth: Int = defaultMaxDepth,
                              minimumSize: Int64 = 1024 * 1024,
                              canReadAppData: Bool = FullDiskAccess.isGranted,
                              appDataHome: URL = Sandbox.userHome,
@@ -195,6 +195,9 @@ public enum DiskUsageTree {
         }
         return walk.directory(url: url, path: path, depth: maxDepth, parallelLevels: parallelLevels)
     }
+
+    /// 목록에 남기는 깊이. 공간 보기가 읽은 뒤 한 자리만 다시 잴 때도 같은 깊이로 맞춘다.
+    public static let defaultMaxDepth = 4
 
     /// 몇 단계까지 자식 폴더를 여러 스레드로 나눠 잴까.
     ///

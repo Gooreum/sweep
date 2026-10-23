@@ -95,6 +95,12 @@ public final class DiskMapModel {
         @Sendable (URL, CancelFlag, @escaping @Sendable (Int64) -> Void) -> DiskUsageNode
     private let expectedBytes: @Sendable (URL) -> Int64?
     private let cache: DiskMapCache?
+    /// 한 자리만 다시 잰다. 읽는 동안 옮긴 것을 맞춰 볼 때 쓴다(`reconcile`).
+    private let rebuild: @Sendable (URL, Int) -> DiskUsageNode
+    private let maxDepth: Int
+
+    /// 읽는 동안 다른 화면에서 옮긴 것. 다 읽은 트리에 다시 맞춰 본다.
+    private var movesDuringLoad: [TrashMove] = []
 
     /// 지금 도는 순회의 중단 신호.
     private var cancelFlag: CancelFlag?
@@ -110,11 +116,16 @@ public final class DiskMapModel {
                                     onBytesScanned: onBytes)
             },
         expectedBytes: @escaping @Sendable (URL) -> Int64? = DiskMapModel.volumeUsedBytes,
-        cache: DiskMapCache? = nil
+        cache: DiskMapCache? = nil,
+        rebuild: @escaping @Sendable (URL, Int) -> DiskUsageNode
+            = { DiskUsageTree.build(at: $0, maxDepth: $1) },
+        maxDepth: Int = DiskUsageTree.defaultMaxDepth
     ) {
         self.buildTree = buildTree
         self.expectedBytes = expectedBytes
         self.cache = cache
+        self.rebuild = rebuild
+        self.maxDepth = maxDepth
     }
 
     /// 시작점이 볼륨 자신(`/`, 외장 디스크)이면 그 볼륨의 사용량. 아니면 모른다.
@@ -160,6 +171,7 @@ public final class DiskMapModel {
         // 볼륨 전체는 몇 분이 걸린다. 시작한 순회를 멈출 수 있어야 한다.
         let flag = CancelFlag()
         cancelFlag = flag
+        movesDuringLoad = []
 
         let measured = ScanCounter()
         let building = Task.detached { [buildTree] in
@@ -175,14 +187,25 @@ public final class DiskMapModel {
                 self.loadPhase = Self.phase(read: Int64(measured.value), of: total)
             }
         }
-        let tree = await building.value
+        var tree = await building.value
         ticker.cancel()
 
         // 중단됐으면 반쪽 트리로 화면을 덮지 않는다.
         // 보던 것(지난 결과 포함)은 그대로 둔다 — 멈췄다고 화면까지 비면 처음부터 다시 해야 한다.
         guard !flag.isCancelled else {
+            movesDuringLoad = []
             loadPhase = nil
             return
+        }
+
+        // 읽는 동안 다른 화면에서 옮긴 것. 그 폴더를 옮기기 전에 읽었으면 지운 것이 되살아난다.
+        let pending = movesDuringLoad
+        movesDuringLoad = []
+        if !pending.isEmpty {
+            let built = tree
+            tree = await Task.detached { [rebuild, maxDepth] in
+                Self.reconcile(built, with: pending, maxDepth: maxDepth, rebuild: rebuild)
+            }.value
         }
 
         // 집계가 끝났으면 정의상 100%다. 한 틱만 보여주고 넘어간다 — 사용자가 완료를 확인할 수 있어야 한다.
@@ -314,7 +337,10 @@ public final class DiskMapModel {
     ///
     /// 크기는 트리가 아는 값을 먼저 쓴다. 스캐너가 잰 값과 조금 달라도 막대 합이 어긋나지 않는다.
     public func apply(_ moves: [TrashMove]) {
-        guard var root = path.first, !moves.isEmpty else { return }
+        guard !moves.isEmpty else { return }
+        // 읽는 중이면 다 읽은 트리에도 맞춰 봐야 한다. 지금 보이는 것은 지난 트리다.
+        if isScanning { movesDuringLoad += moves }
+        guard var root = path.first else { return }
         for move in moves {
             let size = root.node(at: move.from)?.size ?? move.size
             root = root.adjusting(move.from, by: -size, removing: true) ?? root
@@ -326,6 +352,49 @@ public final class DiskMapModel {
         path = retrace(in: root, skippingEmpty: false)
         // 지운 것이 다음에 지난 결과로 되살아나면 안 된다.
         cache?.save(root, for: root.url, at: cachedAt ?? completedAt ?? Date())
+    }
+
+    /// 다 읽은 트리에 읽는 동안 옮긴 것을 맞춰 본다.
+    ///
+    /// 순회가 그 폴더를 옮기기 전에 읽었는지 뒤에 읽었는지는 알 수 없다. 그냥 다시 빼면
+    /// 뒤에 읽은 경우 두 번 빠진다. 그래서 결과 트리를 보고 정한다.
+    /// - 보낸 쪽: 노드가 남아 있으면 전에 읽은 것이라 뺀다. 없는데 품은 노드가 최대 깊이라
+    ///   자식 목록이 없으면 알 수 없으니 그 자리만 다시 잰다. 그 밖은 이미 빠졌거나 1MB 미만이다.
+    /// - 받는 쪽: 휴지통 폴더(목록에 없으면 최대 깊이 조상, 또는 부모 아래 새로)를 다시 잰다.
+    ///   전에 읽었는지 뒤에 읽었는지와 상관없이 맞는 값이 된다. 휴지통은 보통 작다.
+    nonisolated static func reconcile(_ built: DiskUsageNode, with moves: [TrashMove], maxDepth: Int,
+                                      rebuild: (URL, Int) -> DiskUsageNode) -> DiskUsageNode {
+        var tree = built
+        var targets: [URL] = []
+        for move in moves {
+            if move.from.pathKey != tree.url.pathKey, let stale = tree.node(at: move.from) {
+                tree = tree.adjusting(move.from, by: -stale.size, removing: true) ?? tree
+            } else if let holder = tree.deepestNode(containing: move.from), holder.depth >= maxDepth {
+                targets.append(holder.node.url)
+            }
+
+            guard let to = move.to else { continue }
+            let folder = to.deletingLastPathComponent()
+            guard let holder = tree.deepestNode(containing: folder) else { continue }
+            if holder.node.url.pathKey == folder.pathKey || holder.depth >= maxDepth {
+                targets.append(holder.node.url)
+            } else if holder.node.url.pathKey == folder.deletingLastPathComponent().pathKey {
+                targets.append(folder)
+            }
+        }
+
+        // 겹치면 바깥 하나만 잰다. 안쪽은 바깥을 잴 때 같이 잰다.
+        var kept: [URL] = []
+        for target in targets.sorted(by: { $0.pathKey.count < $1.pathKey.count })
+        where !kept.contains(where: { target.isSameOrInside($0) }) {
+            kept.append(target)
+        }
+        for target in kept {
+            guard let holder = tree.deepestNode(containing: target) else { continue }
+            let depth = holder.node.url.pathKey == target.pathKey ? holder.depth : holder.depth + 1
+            tree = tree.replacing(rebuild(target, max(0, maxDepth - depth))) ?? tree
+        }
+        return tree
     }
 
     /// 보던 자리를 **URL로 다시 찾아 내려간다.** 중간이 사라졌으면 거기서 멈춘다.
