@@ -46,15 +46,12 @@ extension DiskUsageNode {
     /// 가장 깊은 조상까지만 바꾼다 — 그 조상의 크기에는 이미 들어 있기 때문이다.
     /// 이 트리 밖이면 nil.
     func adjusting(_ target: URL, by delta: Int64, removing: Bool) -> DiskUsageNode? {
-        let targetPath = target.standardizedFileURL.path
-        guard Self.contains(url.standardizedFileURL.path, targetPath) else { return nil }
+        guard target.isSameOrInside(url) else { return nil }
 
         var children = self.children
-        if let index = children.firstIndex(where: {
-            Self.contains($0.url.standardizedFileURL.path, targetPath)
-        }) {
+        if let index = children.firstIndex(where: { target.isSameOrInside($0.url) }) {
             let child = children[index]
-            if removing, child.url.standardizedFileURL.path == targetPath {
+            if removing, child.url.pathKey == target.pathKey {
                 children.remove(at: index)
             } else if let updated = child.adjusting(target, by: delta, removing: removing) {
                 children[index] = updated
@@ -69,19 +66,29 @@ extension DiskUsageNode {
 
     /// 트리 안에서 그 경로의 노드. 목록에 남지 않은 곳이면 nil.
     func node(at target: URL) -> DiskUsageNode? {
-        let targetPath = target.standardizedFileURL.path
-        let mine = url.standardizedFileURL.path
-        if mine == targetPath { return self }
-        guard Self.contains(mine, targetPath) else { return nil }
+        if url.pathKey == target.pathKey { return self }
+        guard target.isSameOrInside(url) else { return nil }
         for child in children {
             if let found = child.node(at: target) { return found }
         }
         return nil
     }
+}
 
-    /// `path`가 `ancestor` 자신이거나 그 아래인가. `/foo`가 `/foobar`를 품지 않게 `/`까지 맞춘다.
-    private static func contains(_ ancestor: String, _ path: String) -> Bool {
-        path == ancestor || path.hasPrefix(ancestor.hasSuffix("/") ? ancestor : ancestor + "/")
+extension URL {
+    /// 비교용 경로. `.`·`..`만 정리하고 끝의 `/`는 뗀다.
+    ///
+    /// `standardizedFileURL`은 쓰지 않는다 — 있는 경로에서만 `/private`를 떼서,
+    /// 지워져 없어진 파일과 남아 있는 부모 폴더가 서로 다른 경로로 보인다.
+    var pathKey: String {
+        let path = standardized.path
+        return path.count > 1 && path.hasSuffix("/") ? String(path.dropLast()) : path
+    }
+
+    /// 이 경로가 `ancestor` 자신이거나 그 아래인가. `/foo`가 `/foobar`를 품지 않게 `/`까지 맞춘다.
+    func isSameOrInside(_ ancestor: URL) -> Bool {
+        let mine = pathKey, theirs = ancestor.pathKey
+        return mine == theirs || mine.hasPrefix(theirs == "/" ? "/" : theirs + "/")
     }
 }
 

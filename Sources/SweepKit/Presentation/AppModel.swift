@@ -15,6 +15,10 @@ public final class AppModel {
     private let makeModel: @MainActor (Feature) -> ScanModel
 
     private var diskMapModel: DiskMapModel?
+    /// 옮긴 항목 → 휴지통 안 위치. 되돌릴 때 휴지통 쪽 화면에서 그 항목을 찾아 뺀다.
+    private var trashedLocations: [URL: URL] = [:]
+    /// 옮긴 것을 휴지통 항목으로 만들 때 설명을 고른다. 훑지는 않는다.
+    private let trash = TrashScanner()
     private let makeDiskMap: @MainActor () -> DiskMapModel
 
     private var cpuModel: CPUModel?
@@ -296,9 +300,11 @@ public final class AppModel {
         }
         model.onReport = { [weak self] report in
             self?.record(report)
+            self?.moved(report.succeeded.map(\.move), dates: report.succeeded.map(\.item.dates))
         }
         model.onRestored = { [weak self] report in
             self?.recordRestore(report)
+            self?.restored(report)
             self?.refreshVolumeUsageAfterChange()
         }
         model.onRestoredItems = { [weak self] items in
@@ -364,10 +370,62 @@ public final class AppModel {
     ///
     /// 나눠 준 뒤에는 같은 파일을 여러 화면이 들고 있다. 한쪽에서 지웠는데
     /// 다른 쪽에 남아 있으면 목록도 사이드바 배지도 거짓말이 된다.
-    private func forget(_ urls: [URL], except owner: Feature) {
+    private func forget(_ urls: [URL], except owner: Feature?) {
+        guard !urls.isEmpty else { return }
         for (feature, model) in models where feature != owner {
             model.forget(urls)
         }
+    }
+
+    /// 휴지통으로 옮긴 것을 휴지통 쪽 화면에 바로 보여 준다.
+    ///
+    /// 빼기만 하면 휴지통 탭은 다시 검색할 때까지 새로 들어온 것을 모르고, 공간 보기는
+    /// 지운 폴더를 그대로 그린다. 다시 훑지 않고 옮긴 위치로 항목을 만든다.
+    /// 모든 탭에 넣되 각 탭은 자기 몫만 받는다 — 휴지통 항목은 휴지통 탭과 한번에 찾기만 받는다.
+    private func moved(_ moves: [TrashMove], dates: [FileDates]) {
+        guard !moves.isEmpty else { return }
+        var inTrash: [CleanupItem] = []
+        for (move, dates) in zip(moves, dates) {
+            guard let to = move.to else { continue }
+            trashedLocations[move.from] = to
+            inTrash.append(trash.item(movedTo: to, size: move.size, dates: dates))
+        }
+        for (feature, model) in models {
+            model.reinstate(feature.items(from: inTrash))
+        }
+        diskMapModel?.apply(moves)
+    }
+
+    /// 되돌린 것을 휴지통 쪽 화면에서 뺀다. `moved`의 짝이다.
+    ///
+    /// 휴지통 안 위치는 옮길 때 기억해 둔 것을 쓴다. 되돌리기 결과에는 없을 수도 있다.
+    private func restored(_ report: RemovalReport) {
+        var moves: [TrashMove] = []
+        for outcome in report.succeeded {
+            guard let trashed = trashedLocations.removeValue(forKey: outcome.item.url)
+                    ?? outcome.trashedURL else { continue }
+            moves.append(TrashMove(from: trashed, to: outcome.item.url, size: outcome.item.size))
+        }
+        guard !moves.isEmpty else { return }
+        forget(moves.map(\.from), except: nil)
+        diskMapModel?.apply(moves)
+    }
+
+    /// 공간 보기에서 휴지통으로 옮긴 것을 스캔 탭에 알린다.
+    ///
+    /// 공간 보기는 폴더째 지울 수 있다. 그 폴더 **아래** 항목도 이제 없으므로 함께 뺀다.
+    private func movedFromDiskMap(_ moves: [TrashMove]) {
+        let gone = models.values.flatMap(\.items).map(\.url).filter { url in
+            moves.contains { url.isSameOrInside($0.from) }
+        }
+        forget(gone, except: nil)
+        let inTrash = moves.compactMap { move in
+            move.to.map { trash.item(movedTo: $0, size: move.size) }
+        }
+        for (feature, model) in models {
+            model.reinstate(feature.items(from: inTrash))
+        }
+        refreshVolumeUsageAfterChange()
     }
 
     /// 한 화면에서 되돌린 파일을 나머지 화면의 목록에도 돌려준다. `forget`의 짝이다.
@@ -386,6 +444,7 @@ public final class AppModel {
     public func diskMap() -> DiskMapModel {
         if let existing = diskMapModel { return existing }
         let created = makeDiskMap()
+        created.onMoved = { [weak self] moves in self?.movedFromDiskMap(moves) }
         diskMapModel = created
         return created
     }

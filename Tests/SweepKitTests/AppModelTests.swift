@@ -882,6 +882,99 @@ struct AppModelTests {
         #expect(!big.items.contains { $0.url == target.url }, "남의 몫이 끼어들었다")
     }
 
+    // MARK: - 휴지통으로 옮긴 것을 휴지통 쪽 화면에 바로
+
+    @Test("휴지통으로 옮기면 휴지통 탭과 한번에 찾기에 바로 들어가고 배지가 는다")
+    func movedItemsShowUpInTrash() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let app = undoableApp(history: history)
+        let smart = app.model(for: .smartScan)
+        await smart.scan()
+        let trashTab = app.model(for: .trash)
+        let trashBefore = trashTab.items.reduce(0) { $0 + $1.size }
+
+        let junk = app.model(for: .junk)
+        let target = try #require(junk.items.first, "정크 탭이 비어 배분이 끊겼다")
+        junk.selection = [target.url]
+        await junk.removeSelected()
+
+        let trashed = URL(filePath: "/Users/x/.Trash/\(target.displayName)")
+        let added = try #require(trashTab.items.first { $0.url == trashed }, "휴지통 탭에 안 들어왔다")
+        #expect(added.category == .trash && added.size == target.size)
+        #expect(!trashTab.isSelected(added), "휴지통 항목이 골라져 있으면 비우기에 그대로 휩쓸린다")
+        #expect(smart.items.contains { $0.url == trashed })
+        #expect(app.badges[.trash] == AppModel.compactSize(trashBefore + target.size))
+        // 다른 탭 몫은 끼어들지 않는다
+        #expect(!app.model(for: .largeFile).items.contains { $0.url == trashed })
+    }
+
+    @Test("되돌리면 휴지통 쪽에 넣었던 항목이 빠진다")
+    func undoRemovesTrashEntries() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let app = undoableApp(history: history)
+        let smart = app.model(for: .smartScan)
+        await smart.scan()
+
+        let junk = app.model(for: .junk)
+        let target = try #require(junk.items.first)
+        junk.selection = [target.url]
+        await junk.removeSelected()
+        let trashed = URL(filePath: "/Users/x/.Trash/\(target.displayName)")
+        #expect(smart.items.contains { $0.url == trashed }, "휴지통에 안 들어와 TC가 공허하다")
+
+        await junk.undoLastCleanup()
+
+        #expect(!smart.items.contains { $0.url == trashed })
+        #expect(!app.model(for: .trash).items.contains { $0.url == trashed })
+    }
+
+    @Test("다른 탭에서 옮기면 공간 보기 트리에서도 빠진다")
+    func movedItemsLeaveDiskMap() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let map = DiskMapModel()
+        let app = AppModel(makeModel: { f in
+            ScanModel(scan: f == .smartScan ? self.finishing(self.mixed) : self.finishing([]),
+                      removeOne: { RemovalOutcome(item: $0, failureReason: nil,
+                                                  trashedURL: URL(filePath: "/Users/x/.Trash/\($0.displayName)")) })
+        }, makeDiskMap: { map }, history: history)
+        let tmp = URL(filePath: "/private/tmp")
+        map.seed(DiskUsageNode(url: tmp, size: 5_000, children: mixed.map {
+            DiskUsageNode(url: $0.url, size: $0.size)
+        }))
+        _ = app.diskMap()
+        await app.model(for: .smartScan).scan()
+
+        let junk = app.model(for: .junk)
+        let target = try #require(junk.items.first)
+        junk.selection = [target.url]
+        await junk.removeSelected()
+
+        #expect(!map.tiles.contains { $0.url == target.url })
+        #expect(map.current?.size == 5_000 - target.size)
+    }
+
+    @Test("공간 보기에서 폴더를 옮기면 그 아래 스캔 항목이 빠지고 휴지통 탭에 들어간다")
+    func diskMapMoveReachesScanTabs() async throws {
+        let map = DiskMapModel()
+        let app = AppModel(makeModel: { f in
+            ScanModel(scan: f == .smartScan ? self.finishing(self.mixed) : self.finishing([]))
+        }, makeDiskMap: { map })
+        _ = app.diskMap()
+        await app.model(for: .smartScan).scan()
+        #expect(!app.model(for: .junk).items.isEmpty, "정크 탭이 비어 TC가 공허하다")
+
+        let trashed = URL(filePath: "/Users/x/.Trash/tmp")
+        map.onMoved?([TrashMove(from: URL(filePath: "/private/tmp"), to: trashed, size: 5_000)])
+
+        #expect(app.model(for: .junk).items.isEmpty)
+        #expect(app.model(for: .largeFile).items.isEmpty)
+        #expect(app.model(for: .trash).items.map(\.url) == [trashed])
+        #expect(app.model(for: .smartScan).items.map(\.url) == [trashed])
+    }
+
     // MARK: - 휴지통 비우기는 합계에 넣지 않는다
 
     @Test("휴지통 항목을 지운 양은 '휴지통으로 옮김' 합계에 더해지지 않는다")
