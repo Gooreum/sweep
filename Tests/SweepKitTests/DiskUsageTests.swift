@@ -439,6 +439,43 @@ struct TreeAdjustTests {
         #expect(tree.node(at: url("/aa")) == nil)
     }
 
+    @Test("새로 잰 노드로 바꾸면 조상 크기가 차이만큼 바뀐다")
+    func replacingDeepNode() throws {
+        let result = try #require(tree.replacing(DiskUsageNode(url: url("/a/deep"), size: 10)))
+        #expect(result.node(at: url("/a/deep"))?.size == 10)
+        #expect(result.node(at: url("/a"))?.size == 30)
+        #expect(result.size == 70)
+    }
+
+    @Test("목록에 없던 직속 자식은 부모 아래에 넣는다")
+    func replacingInsertsMissingChild() throws {
+        let result = try #require(tree.replacing(DiskUsageNode(url: url("/a/new"), size: 50)))
+        #expect(result.node(at: url("/a"))?.children.map(\.name) == ["new", "deep"])
+        #expect(result.size == 150)
+    }
+
+    @Test("부모도 목록에 없는 경로나 트리 밖은 nil이다")
+    func replacingNeedsVisibleParent() {
+        #expect(tree.replacing(DiskUsageNode(url: url("/a/x/y"), size: 1)) == nil)
+        #expect(tree.replacing(DiskUsageNode(url: URL(filePath: "/other"), size: 1)) == nil)
+    }
+
+    @Test("품은 가장 깊은 노드와 깊이를 찾는다")
+    func findsDeepestNode() throws {
+        let deep = try #require(tree.deepestNode(containing: url("/a/deep/x/y")))
+        #expect(deep.node.url == url("/a/deep"))
+        #expect(deep.depth == 2)
+        #expect(tree.deepestNode(containing: url(""))?.depth == 0)
+        #expect(tree.deepestNode(containing: URL(filePath: "/other")) == nil)
+    }
+
+    @Test("교체해도 조상의 못 읽음 표시는 남는다")
+    func replacingKeepsUnreadable() throws {
+        let result = try #require(tree.replacing(DiskUsageNode(url: url("/locked/x"), size: 3)))
+        #expect(result.node(at: url("/locked"))?.isReadable == false)
+        #expect(result.node(at: url("/locked"))?.size == 3)
+    }
+
     @Test("크기를 바꿔도 못 읽음 표시는 남는다")
     func keepsUnreadable() throws {
         let result = try #require(tree.adjusting(url("/locked/x"), by: 5, removing: false))

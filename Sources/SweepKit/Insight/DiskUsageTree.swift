@@ -64,6 +64,43 @@ extension DiskUsageNode {
                              isReadable: isReadable)
     }
 
+    /// 그 자리의 노드를 새로 잰 것으로 바꾸고 조상 크기를 차이만큼 고친다.
+    ///
+    /// 목록에 없던 **직속 자식**이면 넣는다. 최소 크기에 걸려 빠졌던 것이라 예전 크기는
+    /// 0으로 본다 — 1MB 미만만큼 넘칠 수 있지만, 커진 것이 안 보이는 것보다 낫다.
+    /// 부모도 목록에 없거나 트리 밖이면 nil.
+    func replacing(_ fresh: DiskUsageNode) -> DiskUsageNode? {
+        if url.pathKey == fresh.url.pathKey { return fresh }
+        guard fresh.url.isSameOrInside(url) else { return nil }
+
+        var children = self.children
+        let delta: Int64
+        if let index = children.firstIndex(where: { fresh.url.isSameOrInside($0.url) }) {
+            guard let updated = children[index].replacing(fresh) else { return nil }
+            delta = updated.size - children[index].size
+            children[index] = updated
+        } else if fresh.url.deletingLastPathComponent().pathKey == url.pathKey {
+            delta = fresh.size
+            children.append(fresh)
+        } else {
+            return nil
+        }
+        children.sort { $0.size > $1.size }
+        return DiskUsageNode(url: url, size: max(0, size + delta), children: children,
+                             isReadable: isReadable)
+    }
+
+    /// `target`을 품은 가장 깊은 목록 노드와 그 깊이(루트가 0). 트리 밖이면 nil.
+    func deepestNode(containing target: URL) -> (node: DiskUsageNode, depth: Int)? {
+        guard target.isSameOrInside(url) else { return nil }
+        for child in children {
+            if let found = child.deepestNode(containing: target) {
+                return (found.node, found.depth + 1)
+            }
+        }
+        return (self, 0)
+    }
+
     /// 트리 안에서 그 경로의 노드. 목록에 남지 않은 곳이면 nil.
     func node(at target: URL) -> DiskUsageNode? {
         if url.pathKey == target.pathKey { return self }
