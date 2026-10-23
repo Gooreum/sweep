@@ -419,6 +419,9 @@ public final class AppModel {
             moves.contains { url.isSameOrInside($0.from) }
         }
         forget(gone, except: nil)
+        // 스캔 탭에서 옮긴 것과 같은 합계에 넣는다. 어디서 지웠는지에 따라 숫자가 달라지면 안 된다.
+        history.recordMoves(moves)
+        cleanupSummary = history.summary
         let inTrash = moves.compactMap { move in
             move.to.map { trash.item(movedTo: $0, size: move.size) }
         }

@@ -975,6 +975,23 @@ struct AppModelTests {
         #expect(app.model(for: .smartScan).items.map(\.url) == [trashed])
     }
 
+    @Test("공간 보기에서 옮긴 것도 누적 정리량에 들어간다")
+    func diskMapMoveIsRecorded() throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let map = DiskMapModel()
+        let app = AppModel(makeModel: { _ in ScanModel(scan: self.finishing([])) },
+                           makeDiskMap: { map }, history: history)
+        _ = app.diskMap()
+        #expect(app.cleanupSummary.totalReclaimedBytes == 0)
+
+        map.onMoved?([TrashMove(from: URL(filePath: "/private/tmp/x"),
+                                to: URL(filePath: "/Users/x/.Trash/x"), size: 7_000)])
+
+        #expect(app.cleanupSummary.totalReclaimedBytes == 7_000)
+        #expect(app.cleanupSummary.lastCleanup != nil)
+    }
+
     // MARK: - 휴지통 비우기는 합계에 넣지 않는다
 
     @Test("휴지통 항목을 지운 양은 '휴지통으로 옮김' 합계에 더해지지 않는다")
