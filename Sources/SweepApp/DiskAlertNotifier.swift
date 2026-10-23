@@ -12,6 +12,8 @@ final class DiskAlertNotifier: NSObject, UNUserNotificationCenterDelegate {
     /// 고정이다. 같은 식별자로 보내면 알림 센터에 쌓이지 않고 교체된다.
     static let identifier = "disk-low"
 
+    private var diskMapAuthorizationAsked = false
+    private var diskMapAuthorizationTask: Task<Void, Never>?
     private let app: AppModel
     private(set) var watcher: DiskWatcher!
 
@@ -60,6 +62,34 @@ final class DiskAlertNotifier: NSObject, UNUserNotificationCenterDelegate {
         }
     }
 
+    /// Separate consent from the disk-space watcher toggle. Only ask on the first load.
+    func diskMapLoadingStarted() {
+        guard !diskMapAuthorizationAsked, let center else { return }
+        diskMapAuthorizationAsked = true
+        diskMapAuthorizationTask = Task {
+            let status = await center.notificationSettings().authorizationStatus
+            if status == .notDetermined {
+                _ = try? await center.requestAuthorization(options: [.alert, .sound])
+            }
+            refreshAuthorization()
+        }
+    }
+
+    func postDiskMapDone() {
+        guard let center else { return }
+        Task {
+            await diskMapAuthorizationTask?.value
+            let status = await center.notificationSettings().authorizationStatus
+            guard status == .authorized || status == .provisional,
+                  !(NSApp.isActive && app.selected == .diskMap) else { return }
+            let content = UNMutableNotificationContent()
+            content.title = String(localized: "공간 보기 준비가 끝났어요")
+            content.body = String(localized: "어느 폴더가 공간을 많이 쓰는지 확인해 보세요")
+            try? await center.add(UNNotificationRequest(
+                identifier: "diskmap-done", content: content, trigger: nil))
+        }
+    }
+
     private func post(_ usage: VolumeUsage) {
         guard let center else { return }
         let content = UNMutableNotificationContent()
@@ -80,8 +110,9 @@ final class DiskAlertNotifier: NSObject, UNUserNotificationCenterDelegate {
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse
     ) async {
+        let isDiskMap = response.notification.request.identifier == "diskmap-done"
         await MainActor.run {
-            app.selected = .smartScan
+            app.selected = isDiskMap ? .diskMap : .smartScan
             openMain?()
             NSApp.activate(ignoringOtherApps: true)
         }
@@ -92,6 +123,11 @@ final class DiskAlertNotifier: NSObject, UNUserNotificationCenterDelegate {
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
-        [.banner, .list]
+        if notification.request.identifier == "diskmap-done" {
+            return await MainActor.run {
+                NSApp.isActive && app.selected == .diskMap ? [] : [.banner, .list]
+            }
+        }
+        return [.banner, .list]
     }
 }

@@ -18,14 +18,15 @@ struct RemovalFailuresSheet: View {
     let revealURL: (RemovalOutcome) -> URL
     /// 휴지통에서 직접 꺼내야 할 때 휴지통을 열어 준다.
     let offersTrash: Bool
-
-    @State private var trashOpenFailed = false
+    /// 휴지통을 열 권한을 그 자리에서 받을 때 쓴다.
+    let app: AppModel?
 
     init(failed: [RemovalOutcome],
          title: String? = nil,
          subtitle: String = String(localized: "아래 파일은 그대로 남아 있어요. 각 파일 아래 안내를 따라 문제를 해결한 뒤 ‘실패한 것만 다시 시도’를 눌러 주세요."),
          revealURL: @escaping (RemovalOutcome) -> URL = { $0.item.url },
          offersTrash: Bool = false,
+         app: AppModel? = nil,
          onClose: @escaping () -> Void,
          onRetry: (() -> Void)?) {
         self.failed = failed
@@ -33,12 +34,13 @@ struct RemovalFailuresSheet: View {
         self.subtitle = subtitle
         self.revealURL = revealURL
         self.offersTrash = offersTrash
+        self.app = app
         self.onClose = onClose
         self.onRetry = onRetry
     }
 
-    /// 권한 실패가 있고 이 빌드에서 켤 수 있을 때만 설정 버튼을 둔다.
-    /// 샌드박스(App Store)에서는 전체 디스크 접근이 뜻이 없다 — `FullDiskAccessBanner`와 같은 판단.
+    /// 권한 실패가 있고 전체 디스크 접근이 꺼진 것이 확실할 때만 설정 버튼을 둔다.
+    /// 샌드박스(App Store)에서도 둔다 — 안내 문구가 이것을 켜라고 하는데 버튼이 없으면 막힌다.
     private var offersFullDiskAccess: Bool {
         FullDiskAccessBanner.isNeeded && failed.contains { $0.failure?.kind == .permissionDenied }
     }
@@ -65,12 +67,19 @@ struct RemovalFailuresSheet: View {
                 .retroSunken()
             }
         } buttons: {
+            if failed.contains(where: {
+                $0.item.category == .application && $0.failure?.kind == .permissionDenied
+            }) {
+                Button("앱 관리 설정 열기") { PrivacySettings.openAppManagement() }
+                    .buttonStyle(Retro95ButtonStyle())
+            }
             if offersFullDiskAccess {
                 Button("전체 디스크 접근 설정 열기") { PrivacySettings.openFullDiskAccess() }
                     .buttonStyle(Retro95ButtonStyle())
             }
             if offersTrash {
-                Button("휴지통 열기") { trashOpenFailed = !ItemActions.openTrash() }
+                TrashOpenButton(app: app,
+                                fallback: "Finder에서 휴지통을 열어 주세요. 파일을 마우스 오른쪽 버튼으로 누르고 ‘되돌려 놓기’를 고르면 원래 위치로 돌아가요.")
                     .buttonStyle(Retro95ButtonStyle())
             }
             if let onRetry {
@@ -87,11 +96,6 @@ struct RemovalFailuresSheet: View {
             }
         }
         .frame(width: 560)
-        .alert("휴지통을 열지 못했어요", isPresented: $trashOpenFailed) {
-            Button("확인") {}
-        } message: {
-            Text("Finder에서 휴지통을 열어 주세요. 파일을 마우스 오른쪽 버튼으로 누르고 ‘되돌려 놓기’를 고르면 원래 위치로 돌아가요.")
-        }
         .background(R95.gray)
     }
 
@@ -130,13 +134,15 @@ struct RemovalFailuresSheet: View {
 extension RemovalFailuresSheet {
     /// 되돌리기 실패. 다시 시도할 것이 없고, 휴지통 안의 항목을 가리킨다.
     /// 샌드박스가 휴지통에서 꺼내는 것을 막으면 이 시트가 Finder로 넘겨주는 길이다.
-    static func restore(_ failed: [RemovalOutcome], onClose: @escaping () -> Void) -> RemovalFailuresSheet {
+    static func restore(_ failed: [RemovalOutcome], app: AppModel? = nil,
+                        onClose: @escaping () -> Void) -> RemovalFailuresSheet {
         RemovalFailuresSheet(
             failed: failed,
             title: String(localized: "\(failed.count)개는 아직 복구되지 않았어요"),
             subtitle: String(localized: "휴지통에서 파일을 찾아 마우스 오른쪽 버튼으로 누르고 ‘되돌려 놓기’를 골라 주세요. 휴지통을 이미 비웠다면 복구할 수 없어요."),
             revealURL: { $0.trashedURL ?? $0.item.url },
             offersTrash: true,
+            app: app,
             onClose: onClose,
             onRetry: nil)
     }

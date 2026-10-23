@@ -13,10 +13,11 @@ struct StatusLineTests {
     }
 
     // TC-1
-    @Test("디스크 맵이 개수를 세는 중이면 센 개수를 보여주고 숫자 칸은 비운다")
-    func diskMapCounting() {
-        let line = StatusLine.diskMap(loadPhase: .counting(scanned: 1234), current: sampleTree())
-        #expect(line == StatusLine(status: "\(1234.formatted())개 확인 중…", count: "—", size: "—"))
+    @Test("디스크 맵이 분모 없이 읽는 중이면 읽은 양을 보여주고 숫자 칸은 비운다")
+    func diskMapReading() {
+        let line = StatusLine.diskMap(loadPhase: .reading(bytes: 5_000_000), current: sampleTree())
+        let read = ByteCountFormatter.string(fromByteCount: 5_000_000, countStyle: .file)
+        #expect(line == StatusLine(status: "\(read) 읽는 중…", count: "—", size: "—"))
     }
 
     // TC-2

@@ -111,13 +111,117 @@ struct AppModelTests {
     @Test("주입한 디스크 맵 모델을 그대로 돌려준다")
     func diskMapModelIsInjectable() {
         // 기본 구성은 실제 순회를 물고 있어 테스트에서 10초를 기다리게 된다.
-        let injected = DiskMapModel(countEntries: { _, _, _ in 0 },
-                                    buildTree: { url, _, _ in
+        let injected = DiskMapModel(buildTree: { url, _, _ in
                                         DiskUsageNode(url: url, size: 0)
                                     })
         let app = AppModel(makeDiskMap: { injected })
 
         #expect(app.diskMap() === injected)
+    }
+
+    @Test("기능 상태는 모델이 없으면 idle, 찾기가 끝나면 done, CPU는 늘 idle이다")
+    func featureStatusFollowsModels() async {
+        let model = ScanModel(scan: {
+            AsyncStream { continuation in
+                continuation.yield(ScanCoordinator.Progress(
+                    items: [], fraction: 1, elapsed: .seconds(1), estimatedRemaining: nil,
+                    finishedScanners: 1, totalScanners: 1))
+                continuation.finish()
+            }
+        })
+        let app = AppModel(makeModel: { _ in model })
+        // 사이드바가 읽는다고 모델이 만들어지면 안 된다
+        #expect(app.status(of: .junk) == .idle)
+
+        await app.model(for: .junk).scan()
+
+        #expect(app.status(of: .junk) == .done)
+        #expect(app.status(of: .cpu) == .idle)
+    }
+
+    @Test("탭에서 직접 찾은 결과가 배지가 된다 — 응용 프로그램은 그것으로만 나온다")
+    func badgesUseFeatureOwnResults() async {
+        let app = AppModel(makeModel: { feature in
+            let items: [CleanupItem] = switch feature {
+            case .applications:
+                [CleanupItem(url: URL(filePath: "/Applications/A.app"), size: 2_000_000_000,
+                             category: .application, safety: .caution)]
+            case .junk:
+                [CleanupItem(url: URL(filePath: "/private/tmp/j"), size: 5_000_000_000,
+                             category: .devCache, safety: .safe)]
+            case .smartScan:
+                [CleanupItem(url: URL(filePath: "/private/tmp/s"), size: 1_000_000_000,
+                             category: .devCache, safety: .safe)]
+            default: []
+            }
+            return ScanModel(scan: self.finishing(items))
+        })
+        #expect(app.badges[.applications] == nil)
+
+        await app.model(for: .applications).scan()
+        await app.model(for: .smartScan).scan()
+        await app.model(for: .junk).scan()
+
+        #expect(app.badges[.applications] == AppModel.compactSize(2_000_000_000))
+        // 한번에 찾기는 1GB로 셌지만 탭에서 다시 찾은 5GB가 이긴다
+        #expect(app.badges[.junk] == AppModel.compactSize(5_000_000_000))
+    }
+
+    @Test("공간 보기 배지는 끝까지 읽은 시작 지점의 크기다")
+    func diskMapBadgeIsRootSize() async {
+        let injected = DiskMapModel(buildTree: { url, _, _ in DiskUsageNode(url: url, size: 1_000_000_000) })
+        let app = AppModel(makeDiskMap: { injected })
+        #expect(app.badges[.diskMap] == nil)
+
+        await app.diskMap().load(URL(filePath: "/private/tmp/root"))
+
+        #expect(app.badges[.diskMap] == AppModel.compactSize(1_000_000_000))
+    }
+
+    @Test("CPU 측정은 탭을 떠나도 계속되고, 두 번 시작해도 하나만 돈다")
+    func cpuKeepsSamplingAfterStart() async {
+        let cpu = CPUModel(interval: .milliseconds(10), sample: { [] }, loadSample: { nil })
+        let app = AppModel(makeCPU: { cpu })
+        app.stopCPU()   // 모델이 없으면 만들지 않는다
+        #expect(app.status(of: .cpu) == .idle)
+
+        app.cpu().start()
+        app.cpu().start()
+        for _ in 0..<200 where app.status(of: .cpu) != .loading { await Task.yield() }
+        // 다른 탭으로 옮긴 것처럼 뷰가 없어도 계속 잰다
+        app.selected = .junk
+        #expect(app.status(of: .cpu) == .loading)
+
+        app.stopCPU()
+        for _ in 0..<200 where app.status(of: .cpu) != .idle { await Task.yield() }
+        #expect(app.status(of: .cpu) == .idle)
+    }
+
+    @Test("CPU는 재는 동안만 loading이다")
+    func cpuStatusFollowsSampling() async {
+        let cpu = CPUModel(interval: .milliseconds(10), sample: { [] }, loadSample: { nil })
+        let app = AppModel(makeCPU: { cpu })
+        #expect(app.status(of: .cpu) == .idle)
+
+        let running = Task { await app.cpu().run() }
+        for _ in 0..<200 where app.status(of: .cpu) != .loading { await Task.yield() }
+        #expect(app.status(of: .cpu) == .loading)
+
+        running.cancel()
+        await running.value
+        #expect(app.status(of: .cpu) == .idle)
+    }
+
+    @Test("공간 보기 상태는 모델이 없으면 idle, 끝까지 읽으면 done이다")
+    func diskMapStatusFollowsModel() async {
+        let injected = DiskMapModel(buildTree: { url, _, _ in DiskUsageNode(url: url, size: 0) })
+        let app = AppModel(makeDiskMap: { injected })
+        // 사이드바가 읽는다고 모델이 만들어지면 안 된다
+        #expect(app.diskMapStatus == .idle)
+
+        await app.diskMap().load(URL(filePath: "/private/tmp/root"))
+
+        #expect(app.diskMapStatus == .done)
     }
 
     // MARK: - 메뉴 잠금 조건 (Phase 2 / Step 1)
@@ -778,6 +882,116 @@ struct AppModelTests {
         #expect(!big.items.contains { $0.url == target.url }, "남의 몫이 끼어들었다")
     }
 
+    // MARK: - 휴지통으로 옮긴 것을 휴지통 쪽 화면에 바로
+
+    @Test("휴지통으로 옮기면 휴지통 탭과 한번에 찾기에 바로 들어가고 배지가 는다")
+    func movedItemsShowUpInTrash() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let app = undoableApp(history: history)
+        let smart = app.model(for: .smartScan)
+        await smart.scan()
+        let trashTab = app.model(for: .trash)
+        let trashBefore = trashTab.items.reduce(0) { $0 + $1.size }
+
+        let junk = app.model(for: .junk)
+        let target = try #require(junk.items.first, "정크 탭이 비어 배분이 끊겼다")
+        junk.selection = [target.url]
+        await junk.removeSelected()
+
+        let trashed = URL(filePath: "/Users/x/.Trash/\(target.displayName)")
+        let added = try #require(trashTab.items.first { $0.url == trashed }, "휴지통 탭에 안 들어왔다")
+        #expect(added.category == .trash && added.size == target.size)
+        #expect(!trashTab.isSelected(added), "휴지통 항목이 골라져 있으면 비우기에 그대로 휩쓸린다")
+        #expect(smart.items.contains { $0.url == trashed })
+        #expect(app.badges[.trash] == AppModel.compactSize(trashBefore + target.size))
+        // 다른 탭 몫은 끼어들지 않는다
+        #expect(!app.model(for: .largeFile).items.contains { $0.url == trashed })
+    }
+
+    @Test("되돌리면 휴지통 쪽에 넣었던 항목이 빠진다")
+    func undoRemovesTrashEntries() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let app = undoableApp(history: history)
+        let smart = app.model(for: .smartScan)
+        await smart.scan()
+
+        let junk = app.model(for: .junk)
+        let target = try #require(junk.items.first)
+        junk.selection = [target.url]
+        await junk.removeSelected()
+        let trashed = URL(filePath: "/Users/x/.Trash/\(target.displayName)")
+        #expect(smart.items.contains { $0.url == trashed }, "휴지통에 안 들어와 TC가 공허하다")
+
+        await junk.undoLastCleanup()
+
+        #expect(!smart.items.contains { $0.url == trashed })
+        #expect(!app.model(for: .trash).items.contains { $0.url == trashed })
+    }
+
+    @Test("다른 탭에서 옮기면 공간 보기 트리에서도 빠진다")
+    func movedItemsLeaveDiskMap() async throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let map = DiskMapModel()
+        let app = AppModel(makeModel: { f in
+            ScanModel(scan: f == .smartScan ? self.finishing(self.mixed) : self.finishing([]),
+                      removeOne: { RemovalOutcome(item: $0, failureReason: nil,
+                                                  trashedURL: URL(filePath: "/Users/x/.Trash/\($0.displayName)")) })
+        }, makeDiskMap: { map }, history: history)
+        let tmp = URL(filePath: "/private/tmp")
+        map.seed(DiskUsageNode(url: tmp, size: 5_000, children: mixed.map {
+            DiskUsageNode(url: $0.url, size: $0.size)
+        }))
+        _ = app.diskMap()
+        await app.model(for: .smartScan).scan()
+
+        let junk = app.model(for: .junk)
+        let target = try #require(junk.items.first)
+        junk.selection = [target.url]
+        await junk.removeSelected()
+
+        #expect(!map.tiles.contains { $0.url == target.url })
+        #expect(map.current?.size == 5_000 - target.size)
+    }
+
+    @Test("공간 보기에서 폴더를 옮기면 그 아래 스캔 항목이 빠지고 휴지통 탭에 들어간다")
+    func diskMapMoveReachesScanTabs() async throws {
+        let map = DiskMapModel()
+        let app = AppModel(makeModel: { f in
+            ScanModel(scan: f == .smartScan ? self.finishing(self.mixed) : self.finishing([]))
+        }, makeDiskMap: { map })
+        _ = app.diskMap()
+        await app.model(for: .smartScan).scan()
+        #expect(!app.model(for: .junk).items.isEmpty, "정크 탭이 비어 TC가 공허하다")
+
+        let trashed = URL(filePath: "/Users/x/.Trash/tmp")
+        map.onMoved?([TrashMove(from: URL(filePath: "/private/tmp"), to: trashed, size: 5_000)])
+
+        #expect(app.model(for: .junk).items.isEmpty)
+        #expect(app.model(for: .largeFile).items.isEmpty)
+        #expect(app.model(for: .trash).items.map(\.url) == [trashed])
+        #expect(app.model(for: .smartScan).items.map(\.url) == [trashed])
+    }
+
+    @Test("공간 보기에서 옮긴 것도 누적 정리량에 들어간다")
+    func diskMapMoveIsRecorded() throws {
+        let (history, cleanup) = try isolatedHistory()
+        defer { cleanup() }
+        let map = DiskMapModel()
+        let app = AppModel(makeModel: { _ in ScanModel(scan: self.finishing([])) },
+                           makeDiskMap: { map }, history: history)
+        _ = app.diskMap()
+        #expect(app.cleanupSummary.totalReclaimedBytes == 0)
+
+        map.onMoved?([TrashMove(from: URL(filePath: "/private/tmp/x"),
+                                to: URL(filePath: "/Users/x/.Trash/x"), size: 7_000)])
+
+        #expect(app.cleanupSummary.totalReclaimedBytes == 7_000)
+        #expect(app.cleanupSummary.lastCleanup != nil)
+    }
+
     // MARK: - 휴지통 비우기는 합계에 넣지 않는다
 
     @Test("휴지통 항목을 지운 양은 '휴지통으로 옮김' 합계에 더해지지 않는다")
@@ -876,6 +1090,58 @@ struct AppModelTests {
         #expect(app.volumeUsage == nil)
         app.refreshVolumeUsage()
         #expect(app.volumeUsage == nil)
+    }
+
+    // MARK: - 전체 디스크 접근
+
+    // TC-1, TC-2
+    @Test("전체 디스크 접근이 바뀌었을 때만 스캔 결과를 버린다")
+    func refreshPermissionsForgetsOnlyOnChange() {
+        nonisolated(unsafe) var granted = false
+        let app = AppModel(fullDiskAccess: { granted })
+        #expect(!app.hasFullDiskAccess)
+        let before = app.model(for: .trash)
+
+        app.refreshPermissions()
+        #expect(app.model(for: .trash) === before)
+
+        // 시스템 설정에서 켜고 돌아왔다. 빈 결과로 끝난 휴지통을 다시 찾아야 한다.
+        granted = true
+        app.refreshPermissions()
+        #expect(app.hasFullDiskAccess)
+        #expect(app.model(for: .trash) !== before)
+    }
+
+    // TC-3
+    @Test("홈을 허락하면 안내가 사라지고 휴지통은 전체 디스크 접근만 남는다")
+    func permissionNeedsFollowGrant() throws {
+        let suite = "sweep-test-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let app = AppModel(folderAccess: FolderAccess.Registry(defaults: defaults),
+                           needsFolderAccess: true, fullDiskAccess: { false })
+        #expect(app.permissionNeeds(for: .largeFile) == [.folder(FolderAccess.home)])
+
+        try app.grantFolderAccess(FolderAccess.home.folder, as: FolderAccess.home)
+
+        #expect(app.permissionNeeds(for: .largeFile).isEmpty)
+        #expect(app.permissionNeeds(for: .trash) == [.fullDiskAccess])
+    }
+
+    @Test("전체 디스크 접근은 샌드박스에서 홈을 허락해야 잴 수 있다")
+    func canMeasureFullDiskAccessFollowsGrant() throws {
+        let suite = "sweep-test-\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let sandboxed = AppModel(folderAccess: FolderAccess.Registry(defaults: defaults),
+                                 needsFolderAccess: true, fullDiskAccess: { false })
+        #expect(!sandboxed.canMeasureFullDiskAccess)
+
+        try sandboxed.grantFolderAccess(FolderAccess.home.folder, as: FolderAccess.home)
+        #expect(sandboxed.canMeasureFullDiskAccess)
+
+        // 샌드박스 밖에서는 늘 잰다.
+        #expect(AppModel(needsFolderAccess: false, fullDiskAccess: { false }).canMeasureFullDiskAccess)
     }
 }
 

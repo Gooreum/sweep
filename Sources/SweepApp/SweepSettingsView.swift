@@ -1,12 +1,42 @@
 import SwiftUI
 import SweepKit
 
-/// 앱 메뉴 › 설정…(⌘,). 지금은 디스크 부족 알림 하나뿐이다.
+/// 앱 메뉴 › 설정…(⌘,). 권한과 디스크 부족 알림을 관리한다.
 struct SweepSettingsView: View {
+    @Bindable var app: AppModel
     let notifier: DiskAlertNotifier
     @Bindable var watcher: DiskWatcher
 
+    @State private var selectedTab = 0
+
     var body: some View {
+        VStack(spacing: 0) {
+            Retro95WindowTitleBar(title: String(localized: "Sweep 설정"), icon: .computer,
+                                  fullScreenable: false, minimizable: false)
+                // 아래 탭 패널 배경이 안전 영역으로 번져 제목줄을 덮지 않게 위에 그린다(메인 창과 같다).
+                .zIndex(1)
+            Retro95TabView(selection: $selectedTab,
+                           titles: [String(localized: "권한"), String(localized: "알림")]) { index in
+                if index == 0 {
+                    PermissionsSettingsView(app: app, notifier: notifier, watcher: watcher)
+                } else {
+                    notifications.padding(Theme.panelPadding)
+                }
+            }
+            .padding(8)
+        }
+        // 툴바를 떼면 창이 예전 높이(툴바 포함)를 유지해 아래에 흰 띠가 남는다. 남는 높이까지 채운다.
+        .frame(width: 640)
+        .frame(minHeight: 680, maxHeight: .infinity)
+        .foregroundStyle(R95.black)
+        .background(R95.gray)
+        .retroRaised()
+        .background(WindowChromeConfigurator(auxiliary: true))
+        .ignoresSafeArea(edges: .top)
+        .onAppear { notifier.refreshAuthorization() }
+    }
+
+    private var notifications: some View {
         Retro95GroupBox(title: String(localized: "알림")) {
             VStack(alignment: .leading, spacing: 10) {
                 Toggle("저장 공간 부족 알림", isOn: Binding(
@@ -42,10 +72,5 @@ struct SweepSettingsView: View {
                 }
             }
         }
-        .padding(Theme.panelPadding)
-        .frame(width: Theme.panelWidth)
-        .foregroundStyle(R95.black)
-        .background(R95.gray)
-        .onAppear { notifier.refreshAuthorization() }
     }
 }

@@ -229,4 +229,38 @@ struct CleanupHistoryTests {
         #expect(!json.contains("secret-project"))
         #expect(!json.contains("/private/tmp"))
     }
+
+    @Test("공간 보기에서 휴지통으로 옮긴 것만 합계에 더한다")
+    func recordsDiskMapMoves() throws {
+        let (defaults, cleanup) = try isolated()
+        defer { cleanup() }
+        let history = CleanupHistory(defaults: defaults)
+        let at = Date(timeIntervalSince1970: 5_000)
+
+        let record = history.recordMoves([
+            TrashMove(from: URL(filePath: "/a"), to: URL(filePath: "/u/.Trash/a"), size: 1_000),
+            TrashMove(from: URL(filePath: "/b"), to: URL(filePath: "/u/.Trash/b"), size: 500),
+            // 휴지통 안에서 바로 지운 것은 "휴지통으로 옮김"이 아니다
+            TrashMove(from: URL(filePath: "/u/.Trash/c"), to: nil, size: 9_999),
+        ], at: at)
+
+        #expect(record?.reclaimedBytes == 1_500)
+        #expect(record?.succeededCount == 2)
+        #expect(record?.bytesByCategory == ["diskMap": 1_500])
+        #expect(history.summary.totalReclaimedBytes == 1_500)
+        #expect(history.summary.lastCleanup == at)
+        // 다시 읽어도 남아 있다
+        #expect(CleanupHistory(defaults: defaults).summary.totalReclaimedBytes == 1_500)
+    }
+
+    @Test("휴지통으로 간 것이 없으면 공간 보기 기록을 남기지 않는다")
+    func skipsEmptyDiskMapMoves() throws {
+        let (defaults, cleanup) = try isolated()
+        defer { cleanup() }
+        let history = CleanupHistory(defaults: defaults)
+
+        #expect(history.recordMoves([]) == nil)
+        #expect(history.recordMoves([TrashMove(from: URL(filePath: "/u/.Trash/c"), to: nil, size: 1)]) == nil)
+        #expect(history.records.isEmpty)
+    }
 }

@@ -79,6 +79,18 @@ public struct TrashScanner: CleanupScanner {
         ProtectedPaths.fileInfo(of: url).map { $0.uid == getuid() } ?? true
     }
 
+    /// 방금 휴지통으로 옮긴 것을 다시 훑지 않고 항목으로 만든다.
+    ///
+    /// 설명은 그 휴지통 위치의 것이다 — 스캔이 찾았을 때와 같은 문장이어야 어디서 왔는지에 따라
+    /// 다르게 읽히지 않는다. 모르는 위치면 홈 휴지통 설명을 쓴다.
+    public func item(movedTo url: URL, size: Int64, dates: FileDates = .unknown) -> CleanupItem {
+        let folder = url.deletingLastPathComponent().standardizedFileURL.path
+        let all = locations()
+        let detail = (all.first { $0.folder.standardizedFileURL.path == folder } ?? all[0]).detail
+        return CleanupItem(url: url, size: size, category: .trash, safety: .caution,
+                           detail: detail, dates: dates)
+    }
+
     static func iCloudTrash(in home: URL) -> URL {
         home.appending(path: "Library/Mobile Documents/.Trash")
     }

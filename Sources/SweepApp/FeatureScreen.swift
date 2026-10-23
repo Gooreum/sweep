@@ -7,6 +7,8 @@ import SweepKit
 struct FeatureScreen: View {
     let feature: Feature
     @Bindable var model: ScanModel
+    /// 권한 안내 줄과 그 자리 허용에 쓴다. 스테이지 하네스는 넘기지 않아 안내가 없다.
+    var app: AppModel? = nil
 
     /// 확인 시트를 띄울지. 목록에서 바로 지우지 않는다 —
     /// 되돌릴 수 없는 항목이 몇 개 빠졌는지 한 번 더 보여줘야 한다.
@@ -14,8 +16,6 @@ struct FeatureScreen: View {
 
     /// 옮기지 못한 항목 시트를 띄울지.
     @State private var showsFailures = false
-    /// 휴지통을 열지 못했다(샌드박스가 막는 경우). 조용히 넘어가지 않고 대신 할 일을 말한다.
-    @State private var trashOpenFailed = false
     /// 되돌리기 실패 목록 시트.
     @State private var showsRestoreFailures = false
     /// 열 머리 경계를 끌어 바꾼 폭. 다음 실행에도 남긴다.
@@ -27,14 +27,16 @@ struct FeatureScreen: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            // 휴지통은 전체 디스크 접근 없이는 읽히지 않는다. 그때 결과는 "비어 있음"이라
-            // 휴지통이 빈 것과 구분되지 않는다 — 화면 위에 이유를 먼저 둔다.
-            if feature == .trash, FullDiskAccessBanner.isNeeded {
-                FullDiskAccessBanner(message: String(localized: "휴지통 안의 파일을 보려면 시스템 설정의 전체 디스크 접근에서 Sweep을 켜 주세요."))
+            // 권한이 없으면 결과가 "비어 있음"이라 정말 빈 것과 구분되지 않는다 — 화면 위에
+            // 이유를 먼저 두고 그 자리에서 켜게 한다. 휴지통은 샌드박스에서도 전체 디스크 접근이 필요하다.
+            if let app {
+                ForEach(app.permissionNeeds(for: feature), id: \.self) { need in
+                    PermissionNotice(need: need, feature: feature, app: app)
+                }
             }
 
             if feature == .trash, showsLeftovers, !adminLeftovers.isEmpty {
-                TrashLeftoverNotice(leftovers: adminLeftovers)
+                TrashLeftoverNotice(leftovers: adminLeftovers, app: app)
             }
 
             stage
@@ -192,7 +194,7 @@ struct FeatureScreen: View {
             }
             .frame(maxWidth: R95.dialogWidth)
             .sheet(isPresented: $showsRestoreFailures) {
-                RemovalFailuresSheet.restore(report.failed) { showsRestoreFailures = false }
+                RemovalFailuresSheet.restore(report.failed, app: app) { showsRestoreFailures = false }
             }
         }
     }
@@ -272,20 +274,15 @@ struct FeatureScreen: View {
                 // 휴지통에서 지운 것은 휴지통에 없다. 열어 봐야 보여 줄 것이 없다.
                 if moved > 0, !feature.removesPermanently {
                     // 열어 주기만 한다. 비우는 것은 영구 삭제라 사용자가 Finder에서 직접 한다.
-                    Button("휴지통 열기") { trashOpenFailed = !ItemActions.openTrash() }
+                    TrashOpenButton(app: app)
                         .buttonStyle(Retro95ButtonStyle())
                 }
                 Button("완료") { model.dismissReport() }
                     .buttonStyle(Retro95ButtonStyle(isDefault: true))
             }
             .frame(maxWidth: R95.dialogWidth)
-            .alert("휴지통을 열지 못했어요", isPresented: $trashOpenFailed) {
-                Button("확인") {}
-            } message: {
-                Text("화면 아래에서 휴지통을 열고 필요한 파일이 남아 있는지 확인해 주세요. 휴지통을 비우면 복구할 수 없어요.")
-            }
             .sheet(isPresented: $showsFailures) {
-                RemovalFailuresSheet(failed: report.failed) {
+                RemovalFailuresSheet(failed: report.failed, app: app) {
                     showsFailures = false
                 } onRetry: {
                     showsFailures = false

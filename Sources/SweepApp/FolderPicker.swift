@@ -23,6 +23,32 @@ enum FolderPicker {
         return panel.url
     }
 
+    enum GrantResult {
+        case granted
+        case cancelled
+        /// 다른 폴더를 골랐거나 북마크를 저장하지 못했다. 사용자에게 보여 줄 말.
+        case failed(String)
+    }
+
+    /// 열기 대화상자를 띄우고 고른 폴더로 허락을 받는다.
+    ///
+    /// 앱 모델이 있으면 그쪽으로 받는다 — 관찰 값이 올라가야 화면의 안내 줄이 사라지고
+    /// 낡은 스캔 결과가 버려진다. 없는 곳(모델을 받지 않는 시트)은 저장소에 바로 넣는다.
+    @MainActor
+    static func grant(_ grantable: FolderAccess.Grantable, app: AppModel?) -> GrantResult {
+        guard let picked = ask(for: grantable) else { return .cancelled }
+        do {
+            if let app {
+                try app.grantFolderAccess(picked, as: grantable)
+            } else {
+                try FolderAccess.shared.grant(picked, as: grantable)
+            }
+            return .granted
+        } catch {
+            return .failed(error.message)
+        }
+    }
+
     /// 스마트 스캔에 더할 폴더를 아무 곳에서나 고른다. 취소하면 nil.
     ///
     /// `ask(for:)`와 달리 정해진 폴더가 없다. 홈 아래는 이미 다 보므로

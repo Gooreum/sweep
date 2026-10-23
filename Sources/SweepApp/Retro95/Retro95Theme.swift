@@ -117,6 +117,7 @@ extension R95 {
         case .largeFile: olive
         case .duplicate: purple
         case .trash: danger
+        case .applications: olive
         case .diskMap: navy
         case .cpu: navy
         }

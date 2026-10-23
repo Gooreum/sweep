@@ -29,6 +29,18 @@ public struct CleanupRecord: Codable, Sendable, Hashable {
         bytesByCategory = byCategory
     }
 
+    /// 공간 보기에서 옮긴 것. 공간 보기에는 `CleanupItem`이 없다 — 가짜 항목을 만들면
+    /// 아무 카테고리나 붙이게 되므로(`Remover.removeFile` 참고) 옮김에서 직접 만든다.
+    /// 실패는 공간 보기가 화면에 따로 알리므로 세지 않는다.
+    init(moves: [TrashMove], date: Date) {
+        self.date = date
+        kind = .cleanup
+        reclaimedBytes = moves.reduce(0) { $0 + $1.size }
+        succeededCount = moves.count
+        failedCount = 0
+        bytesByCategory = ["diskMap": reclaimedBytes]
+    }
+
     private enum CodingKeys: String, CodingKey {
         case date, reclaimedBytes, succeededCount, failedCount, bytesByCategory, kind
     }
@@ -152,10 +164,23 @@ public final class CleanupHistory: @unchecked Sendable {
         append(report, at: date, kind: .restore)
     }
 
+    /// 공간 보기에서 휴지통으로 옮긴 것을 남긴다.
+    ///
+    /// 휴지통 안에서 바로 지운 것(`to == nil`)은 뺀다 — 합계 문구가 "휴지통으로 옮김"이라
+    /// 스캔 탭의 휴지통 비우기를 빼는 것(`AppModel.record`)과 같은 규칙이다.
+    @discardableResult
+    public func recordMoves(_ moves: [TrashMove], at date: Date = Date()) -> CleanupRecord? {
+        let trashed = moves.filter { $0.to != nil }
+        guard !trashed.isEmpty else { return nil }
+        return append(CleanupRecord(moves: trashed, date: date))
+    }
+
     private func append(_ report: RemovalReport, at date: Date, kind: CleanupRecord.Kind) -> CleanupRecord? {
         guard !report.succeeded.isEmpty else { return nil }
-        let record = CleanupRecord(report: report, date: date, kind: kind)
+        return append(CleanupRecord(report: report, date: date, kind: kind))
+    }
 
+    private func append(_ record: CleanupRecord) -> CleanupRecord {
         lock.lock(); defer { lock.unlock() }
         cached.append(record)
         if let data = try? JSONEncoder().encode(cached) {

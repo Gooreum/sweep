@@ -30,6 +30,14 @@ enum PrivacySettings {
         "x-apple.systempreferences:com.apple.preference.notifications",
     ]
 
+    static func openAppManagement() {
+        open([
+            "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_AppBundles",
+            "x-apple.systempreferences:com.apple.preference.security?Privacy_AppBundles",
+            "x-apple.systempreferences:com.apple.preference.security",
+        ])
+    }
+
     static func openFilesAndFolders() { open(candidates) }
 
     /// 디스크 부족 알림을 거부했을 때. 앱은 다시 물을 수 없다.

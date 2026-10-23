@@ -11,12 +11,15 @@ import SweepKit
 /// 사용자가 "왜 자꾸 묻냐"고 한 것이 그 때문이다.
 struct FullDiskAccessBanner: View {
 
-    /// 샌드박스(App Store 빌드)에서는 전체 디스크 접근이 의미가 없다.
-    /// 켜 줄 수도 없는 것을 켜라고 하면 안 된다.
-    static var isNeeded: Bool { !Sandbox.isActive && !FullDiskAccess.isGranted }
+    /// 꺼진 것이 확실할 때만. 샌드박스(App Store 빌드)에서도 쓴다 — `~/.Trash`와 다른 앱의
+    /// 데이터는 폴더를 허용해도 이것 없이는 열리지 않는다(실측).
+    /// 화면은 되도록 `AppModel.hasFullDiskAccess`를 본다. 켜고 돌아오면 따라온다.
+    static var isNeeded: Bool { FullDiskAccess.isMissing() }
 
     /// 켜면 무엇이 좋아지는지. 화면마다 얻는 것이 달라 바꿔 끼운다.
     var message = String(localized: "시스템 설정의 전체 디스크 접근에서 Sweep을 켜 주세요. 앱이 다시 쓰려고 저장한 파일도 찾을 수 있어요. 앱마다 파일을 열어도 되는지 묻는 창도 더는 뜨지 않아요.")
+
+    var showsPermissionsLink = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -33,7 +36,14 @@ struct FullDiskAccessBanner: View {
 
             Spacer(minLength: 12)
 
-            Button("시스템 설정 열기") { PrivacySettings.openFullDiskAccess() }
+            VStack(alignment: .trailing, spacing: 8) {
+                Button("시스템 설정 열기") { PrivacySettings.openFullDiskAccess() }
+                if showsPermissionsLink {
+                    SettingsLink { Text("권한 모두 보기") }
+                        .buttonStyle(.link)
+                        .font(Theme.caption)
+                }
+            }
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 8)

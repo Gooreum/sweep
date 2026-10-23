@@ -15,6 +15,10 @@ public final class AppModel {
     private let makeModel: @MainActor (Feature) -> ScanModel
 
     private var diskMapModel: DiskMapModel?
+    /// 옮긴 항목 → 휴지통 안 위치. 되돌릴 때 휴지통 쪽 화면에서 그 항목을 찾아 뺀다.
+    private var trashedLocations: [URL: URL] = [:]
+    /// 옮긴 것을 휴지통 항목으로 만들 때 설명을 고른다. 훑지는 않는다.
+    private let trash = TrashScanner()
     private let makeDiskMap: @MainActor () -> DiskMapModel
 
     private var cpuModel: CPUModel?
@@ -50,6 +54,12 @@ public final class AppModel {
     /// 거둔 직후 "허락이 필요 없다"고 답한다.
     private let requiresFolderAccess: Bool
 
+    /// 전체 디스크 접근. 시스템 설정에서 켜고 돌아오면 `refreshPermissions()`로 다시 잰다.
+    ///
+    /// 판정(`FullDiskAccess`)은 관찰되지 않는 값이라, 화면이 따라오려면 여기 하나 있어야 한다.
+    public private(set) var hasFullDiskAccess: Bool
+    private let fullDiskAccessProbe: @MainActor () -> Bool
+
     /// 지금까지 얼마를 비웠고 마지막이 언제였는지.
     ///
     /// 저장소(`CleanupHistory`)는 관찰되지 않으므로 화면이 따라오려면
@@ -77,7 +87,7 @@ public final class AppModel {
     public init(makeModel: @escaping @MainActor (Feature) -> ScanModel
                     = { ScanModel(feature: $0) },
                 makeDiskMap: @escaping @MainActor () -> DiskMapModel
-                    = { DiskMapModel() },
+                    = { DiskMapModel(cache: .standard) },
                 makeCPU: @escaping @MainActor () -> CPUModel
                     = { CPUModel() },
                 folderAccess: FolderAccess.Registry = FolderAccess.shared,
@@ -85,6 +95,7 @@ public final class AppModel {
                 projectFolders: ProjectFolders.Registry = ProjectFolders.shared,
                 history: CleanupHistory = .shared,
                 needsFolderAccess: Bool? = nil,
+                fullDiskAccess: @escaping @MainActor () -> Bool = { !FullDiskAccess.isMissing() },
                 readVolumeUsage: @escaping @Sendable () -> VolumeUsage? = { VolumeUsage.current() }) {
         self.makeModel = makeModel
         self.makeDiskMap = makeDiskMap
@@ -102,6 +113,32 @@ public final class AppModel {
         self.grantedFolderCount = folderAccess.urls.count
         self.scanFolderCount = userFolders.custom.count
         self.projectFolderCount = projectFolders.custom.count
+        self.fullDiskAccessProbe = fullDiskAccess
+        self.hasFullDiskAccess = fullDiskAccess()
+    }
+
+    /// 앱이 다시 앞으로 올 때 부른다. 바뀌었을 때만 결과를 버린다 — 전체 디스크 접근이 없어
+    /// 빈 결과로 끝난 휴지통을 켠 뒤에 다시 찾게.
+    public func refreshPermissions() {
+        let now = fullDiskAccessProbe()
+        guard now != hasFullDiskAccess else { return }
+        hasFullDiskAccess = now
+        forgetScans()
+    }
+
+    /// 전체 디스크 접근을 지금 잴 수 있는가. 샌드박스에서 홈이나 ~/Library를 허락하기 전에는 못 잰다.
+    /// 권한 탭이 "확인 불가"와 "꺼짐"을 가르는 데 쓴다.
+    public var canMeasureFullDiskAccess: Bool {
+        _ = grantedFolderCount
+        return FullDiskAccess.isMeasurable(sandboxed: requiresFolderAccess, granted: folderAccess.urls)
+    }
+
+    /// 이 화면을 쓰려면 켜야 하는 것. 화면 위 안내 줄이 읽는다.
+    public func permissionNeeds(for feature: Feature) -> [PermissionNeed] {
+        // 허락이 바뀌면 이 값이 바뀐다. 읽어 둬야 안내 줄이 허락 뒤에 사라진다.
+        _ = grantedFolderCount
+        return feature.permissionNeeds(sandboxed: requiresFolderAccess, granted: folderAccess.urls,
+                                       fullDiskAccess: hasFullDiskAccess)
     }
 
     /// 등록한 프로젝트 폴더. 「보는 폴더」 줄이 읽는다.
@@ -197,6 +234,8 @@ public final class AppModel {
         try folderAccess.grant(picked, as: grantable)
         needsFolderAccess = false
         grantedFolderCount = folderAccess.urls.count
+        // 홈을 허락하는 순간 샌드박스에서도 전체 디스크 접근을 잴 수 있게 된다.
+        hasFullDiskAccess = fullDiskAccessProbe()
         forgetScans()
     }
 
@@ -208,6 +247,7 @@ public final class AppModel {
         folderAccess.revoke(grantable)
         grantedFolderCount = folderAccess.urls.count
         needsFolderAccess = requiresFolderAccess && !folderAccess.hasAny
+        hasFullDiskAccess = fullDiskAccessProbe()
         forgetScans()
     }
 
@@ -260,9 +300,11 @@ public final class AppModel {
         }
         model.onReport = { [weak self] report in
             self?.record(report)
+            self?.moved(report.succeeded.map(\.move), dates: report.succeeded.map(\.item.dates))
         }
         model.onRestored = { [weak self] report in
             self?.recordRestore(report)
+            self?.restored(report)
             self?.refreshVolumeUsageAfterChange()
         }
         model.onRestoredItems = { [weak self] items in
@@ -328,10 +370,65 @@ public final class AppModel {
     ///
     /// 나눠 준 뒤에는 같은 파일을 여러 화면이 들고 있다. 한쪽에서 지웠는데
     /// 다른 쪽에 남아 있으면 목록도 사이드바 배지도 거짓말이 된다.
-    private func forget(_ urls: [URL], except owner: Feature) {
+    private func forget(_ urls: [URL], except owner: Feature?) {
+        guard !urls.isEmpty else { return }
         for (feature, model) in models where feature != owner {
             model.forget(urls)
         }
+    }
+
+    /// 휴지통으로 옮긴 것을 휴지통 쪽 화면에 바로 보여 준다.
+    ///
+    /// 빼기만 하면 휴지통 탭은 다시 검색할 때까지 새로 들어온 것을 모르고, 공간 보기는
+    /// 지운 폴더를 그대로 그린다. 다시 훑지 않고 옮긴 위치로 항목을 만든다.
+    /// 모든 탭에 넣되 각 탭은 자기 몫만 받는다 — 휴지통 항목은 휴지통 탭과 한번에 찾기만 받는다.
+    private func moved(_ moves: [TrashMove], dates: [FileDates]) {
+        guard !moves.isEmpty else { return }
+        var inTrash: [CleanupItem] = []
+        for (move, dates) in zip(moves, dates) {
+            guard let to = move.to else { continue }
+            trashedLocations[move.from] = to
+            inTrash.append(trash.item(movedTo: to, size: move.size, dates: dates))
+        }
+        for (feature, model) in models {
+            model.reinstate(feature.items(from: inTrash))
+        }
+        diskMapModel?.apply(moves)
+    }
+
+    /// 되돌린 것을 휴지통 쪽 화면에서 뺀다. `moved`의 짝이다.
+    ///
+    /// 휴지통 안 위치는 옮길 때 기억해 둔 것을 쓴다. 되돌리기 결과에는 없을 수도 있다.
+    private func restored(_ report: RemovalReport) {
+        var moves: [TrashMove] = []
+        for outcome in report.succeeded {
+            guard let trashed = trashedLocations.removeValue(forKey: outcome.item.url)
+                    ?? outcome.trashedURL else { continue }
+            moves.append(TrashMove(from: trashed, to: outcome.item.url, size: outcome.item.size))
+        }
+        guard !moves.isEmpty else { return }
+        forget(moves.map(\.from), except: nil)
+        diskMapModel?.apply(moves)
+    }
+
+    /// 공간 보기에서 휴지통으로 옮긴 것을 스캔 탭에 알린다.
+    ///
+    /// 공간 보기는 폴더째 지울 수 있다. 그 폴더 **아래** 항목도 이제 없으므로 함께 뺀다.
+    private func movedFromDiskMap(_ moves: [TrashMove]) {
+        let gone = models.values.flatMap(\.items).map(\.url).filter { url in
+            moves.contains { url.isSameOrInside($0.from) }
+        }
+        forget(gone, except: nil)
+        // 스캔 탭에서 옮긴 것과 같은 합계에 넣는다. 어디서 지웠는지에 따라 숫자가 달라지면 안 된다.
+        history.recordMoves(moves)
+        cleanupSummary = history.summary
+        let inTrash = moves.compactMap { move in
+            move.to.map { trash.item(movedTo: $0, size: move.size) }
+        }
+        for (feature, model) in models {
+            model.reinstate(feature.items(from: inTrash))
+        }
+        refreshVolumeUsageAfterChange()
     }
 
     /// 한 화면에서 되돌린 파일을 나머지 화면의 목록에도 돌려준다. `forget`의 짝이다.
@@ -350,6 +447,7 @@ public final class AppModel {
     public func diskMap() -> DiskMapModel {
         if let existing = diskMapModel { return existing }
         let created = makeDiskMap()
+        created.onMoved = { [weak self] moves in self?.movedFromDiskMap(moves) }
         diskMapModel = created
         return created
     }
@@ -364,6 +462,9 @@ public final class AppModel {
         cpuModel = created
         return created
     }
+
+    /// CPU 측정을 멈춘다. 메인 창을 닫을 때. 모델이 없으면 만들지 않는다.
+    public func stopCPU() { cpuModel?.stop() }
 
     // MARK: - 메뉴가 물어보는 것
 
@@ -394,8 +495,6 @@ public final class AppModel {
     /// 카테고리 → 기능 대응표를 먼저 만들고 항목을 **한 번만** 지나간다.
     public var badges: [Feature: String] {
         let items = model(for: .smartScan).items
-        guard !items.isEmpty else { return [:] }
-
         var owner: [ScanCategory: Feature] = [:]
         for feature in Feature.summaryCards {
             for category in feature.categories { owner[category] = feature }
@@ -407,6 +506,22 @@ public final class AppModel {
             // 스마트 스캔은 전체를 대표한다. 담당 기능이 없는 카테고리가 생겨도
             // 전체 합에서는 빠지지 않는다.
             bytes[.smartScan, default: 0] += item.size
+        }
+
+        // 탭에서 직접 찾은 결과가 있으면 그 값이 더 정확하다(한번에 찾기보다 나중이거나 범위가 같다).
+        // 응용 프로그램은 한번에 찾기가 훑지 않아 이것으로만 나온다. 모델은 만들지 않는다.
+        // 비운 뒤(`.cleaned`)에는 정리 전 숫자를 남기지 않도록 쓰지 않는다.
+        for feature in Feature.allCases where feature != .smartScan {
+            guard let model = models[feature], model.phase == .results else { continue }
+            // 찾았는데 없으면 배지를 떼어 낸다 — 빈 배지("Zero KB")는 붙이지 않는 규칙과 같다.
+            let total = model.items.reduce(0) { $0 + $1.size }
+            bytes[feature] = total > 0 ? total : nil
+        }
+
+        // 공간 보기는 읽은 시작 지점의 크기. 끝까지 읽었을 때만, 모델은 만들지 않는다.
+        if let map = diskMapModel, map.completedAt != nil, !map.isScanning,
+           let root = map.path.first, root.size > 0 {
+            bytes[.diskMap] = root.size
         }
 
         return bytes.mapValues { Self.compactSize($0) }
@@ -559,7 +674,8 @@ public struct StatusLine: Equatable, Sendable {
     static func diskMap(loadPhase: DiskMapModel.LoadPhase?, current: DiskUsageNode?) -> StatusLine {
         let status: String
         switch loadPhase {
-        case let .counting(scanned): status = String(localized: "\(scanned.formatted())개 확인 중…")
+        case let .reading(bytes):
+            status = String(localized: "\(ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file)) 읽는 중…")
         case let .measuring(percent): status = String(localized: "크기 확인 중… \(percent)%")
         case .none: status = current == nil ? String(localized: "시작 전") : String(localized: "확인 완료")
         }
@@ -571,6 +687,37 @@ public struct StatusLine: Equatable, Sendable {
                           count: String(localized: "항목 \(current.children.count)개"),
                           size: String(localized: "크기 \(current.formattedSize)"))
     }
+}
+
+/// 사이드바 줄 오른쪽에 붙는 진행 상태. 검색 중이면 모래시계, 끝났으면 체크.
+public enum FeatureStatus: Equatable, Sendable {
+    /// 아직 찾지 않았다.
+    case idle
+    case loading
+    /// 찾기(공간 보기는 읽기)가 끝났다.
+    case done
+}
+
+extension AppModel {
+    /// 기능의 진행 상태. 모델을 **만들지 않는다** — 사이드바는 body에서 기능 수만큼 읽는다.
+    public func status(of feature: Feature) -> FeatureStatus {
+        switch feature {
+        case .cpu:
+            return cpuModel?.isSampling == true ? .loading : .idle
+        case .diskMap:
+            guard let model = diskMapModel else { return .idle }
+            if model.isScanning { return .loading }
+            return model.completedAt == nil ? .idle : .done
+        default:
+            switch models[feature]?.phase {
+            case .scanning, .removing, .restoring: return .loading
+            case .results, .cleaned, .restored: return .done
+            default: return .idle
+            }
+        }
+    }
+
+    public var diskMapStatus: FeatureStatus { status(of: .diskMap) }
 }
 
 extension AppModel {

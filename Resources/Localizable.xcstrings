@@ -151,6 +151,66 @@
         }
       }
     },
+    "%@ 읽는 중…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading %@…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を読み込み中…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 읽는 중…"
+          }
+        }
+      }
+    },
+    "%@ 읽었어요…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read %@…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を読み込みました…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 읽었어요…"
+          }
+        }
+      }
+    },
+    "%@ 찾는 중": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — scanning"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 찾는 중"
+          }
+        }
+      }
+    },
     "%@ 폴더를 선택하고 허용을 눌러 주세요. 이 폴더를 여는 이유: %@": {
       "localizations": {
         "en": {
@@ -195,38 +255,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@, 총 %lld개는 Mac 암호가 있어야 지울 수 있어요"
-          }
-        }
-      }
-    },
-    "%@개 확인 중…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Checking %@ items…"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@개 확인 중…"
-          }
-        }
-      }
-    },
-    "%@개 확인했어요…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Checked %@ items…"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@개 확인했어요…"
           }
         }
       }
@@ -763,6 +791,22 @@
         }
       }
     },
+    "%lld일 동안 열지 않았어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not opened for %lld days"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld일 동안 열지 않았어요"
+          }
+        }
+      }
+    },
     "%lld일 전": {
       "localizations": {
         "en": {
@@ -959,6 +1003,22 @@
         }
       }
     },
+    "App Store나 설치 프로그램으로 깐 앱이라 Mac 암호가 필요해요. Finder에서 옮겨 주세요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This app was installed from the App Store or an installer and requires your Mac password. Please move it in Finder."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Store나 설치 프로그램으로 깐 앱이라 Mac 암호가 필요해요. Finder에서 옮겨 주세요"
+          }
+        }
+      }
+    },
     "App Store에 올릴 앱 보관본이에요. 지우면 복구할 수 없어요": {
       "localizations": {
         "en": {
@@ -1035,6 +1095,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "CPU 사용량을 재고 있어요. 잠시 뒤 많이 쓰는 순서로 보여드려요."
+          }
+        }
+      }
+    },
+    "CPU 측정 중": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Measuring CPU usage"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CPU 측정 중"
           }
         }
       }
@@ -1487,6 +1563,22 @@
         }
       }
     },
+    "Mac 암호가 필요한 앱이에요. App Store나 설치 프로그램으로 깐 앱은 Finder에서 휴지통으로 옮겨 주세요: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This app requires your Mac password. Please use Finder to move apps installed from the App Store or an installer to the Trash: %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac 암호가 필요한 앱이에요. App Store나 설치 프로그램으로 깐 앱은 Finder에서 휴지통으로 옮겨 주세요: %@"
+          }
+        }
+      }
+    },
     "Mac 작동에 필요한 프로그램이에요. 그대로 켜 두세요.": {
       "localizations": {
         "en": {
@@ -1803,6 +1895,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sweep"
+          }
+        }
+      }
+    },
+    "Sweep 설정": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweep Settings"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweep 설정"
           }
         }
       }
@@ -2479,6 +2587,22 @@
         }
       }
     },
+    "‘%@’ 폴더를 아직 허용하지 않았어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access to the “%@” folder hasn’t been allowed yet"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‘%@’ 폴더를 아직 허용하지 않았어요"
+          }
+        }
+      }
+    },
     "‘열기…’를 눌러 이 폴더를 다시 골라 주세요": {
       "localizations": {
         "en": {
@@ -2719,6 +2843,38 @@
         }
       }
     },
+    "공간 보기 읽는 중": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading disk map"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "공간 보기 읽는 중"
+          }
+        }
+      }
+    },
+    "공간 보기 준비가 끝났어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your disk map is ready"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "공간 보기 준비가 끝났어요"
+          }
+        }
+      }
+    },
     "공간 사용량": {
       "localizations": {
         "en": {
@@ -2763,6 +2919,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "권장"
+          }
+        }
+      }
+    },
+    "권한": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permissions"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한"
+          }
+        }
+      }
+    },
+    "권한 모두 보기": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View All Permissions"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "권한 모두 보기"
           }
         }
       }
@@ -2843,6 +3031,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "기능"
+          }
+        }
+      }
+    },
+    "꺼진 권한이 있어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some permissions are off"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "꺼진 권한이 있어요"
+          }
+        }
+      }
+    },
+    "꺼짐": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "꺼짐"
           }
         }
       }
@@ -3157,6 +3377,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reload"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再読み込み"
           }
         },
         "ko": {
@@ -3483,6 +3709,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "메일에서 열어 본 첨부 파일의 사본을 찾아요"
+          }
+        }
+      }
+    },
+    "목록에 Sweep이 없으면 + 버튼으로 추가해 주세요. 켜고 돌아오면 바로 반영돼요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If Sweep isn’t listed, click + to add it. Changes take effect as soon as you turn it on and return to Sweep."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "목록에 Sweep이 없으면 + 버튼으로 추가해 주세요. 켜고 돌아오면 바로 반영돼요."
           }
         }
       }
@@ -3999,6 +4241,72 @@
         }
       }
     },
+    "새로 읽기를 멈췄어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh stopped"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再読み込みを停止しました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새로 읽기를 멈췄어요"
+          }
+        }
+      }
+    },
+    "새로 읽는 중 %lld%%": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refreshing %lld%%"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再読み込み中 %lld%%"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새로 읽는 중 %lld%%"
+          }
+        }
+      }
+    },
+    "새로 읽는 중 · %@ 읽음": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refreshing · %@ read"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再読み込み中 · %@読み込み済み"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새로 읽는 중 · %@ 읽음"
+          }
+        }
+      }
+    },
     "새로 추가한 사진과 영상을 살펴보는 동안 CPU를 써요. 분량이 많으면 처리가 끝날 때까지 기다려 주세요.": {
       "localizations": {
         "en": {
@@ -4159,6 +4467,22 @@
         }
       }
     },
+    "설치된 앱을 크기와 마지막으로 연 날짜로 살펴보고, 안 쓰는 앱을 휴지통으로 옮겨요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review installed apps by size and last opened date, and move unused apps to the Trash."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "설치된 앱을 크기와 마지막으로 연 날짜로 살펴보고, 안 쓰는 앱을 휴지통으로 옮겨요."
+          }
+        }
+      }
+    },
     "시스템": {
       "localizations": {
         "en": {
@@ -4303,6 +4627,22 @@
         }
       }
     },
+    "실행 중이에요. 종료하면 옮길 수 있어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This app is running. Quit it before moving it to the Trash."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "실행 중이에요. 종료하면 옮길 수 있어요"
+          }
+        }
+      }
+    },
     "실행한 명령": {
       "localizations": {
         "en": {
@@ -4379,22 +4719,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "아래에서 찾을 곳의 열기를 눌러 주세요. 새 창에서 허용을 누르면 그 안의 파일을 찾을 수 있어요."
-          }
-        }
-      }
-    },
-    "안 쓰는 앱을 골라 정리해요": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose unused apps to remove"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "안 쓰는 앱을 골라 정리해요"
           }
         }
       }
@@ -4571,6 +4895,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "앱"
+          }
+        }
+      }
+    },
+    "앱 관리": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Management"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱 관리"
+          }
+        }
+      }
+    },
+    "앱 관리 설정 열기": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open App Management Settings"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱 관리 설정 열기"
           }
         }
       }
@@ -5055,6 +5411,22 @@
         }
       }
     },
+    "어느 폴더가 공간을 많이 쓰는지 확인해 보세요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See which folders are taking up the most space."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어느 폴더가 공간을 많이 쓰는지 확인해 보세요"
+          }
+        }
+      }
+    },
     "어느 폴더를 볼까요?": {
       "localizations": {
         "en": {
@@ -5215,6 +5587,22 @@
         }
       }
     },
+    "연 기록이 없어요. 한 번도 열지 않았거나 기록이 남지 않은 앱이에요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No opening history. This app may never have been opened, or its history is unavailable."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "연 기록이 없어요. 한 번도 열지 않았거나 기록이 남지 않은 앱이에요"
+          }
+        }
+      }
+    },
     "열 때문에 다른 앱의 CPU 사용을 줄일 때 이 값이 높아지기도 해요. 온도가 내려가면 이 활동도 줄어요.": {
       "localizations": {
         "en": {
@@ -5371,6 +5759,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "오늘 수정했어요"
+          }
+        }
+      }
+    },
+    "오래 열지 않은 앱부터 확인해 보세요. 실행 중인 앱은 종료해야 옮길 수 있어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start with apps you haven’t opened in a while. Quit running apps before moving them to the Trash."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오래 열지 않은 앱부터 확인해 보세요. 실행 중인 앱은 종료해야 옮길 수 있어요."
           }
         }
       }
@@ -5775,6 +6179,38 @@
         }
       }
     },
+    "응용 프로그램 화면과 공간 보기에서 앱 크기를 보고 안 쓰는 앱을 지울 수 있어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check app sizes and remove unused apps in Applications or Disk Map."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "응용 프로그램 화면과 공간 보기에서 앱 크기를 보고 안 쓰는 앱을 지울 수 있어요"
+          }
+        }
+      }
+    },
+    "응용 프로그램 화면에서 다른 앱을 휴지통으로 옮기려면 필요해요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required to move other apps to the Trash from Applications."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "응용 프로그램 화면에서 다른 앱을 휴지통으로 옮기려면 필요해요"
+          }
+        }
+      }
+    },
     "이 Mac": {
       "localizations": {
         "en": {
@@ -5803,6 +6239,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 묶음 전체 고르기, 선택 풀기"
+          }
+        }
+      }
+    },
+    "이 빌드는 폴더 허용이 필요 없어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This build does not need folder access"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 빌드는 폴더 허용이 필요 없어요"
           }
         }
       }
@@ -6159,6 +6611,22 @@
         }
       }
     },
+    "저장 공간이 부족하면 알려드려요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get notified when storage is running low"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저장 공간이 부족하면 알려드려요"
+          }
+        }
+      }
+    },
     "저장 공간이 얼마 남지 않았어요": {
       "localizations": {
         "en": {
@@ -6223,6 +6691,22 @@
         }
       }
     },
+    "전체 디스크 접근": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full Disk Access"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 디스크 접근"
+          }
+        }
+      }
+    },
     "전체 디스크 접근 설정 열기": {
       "localizations": {
         "en": {
@@ -6235,6 +6719,86 @@
           "stringUnit": {
             "state": "translated",
             "value": "전체 디스크 접근 설정 열기"
+          }
+        }
+      }
+    },
+    "전체 디스크 접근이 꺼져 있어요. 시스템 설정에서 Sweep을 켜면 보호된 파일도 찾을 수 있어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full Disk Access is off. Turn on Sweep under Full Disk Access in System Settings to search protected files too."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 디스크 접근이 꺼져 있어요. 시스템 설정에서 Sweep을 켜면 보호된 파일도 찾을 수 있어요."
+          }
+        }
+      }
+    },
+    "전체 디스크 접근이 꺼져 있어요. 시스템 설정에서 Sweep을 켜면 휴지통 안의 파일을 볼 수 있어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full Disk Access is off. Turn on Sweep under Full Disk Access in System Settings to see the files in Trash."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 디스크 접근이 꺼져 있어요. 시스템 설정에서 Sweep을 켜면 휴지통 안의 파일을 볼 수 있어요."
+          }
+        }
+      }
+    },
+    "전체 디스크 접근이 꺼져 있어요. 시스템 설정에서 Sweep을 켜면 휴지통을 열 수 있어요. %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full Disk Access is off. Turn on Sweep under Full Disk Access in System Settings to open Trash. %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 디스크 접근이 꺼져 있어요. 시스템 설정에서 Sweep을 켜면 휴지통을 열 수 있어요. %@"
+          }
+        }
+      }
+    },
+    "전체 화면": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Full Screen"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 화면"
+          }
+        }
+      }
+    },
+    "전체 화면 끝내기": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exit Full Screen"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "전체 화면 끝내기"
           }
         }
       }
@@ -6607,6 +7171,22 @@
         }
       }
     },
+    "지금은 다운로드 폴더에서만 찾아요. 홈 폴더를 허용하면 문서·데스크탑 등 내 폴더 전체에서 찾아요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sweep is only searching the Downloads folder. Allow access to your Home folder to search all your folders, including Documents and Desktop."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금은 다운로드 폴더에서만 찾아요. 홈 폴더를 허용하면 문서·데스크탑 등 내 폴더 전체에서 찾아요."
+          }
+        }
+      }
+    },
     "지금은 표시할 프로그램이 없어요.": {
       "localizations": {
         "en": {
@@ -6619,6 +7199,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "지금은 표시할 프로그램이 없어요."
+          }
+        }
+      }
+    },
+    "지난 결과(%@) · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous results (%@) · %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前回の結果（%@） · %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지난 결과(%@) · %@"
           }
         }
       }
@@ -7167,6 +7769,38 @@
         }
       }
     },
+    "최근에 열었어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opened recently"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "최근에 열었어요"
+          }
+        }
+      }
+    },
+    "최소화": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimize"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "최소화"
+          }
+        }
+      }
+    },
     "추가": {
       "localizations": {
         "en": {
@@ -7291,6 +7925,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "켜진 지"
+          }
+        }
+      }
+    },
+    "켜짐": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "켜짐"
+          }
+        }
+      }
+    },
+    "켜짐 · %@으로 열림": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On · Opened via %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "켜짐 · %@으로 열림"
           }
         }
       }
@@ -7727,6 +8393,22 @@
         }
       }
     },
+    "폴더": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folders"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "폴더"
+          }
+        }
+      }
+    },
     "폴더 선택 필요": {
       "localizations": {
         "en": {
@@ -7771,6 +8453,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "폴더 추가…"
+          }
+        }
+      }
+    },
+    "폴더 허용은 macOS 시스템 설정에 나오지 않아요. 여기서 해제할 수 있어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder access does not appear in macOS System Settings. You can revoke it here."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "폴더 허용은 macOS 시스템 설정에 나오지 않아요. 여기서 해제할 수 있어요."
           }
         }
       }
@@ -8091,6 +8789,22 @@
         }
       }
     },
+    "필요한 권한이 켜져 있어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All required permissions are on"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "필요한 권한이 켜져 있어요"
+          }
+        }
+      }
+    },
     "필요한 폴더와 달라요": {
       "localizations": {
         "en": {
@@ -8231,6 +8945,22 @@
         }
       }
     },
+    "허용…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "허용…"
+          }
+        }
+      }
+    },
     "허용됨": {
       "localizations": {
         "en": {
@@ -8243,6 +8973,70 @@
           "stringUnit": {
             "state": "translated",
             "value": "허용됨"
+          }
+        }
+      }
+    },
+    "홈": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "홈"
+          }
+        }
+      }
+    },
+    "홈 폴더 허용…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow Home Folder…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "홈 폴더 허용…"
+          }
+        }
+      }
+    },
+    "홈 폴더가 허용되지 않았어요. 허용하면 그 안의 휴지통을 열 수 있어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access to your Home folder hasn’t been allowed. Allow access to open Trash inside it."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "홈 폴더가 허용되지 않았어요. 허용하면 그 안의 휴지통을 열 수 있어요."
+          }
+        }
+      }
+    },
+    "홈 폴더를 허용하면 확인할 수 있어요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow access to your home folder to check"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "홈 폴더를 허용하면 확인할 수 있어요"
           }
         }
       }
@@ -8291,6 +9085,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "확인"
+          }
+        }
+      }
+    },
+    "확인 불가": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unable to Check"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "확인 불가"
           }
         }
       }
@@ -8359,22 +9169,6 @@
         }
       }
     },
-    "휴지통 안의 파일을 보려면 시스템 설정의 전체 디스크 접근에서 Sweep을 켜 주세요.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "To see the files in Trash, turn on Sweep under Full Disk Access in System Settings."
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "휴지통 안의 파일을 보려면 시스템 설정의 전체 디스크 접근에서 Sweep을 켜 주세요."
-          }
-        }
-      }
-    },
     "휴지통 열기": {
       "localizations": {
         "en": {
@@ -8403,6 +9197,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "휴지통 이동 실패"
+          }
+        }
+      }
+    },
+    "휴지통과 다른 앱이 저장한 파일도 찾을 수 있어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find files in the Trash and files saved by other apps."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통과 다른 앱이 저장한 파일도 찾을 수 있어요."
           }
         }
       }
@@ -8599,6 +9409,22 @@
         }
       }
     },
+    "휴지통은 홈 폴더 안에 있어요. 허용하면 휴지통에 버린 파일을 찾을 수 있어요.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trash is inside your Home folder. Allow access to find files you’ve moved to Trash."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통은 홈 폴더 안에 있어요. 허용하면 휴지통에 버린 파일을 찾을 수 있어요."
+          }
+        }
+      }
+    },
     "휴지통을 비우기 전에는 고른 파일을 모두 복구할 수 있어요. 이 중 %lld개는 다시 만들 수 없는 파일이에요. 휴지통까지 비우면 복구할 수 없어요. 저장 공간은 비운 뒤에 생겨요.": {
       "localizations": {
         "en": {
@@ -8643,6 +9469,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "휴지통을 비우면 %@의 저장 공간이 생겨요. 비운 파일은 복구할 수 없어요"
+          }
+        }
+      }
+    },
+    "휴지통을 열려면 허용이 필요해요": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow Access to Open Trash"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴지통을 열려면 허용이 필요해요"
           }
         }
       }

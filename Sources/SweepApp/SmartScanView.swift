@@ -208,7 +208,7 @@ struct SmartScanView: View {
 
                 // 전체 디스크 접근은 **한 번 켜면 끝나는 스위치**다. 앱 폴더마다 따로 묻는
                 // "다른 앱의 데이터" 물음을 통째로 없앤다 — 늘 보이는 자리에 둔다.
-                if FullDiskAccessBanner.isNeeded {
+                if !app.hasFullDiskAccess {
                     Divider().overlay(Theme.border)
                     FullDiskAccessBanner()
                 }
@@ -308,6 +308,13 @@ struct SmartScanView: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 8)
             }
+            // 링크 글자로 두니 누르는 것인지 몰랐다. 사이드바와 같은 볼록 버튼으로 둔다.
+            HStack {
+                Spacer(minLength: 0)
+                SettingsLink { Text("권한 모두 보기").padding(.horizontal, 8) }
+                    .buttonStyle(Retro95ButtonStyle())
+            }
+            .padding(8)
         }
     }
 

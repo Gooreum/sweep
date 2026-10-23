@@ -82,6 +82,26 @@ extension PixelArt {
         "................",
     ], palette: retroPalette)
 
+    /// Raised program window with a navy title bar and a small document inside.
+    static let application = PixelArt(rows: [
+        "................",
+        ".kkkkkkkkkkkkkk.",
+        ".kwwwwwwwwwwwwk.",
+        ".kwnnnnnnnnngdk.",
+        ".kwnwnnnnnnngdk.",
+        ".kwdddddddddddk.",
+        ".kwgggggggggddk.",
+        ".kwggkkkkkggddk.",
+        ".kwggkwwwkggddk.",
+        ".kwggkwnwkggddk.",
+        ".kwggkwwwkggddk.",
+        ".kwggkkkkkggddk.",
+        ".kwgggggggggddk.",
+        ".kddddddddddddk.",
+        ".kkkkkkkkkkkkkk.",
+        "................",
+    ], palette: retroPalette)
+
     static let computer = PixelArt(rows: [
         "..kkkkkkkkkkkk..",
         "..kweeeeeeeeek..",
@@ -566,6 +586,7 @@ extension Feature {
         case .largeFile: .folder
         case .duplicate: .documents
         case .trash: .trash
+        case .applications: .application
         case .diskMap: .spaceView
         case .cpu: .chip
         }
@@ -586,6 +607,7 @@ extension ScanCategory {
         case .deviceBackup: .hardDrive
         case .largeFile: .bigFile
         case .duplicate: .documents
+        case .application: .application
         }
     }
 }
@@ -605,6 +627,7 @@ extension SafetyLevel {
 struct PixelIconGallery: View {
     private let entries: [(name: String, art: PixelArt)] = [
         ("computer", .computer),
+        ("application", .application),
         ("computerLarge", .computerLarge),
         ("magnifier", .magnifier),
         ("folder", .folder),

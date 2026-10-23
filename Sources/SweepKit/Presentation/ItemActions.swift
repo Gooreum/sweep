@@ -43,6 +43,17 @@ public enum ItemActions {
     @discardableResult
     public static func openTrash() -> Bool { openFolder(trashURL) }
 
+    /// 휴지통을 열지 못했을 때 무엇을 켜면 열리는가. nil이면 권한 문제가 아니다.
+    ///
+    /// 샌드박스는 홈 폴더 허용이 있어야 휴지통에 닿고, macOS는 그 위에 전체 디스크 접근을
+    /// 따로 요구한다. 둘 다 있어야 열리므로 휴지통 화면과 같은 순서로 하나씩 안내한다.
+    public static func trashOpenNeed(sandboxed: Bool = Sandbox.isActive,
+                                     granted: [URL] = FolderAccess.shared.urls,
+                                     fullDiskAccess: Bool = !FullDiskAccess.isMissing()) -> PermissionNeed? {
+        Feature.trash.permissionNeeds(sandboxed: sandboxed, granted: granted,
+                                      fullDiskAccess: fullDiskAccess).first
+    }
+
     /// 경로를 붙임판에 넣는다. 사람이 터미널에 붙여 넣을 값이므로
     /// 퍼센트 인코딩이 아니라 파일 시스템 경로 원문을 준다.
     public static func copyPath(_ url: URL) { writeToPasteboard(url.path) }

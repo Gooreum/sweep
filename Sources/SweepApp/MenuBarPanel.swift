@@ -15,9 +15,6 @@ struct MenuBarPanel: View {
     /// 디스크 부족 알림 동의를 받는 안내 줄. 한 번 답하면 다시 그리지 않는다.
     let diskAlerts: DiskAlertNotifier
 
-    /// 휴지통을 열지 못했다(샌드박스). 대신 할 일을 말한다.
-    @State private var trashOpenFailed = false
-
     var body: some View {
         // 요약을 한 번만 만들어 내려보낸다. 섹션마다 부르면 그때마다
         // 전체 항목을 기능 수만큼 필터링한다.
@@ -27,6 +24,9 @@ struct MenuBarPanel: View {
             diskSection
             if !diskAlerts.watcher.consentAsked {
                 diskAlertConsent
+            } else if diskAlerts.watcher.isEnabled && !diskAlerts.watcher.isAuthorized {
+                // 켰는데 시스템에서 꺼져 있다. 설정 창까지 가지 않아도 여기서 켜러 가게 한다.
+                diskAlertDenied
             }
             Retro95Separator()
             scanSection(summary)
@@ -36,11 +36,6 @@ struct MenuBarPanel: View {
         .frame(width: Theme.panelWidth)
         // 패널은 열 때마다 지금 디스크 용량을 보여준다. 마지막 정리 뒤 시간이 지났을 수 있다.
         .onAppear { app.refreshVolumeUsage() }
-        .alert("휴지통을 열지 못했어요", isPresented: $trashOpenFailed) {
-            Button("확인") {}
-        } message: {
-            Text("화면 아래에서 휴지통을 열고 필요한 파일이 남아 있는지 확인해 주세요. 휴지통을 비우면 복구할 수 없어요.")
-        }
         .foregroundStyle(R95.black)
         .background(R95.gray)
         .retroRaised()
@@ -84,6 +79,21 @@ struct MenuBarPanel: View {
                 .buttonStyle(.link)
                 .font(Theme.caption)
             Button("괜찮아요") { diskAlerts.watcher.consentAsked = true }
+                .buttonStyle(.link)
+                .font(Theme.caption)
+        }
+        .padding(.horizontal, Theme.panelPadding)
+        .padding(.bottom, Theme.panelPadding)
+    }
+
+    /// 설정 창(`SweepSettingsView`)의 같은 안내와 문구를 맞춘다.
+    private var diskAlertDenied: some View {
+        HStack(spacing: 6) {
+            Text("알림을 받으려면 시스템 설정에서 Sweep 알림을 켜 주세요")
+                .font(Theme.caption)
+                .foregroundStyle(Theme.cautionText)
+            Spacer(minLength: 0)
+            Button("알림 설정 열기") { PrivacySettings.openNotifications() }
                 .buttonStyle(.link)
                 .font(Theme.caption)
         }
@@ -147,7 +157,7 @@ struct MenuBarPanel: View {
                         .font(Theme.caption)
                         .foregroundStyle(.secondary)
                     Spacer(minLength: 0)
-                    Button("휴지통 열기") { trashOpenFailed = !ItemActions.openTrash() }
+                    TrashOpenButton(app: app)
                         .buttonStyle(.link)
                         .font(Theme.caption)
                 }
