@@ -571,6 +571,104 @@ struct DiskMapModelTests {
         #expect(model.path[0].size == 0)    // root: 50 - 900
     }
 
+    // MARK: - 다른 화면에서 옮긴 것
+
+    @Test("지금 보는 지점 밖의 노드도 apply로 빠지고 조상 크기가 준다")
+    func applyRemovesAnywhere() {
+        let model = loadedModel()
+        model.apply([TrashMove(from: URL(filePath: "/private/tmp/root/big/a"), to: nil, size: 1)])
+
+        // 트리가 아는 크기(300)로 뺀다. 넘어온 1이 아니다.
+        #expect(model.current?.size == 300)
+        let big = model.tiles.first { $0.name == "big" }!
+        #expect(big.size == 200)
+        #expect(big.children.map(\.name) == ["b"])
+    }
+
+    @Test("휴지통으로 옮기면 휴지통 폴더가 늘고 합계는 그대로다")
+    func applyAddsToTrash() {
+        let root = URL(filePath: "/private/tmp/root")
+        let trash = DiskUsageNode(url: root.appending(path: ".Trash"), size: 10)
+        let model = DiskMapModel()
+        model.seed(DiskUsageNode(url: root, size: 610, children: [
+            DiskUsageNode(url: root.appending(path: "big"), size: 600), trash,
+        ]))
+
+        model.apply([TrashMove(from: root.appending(path: "big"),
+                               to: root.appending(path: ".Trash/big"), size: 600)])
+
+        #expect(model.current?.size == 610)
+        #expect(model.tiles.map(\.name) == [".Trash"])
+        #expect(model.tiles.first?.size == 610)
+    }
+
+    @Test("깊이 들어가 있는 동안 다른 갈래가 바뀌어도 보던 자리에 남는다")
+    func applyKeepsTrail() {
+        let model = loadedModel()
+        model.drillDown(into: model.tiles.first { $0.name == "big" }!)
+
+        model.apply([TrashMove(from: URL(filePath: "/private/tmp/root/small"), to: nil, size: 100)])
+
+        #expect(model.path.count == 2)
+        #expect(model.current?.name == "big")
+        #expect(model.path[0].size == 500)
+    }
+
+    @Test("apply가 지난 결과에도 남는다")
+    func applyUpdatesCache() async {
+        let (cache, cleanup) = makeCache()
+        defer { cleanup() }
+        let model = fakeModel(cache: cache)
+        let root = URL(filePath: "/private/tmp/root")
+        await model.load(root)
+
+        model.apply([TrashMove(from: root.appending(path: "big/b"), to: nil, size: 200)])
+
+        #expect(cache.load(root)?.tree.size == 400)
+    }
+
+    @Test("휴지통으로 옮기면 새 위치와 함께 알린다")
+    func removeReportsMove() async throws {
+        let fm = FileManager.default
+        let dir = fm.homeDirectoryForCurrentUser
+            .appending(path: "Library/Caches/sweep-diskmap-\(UUID().uuidString)")
+        try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: dir) }
+        let file = dir.appending(path: "target.bin")
+        try Data(count: 128).write(to: file)
+
+        let model = DiskMapModel()
+        let child = DiskUsageNode(url: file, size: 128)
+        model.seed(DiskUsageNode(url: dir, size: 128, children: [child]))
+        var reported: [TrashMove] = []
+        model.onMoved = { reported += $0 }
+
+        await model.remove(child)
+        defer { reported.compactMap(\.to).forEach { try? fm.removeItem(at: $0) } }
+
+        #expect(reported.count == 1)
+        #expect(reported.first?.from == file)
+        let trashed = try #require(reported.first?.to)
+        #expect(fm.fileExists(atPath: trashed.path))
+        #expect(model.tiles.isEmpty)
+    }
+
+    @Test("관문이 막으면 알리지 않는다")
+    func vetoedRemoveDoesNotReport() async {
+        let blocked = FileManager.default.homeDirectoryForCurrentUser
+            .appending(path: "Library/Keychains/sweep-never-exists-\(UUID().uuidString)")
+        let model = DiskMapModel()
+        model.seed(DiskUsageNode(url: URL(filePath: "/private/tmp/root"), size: 1,
+                                 children: [DiskUsageNode(url: blocked, size: 1)]))
+        var called = false
+        model.onMoved = { _ in called = true }
+
+        await model.remove(model.tiles[0])
+
+        #expect(!called)
+        #expect(model.tiles.count == 1)
+    }
+
     // MARK: - 지울 수 있는지 (범위 확대)
 
     /// 지워도 됨(캐시)·확인 필요(내 문서)·보호됨(계정 데이터)을 한 지점에 섞어 둔 트리.

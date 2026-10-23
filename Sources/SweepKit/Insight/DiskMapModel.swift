@@ -193,15 +193,7 @@ public final class DiskMapModel {
 
         // 보던 자리를 **URL로 다시 찾아 내려간다.** 세 단계 파고든 뒤 새로 읽었다고
         // 맨 위로 튕기면 세 번 다시 눌러야 한다. 중간이 사라졌으면 거기서 멈춘다.
-        let trail = path.first?.url == root ? path.dropFirst().map(\.url) : []
-        var rebuilt = [tree]
-        for url in trail {
-            guard let next = rebuilt.last?.children.first(where: { $0.url == url }),
-                  !next.children.isEmpty
-            else { break }
-            rebuilt.append(next)
-        }
-        path = rebuilt
+        path = path.first?.url == root ? retrace(in: tree, skippingEmpty: true) : [tree]
         cachedAt = nil
         loadPhase = nil
         completedAt = Date()
@@ -295,47 +287,60 @@ public final class DiskMapModel {
     public func remove(_ node: DiskUsageNode,
                        using remover: Remover = Remover(scope: .diskMap)) async {
         let url = node.url
-        let failure = await Task.detached { remover.removeFile(at: url) }.value
+        let (trashed, failure) = await Task.detached { remover.trash(at: url) }.value
 
-        removalFailure = failure
-        if failure == nil { drop(node) }
+        removalFailure = failure?.reason
+        guard failure == nil else { return }
+        let move = TrashMove(from: url, to: trashed, size: node.size)
+        apply([move])
+        // 스캔 탭이 들고 있는 같은 파일·그 아래 파일을 빼고, 휴지통 탭에 넣게 한다.
+        onMoved?([move])
     }
 
-    /// 지운 노드를 트리에서 뺀다.
-    ///
-    /// 다시 훑으면 10초가 걸린다. 조상의 크기도 함께 줄여야
-    /// 상위 합계와 막대 비율이 어긋나지 않는다.
+    /// 여기서 휴지통으로 옮겼을 때 한 번. 앱이 다른 화면에 알린다.
+    public var onMoved: (@MainActor ([TrashMove]) -> Void)?
+
+    /// 지운 노드를 트리에서 뺀다. 지금 보고 있는 지점의 자식만 받는다.
     func drop(_ node: DiskUsageNode) {
-        guard let leaf = path.indices.last,
-              path[leaf].children.contains(where: { $0.id == node.id })
-        else { return }
+        guard let leaf = path.last, leaf.children.contains(where: { $0.id == node.id }) else { return }
+        apply([TrashMove(from: node.url, to: nil, size: node.size)])
+    }
 
-        var rebuilt = path
-        rebuilt[leaf] = DiskUsageNode(
-            url: rebuilt[leaf].url,
-            size: max(0, rebuilt[leaf].size - node.size),
-            children: rebuilt[leaf].children.filter { $0.id != node.id },
-            // 안 넘기면 기본값 true로 되살아나 "읽을 수 없음"이 사라진다
-            isReadable: rebuilt[leaf].isReadable)
-
-        // 조상으로 올라가며 크기를 줄이고, 바뀐 자식으로 교체한다.
-        // 교체하지 않으면 breadcrumb으로 위에 올라갔을 때 지운 노드가 되살아난다.
-        var index = leaf
-        while index > 0 {
-            let parent = index - 1
-            let updated = rebuilt[index]
-            rebuilt[parent] = DiskUsageNode(
-                url: rebuilt[parent].url,
-                size: max(0, rebuilt[parent].size - node.size),
-                children: rebuilt[parent].children.map {
-                    $0.id == updated.id ? updated : $0
-                },
-                isReadable: rebuilt[parent].isReadable)
-            index = parent
+    /// 옮긴 것을 트리에 반영한다. 다시 훑으면 몇 분이 걸린다.
+    ///
+    /// 트리 어디에 있든 빼고 조상 크기를 줄인다 — 다른 탭에서 지운 것은 지금 보고 있는
+    /// 지점과 상관없는 곳에 있다. 휴지통으로 갔으면 휴지통 폴더(가 목록에 없으면 가장 깊은
+    /// 조상) 크기에 더한다. 같은 디스크 안에서 옮긴 것이라 합계는 그대로여야 맞다.
+    ///
+    /// 크기는 트리가 아는 값을 먼저 쓴다. 스캐너가 잰 값과 조금 달라도 막대 합이 어긋나지 않는다.
+    public func apply(_ moves: [TrashMove]) {
+        guard var root = path.first, !moves.isEmpty else { return }
+        for move in moves {
+            let size = root.node(at: move.from)?.size ?? move.size
+            root = root.adjusting(move.from, by: -size, removing: true) ?? root
+            if let to = move.to {
+                root = root.adjusting(to.deletingLastPathComponent(), by: size, removing: false) ?? root
+            }
         }
-        path = rebuilt
+        // 조상을 바꿔 끼우지 않으면 breadcrumb으로 올라갔을 때 지운 노드가 되살아난다.
+        path = retrace(in: root, skippingEmpty: false)
         // 지운 것이 다음에 지난 결과로 되살아나면 안 된다.
-        if let root = path.first { cache?.save(root, for: root.url, at: cachedAt ?? completedAt ?? Date()) }
+        cache?.save(root, for: root.url, at: cachedAt ?? completedAt ?? Date())
+    }
+
+    /// 보던 자리를 **URL로 다시 찾아 내려간다.** 중간이 사라졌으면 거기서 멈춘다.
+    ///
+    /// 새로 읽었을 때는 빈 폴더에 들어가 있지 않는다(`skippingEmpty`) — 빈 화면에서 길을 잃는다.
+    /// 지워서 비었을 때는 그 자리에 둔다. 방금 지운 곳에서 튕겨 나가면 무엇이 지워졌는지 못 본다.
+    private func retrace(in tree: DiskUsageNode, skippingEmpty: Bool) -> [DiskUsageNode] {
+        var rebuilt = [tree]
+        for url in path.dropFirst().map(\.url) {
+            guard let next = rebuilt.last?.children.first(where: { $0.url == url }),
+                  !(skippingEmpty && next.children.isEmpty)
+            else { break }
+            rebuilt.append(next)
+        }
+        return rebuilt
     }
 
     /// 테스트에서 스캔 없이 트리를 넣기 위한 입구.
