@@ -79,20 +79,27 @@ public enum FolderAccess {
         folder: Sandbox.userHome, label: "~",
         purpose: String(localized: "큰 파일과 중복 파일, 버린 파일, 앱을 만들며 쌓인 파일을 찾아요"))
 
+    /// `~/Library`. 정리할 파일 탭의 스캐너가 대부분 이 아래를 본다.
+    public static let library = Grantable(
+        folder: inHome("Library"), label: "~/Library",
+        purpose: String(localized: "앱을 만들며 쌓인 파일과 웹페이지 사본, 앱 작동 기록을 찾아요"))
+
     public static let grantables: [Grantable] = [
         wholeDisk,
         home,
-        .init(folder: inHome("Library"), label: "~/Library",
-              purpose: String(localized: "앱을 만들며 쌓인 파일과 웹페이지 사본, 앱 작동 기록을 찾아요")),
+        library,
         .init(folder: inHome(".npm"), label: "~/.npm",
               purpose: String(localized: "npm이 받은 코드예요. 설치할 때 다시 받아요")),
         .init(folder: inHome(".expo"), label: "~/.expo",
               purpose: String(localized: "Expo 앱 제작에 받은 파일이에요. 필요하면 다시 받아요")),
-        // 홈 밖이지만 같은 방식으로 열린다 — 열기 대화상자로 고른 폴더는 위치를 가리지 않는다.
-        // 이것을 열어도 지울 수 있는 것은 **바로 아래 `.app` 하나씩**뿐이다(`ProtectedPaths`).
-        .init(folder: URL(filePath: "/Applications"), label: String(localized: "응용 프로그램"),
-              purpose: String(localized: "안 쓰는 앱을 골라 정리해요")),
+        applications,
     ]
+
+    /// 응용 프로그램 폴더. 홈 밖이지만 열기 대화상자로 고르면 같은 방식으로 열린다.
+    /// 이것을 열어도 지울 수 있는 것은 **바로 아래 `.app` 하나씩**뿐이다(`ProtectedPaths`).
+    public static let applications = Grantable(
+        folder: URL(filePath: "/Applications"), label: String(localized: "응용 프로그램"),
+        purpose: String(localized: "응용 프로그램 화면과 공간 보기에서 앱 크기를 보고 안 쓰는 앱을 지울 수 있어요"))
 
     /// 앱 전체가 공유하는 허락 상태.
     public static let shared = Registry()

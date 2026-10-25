@@ -29,6 +29,13 @@ struct SweepApp: App {
         }
         let app = AppModel()
         _app = State(initialValue: app)
+        // 시스템 설정에서 전체 디스크 접근을 켜고 돌아오는 경우. 돌아올 때마다 다시 잰다 —
+        // 알림 권한(`DiskAlertNotifier`)과 같은 방식이다.
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { _ in
+            MainActor.assumeIsolated { app.refreshPermissions() }
+        }
         // 앱이 다 뜨기 전에 만든다. 알림 센터 델리게이트가 그때 등록돼야
         // 알림을 눌러 앱이 실행된 경우도 받는다.
         _diskAlerts = State(initialValue: DiskAlertNotifier(app: app, interval: Self.diskWatchInterval))
@@ -84,7 +91,7 @@ struct SweepApp: App {
                     .background(R95.gray)
                     .preferredColorScheme(.light)
             } else {
-                ContentView(app: app)
+                ContentView(app: app, notifier: diskAlerts)
                     // 결과 목록이 접히지 않도록 창의 최소 폭을 유지한다.
                     .frame(minWidth: 940, minHeight: 600)
                     .background(R95.gray)
@@ -92,6 +99,9 @@ struct SweepApp: App {
             }
         }
         .defaultSize(width: Theme.windowWidth, height: Theme.windowHeight)
+        // macOS 제목줄 자리를 비운다. 창 안의 Win95 제목줄(`Retro95WindowTitleBar`)이 그 자리를 쓴다 —
+        // 투명 제목줄만으로는 제목·툴바 영역이 남아 Win95 제목줄을 덮었다.
+        .windowStyle(.hiddenTitleBar)
         .commands { SweepCommands(app: app) }
 
         // 배터리·와이파이가 있는 상태 영역. 창을 닫아도 여기는 남는다.
@@ -103,9 +113,10 @@ struct SweepApp: App {
         .menuBarExtraStyle(.window)
 
         Settings {
-            SweepSettingsView(notifier: diskAlerts, watcher: diskAlerts.watcher)
+            SweepSettingsView(app: app, notifier: diskAlerts, watcher: diskAlerts.watcher)
                 .preferredColorScheme(.light)
         }
+        .windowStyle(.hiddenTitleBar)
     }
 
     /// 스캔 결과를 탭 구분 텍스트로 찍고 종료한다.

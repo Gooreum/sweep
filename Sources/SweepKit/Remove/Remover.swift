@@ -58,6 +58,13 @@ public struct Remover: Sendable {
         perform(at: url, scope: scope).failure
     }
 
+    /// `attempt(at:)`와 같은 관문·같은 삭제. 휴지통으로 옮겼으면 **휴지통 안의 새 위치**도 돌려준다 —
+    /// 디스크 맵이 휴지통 크기를 늘리고 휴지통 탭에 항목을 넣으려면 그 위치가 필요하다.
+    public func trash(at url: URL) -> (trashedURL: URL?, failure: RemovalFailure?) {
+        let (trashed, failure) = perform(at: url, scope: scope)
+        return (trashed, failure)
+    }
+
     /// 관문 → 삭제. 휴지통으로 옮겼으면 **휴지통 안의 새 위치**도 돌려준다 —
     /// 예전엔 버렸는데, 그러면 앱이 되돌릴 길이 없어 사용자가 Finder 휴지통을 뒤져야 했다.
     private func perform(at url: URL,

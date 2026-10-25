@@ -159,4 +159,31 @@ struct TrashScannerTests {
         try fm.removeItem(at: home.appending(path: ".Trash"))
         #expect(scanner.adminOwnedLeftovers().isEmpty)
     }
+
+    @Test("옮긴 것으로 만든 항목은 그 휴지통 위치의 설명을 단다")
+    func itemMovedToUsesLocationDetail() throws {
+        let home = try makeHome()
+        defer { try? fm.removeItem(at: home) }
+        let scanner = scanner(home)
+        let iCloud = TrashScanner.iCloudTrash(in: home).appending(path: "사진.heic")
+
+        let item = scanner.item(movedTo: iCloud, size: 1234)
+
+        #expect(item.url == iCloud)
+        #expect(item.size == 1234)
+        #expect(item.category == .trash && item.safety == .caution)
+        #expect(!item.isSelectedByDefault)
+        #expect(item.detail == scanner.locations().first { $0.folder == TrashScanner.iCloudTrash(in: home) }!.detail)
+    }
+
+    @Test("모르는 위치로 옮긴 항목은 홈 휴지통 설명으로 떨어진다")
+    func itemMovedToUnknownFallsBack() throws {
+        let home = try makeHome()
+        defer { try? fm.removeItem(at: home) }
+        let scanner = scanner(home)
+
+        let item = scanner.item(movedTo: URL(filePath: "/somewhere/else/a.bin"), size: 1)
+
+        #expect(item.detail == scanner.locations().first!.detail)
+    }
 }

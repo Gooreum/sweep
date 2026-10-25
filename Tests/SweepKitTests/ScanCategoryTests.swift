@@ -6,9 +6,9 @@ import Foundation
 struct ScanCategoryTests {
 
     // TC-1
-    @Test("카테고리는 11종이다")
+    @Test("카테고리는 12종이다")
     func hasTenCases() {
-        #expect(ScanCategory.allCases.count == 11)
+        #expect(ScanCategory.allCases.count == 12)
     }
 
     @Test("새 정크 세 종은 재생성 쉬운 캐시 뒤, 사용자 파일 앞에 온다")
@@ -75,7 +75,7 @@ struct ScanCategoryTests {
 
         #expect(sorted == [.runawayTemp, .xcode, .devCache, .projectArtifact, .appCache,
                            .staleCache, .mailAttachment, .trash, .deviceBackup,
-                           .largeFile, .duplicate])
+                           .largeFile, .duplicate, .application])
     }
 
     // TC-7

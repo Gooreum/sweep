@@ -36,37 +36,74 @@ public enum DirectorySize {
                                             lastUsed: values.contentModificationDate))
         }
 
-        guard let walker = FileManager.default.enumerator(
-            at: url,
-            includingPropertiesForKeys: Array(keys),
-            options: [],
-            errorHandler: { _, _ in true }      // 접근 실패는 무시하고 계속한다
-        ) else { return Summary(bytes: 0, dates: FileDates(created: created)) }
-
-        var total: Int64 = 0
-        var newest: Date?
-        for case let child as URL in walker {
-            guard let v = try? child.resourceValues(forKeys: keys) else { continue }
-            // 링크는 세지 않고 넘어가기만 한다. 열거자는 심볼릭 링크를 따라 내려가지
-            // 않으므로 그것으로 충분하다.
-            //
-            // 여기서 skipDescendants()를 부르면 안 된다. 그 호출은 "가장 최근에 얻은
-            // 디렉토리"의 하위를 건너뛰는데, 링크는 디렉토리가 아니라서 대신 **부모의
-            // 나머지 하위가 통째로 잘려나간다.** 실측에서 261MB짜리 캐시가 3MB로
-            // 집계되는 원인이었다.
-            if v.isSymbolicLink == true { continue }
-            guard v.isDirectory != true else { continue }
-            total += allocated(v)
-
-            // **일반 파일의 mtime만 센다.** 디렉토리 mtime은 항목이 추가·삭제되거나
-            // 다른 프로세스가 건드리기만 해도 갱신돼서, 포함하면 331일 묵은 캐시가
-            // "오늘 쓴 것"으로 보인다 (실측에서 이 때문에 검출이 통째로 실패했다).
-            if v.isRegularFile == true, let modified = v.contentModificationDate,
-               newest == nil || modified > newest! {
-                newest = modified
+        // 바로 아래 폴더들을 여러 스레드로 나눠 잰다. `getattrlistbulk`만으로는 1.3배였고
+        // (실측 ~/Code 63→48초) 나눠야 SSD가 여러 곳을 동시에 읽는다.
+        let path = url.standardizedFileURL.path
+        guard let entries = BulkDirectory.entries(atPath: path) else {
+            return Summary(bytes: 0, dates: FileDates(created: created))
+        }
+        var top = Tally()
+        var folders: [String] = []
+        for entry in entries {
+            if entry.kind == .directory {
+                folders.append(BulkDirectory.join(path, entry.name))
+            } else {
+                top.add(entry)
             }
         }
-        return Summary(bytes: total, dates: FileDates(created: created, lastUsed: newest))
+        let below = folders.count > 1 ? folders.concurrentMap(Tally.walk) : folders.map(Tally.walk)
+        let total = below.reduce(top) { $0.merged($1) }
+        return Summary(bytes: total.bytes, dates: FileDates(created: created, lastUsed: total.newest))
+    }
+
+    /// 한 갈래의 합계와 가장 최근 수정 시각.
+    private struct Tally: Sendable {
+        var bytes: Int64 = 0
+        var newest: Date?
+
+        mutating func add(_ entry: BulkEntry) {
+            switch entry.kind {
+            case .directory, .symlink:
+                // 링크는 세지도 따라가지도 않는다.
+                return
+            case .file, .other:
+                bytes += entry.allocated
+                // **일반 파일의 mtime만 센다.** 디렉토리 mtime은 항목이 추가·삭제되거나
+                // 다른 프로세스가 건드리기만 해도 갱신돼서, 포함하면 331일 묵은 캐시가
+                // "오늘 쓴 것"으로 보인다 (실측에서 이 때문에 검출이 통째로 실패했다).
+                if entry.kind == .file, let modified = entry.modified,
+                   newest == nil || modified > newest! {
+                    newest = modified
+                }
+            }
+        }
+
+        func merged(_ other: Tally) -> Tally {
+            var result = self
+            result.bytes += other.bytes
+            if let date = other.newest, result.newest == nil || date > result.newest! {
+                result.newest = date
+            }
+            return result
+        }
+
+        /// 폴더 하나 아래 전부. 한 스레드에서 스택으로 훑는다.
+        @Sendable static func walk(_ root: String) -> Tally {
+            var tally = Tally()
+            var pending = [root]
+            while let path = pending.popLast() {
+                // 접근 실패는 무시하고 계속한다 — 권한 없는 폴더 하나 때문에 전체가 실패하면 안 된다.
+                guard let entries = BulkDirectory.entries(atPath: path) else { continue }
+                for entry in entries {
+                    if entry.kind == .directory {
+                        pending.append(BulkDirectory.join(path, entry.name))
+                    } else {
+                        tally.add(entry)
+                    }
+                }
+            }
+            return tally
+        }
     }
 
     /// 크기만 필요한 곳을 위한 얇은 래퍼.

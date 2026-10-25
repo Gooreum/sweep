@@ -117,12 +117,14 @@ struct DiskUsageTreeTests {
         try write(2, to: root.appending(path: "c/z.bin"))
 
         let counter = VisitCounter()
-        _ = DiskUsageTree.build(at: root, maxDepth: 4,
-                                minimumSize: Int64(Self.oneMB),
-                                onEntryScanned: { counter.increment() })
+        let tree = DiskUsageTree.build(at: root, maxDepth: 4,
+                                       minimumSize: Int64(Self.oneMB),
+                                       onBytesScanned: { _ in counter.increment() })
 
-        // 루트 1 + 디렉토리 3 + 파일 3
-        #expect(counter.value == 7, "방문 횟수가 항목 수와 다르다: \(counter.value)")
+        // 파일이 있는 폴더 a, b, c에서 한 번씩. 같은 폴더를 두 번 읽지 않는다.
+        #expect(counter.value == 3, "폴더를 읽은 횟수가 다르다: \(counter.value)")
+        #expect(tree.size >= Int64(6 * Self.oneMB))
+        #expect(tree.size < Int64(7 * Self.oneMB))
     }
 
     // TC-6
@@ -386,52 +388,97 @@ struct DiskUsageAppDataTests {
     }
 }
 
-/// 세기와 집계가 **같은 곳을 본다.**
-///
-/// `build`가 안 내려가는데 `countEntries`만 세면 분모가 커져 퍼센트가 100에 닿지 못한다.
-/// 링크 232개 때문에 99%에서 멈췄던 것과 같은 함정이다.
-@Suite("세기와 집계가 같은 범위")
-struct CountMatchesBuildTests {
 
-    private let fm = FileManager.default
+@Suite("트리 크기 고치기")
+struct TreeAdjustTests {
 
-    private func makeHome() throws -> (URL, () -> Void) {
-        let home = URL(filePath: NSTemporaryDirectory())
-            .appending(path: "sweep-count-\(UUID().uuidString)")
-        for relative in ["Library/Containers/com.example.app/deep/deeper",
-                         "Library/Caches/Example"] {
-            try fm.createDirectory(at: home.appending(path: relative),
-                                   withIntermediateDirectories: true)
-        }
-        return (home, { try? self.fm.removeItem(at: home) })
+    private func url(_ path: String) -> URL { URL(filePath: "/r" + path) }
+
+    /// /r(100) ─ a(60) ─ a/deep(40)
+    ///         ├ .Trash(30)
+    ///         └ locked(0, 못 읽음)
+    private var tree: DiskUsageNode {
+        DiskUsageNode(url: url(""), size: 100, children: [
+            DiskUsageNode(url: url("/a"), size: 60, children: [
+                DiskUsageNode(url: url("/a/deep"), size: 40),
+            ]),
+            DiskUsageNode(url: url("/.Trash"), size: 30),
+            DiskUsageNode(url: url("/locked"), size: 0, isReadable: false),
+        ])
     }
 
-    // TC-1
-    @Test("접근이 없으면 세기도 앱 데이터 안으로 안 들어간다")
-    func countSkipsAppDataWhenDenied() throws {
-        let (home, cleanup) = try makeHome()
-        defer { cleanup() }
-        let library = home.appending(path: "Library")
-
-        let denied = DiskUsageTree.countEntries(at: library,
-                                                canReadAppData: false, appDataHome: home)
-        let granted = DiskUsageTree.countEntries(at: library,
-                                                 canReadAppData: true, appDataHome: home)
-
-        // 막았으면 `com.example.app` 아래 두 층을 세지 않는다.
-        #expect(denied < granted)
+    @Test("깊은 노드를 빼면 그 노드가 사라지고 조상 크기가 그만큼 준다")
+    func removingDeepNode() throws {
+        let result = try #require(tree.adjusting(url("/a/deep"), by: -40, removing: true))
+        #expect(result.size == 60)
+        let a = try #require(result.node(at: url("/a")))
+        #expect(a.size == 20)
+        #expect(a.children.isEmpty)
     }
 
-    // TC-2
-    @Test("구역 자신은 세기에 들어간다")
-    func countIncludesRootItself() throws {
-        let (home, cleanup) = try makeHome()
-        defer { cleanup() }
+    @Test("휴지통 폴더에 더하면 그 노드와 조상이 늘고 크기순으로 다시 선다")
+    func addingToTrash() throws {
+        let result = try #require(tree.adjusting(url("/.Trash"), by: 40, removing: false))
+        #expect(result.size == 140)
+        #expect(result.children.first?.url == url("/.Trash"))
+        #expect(result.node(at: url("/.Trash"))?.size == 70)
+    }
 
-        let denied = DiskUsageTree.countEntries(at: home.appending(path: "Library"),
-                                                canReadAppData: false, appDataHome: home)
+    @Test("목록에 없는 깊은 경로는 가장 깊은 조상까지만 바꾼다")
+    func missingNodeStopsAtDeepestAncestor() throws {
+        let result = try #require(tree.adjusting(url("/a/deep/x/y"), by: -10, removing: true))
+        #expect(result.size == 90)
+        #expect(result.node(at: url("/a"))?.size == 50)
+        #expect(result.node(at: url("/a/deep"))?.size == 30)
+    }
 
-        // `Containers`와 그 안의 `com.example.app`까지는 목록에 보인다.
-        #expect(denied >= 4)
+    @Test("트리 밖 경로는 nil이고, 이름이 앞부분만 같은 형제는 품지 않는다")
+    func outsideIsNil() {
+        #expect(tree.adjusting(URL(filePath: "/other/x"), by: -1, removing: true) == nil)
+        #expect(tree.adjusting(URL(filePath: "/rr/x"), by: -1, removing: true) == nil)
+        #expect(tree.node(at: url("/aa")) == nil)
+    }
+
+    @Test("새로 잰 노드로 바꾸면 조상 크기가 차이만큼 바뀐다")
+    func replacingDeepNode() throws {
+        let result = try #require(tree.replacing(DiskUsageNode(url: url("/a/deep"), size: 10)))
+        #expect(result.node(at: url("/a/deep"))?.size == 10)
+        #expect(result.node(at: url("/a"))?.size == 30)
+        #expect(result.size == 70)
+    }
+
+    @Test("목록에 없던 직속 자식은 부모 아래에 넣는다")
+    func replacingInsertsMissingChild() throws {
+        let result = try #require(tree.replacing(DiskUsageNode(url: url("/a/new"), size: 50)))
+        #expect(result.node(at: url("/a"))?.children.map(\.name) == ["new", "deep"])
+        #expect(result.size == 150)
+    }
+
+    @Test("부모도 목록에 없는 경로나 트리 밖은 nil이다")
+    func replacingNeedsVisibleParent() {
+        #expect(tree.replacing(DiskUsageNode(url: url("/a/x/y"), size: 1)) == nil)
+        #expect(tree.replacing(DiskUsageNode(url: URL(filePath: "/other"), size: 1)) == nil)
+    }
+
+    @Test("품은 가장 깊은 노드와 깊이를 찾는다")
+    func findsDeepestNode() throws {
+        let deep = try #require(tree.deepestNode(containing: url("/a/deep/x/y")))
+        #expect(deep.node.url == url("/a/deep"))
+        #expect(deep.depth == 2)
+        #expect(tree.deepestNode(containing: url(""))?.depth == 0)
+        #expect(tree.deepestNode(containing: URL(filePath: "/other")) == nil)
+    }
+
+    @Test("교체해도 조상의 못 읽음 표시는 남는다")
+    func replacingKeepsUnreadable() throws {
+        let result = try #require(tree.replacing(DiskUsageNode(url: url("/locked/x"), size: 3)))
+        #expect(result.node(at: url("/locked"))?.isReadable == false)
+        #expect(result.node(at: url("/locked"))?.size == 3)
+    }
+
+    @Test("크기를 바꿔도 못 읽음 표시는 남는다")
+    func keepsUnreadable() throws {
+        let result = try #require(tree.adjusting(url("/locked/x"), by: 5, removing: false))
+        #expect(result.node(at: url("/locked"))?.isReadable == false)
     }
 }

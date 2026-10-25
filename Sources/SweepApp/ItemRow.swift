@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import SweepKit
 
@@ -64,13 +65,23 @@ struct ItemRow: View {
                 .accessibilityAction { isOn.toggle() }
                 .frame(width: ItemTableColumns.check)
 
-            PixelIcon(art: item.category.pixelArt, size: 16)
-                .frame(width: ItemTableColumns.icon)
+            Group {
+                if item.category == .application {
+                    Image(nsImage: ApplicationIconCache.icon(for: item.url.path))
+                        .resizable()
+                        .interpolation(.high)
+                        .frame(width: 16, height: 16)
+                        .accessibilityHidden(true)
+                } else {
+                    PixelIcon(art: item.category.pixelArt, size: 16)
+                }
+            }
+            .frame(width: ItemTableColumns.icon)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.displayName)
                     .font(R95.ui(12, bold: true))
-                    .foregroundStyle(R95.black)
+                    .foregroundStyle(isOn ? R95.white : R95.black)
                     .lineLimit(1)
                     .truncationMode(.middle)
 
@@ -78,26 +89,44 @@ struct ItemRow: View {
                 // 가운데를 잘라 긴 경로의 끝에 있는 구별 가능한 이름을 남긴다.
                 Text(item.displayPath)
                     .font(R95.ui(10))
-                    .foregroundStyle(R95.shadow)
+                    .foregroundStyle(isOn ? R95.light : R95.shadow)
                     .lineLimit(1)
                     .truncationMode(.middle)
             }
             .padding(.horizontal, ItemTableColumns.padding)
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text(item.detail)
-                .font(R95.ui(12))
-                .foregroundStyle(item.safety == .safe ? R95.deep : item.safety.tint)
-                // 위험·확인 항목의 설명은 왜 조심해야 하는지다. 잘리면 판단 근거가 사라진다.
-                .lineLimit(item.safety == .safe ? 1 : 2)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, ItemTableColumns.padding)
-                .frame(width: CGFloat(columns.width(.detail)), alignment: .leading)
+            HStack(spacing: 4) {
+                Text(item.detail)
+                    .font(R95.ui(12))
+                    .foregroundStyle(isOn ? R95.white : (item.safety == .safe ? R95.deep : item.safety.tint))
+                    // 위험·확인 항목은 선택 후에도 이유를 읽을 수 있어야 한다.
+                    .lineLimit(item.safety == .safe ? 1 : 2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                if item.category == .application && item.safety == .danger {
+                    ViewThatFits(in: .horizontal) {
+                        Button("Finder에서 보기") { ItemActions.reveal(item.url) }
+                            .fixedSize()
+                        Button {
+                            ItemActions.reveal(item.url)
+                        } label: {
+                            PixelIcon(art: .folder, size: 16)
+                        }
+                        .accessibilityLabel(Text("Finder에서 보기"))
+                        .help(Text("Finder에서 보기"))
+                    }
+                    .buttonStyle(Retro95ButtonStyle())
+                }
+            }
+            .padding(.horizontal, ItemTableColumns.padding)
+            .frame(width: CGFloat(columns.width(.detail)), alignment: .leading)
 
             if showsDates {
                 Text(item.datesLine() ?? "")
                     .font(R95.ui(11))
-                    .foregroundStyle(R95.deep)
+                    .foregroundStyle(isOn ? R95.light : R95.deep)
                     .lineLimit(1)
                     .padding(.horizontal, ItemTableColumns.padding)
                     .frame(width: CGFloat(columns.width(.dates)), alignment: .leading)
@@ -106,7 +135,7 @@ struct ItemRow: View {
             // 고른 것만 또렷하게 보여 훑을 때 담은 크기를 비교할 수 있다.
             Text(item.formattedSize)
                 .font(R95.mono(12))
-                .foregroundStyle(isOn ? R95.black : R95.shadow)
+                .foregroundStyle(isOn ? R95.white : R95.shadow)
                 .lineLimit(1)
                 .padding(.horizontal, ItemTableColumns.padding)
                 .frame(width: CGFloat(columns.width(.size)), alignment: .trailing)
@@ -115,7 +144,7 @@ struct ItemRow: View {
                 .frame(width: CGFloat(columns.width(.safety)))
         }
         .frame(height: R95.tableRowHeight)
-        .background(isHovering ? R95.light : R95.white)
+        .background(isOn ? R95.navy : (isHovering ? R95.light : R95.white))
         .overlay(alignment: .bottom) { R95.light.frame(height: 1).allowsHitTesting(false) }
         .contentShape(Rectangle())
         .onTapGesture { isOn.toggle() }
@@ -127,5 +156,23 @@ struct ItemRow: View {
             Button("Finder에서 보기") { ItemActions.reveal(item.url) }
             Button("위치 복사") { ItemActions.copyPath(item.url) }
         }
+    }
+}
+
+/// AppKit icon lookup stays on the main actor; repeated row updates reuse the image.
+@MainActor
+private enum ApplicationIconCache {
+    static let images: NSCache<NSString, NSImage> = {
+        let cache = NSCache<NSString, NSImage>()
+        cache.countLimit = 256
+        return cache
+    }()
+
+    static func icon(for path: String) -> NSImage {
+        let key = path as NSString
+        if let image = images.object(forKey: key) { return image }
+        let image = NSWorkspace.shared.icon(forFile: path)
+        images.setObject(image, forKey: key)
+        return image
     }
 }

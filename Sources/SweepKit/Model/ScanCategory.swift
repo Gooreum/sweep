@@ -25,6 +25,8 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
     case largeFile
     /// 내용이 같은 중복 파일.
     case duplicate
+    /// 앱 폴더 바로 아래의 `.app`. 지우면 앱이 사라지니 사용자가 하나씩 고른다.
+    case application
 
     public var displayName: String {
         switch self {
@@ -39,6 +41,7 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
         case .deviceBackup: String(localized: "기기 백업")
         case .largeFile: String(localized: "큰 파일")
         case .duplicate: String(localized: "중복 파일")
+        case .application: String(localized: "응용 프로그램")
         }
     }
 
@@ -57,6 +60,7 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
         case .deviceBackup: 8
         case .largeFile: 9
         case .duplicate: 10
+        case .application: 11
         }
     }
 
@@ -89,6 +93,7 @@ public enum ScanCategory: String, CaseIterable, Sendable, Hashable {
         case .deviceBackup: "iphone"
         case .largeFile: "arrow.down.doc.fill"
         case .duplicate: "doc.on.doc.fill"
+        case .application: "app"
         }
     }
 }

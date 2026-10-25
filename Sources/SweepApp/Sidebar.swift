@@ -36,6 +36,8 @@ struct Sidebar: View {
             diskGauge.padding(.top, 24)
 
             Spacer(minLength: 0)
+
+            permissionsEntry
         }
         .frame(width: R95.sidebarWidth)
         .frame(maxHeight: .infinity)
@@ -45,11 +47,36 @@ struct Sidebar: View {
         }
     }
 
+    private var permissionsEntry: some View {
+        let hasOff = Feature.allCases.contains { !app.permissionNeeds(for: $0).isEmpty }
+
+        return VStack(alignment: .leading, spacing: 8) {
+            Retro95Separator()
+            HStack(spacing: 8) {
+                PixelIcon(art: hasOff ? .warning : .check, size: 16)
+                    .accessibilityHidden(true)
+                Text(hasOff ? "꺼진 권한이 있어요" : "필요한 권한이 켜져 있어요")
+                    .font(R95.ui(11))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .foregroundStyle(hasOff ? Theme.cautionText : Theme.textSecondary)
+            SettingsLink {
+                Text("권한 모두 보기")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(Retro95ButtonStyle())
+            .accessibilityLabel(Text("권한 모두 보기"))
+        }
+        .padding(8)
+    }
+
     private func row(_ feature: Feature, badge: String?) -> some View {
         // 선택 상태를 따로 들고 있지 않는다. 두 곳에 있으면 어긋난다.
         let isSelected = app.selected == feature
+        let status = app.status(of: feature)
 
-        return HStack(spacing: 8) {
+        return HStack(spacing: 4) {
             PixelIcon(art: feature.pixelArt, size: 24)
             Text(feature.displayName)
                 .font(R95.ui(13))
@@ -60,11 +87,29 @@ struct Sidebar: View {
                 .layoutPriority(1)
             Spacer(minLength: 0)
 
-            // 스캔 결과를 사이드바에서 바로 본다. 어디에 용량이 묶여 있는지
-            // 화면을 옮기지 않고 알 수 있어야 한다.
-            if let badge {
-                Text(badge).font(R95.mono(11)).lineLimit(1).fixedSize(horizontal: true, vertical: false)
+            HStack(spacing: 4) {
+                Group {
+                    switch status {
+                    case .idle: EmptyView()
+                    case .loading:
+                        if feature == .cpu {
+                            Retro95CPUActivity()
+                        } else {
+                            Retro95Hourglass(size: 16)
+                        }
+                    // 끝나면 아이콘 대신 용량 배지가 완료를 말한다(공간 보기 포함).
+                    case .done:
+                        EmptyView()
+                    }
+                }
+                // 픽셀의 검은 테두리도 선택 배경에서 보이게 한다.
+                .background(R95.gray)
+                .accessibilityHidden(true)
+                if let badge {
+                    Text(badge).font(R95.mono(11)).lineLimit(1).fixedSize(horizontal: true, vertical: false)
+                }
             }
+            .fixedSize(horizontal: true, vertical: false)
         }
         .foregroundStyle(isSelected ? R95.white : R95.black)
         .padding(.horizontal, 4)
@@ -74,8 +119,28 @@ struct Sidebar: View {
         .contentShape(Rectangle())
         .onTapGesture { app.selected = feature }
         .accessibilityElement(children: .combine)
+        .accessibilityValue(accessibilityStatus(for: feature))
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
         .padding(.horizontal, 4)
+    }
+
+    private func accessibilityStatus(for feature: Feature) -> String {
+        let status = app.status(of: feature)
+        if feature == .diskMap {
+            switch status {
+            case .idle: return ""
+            case .loading: return String(localized: "공간 보기 읽는 중")
+            case .done: return ""
+            }
+        }
+        if feature == .cpu {
+            return status == .loading ? String(localized: "CPU 측정 중") : ""
+        }
+        switch status {
+        case .idle: return ""
+        case .loading: return String(localized: "\(feature.displayName) 찾는 중")
+        case .done: return ""
+        }
     }
 
     /// 용량을 읽지 못하면 아예 그리지 않는다 — 0으로 그리면

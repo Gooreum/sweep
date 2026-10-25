@@ -5,14 +5,18 @@ import SweepKit
 struct ContentView: View {
     /// 앱이 소유한다 — 메뉴 명령도 같은 모델을 건드려야 한다.
     @Bindable var app: AppModel
+    var notifier: DiskAlertNotifier? = nil
 
     var body: some View {
         VStack(spacing: 0) {
+            Retro95WindowTitleBar(title: "Sweep - \(app.selected.displayName)",
+                                  icon: app.selected.pixelArt, fullScreenable: true)
+                // 아래 패널들의 배경(`background(R95.gray)`)은 안전 영역으로 번진다. 제목줄이
+                // macOS 제목줄 자리(안전 영역)에 있으므로 위에 그려야 회색에 덮이지 않는다.
+                .zIndex(1)
             HStack(spacing: 0) {
                 Sidebar(app: app)
                 VStack(spacing: 0) {
-                    Retro95TitleStrip(title: "Sweep - \(app.selected.displayName)",
-                                      icon: app.selected.pixelArt)
                     // 디스크 맵·폴더 허락 화면은 스캔하지 않으므로 명령이 없다.
                     if app.currentModel != nil {
                         CommandBar(app: app)
@@ -26,6 +30,10 @@ struct ContentView: View {
             AppStatusBar(app: app)
         }
         .background(R95.gray)
+        .background(WindowChromeConfigurator())
+        .ignoresSafeArea(edges: .top)
+        // CPU는 탭을 떠나도 계속 잰다. 창을 닫으면 멈춘다 — 안 보이는 창이 CPU를 쓰지 않게.
+        .onDisappear { app.stopCPU() }
         // 기능 이름은 **창 제목**으로 둔다. 명령은 시스템 툴바가 아니라 창 안의 명령줄에 있다 —
         // 툴바에 두면 둥근 유리 캡슐로 그려져 Win95 화면과 따로 논다.
         .navigationTitle(app.selected.displayName)
@@ -37,7 +45,7 @@ struct ContentView: View {
         case .diskMap:
             // 스캔 모델은 아니지만 **소유는 다른 기능과 똑같이** AppModel이 한다.
             // 뷰가 들고 있으면 탭을 옮기는 순간 트리가 사라져 10초를 다시 기다린다.
-            DiskMapView(model: app.diskMap(), app: app)
+            DiskMapView(model: app.diskMap(), app: app, notifier: notifier)
 
         case .cpu:
             // 스캔 모델이 없다. 디스크 맵과 같은 이유로 소유는 AppModel이 한다.
@@ -61,7 +69,7 @@ struct ContentView: View {
             ProjectsScreen(app: app)
 
         case let feature:
-            FeatureScreen(feature: feature, model: app.model(for: feature))
+            FeatureScreen(feature: feature, model: app.model(for: feature), app: app)
                 // 기능을 바꾸면 뷰를 새로 만든다. 안 그러면 이전 기능의
                 // 스크롤 위치와 애니메이션 상태가 그대로 따라온다.
                 .id(feature)

@@ -21,6 +21,21 @@ public enum FullDiskAccess {
 
     public static var isGranted: Bool { canRead(probe) }
 
+    /// 확인용 파일에 닿을 수 있는가. 샌드박스에서는 그 폴더 권한이 없으면 전체 디스크 접근과
+    /// 무관하게 못 읽는다 — 그때 "꺼짐"이라고 하면 켜 놓은 사용자에게도 켜라고 한다.
+    public static func isMeasurable(sandboxed: Bool, granted: [URL]) -> Bool {
+        !sandboxed || granted.contains { probe.isSameOrDescendant(of: $0) }
+    }
+
+    /// 꺼진 것이 **확실할 때만** true. 잴 수 없으면 폴더 허용을 먼저 안내한다
+    /// (`Feature.permissionNeeds`).
+    ///
+    /// 샌드박스에서도 의미가 있다. `~/.Trash`는 폴더를 허용해도 이것 없이는 열리지 않는다(실측).
+    public static func isMissing(sandboxed: Bool = Sandbox.isActive,
+                                 granted: [URL] = FolderAccess.shared.urls) -> Bool {
+        isMeasurable(sandboxed: sandboxed, granted: granted) && !isGranted
+    }
+
     /// 한 바이트만 읽어 본다. 100KB짜리를 통째로 들 이유가 없다.
     ///
     /// **읽은 결과가 아니라 던졌는지를 본다.** 빈 파일은 `read`가 nil을 돌려주는데
