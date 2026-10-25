@@ -133,7 +133,7 @@ struct ItemRow: View {
             }
 
             // 고른 것만 또렷하게 보여 훑을 때 담은 크기를 비교할 수 있다.
-            Text(item.formattedSize)
+            Text(item.sizeLabel)
                 .font(R95.mono(12))
                 .foregroundStyle(isOn ? R95.white : R95.shadow)
                 .lineLimit(1)

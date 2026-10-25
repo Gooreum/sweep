@@ -23,6 +23,14 @@ struct ItemSortTests {
         #expect(names(sorted) == ["b", "c", "a"])
     }
 
+    @Test("크기순에서 iCloud에만 있는 큰 항목이 작은 Mac 항목보다 앞선다")
+    func cloudOnlyItemsSortByCloudBytes() {
+        let cloud = CleanupItem(url: URL(filePath: "/private/tmp/sort/cloud"), size: 0,
+                                category: .trash, safety: .caution, cloudBytes: 5_000_000_000)
+        let sorted = ItemSort.default.sorted([item("mac", size: 1_000_000), cloud])
+        #expect(names(sorted) == ["cloud", "mac"])
+    }
+
     // TC-2
     @Test("같은 열은 방향을 뒤집고 다른 열은 그 열의 처음 방향으로")
     func toggling() {

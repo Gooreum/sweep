@@ -17,6 +17,9 @@ public struct CleanupItem: Sendable, Hashable, Identifiable {
     /// 중복 사본이면 남겨 두는 원본의 경로. 원본이 같은 목록에 따로 올라왔는지
     /// `ScanCoordinator.normalize`가 확인하는 데 쓴다.
     public let originalURL: URL?
+    /// iCloud에만 있어 이 Mac 디스크를 차지하지 않는 내용의 원래 크기. 지우면 iCloud 공간이 그만큼 빈다.
+    /// `size`(이 Mac에서 비워지는 크기)와 따로 둔다 — 합계·디스크 막대가 Mac 공간을 부풀리지 않게.
+    public let cloudBytes: Int64
 
     public var id: URL { url }
 
@@ -27,7 +30,8 @@ public struct CleanupItem: Sendable, Hashable, Identifiable {
         safety: SafetyLevel,
         detail: String = "",
         dates: FileDates = .unknown,
-        originalURL: URL? = nil
+        originalURL: URL? = nil,
+        cloudBytes: Int64 = 0
     ) {
         self.url = url
         self.size = size
@@ -36,11 +40,20 @@ public struct CleanupItem: Sendable, Hashable, Identifiable {
         self.detail = detail
         self.dates = dates
         self.originalURL = originalURL
+        self.cloudBytes = cloudBytes
     }
 
     /// 사람이 읽는 크기 문자열. ("152.1 GB")
     public var formattedSize: String {
         ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
+    }
+
+    /// 크기 칸 문자열. iCloud에만 있으면 "iCloud 5.2 GB", 아니면 `formattedSize`와 같다.
+    ///
+    /// 할당 크기로 재면 iCloud에만 있는 파일은 0이라, Finder가 20GB로 보여 주는 휴지통이 30MB로 보였다.
+    public var sizeLabel: String {
+        guard cloudBytes > 0, size == 0 else { return formattedSize }
+        return String(localized: "iCloud \(ByteCountFormatter.string(fromByteCount: cloudBytes, countStyle: .file))")
     }
 
     /// 목록에 보여줄 이름. 경로 마지막 구성요소.
@@ -93,4 +106,7 @@ extension Array where Element == CleanupItem {
     public var formattedTotalSize: String {
         ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file)
     }
+
+    /// iCloud에서 비워지는 총 바이트. `totalSize`에는 들어가지 않는다.
+    public var totalCloudBytes: Int64 { reduce(0) { $0 + $1.cloudBytes } }
 }
