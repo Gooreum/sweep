@@ -797,6 +797,46 @@ struct DiskMapModelTests {
         #expect(model.current?.node(at: URL(filePath: "/r/a/b"))?.size == 400)
     }
 
+    @Test("읽는 중에 다시 읽으면 앞 순회를 멈추고, 먼저 끝나도 뒤 순회의 상태를 건드리지 않는다")
+    func overlappingLoadsDoNotClobber() async {
+        let built = builtTree
+        let rebuilds = Rebuilds(["/r/.Trash": 500])
+        let flags = FlagLog()
+        // 뒤 순회를 놓아줄 신호. 시간으로 정하면 전체 실행의 부하에서 순서가 뒤집힌다.
+        let release = CancelFlag()
+        // 앞 순회는 뒤 순회가 시작된 뒤에, 뒤 순회보다 먼저 끝난다.
+        // 문으로 붙잡지 않고 짧게 자며 확인한다. 붙잡지 않는 이유는 위 테스트와 같다.
+        let model = DiskMapModel(
+            buildTree: { _, flag, _ in
+                if flags.append(flag) == 1 {
+                    while flags.count < 2 { Thread.sleep(forTimeInterval: 0.01) }
+                } else {
+                    while !release.isCancelled { Thread.sleep(forTimeInterval: 0.01) }
+                }
+                return built
+            },
+            expectedBytes: { _ in nil }, rebuild: rebuilds.callAsFunction)
+        var completions = 0
+        model.onCompleted = { completions += 1 }
+        let root = URL(filePath: "/r")
+
+        async let first: Void = model.load(root)
+        while flags.count < 1 { await Task.yield() }
+        async let second: Void = model.load(root)
+        while flags.count < 2 { await Task.yield() }
+        await first
+
+        #expect(flags.first?.isCancelled == true, "앞 순회를 멈추지 않았다")
+        #expect(model.isScanning, "앞 순회가 끝나며 뒤 순회의 진행 표시를 내렸다")
+        model.apply([TrashMove(from: URL(filePath: "/r/a/b"), to: URL(filePath: "/r/.Trash/b"), size: 400)])
+        release.cancel()
+        await second
+
+        #expect(!model.isScanning)
+        #expect(completions == 1)
+        #expect(model.current?.node(at: URL(filePath: "/r/a/b")) == nil, "지운 것이 되살아났다")
+    }
+
     // MARK: - 지울 수 있는지 (범위 확대)
 
     /// 지워도 됨(캐시)·확인 필요(내 문서)·보호됨(계정 데이터)을 한 지점에 섞어 둔 트리.
@@ -1136,6 +1176,29 @@ private final class TreeSource: @unchecked Sendable {
     var callCount: Int {
         lock.lock(); defer { lock.unlock() }
         return calls
+    }
+}
+
+/// 순회마다 받은 중단 신호를 모은다. `buildTree`는 `Task.detached`에서 불린다.
+private final class FlagLog: @unchecked Sendable {
+    private let lock = NSLock()
+    private var flags: [CancelFlag] = []
+
+    /// 몇 번째 순회인지 돌려준다. 1부터.
+    func append(_ flag: CancelFlag) -> Int {
+        lock.lock(); defer { lock.unlock() }
+        flags.append(flag)
+        return flags.count
+    }
+
+    var count: Int {
+        lock.lock(); defer { lock.unlock() }
+        return flags.count
+    }
+
+    var first: CancelFlag? {
+        lock.lock(); defer { lock.unlock() }
+        return flags.first
     }
 }
 

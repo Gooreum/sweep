@@ -169,6 +169,9 @@ public final class DiskMapModel {
         loadPhase = Self.phase(read: 0, of: total)
 
         // 볼륨 전체는 몇 분이 걸린다. 시작한 순회를 멈출 수 있어야 한다.
+        // 도는 순회가 있으면 먼저 멈춘다 — 허락이 바뀌면 화면이 읽는 중에도 다시 부른다.
+        // 플래그를 덮어쓰기만 하면 앞 순회는 멈출 길이 없고, 먼저 끝나 진행 표시를 내린다.
+        cancelFlag?.cancel()
         let flag = CancelFlag()
         cancelFlag = flag
         movesDuringLoad = []
@@ -192,11 +195,9 @@ public final class DiskMapModel {
 
         // 중단됐으면 반쪽 트리로 화면을 덮지 않는다.
         // 보던 것(지난 결과 포함)은 그대로 둔다 — 멈췄다고 화면까지 비면 처음부터 다시 해야 한다.
-        guard !flag.isCancelled else {
-            movesDuringLoad = []
-            loadPhase = nil
-            return
-        }
+        // 진행 표시·모아 둔 옮김은 건드리지 않는다. 사용자가 멈췄으면 `cancelLoad`가 이미 치웠고,
+        // 새 순회가 이어받았으면 그쪽 것이다.
+        guard isCurrent(flag) else { return }
 
         // 읽는 동안 다른 화면에서 옮긴 것. 그 폴더를 옮기기 전에 읽었으면 지운 것이 되살아난다.
         let pending = movesDuringLoad
@@ -206,12 +207,14 @@ public final class DiskMapModel {
             tree = await Task.detached { [rebuild, maxDepth] in
                 Self.reconcile(built, with: pending, maxDepth: maxDepth, rebuild: rebuild)
             }.value
+            guard isCurrent(flag) else { return }
         }
 
         // 집계가 끝났으면 정의상 100%다. 한 틱만 보여주고 넘어간다 — 사용자가 완료를 확인할 수 있어야 한다.
         if total != nil {
             loadPhase = .measuring(percent: 100)
             try? await Task.sleep(for: .milliseconds(120))
+            guard isCurrent(flag) else { return }
         }
 
         // 보던 자리를 **URL로 다시 찾아 내려간다.** 세 단계 파고든 뒤 새로 읽었다고
@@ -222,6 +225,11 @@ public final class DiskMapModel {
         completedAt = Date()
         cache?.save(tree, for: root)
         onCompleted?()
+    }
+
+    /// 이 순회가 아직 화면의 몫인가. 중단됐거나 더 새 `load`가 시작됐으면 결과를 버린다.
+    private func isCurrent(_ flag: CancelFlag) -> Bool {
+        !flag.isCancelled && cancelFlag === flag
     }
 
     /// 읽은 양과 분모로 단계를 정한다. 분모가 추정이라 다 읽기 전에는 99%에서 멈춘다.
@@ -257,6 +265,7 @@ public final class DiskMapModel {
     public func cancelLoad() {
         cancelFlag?.cancel()
         cancelFlag = nil
+        movesDuringLoad = []
         loadPhase = nil
     }
 
